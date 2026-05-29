@@ -136,7 +136,7 @@ const normalizePage = (input: any): NormalizeResult => {
 								: p.label.toLowerCase().includes("image")
 									? "src"
 									: p.label.toLowerCase().replace(/\s+/g, "");
-					properties[key] = {value: p.value};
+					properties[key] = p.value;
 				});
 			}
 			theEles[node.id] = {
@@ -746,7 +746,7 @@ export default function VBPrototype({
 				const properties = {...(ele.properties || {})};
 
 				if (typeof keyOrIndex === "string") {
-					properties[keyOrIndex] = {...properties[keyOrIndex], value};
+					properties[keyOrIndex] = value;
 				}
 
 				return {
@@ -776,7 +776,7 @@ export default function VBPrototype({
 	}, [currentEle]);
 
 	const onStyleChange = useCallback(
-		(templateId: string) => {
+		(templateKey: string) => {
 			if (!styleEditorEle) return;
 
 			setTheEles((prev) => {
@@ -784,20 +784,68 @@ export default function VBPrototype({
 
 				const ele = prev[styleEditorEle];
 				const properties = {...(ele.properties || {})};
-
-				properties.template = {value: templateId};
+				properties.displayTemplateKey = templateKey;
 
 				return {
 					...prev,
-					[styleEditorEle]: {
-						...ele,
-						properties,
-					},
+					[styleEditorEle]: {...ele, properties},
 				};
 			});
+
+			setOutlines((prev) => prev.map((outline) => {
+				if (!outline.elements[styleEditorEle]) return outline;
+				const ele = outline.elements[styleEditorEle];
+				const properties = {...(ele.properties || {})};
+				properties.displayTemplateKey = templateKey;
+				return {...outline, elements: {...outline.elements, [styleEditorEle]: {...ele, properties}}};
+			}));
 		},
-		[styleEditorEle, setTheEles]
+		[styleEditorEle, setTheEles, setOutlines]
 	);
+
+	const onSettingChange = useCallback((settingKey: string, value: string) => {
+		if (!styleEditorEle) return;
+
+		setTheEles((prev) => {
+			if (!prev[styleEditorEle]) return prev;
+			const ele = prev[styleEditorEle];
+			const properties = {...(ele.properties || {})};
+			const displaySettings = [...(properties.displaySettings || [])];
+			const idx = displaySettings.findIndex(s => s.key === settingKey);
+			if (idx >= 0) displaySettings[idx] = { key: settingKey, value };
+			else displaySettings.push({ key: settingKey, value });
+			properties.displaySettings = displaySettings;
+			return {...prev, [styleEditorEle]: {...ele, properties}};
+		});
+
+		setOutlines((prev) => prev.map((outline) => {
+			if (!outline.elements[styleEditorEle]) return outline;
+			const ele = outline.elements[styleEditorEle];
+			const properties = {...(ele.properties || {})};
+			const displaySettings = [...(properties.displaySettings || [])];
+			const idx = displaySettings.findIndex(s => s.key === settingKey);
+			if (idx >= 0) displaySettings[idx] = { key: settingKey, value };
+			else displaySettings.push({ key: settingKey, value });
+			properties.displaySettings = displaySettings;
+			return {...outline, elements: {...outline.elements, [styleEditorEle]: {...ele, properties}}};
+		}));
+	}, [styleEditorEle, setTheEles, setOutlines]);
+
+	const onSectionSettingChange = useCallback((settingKey: string, value: string) => {
+		if (!styleEditorEle) return;
+
+		setOutlines((prev) => prev.map((outline) => ({
+			...outline,
+			tree: outline.tree.map((section) => {
+				if (section.id !== styleEditorEle) return section;
+				const displaySettings = [...(section.displaySettings || [])];
+				const idx = displaySettings.findIndex(s => s.key === settingKey);
+				if (idx >= 0) displaySettings[idx] = { key: settingKey, value };
+				else displaySettings.push({ key: settingKey, value });
+				return {...section, displayTemplateKey: section.displayTemplateKey || "defaultSection", displaySettings};
+			}),
+		})));
+	}, [styleEditorEle, setOutlines]);
 
 	// Update element by ID (for Brand Tone suggestions)
 	const onUpdateElementById = useCallback(
@@ -813,7 +861,7 @@ export default function VBPrototype({
 				const ele = prev[elementId];
 				const properties = {...(ele.properties || {})};
 
-				properties[propertyKey] = {...properties[propertyKey], value};
+				properties[propertyKey] = value;
 
 				return {
 					...prev,
@@ -1875,6 +1923,7 @@ export default function VBPrototype({
 														}
 													}}
 													onStyleChange={onStyleChange}
+													onSettingChange={onSettingChange}
 												/>
 											) : (
 												<ElementEditor
@@ -2096,6 +2145,7 @@ export default function VBPrototype({
 														}
 													}}
 													onStyleChange={onStyleChange}
+													onSettingChange={onSettingChange}
 												/>
 											) : (
 												<ElementEditor

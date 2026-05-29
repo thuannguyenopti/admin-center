@@ -42,7 +42,8 @@ import {useTheme} from "@/app/hooks/useTheme";
 import {useLayout} from "@/app/context/LayoutContext";
 import NotificationDropdown from "./NotificationDropdown";
 import { IconXmark } from "@optimizely/axiom-icons";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { LayoutSwitcher } from "@/app/opal/im/components/LayoutSwitcher";
 import { createPortal } from "react-dom";
 import { VAUS, type VAU } from "@/app/opal/data/vaus";
 
@@ -58,6 +59,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const {theme, preference: themePreference, setPreference: setThemePreference} = useTheme();
 	const light = theme === "light";
 	const isOpalRoute = pathname.startsWith("/opal");
+	const isImRoute = pathname.startsWith("/opal/im");
 	const {codePanelControls} = useLayout();
 
 	const handleCodeClick = () => {
@@ -412,9 +414,48 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 			<Box display="flex" alignItems="center" gap="4">
 				{isOpalRoute ? (
 					<>
+						<Suspense fallback={null}>
+							<LayoutSwitcher />
+						</Suspense>
 						<Button appearance="subtle" size="md" icon={<IconSearch size={20} />} aria-label="Search" />
 						<NotificationDropdown />
 						<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
+						<Menu
+							options={[
+								{
+									label: "Light",
+									addon: <IconSunFilled size={16} />,
+									...(themePreference === "light" && { selected: true }),
+									execute: () => setThemePreference("light"),
+								},
+								{
+									label: "Dark",
+									addon: <IconMoon size={16} />,
+									...(themePreference === "dark" && { selected: true }),
+									execute: () => setThemePreference("dark"),
+								},
+								{
+									label: "System",
+									addon: <IconDeviceDesktop size={16} />,
+									...(themePreference === "system" && { selected: true }),
+									execute: () => setThemePreference("system"),
+								},
+							]}
+						>
+							<MenuTrigger asChild>
+								<Button
+									appearance="subtle"
+									size="md"
+									icon={{
+										system: <IconDeviceDesktop />,
+										light: <IconSunFilled />,
+										dark: <IconMoon />,
+									}[themePreference]}
+									aria-label="Theme"
+								/>
+							</MenuTrigger>
+							<MenuContent />
+						</Menu>
 						<Menu
 							options={[
 								...VAUS.map(vau => ({
@@ -437,7 +478,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 									{activeVAU ? (
 										<Image src={activeVAU.avatar} alt={activeVAU.name} width={24} height={24} style={{ borderRadius: 999, flexShrink: 0 }} />
 									) : (
-										<span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: 999, background: "var(--ax-colors-bg-avatar-purple)", color: "var(--ax-colors-fg-avatar-purple)", fontSize: 10, fontWeight: 600, letterSpacing: "0.02em", flexShrink: 0 }}>JC</span>
+										<Image src="/avatars/avatar-3.png" alt="Jamie Chen" width={24} height={24} style={{ borderRadius: 999, flexShrink: 0, objectFit: "cover" }} />
 									)}
 								</Button>
 							</MenuTrigger>

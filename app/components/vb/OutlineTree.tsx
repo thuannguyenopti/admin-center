@@ -9,6 +9,7 @@ import Row from "./Row";
 import Col from "./Col";
 import Ele, {EleMap} from "./Ele";
 import {getProperty, isImageDrag, isInternalDrag, VB_INTERNAL_MIME} from "./blocks/utils";
+import {getPreviewLabel} from "./blocks/previewLabel";
 import {BLOCK_SCHEMAS} from "./blocks/schemas";
 import {initialPages} from "@/app/db/initialData";
 
@@ -376,16 +377,16 @@ export default function OutlineTree({
 				properties: (() => {
 					const schema = BLOCK_SCHEMAS[type];
 					if (schema) {
-						const props: Record<string, {value: any}> = {};
+						const props: Record<string, any> = {};
 						Object.entries(schema.properties).forEach(([key, def]) => {
-							props[key] = {value: def.default ?? ""};
+							props[key] = def.default ?? "";
 						});
 
 						// Special case for image if we have pending data
 						if (type === "ct-image" && imageUrl) {
-							if (props["title"]) props["title"].value = imageAlt || "Untitled Image";
-							if (props["altText"]) props["altText"].value = imageAlt;
-							if (props["imageUrl"]) props["imageUrl"].value = imageUrl;
+							if ("title" in props) props["title"] = imageAlt || "Untitled Image";
+							if ("altText" in props) props["altText"] = imageAlt;
+							if ("imageUrl" in props) props["imageUrl"] = imageUrl;
 						}
 
 						return props;
@@ -618,10 +619,10 @@ export default function OutlineTree({
 			[uKey]: {
 				type: "ct-image",
 				properties: {
-					imageUrl: {value: imageUrl},
-					altText: {value: imageAlt || "Untitled Image"},
-					width: {value: "auto"},
-					height: {value: "auto"},
+					imageUrl: imageUrl,
+					altText: imageAlt || "Untitled Image",
+					width: "auto",
+					height: "auto",
 				},
 			},
 		}));
@@ -1113,65 +1114,11 @@ export default function OutlineTree({
 																									element
 																								}
 																								label={
-																									getProperty(
-																										theEles[
-																											element
-																												.id
-																										]
-																											?.properties,
-																										"text",
-																										"Text"
-																									) ||
-																									getProperty(
-																										theEles[
-																											element
-																												.id
-																										]
-																											?.properties,
-																										"label",
-																										"Label"
-																									) ||
-																									getProperty(
-																										theEles[
-																											element
-																												.id
-																										]
-																											?.properties,
-																										"name",
-																										"Name"
-																									) ||
-																									getProperty(
-																										theEles[
-																											element
-																												.id
-																										]
-																											?.properties,
-																										"alt",
-																										"Alt Text"
-																									) ||
-																									getImageNameFromUrl(
-																										getProperty(
-																											theEles[
-																												element
-																													.id
-																											]
-																												?.properties,
-																											"image",
-																											"Image"
-																										)
-																									) ||
-																									extractPlainText(
-																										getProperty(
-																											theEles[
-																												element
-																													.id
-																											]
-																												?.properties,
-																											"richtext",
-																											"Rich Text"
-																										)
-																									) ||
-																									undefined
+																									getPreviewLabel(theEles[element.id]?.properties) ||
+																									getImageNameFromUrl(getProperty(theEles[element.id]?.properties, "appImage", "App Image")) ||
+																									getImageNameFromUrl(getProperty(theEles[element.id]?.properties, "image", "Image")) ||
+																									extractPlainText(getProperty(theEles[element.id]?.properties, "richtext", "Rich Text")) ||
+																									""
 																								}
 																								setCurrentEle={
 																									setCurrentEle

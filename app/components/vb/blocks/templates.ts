@@ -31,6 +31,32 @@ export type SectionTemplates = {
  * Each element type has multiple visual templates that can be swapped
  */
 export const ELEMENT_TEMPLATES: ElementTemplates = {
+    "ct-hero": {
+        defaultTemplate: "default",
+        templates: [
+            {
+                id: "default",
+                label: "Standard",
+                description: "Left-aligned text with app mockup on right",
+                semanticTags: ["default", "standard", "homepage"],
+                cssClasses: "",
+            },
+            {
+                id: "centered",
+                label: "Centered",
+                description: "Centered text over background image",
+                semanticTags: ["centered", "product", "features"],
+                cssClasses: "",
+            },
+            {
+                id: "event",
+                label: "Event",
+                description: "White text on dark background, no mockup",
+                semanticTags: ["event", "dark", "marathon", "campaign"],
+                cssClasses: "",
+            },
+        ],
+    },
     "ct-heading": {
         defaultTemplate: "default",
         templates: [

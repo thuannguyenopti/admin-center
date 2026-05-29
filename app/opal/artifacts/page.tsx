@@ -507,19 +507,18 @@ function SortHeader({
     const active = current === sortKey;
     return (
         <Th>
-            <Box
-                display="inline-flex"
-                alignItems="center"
-                gap="4"
-                style={{ cursor: "pointer", userSelect: "none" }}
-                onClick={() => onSort(sortKey)}
-            >
-                {label}
-                {active ? (
-                    dir === "asc" ? <IconChevronUp size={12} /> : <IconChevronDown size={12} />
-                ) : (
-                    <IconChevronDown size={12} color="var(--ax-colors-fg-tertiary)" />
-                )}
+            <Box asChild display="inline-flex" alignItems="center" gap="4">
+                <span
+                    style={{ cursor: "pointer", userSelect: "none" }}
+                    onClick={() => onSort(sortKey)}
+                >
+                    {label}
+                    {active ? (
+                        dir === "asc" ? <IconChevronUp size={12} /> : <IconChevronDown size={12} />
+                    ) : (
+                        <IconChevronDown size={12} color="var(--ax-colors-fg-tertiary)" />
+                    )}
+                </span>
             </Box>
         </Th>
     );

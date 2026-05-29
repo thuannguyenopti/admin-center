@@ -13,7 +13,7 @@ import {HydrationErrorSuppressor} from "@/app/components/HydrationErrorSuppresso
 import {MigrationRunner} from "@/app/components/MigrationRunner";
 import {useCmsNav} from "@/app/cms/navigation";
 import {cmpNav} from "@/app/cmp/navigation";
-import {opalNav} from "@/app/opal/navigation";
+import {useOpalNav} from "@/app/opal/navigation";
 import {connectPlatformNav} from "@/app/connect-platform/navigation";
 import {feHostingNav} from "@/app/fe-hosting/navigation";
 import {webExperimentationNav} from "@/app/web-experimentation/navigation";
@@ -25,6 +25,8 @@ export default function RootLayout({
 }>) {
 	const path = usePathname() ?? "";
 	const cmsNav = useCmsNav();
+	const opalNav = useOpalNav();
+	const brand = path.startsWith("/site") ? undefined : "v3";
 
 	const structure = {
 		cms: cmsNav,
@@ -49,14 +51,14 @@ export default function RootLayout({
 				{/* figma-capture: remove after capture */}
 				<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
 			</head>
-			<body suppressHydrationWarning data-brand="v3">
+			<body suppressHydrationWarning data-brand={brand}>
 				<ThemeProvider>
 					<ProofreadingProvider>
 						<OpalGenerationProvider>
 							<ExperimentResultsProvider>
 								<HydrationErrorSuppressor />
 								<MigrationRunner />
-								<div data-brand="v3" style={{display: "contents"}}>
+								<div data-brand={brand} style={{display: "contents"}}>
 									{menu ? (
 										<Template structure={menu}>{children}</Template>
 									) : (

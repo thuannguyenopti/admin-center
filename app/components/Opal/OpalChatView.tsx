@@ -12,7 +12,7 @@ import { OpalLoaderDevPanel } from "@/app/opal/components/OpalLoaderDevPanel";
 
 // ── Grab handle for resizing the canvas / chat split ─────────────────────────
 
-function GrabHandle({ onResize }: { onResize: (dx: number) => void }) {
+export function GrabHandle({ onResize }: { onResize: (dx: number) => void }) {
     const isDragging = useRef(false);
     const lastX = useRef(0);
 
@@ -109,6 +109,32 @@ type OpalChatViewProps = {
     canvasMode?: boolean;
     /** Controls visibility of the right chat sidebar when leftCanvas is active. Defaults to true. */
     chatPanelVisible?: boolean;
+    /** Current user id — surfaces in IM mode for reactions. */
+    currentUserId?: string;
+    /** Reactions keyed by message id. */
+    messageReactions?: Record<string, Record<string, string[]>>;
+    /** Toggle reaction handler. */
+    onToggleReaction?: (messageId: string, emoji: string) => void;
+    /** Reply-in-thread handler — opens a thread panel for the message id. */
+    onReplyInThread?: (messageId: string) => void;
+    /** Quote-reply handler — pins a message as quote in the main composer. */
+    onQuoteReply?: (messageId: string) => void;
+    /** Node rendered just above the message composer (e.g. a quote chip). */
+    aboveInputContent?: React.ReactNode;
+    /** When provided, replaces the OpalInput entirely (e.g. a blocking action card). */
+    inputOverride?: React.ReactNode;
+    /** When provided in IM mode, the + menu "Upload from device" picks a file and calls this. */
+    onAttachFile?: (file: File) => void;
+    /** When set, overrides the "Opal" dropdown trigger in the header with static text. */
+    headerTitle?: string;
+    /** Label for the new-chat button (sidebar + header). Defaults to "New chat". */
+    newChatLabel?: string;
+    /** When provided, sidebar section headers render a + button that calls this with the section label. */
+    onCreateInSection?: (sectionLabel: string) => void;
+    /** Per-section tooltip labels for the + button. Keyed by section label. */
+    sectionAddTooltips?: Record<string, string>;
+    /** When provided, renders an X close button at the top-left of the chat sidebar (canvas mode only). */
+    onCloseChat?: () => void;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -159,6 +185,19 @@ export function OpalChatView({
     leftCanvas,
     canvasMode = false,
     chatPanelVisible = true,
+    currentUserId,
+    messageReactions,
+    onToggleReaction,
+    onReplyInThread,
+    onQuoteReply,
+    aboveInputContent,
+    inputOverride,
+    onAttachFile,
+    headerTitle,
+    newChatLabel,
+    onCreateInSection,
+    sectionAddTooltips,
+    onCloseChat,
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
     const [chatWidth, setChatWidth] = useState(400);
@@ -216,9 +255,12 @@ export function OpalChatView({
                         <Box style={{ flexShrink: 0 }}>
                             <OpalHeader
                                 onToggleHistory={onToggleHistory || (() => {})}
-                                onNewChat={onNewChat}
+                                onNewChat={isHistoryVisible ? undefined : onNewChat}
                                 imMode={imMode}
                                 onImModeChange={setImMode}
+                                titleOverride={headerTitle}
+                                newChatLabel={newChatLabel}
+                                leadingClose={onCloseChat}
                             />
                         </Box>
                     )}
@@ -247,6 +289,11 @@ export function OpalChatView({
                             activeAgentCtx={activeAgentCtx}
                             contextualActionCard={contextualActionCard}
                             messageCards={messageCards}
+                            imMode={imMode}
+                            currentUserId={currentUserId}
+                            messageReactions={messageReactions}
+                            onToggleReaction={onToggleReaction}
+                            onReplyInThread={onReplyInThread}
                         />
                     </Box>
                     <Box style={{ flexShrink: 0, padding: '12px' }}>
@@ -264,6 +311,7 @@ export function OpalChatView({
                             onMentionSelect={onMentionSelect}
                             onSubmitBlocked={onSubmitBlocked}
                             imMode={imMode}
+                            onAttachFile={onAttachFile}
                         />
                     </Box>
                 </Box>
@@ -286,6 +334,9 @@ export function OpalChatView({
                     onDeleteChat={onDeleteChat || (() => { })}
                     mode="docked"
                     isVisible={!!isHistoryVisible}
+                    newChatLabel={newChatLabel}
+                    onCreateInSection={onCreateInSection}
+                    sectionAddTooltips={sectionAddTooltips}
                 />
                 <Box display="flex" flexDirection="column" h="full" style={{ flex: 1, minWidth: 0 }}>
                     <Box
@@ -340,6 +391,9 @@ export function OpalChatView({
                     onDeleteChat={onDeleteChat || (() => { })}
                     mode="docked"
                     isVisible={!!isHistoryVisible}
+                    newChatLabel={newChatLabel}
+                    onCreateInSection={onCreateInSection}
+                    sectionAddTooltips={sectionAddTooltips}
                 />
             )}
             <Box
@@ -351,9 +405,11 @@ export function OpalChatView({
                     <Box style={{ flexShrink: 0, width: '100%' }}>
                         <OpalHeader
                             onToggleHistory={onToggleHistory || (() => { })}
-                            onNewChat={onNewChat}
+                            onNewChat={isHistoryVisible ? undefined : onNewChat}
                             imMode={imMode}
                             onImModeChange={setImMode}
+                            titleOverride={headerTitle}
+                            newChatLabel={newChatLabel}
                         />
                     </Box>
                 )}
@@ -391,6 +447,12 @@ export function OpalChatView({
                         activeAgentCtx={activeAgentCtx}
                         contextualActionCard={contextualActionCard}
                         messageCards={messageCards}
+                        imMode={imMode}
+                        currentUserId={currentUserId}
+                        messageReactions={messageReactions}
+                        onToggleReaction={onToggleReaction}
+                        onReplyInThread={onReplyInThread}
+                        onQuoteReply={onQuoteReply}
                     />
                 </Box>
 
@@ -404,23 +466,29 @@ export function OpalChatView({
                         gap="16"
                         style={{ width: '100%', maxWidth: variant === 'home' ? '800px' : 'none' }}
                     >
-                        <OpalInput
-                            variant={variant}
-                            value={inputValue}
-                            onChange={setInputValue}
-                            onSend={(content) => onSend(content ?? inputValue)}
-                            disabled={isLoading || !!disabled}
-                            isLoading={isLoading}
-                            error={error}
-                            enableAI={enableAI}
-                            onEnableAIChange={onEnableAIChange}
-                            agentBar={agentBar}
-                            inputAgentCtx={inputAgentCtx}
-                            mentionableAgents={mentionableAgents}
-                            onMentionSelect={onMentionSelect}
-                            onSubmitBlocked={onSubmitBlocked}
-                            imMode={imMode}
-                        />
+                        {inputOverride ? (
+                            inputOverride
+                        ) : (
+                            <OpalInput
+                                variant={variant}
+                                value={inputValue}
+                                onChange={setInputValue}
+                                onSend={(content) => onSend(content ?? inputValue)}
+                                disabled={isLoading || !!disabled}
+                                isLoading={isLoading}
+                                error={error}
+                                enableAI={enableAI}
+                                onEnableAIChange={onEnableAIChange}
+                                agentBar={agentBar}
+                                inputAgentCtx={inputAgentCtx}
+                                mentionableAgents={mentionableAgents}
+                                onMentionSelect={onMentionSelect}
+                                onSubmitBlocked={onSubmitBlocked}
+                                imMode={imMode}
+                                onAttachFile={onAttachFile}
+                                topContent={aboveInputContent}
+                            />
+                        )}
                     </Box>
                 </Box>
             </Box>

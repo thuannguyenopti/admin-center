@@ -1,9 +1,9 @@
 "use client";
 
-import { Alert, Box, Button as AxiomButton } from "@optiaxiom/react";
+import { Box, Button as AxiomButton, Textarea } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconAgent, IconCircleCheckSolid } from "@optimizely/axiom-icons";
+import { IconAgent, IconCircleCheckSolid, IconArrowLeft } from "@optimizely/axiom-icons";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useOpalContext } from "@/app/context/OpalContext";
@@ -12,6 +12,10 @@ import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
 import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { InlineEditorCard } from "@/app/components/Opal/InlineEditorCard";
+import { HeadlessTaskPanel, useTaskController } from "./components/HeadlessTaskPanel";
+import { GrabHandle } from "@/app/components/Opal/OpalChatView";
+import { imToChatMessage } from "@/app/opal/im/lib/adapters";
+import type { IMMessage } from "@/app/opal/im/lib/types";
 
 // Loaded client-side only — contains @codemirror/*, @tiptap/*, yjs which are
 // browser-only and must not be included in the SSR bundle.
@@ -133,16 +137,26 @@ const VAU_MSG_2 = `Done — all three rounds of feedback incorporated:
 
 The updated article is ready for final review. See the revised artifact below.`;
 
-type ApprovalState = 'pending' | 'approved' | 'changes';
+const VAU_PUBLISHED_MSG = `🚀 **discover-the-unknown-qa.md** is live.
 
-function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
+Published to the answer-engine surface just now. I'll monitor citation pickup over the next 24h and flag if anything looks off.`;
+
+type ApprovalState = 'pending' | 'approved' | 'changes' | 'requesting';
+
+function ApprovalActionCard({ state, changesMessage, noteValue, onApprove, onAskChanges, onNoteChange, onNoteSubmit, onNoteCancel, onOpenTask }: {
   state: ApprovalState;
+  changesMessage?: string;
+  noteValue?: string;
   onApprove: () => void;
-  onRequestChanges: () => void;
+  onAskChanges: () => void;
+  onNoteChange: (v: string) => void;
+  onNoteSubmit: () => void;
+  onNoteCancel: () => void;
+  onOpenTask?: () => void;
 }) {
   if (state === 'approved') {
     return (
-      <Box display="flex" flexDirection="column" gap="4" p="16" rounded="lg" style={{ border: '1px solid var(--ax-colors-border-default)', background: 'var(--ax-colors-bg-default)', opacity: 0.6 }}>
+      <Box display="flex" flexDirection="column" gap="4" p="16" rounded="xl" style={{ border: '1px solid var(--ax-colors-border-default)', background: 'var(--ax-colors-bg-default)', opacity: 0.6 }}>
         <Text fontWeight="500" style={{ fontSize: 14, color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
           Team approval needed for discover-the-unknown-qa.md
         </Text>
@@ -152,18 +166,60 @@ function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
       </Box>
     );
   }
-  if (state === 'changes') {
+
+  if (state === 'requesting') {
     return (
-      <Box display="flex" flexDirection="column" gap="4" p="16" rounded="lg" style={{ border: '1px solid var(--ax-colors-border-default)', background: 'var(--ax-colors-bg-default)', opacity: 0.6 }}>
-        <Text fontWeight="500" style={{ fontSize: 14, color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
-          Team approval needed for discover-the-unknown-qa.md
-        </Text>
-        <Text style={{ fontSize: 14, color: 'var(--ax-colors-fg-tertiary)', lineHeight: 1.43 }}>
-          Jamie Chen: Ask changes
-        </Text>
+      <Box
+        display="flex"
+        flexDirection="column"
+        gap="12"
+        p="16"
+        rounded="xl"
+        style={{ border: '1px solid var(--ax-colors-border-default)', background: 'var(--ax-colors-bg-default)' }}
+      >
+        <Box display="flex" flexDirection="column" gap="4">
+          <Text fontWeight="500" style={{ fontSize: 14, color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
+            Request changes
+          </Text>
+          <Text style={{ fontSize: 13, color: 'var(--ax-colors-fg-secondary)', lineHeight: 1.43 }}>
+            Let Frank know what needs to be updated before publishing.
+          </Text>
+        </Box>
+        <Textarea
+          autoFocus
+          value={noteValue ?? ''}
+          onChange={e => onNoteChange(e.target.value)}
+          placeholder="Describe the changes needed…"
+          rows={3}
+          w="full"
+        />
+        <Box display="flex" justifyContent="flex-end" gap="4">
+          <AxiomButton appearance="subtle" size="md" onClick={onNoteCancel}>Cancel</AxiomButton>
+          <AxiomButton appearance="primary" size="md" onClick={onNoteSubmit}>Send</AxiomButton>
+        </Box>
       </Box>
     );
   }
+
+  if (state === 'changes') {
+    return (
+      <Box display="flex" flexDirection="column" gap="12" p="16" rounded="xl" style={{ border: '1px solid var(--ax-colors-border-default)', background: 'var(--ax-colors-bg-default)' }}>
+        <Box display="flex" alignItems="center" gap="8">
+          <Text fontWeight="500" style={{ fontSize: 14, color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
+            ✓ Changes requested
+          </Text>
+        </Box>
+        {changesMessage && (
+          <Box p="12" rounded="lg" style={{ background: 'var(--ax-colors-bg-page)', borderLeft: '3px solid var(--ax-colors-border-focus)' }}>
+            <Text style={{ fontSize: 13, color: 'var(--ax-colors-fg-default)', lineHeight: 1.5 }}>
+              {changesMessage}
+            </Text>
+          </Box>
+        )}
+      </Box>
+    );
+  }
+
   return (
     <Box
       display="flex"
@@ -220,11 +276,33 @@ function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
         <Text style={{ fontSize: 14, letterSpacing: '0.28px', color: 'var(--ax-colors-fg-secondary)', lineHeight: 1.43 }}>
           Review the updated Q&amp;A article. Approve to proceed with publishing, or request further changes.
         </Text>
+        {onOpenTask && (
+          <button
+            type="button"
+            onClick={onOpenTask}
+            style={{
+              alignSelf: 'flex-start',
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 500,
+              color: 'var(--ax-colors-fg-accent)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <IconArrowLeft size={14} />
+            View Task
+          </button>
+        )}
       </Box>
 
       {/* Actions */}
-      <Box display="flex" justifyContent="flex-end" gap="4">
-        <AxiomButton appearance="subtle" size="md" onClick={onRequestChanges}>Ask Changes</AxiomButton>
+      <Box display="flex" alignItems="center" justifyContent="flex-end" gap="4">
+        <AxiomButton appearance="subtle" size="md" onClick={onAskChanges}>Ask Changes</AxiomButton>
         <AxiomButton appearance="primary" size="md" onClick={onApprove} icon={<IconCircleCheckSolid size={14} />}>Approve</AxiomButton>
       </Box>
     </Box>
@@ -281,13 +359,70 @@ export default function OpalPage() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorVersion, setEditorVersion] = useState<'v1' | 'v2'>('v1');
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
+  const [headlessTaskOpen, setHeadlessTaskOpen] = useState(false);
+  const [taskPanelWidth, setTaskPanelWidth] = useState(460);
+  const handleTaskResize = useCallback((dx: number) => {
+    setTaskPanelWidth(w => Math.max(320, Math.min(720, w + dx)));
+  }, []);
   const [approvalState, setApprovalState] = useState<ApprovalState>('pending');
+  const [approvalNote, setApprovalNote] = useState('');
+  const [approvalChangesNote, setApprovalChangesNote] = useState('');
   const [landingPageReady, setLandingPageReady] = useState(() => {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('artifacts') === '1';
   });
   const isFirstMount = useRef(true);
   const hasSeededThread = useRef(false);
+
+  // Drive seeded/triggered messages through the IM adapter so avatars,
+  // timestamps, and VAU template names render identically to the live IM module.
+  const GEO_PROFILES = useRef<Record<string, string>>({
+    'vau-frank': 'Frank',
+    'jamie': 'Jamie Chen',
+    'mary-anne': 'Mary Anne Torres',
+  }).current;
+  const pushIMMessage = useCallback((
+    senderId: string,
+    content: string,
+    opts: { minutesAgo?: number; senderType?: 'agent' | 'user' } = {},
+  ) => {
+    const im: IMMessage = {
+      id: crypto.randomUUID(),
+      conversation_id: 'demo-geo-qa',
+      instance_id: 'demo',
+      sender_id: senderId,
+      sender_type: opts.senderType ?? 'user',
+      content,
+      content_plain: content,
+      format: 'markdown',
+      created_at: new Date(Date.now() - (opts.minutesAgo ?? 0) * 60_000).toISOString(),
+      deleted: false,
+      thread_reply_count: 0,
+      thread_participants: [],
+    };
+    const chat = imToChatMessage(im, GEO_PROFILES);
+    const added = addMessage({
+      role: chat.role,
+      content: chat.content,
+      metadata: chat.metadata,
+    });
+    updateMessage(added.id, { timestamp: chat.timestamp });
+  }, [addMessage, updateMessage, GEO_PROFILES]);
+
+  // Task workflow state lives at the page level so approving from the action
+  // card persists into the panel — even if the panel is opened later.
+  const taskController = useTaskController('geo-qa', (stepId) => {
+    if (stepId === '2') {
+      setApprovalState('approved');
+      pushIMMessage('jamie', '✓ Approved');
+    }
+    if (stepId === '3') {
+      pushIMMessage('vau-frank', VAU_PUBLISHED_MSG, { senderType: 'agent' });
+    }
+  });
+  const handleApprove = useCallback(() => {
+    taskController.completeStep('2');
+  }, [taskController]);
 
   // ── Deep-link: ?artifacts=1 seeds the GEO Q&A mock thread ─────────────
   useEffect(() => {
@@ -297,10 +432,10 @@ export default function OpalPage() {
       hasSeededThread.current = true;
 
       const seedThread = () => {
-        addMessage({ role: 'assistant', content: VAU_MSG_1, cardAfterKey: 'geo-initial' });
-        addMessage({ role: 'user', content: JC_MSG, authorName: 'Jamie Chen' });
-        addMessage({ role: 'user', content: TEAMMATE_MSG, authorAvatar: '/avatar-user.png', authorName: 'Mary Anne Torres' });
-        addMessage({ role: 'assistant', content: VAU_MSG_2, cardAfterKey: 'geo-updated' });
+        pushIMMessage('vau-frank', VAU_MSG_1, { minutesAgo: 18, senderType: 'agent' });
+        pushIMMessage('jamie', JC_MSG, { minutesAgo: 14 });
+        pushIMMessage('mary-anne', TEAMMATE_MSG, { minutesAgo: 10 });
+        pushIMMessage('vau-frank', VAU_MSG_2, { minutesAgo: 2, senderType: 'agent' });
         setLandingPageReady(true);
         setTimeout(() => { setEditorVersion('v2'); setEditorOpen(true); }, 500);
       };
@@ -386,6 +521,11 @@ export default function OpalPage() {
       setApprovalState('approved');
       return;
     }
+    if (text?.trim().toLowerCase() === 'show approval card') {
+      setInputValue('');
+      setApprovalState('pending');
+      return;
+    }
     handleSendMessage(text ?? "");
   }, [handleLandingPageTrigger, handleSendMessage, setApprovalState, setInputValue]);
 
@@ -413,8 +553,13 @@ export default function OpalPage() {
         />
         <ApprovalActionCard
           state="changes"
+          changesMessage="The FAQ section needs more specific examples for each answer."
           onApprove={() => {}}
-          onRequestChanges={() => {}}
+          onAskChanges={() => {}}
+          onNoteChange={() => {}}
+          onNoteSubmit={() => {}}
+          onNoteCancel={() => {}}
+          onOpenTask={() => setHeadlessTaskOpen(true)}
         />
       </Box>
     ),
@@ -432,8 +577,14 @@ export default function OpalPage() {
         />
         <ApprovalActionCard
           state={approvalState}
-          onApprove={() => setApprovalState('approved')}
-          onRequestChanges={() => setApprovalState('changes')}
+          changesMessage={approvalChangesNote || undefined}
+          noteValue={approvalNote}
+          onApprove={handleApprove}
+          onAskChanges={() => setApprovalState('requesting')}
+          onNoteChange={setApprovalNote}
+          onNoteSubmit={() => { const n = approvalNote; setApprovalChangesNote(n); setApprovalNote(''); setApprovalState('changes'); if (n.trim()) addMessage({ role: 'user', content: n, metadata: { authorName: 'Jamie Chen' } }); }}
+          onNoteCancel={() => { setApprovalNote(''); setApprovalState('pending'); }}
+          onOpenTask={() => setHeadlessTaskOpen(true)}
         />
       </Box>
     ),
@@ -456,6 +607,7 @@ export default function OpalPage() {
         <OpalChatView
           variant="home"
           streamingMode="expanded"
+          headerTitle={landingPageReady ? "Threads" : undefined}
           messages={messages}
           inputValue={inputValue}
           isLoading={isLoading}
@@ -490,24 +642,57 @@ export default function OpalPage() {
           inputAgentCtx={agentSession ? { name: agentSession.agent.name, handle: agentSession.agent.handle } : null}
           disabled={isResuming}
           onSubmitBlocked={triggerResumeHighlight}
-          contextualActionCard={approvalState === 'approved' ? <Alert intent="success">Approved — submitting for publication</Alert> : (atlassianActionCard ?? undefined)}
+          contextualActionCard={
+            approvalState === 'approved'
+              ? undefined
+              : landingPageReady && (approvalState === 'pending' || approvalState === 'requesting' || approvalState === 'changes')
+              ? <ApprovalActionCard state={approvalState} changesMessage={approvalChangesNote || undefined} noteValue={approvalNote} onApprove={handleApprove} onAskChanges={() => setApprovalState('requesting')} onNoteChange={setApprovalNote} onNoteSubmit={() => { const n = approvalNote; setApprovalChangesNote(n); setApprovalNote(''); setApprovalState('changes'); if (n.trim()) addMessage({ role: 'user', content: n, metadata: { authorName: 'Jamie Chen' } }); }} onNoteCancel={() => { setApprovalNote(''); setApprovalState('pending'); }} onOpenTask={() => setHeadlessTaskOpen(true)} />
+              : (atlassianActionCard ?? undefined)
+          }
           messageCards={messageCards}
-          canvasMode={editorOpen}
+          canvasMode={editorOpen || headlessTaskOpen}
           chatPanelVisible={chatPanelVisible}
+          onCloseChat={(editorOpen || headlessTaskOpen) ? () => setChatPanelVisible(false) : undefined}
           leftCanvas={
-            editorOpen ? (
-              <CodeCanvasPanel
-                onClose={() => setEditorOpen(false)}
-                filename="discover-the-unknown-qa.md"
-                artifactTitle="Q and A: Discover the unknown"
-                artifactVersion={editorVersion}
-                fileType="markdown"
-                language="markdown"
-                artifactCreator={{ name: "Jamie Chen" }}
-                initialHtml={editorVersion === 'v2' ? GEO_QA_HTML_V2 : GEO_QA_HTML_V1}
-                chatOpen={chatPanelVisible}
-                onChatToggle={() => setChatPanelVisible(v => !v)}
-              />
+            editorOpen || headlessTaskOpen ? (
+              <Box display="flex" flexDirection="row" h="full" w="full" style={{ minHeight: 0 }}>
+                {editorOpen && (
+                  <Box style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden' }}>
+                    <CodeCanvasPanel
+                      onClose={() => setEditorOpen(false)}
+                      filename="discover-the-unknown-qa.md"
+                      artifactTitle="Q and A: Discover the unknown"
+                      artifactVersion={editorVersion}
+                      fileType="markdown"
+                      language="markdown"
+                      artifactCreator={{ name: "Jamie Chen" }}
+                      initialHtml={editorVersion === 'v2' ? GEO_QA_HTML_V2 : GEO_QA_HTML_V1}
+                      chatOpen={chatPanelVisible}
+                      onChatToggle={() => setChatPanelVisible(v => !v)}
+                    />
+                  </Box>
+                )}
+                {editorOpen && headlessTaskOpen && <GrabHandle onResize={handleTaskResize} />}
+                {headlessTaskOpen && (
+                  <Box
+                    style={{
+                      width: editorOpen ? taskPanelWidth : '100%',
+                      flexShrink: 0,
+                      flexGrow: editorOpen ? 0 : 1,
+                      height: '100%',
+                      minHeight: 0,
+                      overflow: 'hidden',
+                      transition: editorOpen ? 'none' : 'width 0.25s cubic-bezier(0.16,1,0.3,1)',
+                    }}
+                  >
+                    <HeadlessTaskPanel
+                      open={headlessTaskOpen}
+                      onClose={() => setHeadlessTaskOpen(false)}
+                      controller={taskController}
+                    />
+                  </Box>
+                )}
+              </Box>
             ) : undefined
           }
         />
@@ -520,25 +705,7 @@ export default function OpalPage() {
     <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
       {modalElement}
       <OpalLanding
-        topSlot={agentSession ? null : (
-          <Box
-            style={{
-              position: "relative",
-              zIndex: 1,
-              width: "100%",
-              maxWidth: "768px",
-              marginBottom: "16px",
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              flexWrap: "wrap",
-              gap: "8px",
-              flexShrink: 0,
-            }}
-          >
-          </Box>
-        )}
+        topSlot={null}
         inputSlot={
           <OpalInput
             value={inputValue}

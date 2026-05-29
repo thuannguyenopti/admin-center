@@ -1,12 +1,13 @@
 "use client";
 
-import { Box, Button } from "@optiaxiom/react";
+import { useState } from "react";
+import { Box, Button, Tooltip } from "@optiaxiom/react";
+import { IconPlus, IconAngleDown, IconAngleRight } from "@optiaxiom/icons";
 import { Text } from "../Text";
 import { Input } from "../Input";
 import { OpalHistoryItem } from "./OpalHistoryItem";
 import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
 import IconSearch from "@/app/assets/opal/icon-search.svg";
-import IconInfo from "@/app/assets/opal/icon-info.svg";
 import { opalTypography } from "@/app/styles/opalTypography";
 
 type OpalHistorySidebarProps = {
@@ -19,6 +20,9 @@ type OpalHistorySidebarProps = {
   onDeleteChat: (id: string) => void;
   mode: 'docked' | 'popped-out';
   isVisible: boolean;
+  newChatLabel?: string;
+  onCreateInSection?: (sectionLabel: string) => void;
+  sectionAddTooltips?: Record<string, string>;
 };
 
 export function OpalHistorySidebar({
@@ -31,8 +35,19 @@ export function OpalHistorySidebar({
   onDeleteChat,
   mode,
   isVisible,
+  newChatLabel = 'New chat',
+  onCreateInSection,
+  sectionAddTooltips,
 }: OpalHistorySidebarProps) {
   const sidebarWidth = mode === 'docked' ? '272px' : '256px';
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  const toggleSection = (label: string) =>
+    setCollapsedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
 
   return (
     <Box
@@ -52,7 +67,7 @@ export function OpalHistorySidebar({
       }}
     >
       {/* Search and New Chat */}
-      <Box display="flex" flexDirection="row" gap="2" alignItems="center" justifyContent="space-between">
+      <Box display="flex" flexDirection="row" gap="8" alignItems="center">
         <Button
           appearance="subtle"
           size="md"
@@ -61,81 +76,98 @@ export function OpalHistorySidebar({
             width: '32px',
             height: '32px',
             padding: 0,
-            borderRadius: '6px',
             minWidth: '32px',
             flexShrink: 0,
           }}
         >
           <IconSearch style={{ width: '16px', height: '16px' }} />
         </Button>
-        
-        <Box
-          onClick={onNewChat}
-          style={{
-            height: '32px',
-            borderRadius: '6px',
-            border: '1px solid var(--opal-border-input)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '0 12px',
-            cursor: 'pointer',
-            backgroundColor: 'transparent',
-            transition: 'background-color 0.2s ease',
-            whiteSpace: 'nowrap',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--opal-bg-history-active)';
-            e.currentTarget.style.borderColor = 'var(--opal-border-primary)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.borderColor = 'var(--opal-border-input)';
-          }}
-        >
-          <IconInfo style={{ width: '16px', height: '16px', flexShrink: 0 }} />
-          <Text
-            style={{
-              fontSize: '14px',
-              fontWeight: 400,
-              letterSpacing: '-0.10px',
-              fontFamily: 'Inter, sans-serif',
-              margin: 0,
-              color: 'var(--opal-text-primary)',
-            }}
+
+        <Box style={{ width: 120, marginLeft: 'auto' }}>
+          <Button
+            appearance="default"
+            size="md"
+            onClick={onNewChat}
+            icon={<IconPlus size={16} />}
+            w="full"
           >
-            New chat
-          </Text>
+            {newChatLabel}
+          </Button>
         </Box>
       </Box>
 
       {/* Chat History Groups */}
-      <Box display="flex" flexDirection="column" gap="16" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+      <Box display="flex" flexDirection="column" gap="16" style={{ flex: 1, overflowY: 'auto', overflowX: 'clip', minHeight: 0, paddingRight: 2 }}>
         {Object.entries(groupedHistory).map(([dateLabel, items]) => {
           if (items.length === 0) return null;
-          
+          const isCollapsed = collapsedSections.has(dateLabel);
+
           return (
             <Box key={dateLabel} display="flex" flexDirection="column" gap="8">
-              <Text
-                style={{
-                  ...opalTypography.disclaimer,
-                  margin: 0,
-                  color: 'var(--opal-text-secondary)',
-                }}
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                gap="8"
+                onClick={() => toggleSection(dateLabel)}
+                style={{ cursor: "pointer", userSelect: "none" }}
               >
-                {dateLabel}
-              </Text>
-              <Box display="flex" flexDirection="column" gap="4">
-                {items.map(item => (
-                  <OpalHistoryItem
-                    key={item.id}
-                    item={item}
-                    isActive={activeChat === item.id}
-                    onClick={() => onSelectChat(item.id)}
-                    onDelete={() => onDeleteChat(item.id)}
-                  />
-                ))}
+                <Box display="flex" alignItems="center" gap="4" style={{ minWidth: 0, flex: 1 }}>
+                  {isCollapsed ? (
+                    <IconAngleRight size={16} style={{ color: "var(--opal-text-secondary)", flexShrink: 0 }} />
+                  ) : (
+                    <IconAngleDown size={16} style={{ color: "var(--opal-text-secondary)", flexShrink: 0 }} />
+                  )}
+                  <Text
+                    style={{
+                      ...opalTypography.disclaimer,
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      margin: 0,
+                      color: 'var(--opal-text-secondary)',
+                    }}
+                  >
+                    {dateLabel}
+                  </Text>
+                </Box>
+                {onCreateInSection && (
+                  <Tooltip
+                    content={sectionAddTooltips?.[dateLabel] ?? `Add to ${dateLabel}`}
+                  >
+                    <Button
+                      appearance="subtle"
+                      size="sm"
+                      aria-label={sectionAddTooltips?.[dateLabel] ?? `Add to ${dateLabel}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCreateInSection(dateLabel);
+                      }}
+                      icon={<IconPlus size={14} />}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        minWidth: 20,
+                        padding: 0,
+                        borderRadius: 4,
+                        color: 'var(--opal-text-secondary)',
+                      }}
+                    />
+                  </Tooltip>
+                )}
               </Box>
+              {!isCollapsed && (
+                <Box display="flex" flexDirection="column" gap="4" style={{ paddingLeft: 16 }}>
+                  {items.map(item => (
+                    <OpalHistoryItem
+                      key={item.id}
+                      item={item}
+                      isActive={activeChat === item.id}
+                      onClick={() => onSelectChat(item.id)}
+                      onDelete={() => onDeleteChat(item.id)}
+                    />
+                  ))}
+                </Box>
+              )}
             </Box>
           );
         })}

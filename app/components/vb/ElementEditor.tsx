@@ -172,7 +172,7 @@ export default function ElementEditor({
 
               {visibleProps.map((prop) => {
                 const propData = properties ? properties[prop.id] : null;
-                const value = propData ? propData.value : (prop.defaultValue ?? "");
+                const value = propData != null ? propData : (prop.defaultValue ?? "");
 
                 return (
                   <PropertyRenderer
