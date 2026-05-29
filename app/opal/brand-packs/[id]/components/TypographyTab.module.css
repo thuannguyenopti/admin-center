@@ -1,0 +1,446 @@
+.typographyTab {
+	container-type: inline-size;
+}
+
+.heroSpecimen {
+	grid-template-columns: minmax(0, 1fr) minmax(300px, 440px);
+}
+
+.heroControls {
+	justify-content: flex-end;
+}
+
+.heroDisplay {
+	align-items: center;
+	width: 100%;
+}
+
+.familyName {
+	font-size: 72px;
+}
+
+.pangram {
+	font-size: 28px;
+	max-width: 560px;
+}
+
+.specimenLetters {
+	font-size: 156px;
+}
+
+.alphabetSample {
+	white-space: nowrap;
+}
+
+.libraryLayout {
+	grid-template-columns: 180px minmax(0, 1fr);
+}
+
+.typefaceRow {
+	grid-template-columns: 112px minmax(160px, 220px) minmax(260px, 1fr) 112px;
+}
+
+.typefacePreview {
+	min-width: 0;
+}
+
+.addTypefaceBody {
+	container-type: inline-size;
+	min-height: 0;
+	overflow-y: auto;
+	padding-block: 24px;
+}
+
+.addTypefaceGrid {
+	display: grid;
+	gap: 32px;
+	grid-template-columns: minmax(0, 480px) minmax(340px, 392px);
+}
+
+.sourceGrid {
+	display: grid;
+	gap: 10px;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.sourceButton {
+	background: var(--ax-colors-bg-default);
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: var(--ax-borderRadius-lg);
+	cursor: pointer;
+	min-height: 136px;
+	padding: 16px 10px;
+	transition: border-color var(--ax-duration-sm), box-shadow var(--ax-duration-sm), background var(--ax-duration-sm);
+	width: 100%;
+}
+
+.sourceButton:hover {
+	background: var(--ax-colors-bg-secondary);
+	border-color: var(--ax-colors-border-secondary);
+}
+
+.sourceButton:focus-visible,
+.typefaceResult:focus-visible {
+	box-shadow: 0 0 0 2px var(--ax-colors-border-focus);
+	outline: none;
+}
+
+.sourceButtonSelected {
+	background: var(--ax-colors-bg-default);
+	border-color: var(--ax-colors-border-success);
+	box-shadow: inset 0 0 0 1px var(--ax-colors-border-success);
+}
+
+.sourceStatus {
+	min-height: 24px;
+}
+
+.uploadPanel {
+	background: var(--ax-colors-bg-secondary);
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: var(--ax-borderRadius-lg);
+	padding: 14px 16px;
+}
+
+.typefaceResult {
+	background: var(--ax-colors-bg-default);
+	border-radius: 0;
+	cursor: pointer;
+	min-height: 64px;
+	text-align: left;
+	transition: background var(--ax-duration-sm), box-shadow var(--ax-duration-sm);
+	width: 100%;
+}
+
+.typefaceResult:hover {
+	background: var(--ax-colors-bg-secondary);
+}
+
+.typefaceResult + .typefaceResult {
+	border-top: 1px solid var(--ax-colors-border-tertiary);
+}
+
+.typefaceResultSelected {
+	background: var(--ax-colors-bg-success-subtle);
+	box-shadow: inset 0 0 0 1px var(--ax-colors-border-success);
+	position: relative;
+	z-index: 1;
+}
+
+.typefaceResultSelected:first-child {
+	border-top-left-radius: var(--ax-borderRadius-lg);
+	border-top-right-radius: var(--ax-borderRadius-lg);
+}
+
+.typefaceResultSelected:last-child {
+	border-bottom-left-radius: var(--ax-borderRadius-lg);
+	border-bottom-right-radius: var(--ax-borderRadius-lg);
+}
+
+.typefaceEmptyState {
+	background: var(--ax-colors-bg-secondary);
+	min-height: 88px;
+}
+
+.addTypefaceRightRail {
+	border-left: 1px solid var(--ax-colors-border-tertiary);
+	padding-left: 28px;
+}
+
+.typefaceDialogPreview {
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: var(--ax-borderRadius-lg);
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	padding: 24px;
+}
+
+.dialogSpecimenRow {
+	grid-template-columns: 88px minmax(0, 1fr);
+}
+
+.dialogAg {
+	font-size: 64px;
+	letter-spacing: 0;
+	line-height: 0.9;
+}
+
+.dialogPangram {
+	font-size: 17px;
+	letter-spacing: 0;
+	line-height: 1.28;
+}
+
+.weightSlider {
+	width: 100%;
+}
+
+.typefaceDetailsGrid {
+	display: grid;
+	gap: 12px 24px;
+	grid-template-columns: minmax(92px, auto) minmax(0, 1fr);
+}
+
+.usedForGrid {
+	display: grid;
+	gap: 12px 24px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.addTypefaceFooter {
+	justify-content: space-between;
+	min-height: 94px;
+	padding-inline: 32px;
+}
+
+.manageTypeBody {
+	container-type: inline-size;
+	min-height: 0;
+	overflow-y: auto;
+	padding-block: 24px;
+}
+
+.manageTypeGrid {
+	--manage-type-grid-columns: minmax(0, 526px) minmax(420px, 1fr);
+
+	grid-template-columns: var(--manage-type-grid-columns);
+}
+
+.typeRoleRow {
+	--type-role-row-columns: 40px minmax(0, 1fr) 176px;
+	--type-role-row-padding: 14px 16px;
+
+	background: var(--ax-colors-bg-default);
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: var(--ax-borderRadius-md);
+	cursor: pointer;
+	grid-template-columns: var(--type-role-row-columns);
+	min-height: 90px;
+	padding: var(--type-role-row-padding);
+	position: relative;
+	transition: border-color var(--ax-duration-sm), box-shadow var(--ax-duration-sm), background var(--ax-duration-sm);
+}
+
+.typeRoleRow:hover {
+	background: var(--ax-colors-bg-secondary);
+	border-color: var(--ax-colors-border-secondary);
+}
+
+.typeRoleRow:focus-visible {
+	box-shadow: 0 0 0 2px var(--ax-colors-border-focus);
+	outline: none;
+}
+
+.typeRoleRowSelected {
+	background: var(--ax-colors-bg-success-subtle);
+	border-color: var(--ax-colors-border-success);
+	box-shadow: inset 0 0 0 1px var(--ax-colors-border-success);
+}
+
+.typeRoleRowSelected::before {
+	background: var(--ax-colors-bg-success);
+	border-radius: var(--ax-borderRadius-full);
+	bottom: 0;
+	content: "";
+	left: -9px;
+	position: absolute;
+	top: 0;
+	width: 3px;
+}
+
+.addCustomRoleButton {
+	border: 1px dashed var(--ax-colors-border-success);
+	color: var(--ax-colors-fg-success);
+	min-height: 52px;
+	width: 100%;
+}
+
+.manageTypeRightRail {
+	--manage-type-rail-border-left: 1px solid var(--ax-colors-border-tertiary);
+	--manage-type-rail-border-top: 0;
+	--manage-type-rail-padding-left: 32px;
+	--manage-type-rail-padding-top: 0;
+
+	border-left: var(--manage-type-rail-border-left);
+	border-top: var(--manage-type-rail-border-top);
+	padding-left: var(--manage-type-rail-padding-left);
+	padding-top: var(--manage-type-rail-padding-top);
+}
+
+.rolePreviewCard {
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: var(--ax-borderRadius-lg);
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 20px;
+}
+
+.rolePreviewDisplay {
+	font-size: 34px;
+	letter-spacing: 0;
+	line-height: 1.08;
+	max-width: 420px;
+}
+
+.rolePreviewSamples {
+	--role-preview-samples-columns: minmax(0, 1fr) minmax(0, 1fr);
+
+	grid-template-columns: var(--role-preview-samples-columns);
+}
+
+.aiGuidanceCard {
+	background: var(--ax-colors-bg-secondary);
+	border-radius: var(--ax-borderRadius-lg);
+	padding: 16px;
+}
+
+.manageTypeFooter {
+	justify-content: space-between;
+	min-height: 94px;
+	padding-inline: 32px;
+}
+
+.manageTypeFooterActions {
+	justify-content: flex-end;
+}
+
+@container (max-width: 820px) {
+	.heroSpecimen {
+		grid-template-columns: 1fr;
+	}
+
+	.heroControls {
+		justify-content: flex-start;
+		order: 2;
+	}
+
+	.heroSide {
+		justify-content: flex-start !important;
+	}
+
+	.heroDisplay {
+		align-items: flex-start;
+		order: 1;
+	}
+
+	.specimenLetters {
+		font-size: 118px;
+	}
+
+	.alphabetSample {
+		white-space: normal;
+	}
+
+	.libraryLayout {
+		grid-template-columns: 1fr;
+	}
+
+	.addTypefaceBody > div {
+		grid-template-columns: 1fr !important;
+	}
+
+	.addTypefaceRightRail {
+		border-left: 0;
+		border-top: 1px solid var(--ax-colors-border-tertiary);
+		padding-left: 0;
+		padding-top: 24px;
+	}
+
+	.manageTypeGrid {
+		--manage-type-grid-columns: 1fr;
+	}
+
+	.manageTypeRightRail {
+		--manage-type-rail-border-left: 0;
+		--manage-type-rail-border-top: 1px solid var(--ax-colors-border-tertiary);
+		--manage-type-rail-padding-left: 0;
+		--manage-type-rail-padding-top: 24px;
+	}
+
+}
+
+@container (max-width: 620px) {
+	.familyName {
+		font-size: 56px;
+	}
+
+	.pangram {
+		font-size: 24px;
+		max-width: none;
+	}
+
+	.typefaceRow {
+		grid-template-columns: 88px minmax(0, 1fr);
+	}
+
+	.typefacePreview,
+	.typefaceAction {
+		grid-column: 1 / -1;
+	}
+
+	.typefaceAction {
+		justify-content: flex-start;
+	}
+
+	.sourceGrid {
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	}
+
+	.usedForGrid,
+	.rolePreviewSamples {
+		--role-preview-samples-columns: 1fr;
+
+		grid-template-columns: 1fr !important;
+	}
+
+	.typeRoleRow {
+		--type-role-row-columns: 40px minmax(0, 1fr);
+		--type-role-row-padding: 14px;
+	}
+
+	.typeRoleRow > :last-child {
+		grid-column: 1 / -1;
+	}
+
+	.rolePreviewDisplay {
+		font-size: 34px;
+	}
+
+	.manageTypeFooter {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+}
+
+@container (max-width: 430px) {
+	.sourceGrid {
+		grid-template-columns: 1fr !important;
+	}
+
+	.addTypefaceFooter,
+	.manageTypeFooter {
+		align-items: stretch;
+		flex-direction: column;
+	}
+}
+
+@media (max-width: 430px) {
+	.addTypefaceFooter,
+	.manageTypeFooter {
+		align-items: stretch;
+		flex-direction: column;
+		gap: 12px;
+		min-height: auto;
+		padding-block: 16px;
+		padding-inline: 24px;
+	}
+
+	.manageTypeFooterActions {
+		align-items: stretch;
+		flex-direction: column;
+		width: 100%;
+	}
+}
