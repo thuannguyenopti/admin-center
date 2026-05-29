@@ -107,7 +107,7 @@ export const MARATHON_EVENT_OUTLINE: Outline = {
 		"ele-marathon-hero": {
 			type: "ct-hero",
 			properties: {
-				heading: "Set it. Sweat it. Sign up now!",
+				heading: "Set it. Sweat it.\nSign up now!",
 				subheading: "Boston Marathon 2027.",
 				primaryButton: "SIGN UP NOW",
 				secondaryButton: "",
