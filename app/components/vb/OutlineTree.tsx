@@ -9,6 +9,7 @@ import Row from "./Row";
 import Col from "./Col";
 import Ele, {EleMap} from "./Ele";
 import {getProperty, isImageDrag, isInternalDrag, VB_INTERNAL_MIME} from "./blocks/utils";
+import {getPreviewLabel} from "./blocks/previewLabel";
 import {BLOCK_SCHEMAS} from "./blocks/schemas";
 import {initialPages} from "@/app/db/initialData";
 
@@ -1113,65 +1114,11 @@ export default function OutlineTree({
 																									element
 																								}
 																								label={
-																									getProperty(
-																										theEles[
-																											element
-																												.id
-																										]
-																											?.properties,
-																										"text",
-																										"Text"
-																									) ||
-																									getProperty(
-																										theEles[
-																											element
-																												.id
-																										]
-																											?.properties,
-																										"label",
-																										"Label"
-																									) ||
-																									getProperty(
-																										theEles[
-																											element
-																												.id
-																										]
-																											?.properties,
-																										"name",
-																										"Name"
-																									) ||
-																									getProperty(
-																										theEles[
-																											element
-																												.id
-																										]
-																											?.properties,
-																										"alt",
-																										"Alt Text"
-																									) ||
-																									getImageNameFromUrl(
-																										getProperty(
-																											theEles[
-																												element
-																													.id
-																											]
-																												?.properties,
-																											"image",
-																											"Image"
-																										)
-																									) ||
-																									extractPlainText(
-																										getProperty(
-																											theEles[
-																												element
-																													.id
-																											]
-																												?.properties,
-																											"richtext",
-																											"Rich Text"
-																										)
-																									) ||
-																									undefined
+																									getPreviewLabel(theEles[element.id]?.properties) ||
+																									getImageNameFromUrl(getProperty(theEles[element.id]?.properties, "appImage", "App Image")) ||
+																									getImageNameFromUrl(getProperty(theEles[element.id]?.properties, "image", "Image")) ||
+																									extractPlainText(getProperty(theEles[element.id]?.properties, "richtext", "Rich Text")) ||
+																									""
 																								}
 																								setCurrentEle={
 																									setCurrentEle
