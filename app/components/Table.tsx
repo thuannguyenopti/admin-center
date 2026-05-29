@@ -106,7 +106,7 @@ export const Th = ({
 				}}
 				onClick={onSort || onClick}
 			>
-					<Text fontFamily="mono" fontSize="sm" textTransform="uppercase" color="fg.tertiary" fontWeight="400" className="inline-flex items-center gap-1 min-h-[14px]">
+					<Box fontFamily="mono" fontSize="sm" textTransform="uppercase" color="fg.tertiary" fontWeight="400" className="inline-flex items-center gap-1 min-h-[14px]">
 						{children}
 						{onSort &&
 							(sortDirection === "asc" ? (
@@ -123,7 +123,7 @@ export const Th = ({
 								</span>
 							</Tooltip>
 						)}
-					</Text>
+					</Box>
 			</th>
 		</Box>
 	);

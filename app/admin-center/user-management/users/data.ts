@@ -50,6 +50,15 @@ export const ROLES = [
 	"Owner",
 ] as const;
 
+export const GROUPS = [
+	"Engineering",
+	"Marketing",
+	"Sales",
+	"Customer Success",
+	"Product",
+	"Operations",
+] as const;
+
 export const USER_TYPES: UserType[] = ["Local", "SSO"];
 
 export const ACTIVATION_STATUSES: ActivationStatus[] = [

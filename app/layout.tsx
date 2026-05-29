@@ -14,6 +14,7 @@ import {SnowEffect} from "@/app/components/effects/SnowEffect";
 import {NewYearEffect} from "@/app/components/effects/NewYearEffect";
 import {HydrationErrorSuppressor} from "@/app/components/HydrationErrorSuppressor";
 import {MigrationRunner} from "@/app/components/MigrationRunner";
+import { AdminCenterIcons } from "./admin-center/admin-center-icons";
 import {
 	IconGrid2,
 	IconChartColumn,
@@ -688,41 +689,44 @@ export default function RootLayout({
 				label: "Dashboard",
 				highlight: "admin-center/dashboard",
 				url: "/admin-center/dashboard",
-				icon: <IconGauge />,
+				icon: <AdminCenterIcons.Dashboard />,
 				hidePageHeader: true,
 			},
 			{
 				label: "User Management",
 				highlight: "admin-center/user-management",
 				url: "/admin-center/user-management/users",
-				icon: <IconUserGroup />,
+				icon: <AdminCenterIcons.UserManagement	 />,
 				hidePageHeader: true,
 				children: [
 					{label: "Users", url: "/admin-center/user-management/users", icon: <IconUser />},
-					{label: "Virtual Teammates", url: "/admin-center/user-management/agents", icon: <IconRobot />},
-					{label: "Teams", url: "/admin-center/user-management/teams", icon: <IconPeopleSimple />},
-					{label: "Groups", url: "/admin-center/user-management/groups", icon: <IconUserGroup />},
+					{label: "Virtual Teammates", url: "/admin-center/user-management/agents", icon: <AdminCenterIcons.VirtualTeammates />},
+					{label: "Teams", url: "/admin-center/user-management/teams", icon: <AdminCenterIcons.Teams	/>, hidePageHeader: true},
+					{label: "Groups", url: "/admin-center/user-management/groups", icon: <AdminCenterIcons.Groups />, hidePageHeader: true},
 				],
 			},
 			{
 				label: "Access Setup",
 				highlight: "admin-center/access-setup",
 				url: "/admin-center/access-setup/product-access",
-				icon: <IconFlag />,
+				icon: <AdminCenterIcons.AccessSetup />,
 				children: [
-					{label: "Product Access", url: "/admin-center/access-setup/product-access", icon: <IconGrid />},
-					{label: "Roles", url: "/admin-center/access-setup/roles", icon: <IconShieldCheck />},
+					{label: "Product Access", url: "/admin-center/access-setup/product-access", icon: <AdminCenterIcons.ProductAccess />},
+					{label: "Roles", url: "/admin-center/access-setup/roles", icon: <AdminCenterIcons.Roles />},
 				],
 			},
 			{
 				label: "Settings",
 				highlight: "admin-center/settings",
 				url: "/admin-center/settings/usage-billing",
-				icon: <IconGear />,
+				icon: <AdminCenterIcons.Settings />,
 				children: [
-					{label: "Usage & Billing", url: "/admin-center/settings/usage-billing", icon: <IconCircleDollar />},
-					{label: "Activity log", url: "/admin-center/settings/activity-log", icon: <IconClockRotateLeft />},
-					{label: "Settings", url: "/admin-center/settings/settings", icon: <IconGear />},
+					{label: "Usage & Billing", url: "/admin-center/settings/usage-billing", icon: <AdminCenterIcons.UsageBilling />},
+					{label: "Activity log", url: "/admin-center/settings/activity-log", icon: <AdminCenterIcons.ActivityLog />},
+					{label: "Organization", url: "/admin-center/settings/organization", icon: <AdminCenterIcons.Organization />},
+					{label: "Notifications", url: "/admin-center/settings/notification", icon: <AdminCenterIcons.Notifications />},
+					{label: "Authentication", url: "/admin-center/settings/authentication", icon: <AdminCenterIcons.Authentication />},
+					{label: "Opal AI", url: "/admin-center/settings/opal-ai", icon: <AdminCenterIcons.OpalAI />},
 				],
 			},
 			{
