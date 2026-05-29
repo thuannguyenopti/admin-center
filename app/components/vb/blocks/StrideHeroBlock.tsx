@@ -100,7 +100,8 @@ export const HeroBlock = React.memo(function StrideHeroBlock({
 				</div>
 
 				{/* Content */}
-				<div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 pt-[200px] pb-20">
+				<div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 pt-[120px] pb-20 flex items-end gap-12">
+				<div className="flex-1">
 					{badge && (
 						<div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-1.5 rounded-[5px] border border-white/20 mb-4">
 							<span className="text-white text-xs font-stride-semibold font-stride-sans uppercase tracking-wider">{badge}</span>
@@ -121,6 +122,16 @@ export const HeroBlock = React.memo(function StrideHeroBlock({
 							</button>
 						</div>
 					)}
+				</div>
+				{appMockupImage && (
+					<div className="hidden md:block flex-shrink-0">
+						<img
+							src={appMockupImage}
+							alt=""
+							className="w-[200px] lg:w-[280px] drop-shadow-lg"
+						/>
+					</div>
+				)}
 				</div>
 			</div>
 		);
