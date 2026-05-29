@@ -112,8 +112,8 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 	const checks: CheckItem[] = [
 		{
 			id: "colours",
-			label: "Colour palette defined",
-			description: `${pack.colors.length} colour${pack.colors.length !== 1 ? "s" : ""} configured`,
+			label: "Color palette defined",
+			description: `${pack.colors.length} color${pack.colors.length !== 1 ? "s" : ""} configured`,
 			passed: hasColors,
 			blocking: true,
 		},
@@ -311,7 +311,7 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 						<Box>
 							<Button
 								appearance={canPublish ? "primary" : "default"}
-								size="sm"
+								size="md"
 								onClick={() => canPublish && setPublished(true)}
 								style={{ opacity: canPublish ? 1 : 0.5, cursor: canPublish ? "pointer" : "default" }}
 							>

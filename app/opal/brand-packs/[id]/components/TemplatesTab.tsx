@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, Text } from "@optiaxiom/react";
+import { Badge, Box, Button, Text } from "@optiaxiom/react";
 import { IconGrid2, IconListUl, IconCopy, IconBolt } from "@optimizely/axiom-icons";
 import { useLayout } from "@/app/context/LayoutContext";
 import type { BrandPack, BrandTemplate } from "../../types";
@@ -234,82 +234,77 @@ export function TemplatesTab({ pack }: TemplatesTabProps) {
 		: pack.templates.filter((t) => t.channel === filterChannel);
 
 	return (
-		<Box display="flex" flexDirection="column" gap="20">
-			{/* Toolbar */}
+		<Box display="flex" flexDirection="column" gap="16">
+			{pack.templates[0] && (
+				<Box
+					bg="bg.default"
+					border="1"
+					borderColor="border.tertiary"
+					display="grid"
+					gap="24"
+					p="32"
+					rounded="xl"
+					shadow="sm"
+					style={{ gridTemplateColumns: "minmax(260px, 0.72fr) minmax(0, 1.28fr)" }}
+				>
+					<Box display="flex" flexDirection="column" gap="16">
+						<Badge intent="success" variant="subtle" style={{ width: "fit-content" }}>Template library</Badge>
+						<Text fontWeight="700" style={{ fontSize: 32, letterSpacing: 0, lineHeight: 1.1 }}>
+							Approved formats, ready to generate.
+						</Text>
+						<Text color="fg.secondary" fontSize="md" style={{ lineHeight: 1.55, maxWidth: 420 }}>
+							Browse the highest-signal layouts by channel and use the right format as the starting point for Opal.
+						</Text>
+						<Box display="flex" gap="6" style={{ flexWrap: "wrap" }}>
+							{channels.slice(1, 5).map((channel) => (
+								<Badge key={channel} intent="neutral" variant="subtle">{channel}</Badge>
+							))}
+						</Box>
+					</Box>
+					<Box display="grid" gap="12" style={{ gridTemplateColumns: "1.1fr 0.9fr 0.9fr" }}>
+						{pack.templates.slice(0, 3).map((template) => (
+							<Box key={template.id} overflow="hidden" rounded="lg" style={{ minHeight: 188 }}>
+								<img alt={template.name} src={template.thumb} style={{ height: "100%", objectFit: "cover", width: "100%" }} />
+							</Box>
+						))}
+					</Box>
+				</Box>
+			)}
+
 			<Box alignItems="center" display="flex" gap="16" justifyContent="space-between" style={{ flexWrap: "wrap" }}>
-				{/* Channel filter tabs */}
-				<Box alignItems="center" display="flex" gap="0" style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
+				<Box alignItems="center" display="flex" gap="6" style={{ flexWrap: "wrap" }}>
 					{channels.map((ch) => (
-						<button
+						<Button
 							key={ch}
-							type="button"
 							onClick={() => setFilterChannel(ch)}
-							style={{
-								background: "transparent",
-								border: 0,
-								borderBottom: `2px solid ${filterChannel === ch ? "var(--ax-colors-fg-default)" : "transparent"}`,
-								color: filterChannel === ch ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)",
-								cursor: "pointer",
-								fontSize: 13,
-								fontWeight: filterChannel === ch ? 600 : 400,
-								marginBottom: -1,
-								padding: "6px 14px",
-								transition: "color 0.15s ease, border-color 0.15s ease",
-								whiteSpace: "nowrap",
-							}}
+							appearance={filterChannel === ch ? "default" : "subtle"}
+							size="sm"
 						>
 							{ch}
 							{ch !== "All" && (
-								<span style={{
-									background: "var(--ax-colors-bg-secondary)",
-									borderRadius: 999,
-									color: "var(--ax-colors-fg-tertiary)",
-									fontSize: 11,
-									fontWeight: 600,
-									marginLeft: 5,
-									padding: "1px 5px",
-								}}>
+								<Badge intent="neutral" variant="subtle">
 									{pack.templates.filter((t) => t.channel === ch).length}
-								</span>
+								</Badge>
 							)}
-						</button>
+						</Button>
 					))}
 				</Box>
 
-				{/* View toggle + count */}
 				<Box alignItems="center" display="flex" gap="12">
 					<Text color="fg.tertiary" fontSize="xs">
 						{visible.length} template{visible.length !== 1 ? "s" : ""}
 					</Text>
-					<Box
-						alignItems="center"
-						bg="bg.secondary"
-						display="inline-flex"
-						gap="2"
-						p="2"
-						rounded="full"
-					>
+					<Box alignItems="center" display="flex" gap="6">
 						{(["grid", "list"] as ViewMode[]).map((v) => (
-							<button
+							<Button
 								key={v}
-								type="button"
 								onClick={() => setView(v)}
-								style={{
-									alignItems: "center",
-									background: view === v ? "var(--ax-colors-bg-default)" : "transparent",
-									border: 0,
-									borderRadius: 999,
-									color: view === v ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)",
-									cursor: "pointer",
-									display: "flex",
-									gap: 6,
-									padding: "4px 10px",
-									transition: "all 0.15s ease",
-								}}
+								appearance={view === v ? "default" : "subtle"}
+								icon={v === "grid" ? <IconGrid2 size={14} /> : <IconListUl size={14} />}
+								size="sm"
 							>
-								{v === "grid" ? <IconGrid2 size={14} /> : <IconListUl size={14} />}
-								<span style={{ fontSize: 13 }}>{v === "grid" ? "Grid" : "List"}</span>
-							</button>
+								{v === "grid" ? "Grid" : "List"}
+							</Button>
 						))}
 					</Box>
 				</Box>

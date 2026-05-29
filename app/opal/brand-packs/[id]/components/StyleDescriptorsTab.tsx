@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Box, Button, Text } from "@optiaxiom/react";
-import { IconCheck } from "@optimizely/axiom-icons";
+import { Badge, Box, Button, Input, Text } from "@optiaxiom/react";
+import { IconCheck, IconPlus, IconXmark } from "@optimizely/axiom-icons";
 
 type DescriptorGroup = {
 	id: string;
@@ -20,8 +20,8 @@ const INITIAL_GROUPS: DescriptorGroup[] = [
 	},
 	{
 		id: "colour-mood",
-		label: "Colour Mood",
-		hint: "Emotional qualities the colour palette conveys",
+		label: "Color Mood",
+		hint: "Emotional qualities the color palette conveys",
 		items: ["Vibrant", "Natural", "High energy"],
 	},
 	{
@@ -46,41 +46,17 @@ function Chip({
 	onRemove: () => void;
 }) {
 	return (
-		<Box
-			alignItems="center"
-			bg="bg.accent.subtle"
-			display="inline-flex"
-			gap="6"
-			rounded="full"
-			style={{ padding: "5px 10px 5px 12px" }}
-		>
-			<Text color="fg.accent" fontWeight="500" style={{ fontSize: 13 }}>
+		<Box alignItems="center" display="inline-flex" gap="4">
+			<Badge intent="success" variant="subtle" style={{ width: "fit-content", whiteSpace: "nowrap" }}>
 				{label}
-			</Text>
-			<button
-				type="button"
+			</Badge>
+			<Button
+				appearance="subtle"
 				onClick={onRemove}
 				aria-label={`Remove ${label}`}
-				style={{
-					alignItems: "center",
-					background: "transparent",
-					border: 0,
-					borderRadius: "50%",
-					color: "var(--ax-colors-fg-accent)",
-					cursor: "pointer",
-					display: "flex",
-					fontSize: 14,
-					fontWeight: 300,
-					lineHeight: 1,
-					opacity: 0.6,
-					padding: 0,
-					transition: "opacity 0.12s",
-				}}
-				onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
-				onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.6"; }}
-			>
-				×
-			</button>
+				icon={<IconXmark />}
+				size="sm"
+			/>
 		</Box>
 	);
 }
@@ -139,30 +115,18 @@ function DescriptorSection({
 
 			{/* Add input */}
 			<Box alignItems="center" display="flex" gap="8">
-				<input
+				<Input
 					ref={inputRef}
 					value={draft}
 					onChange={(e) => setDraft(e.target.value)}
 					placeholder={`Add to ${group.label.toLowerCase()}…`}
 					onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
-					style={{
-						background: "var(--ax-colors-bg-secondary)",
-						border: "1px solid var(--ax-colors-border-default)",
-						borderRadius: 6,
-						color: "var(--ax-colors-fg-default)",
-						flex: 1,
-						fontFamily: "inherit",
-						fontSize: 13,
-						outline: "none",
-						padding: "6px 10px",
-						transition: "border-color 0.15s",
-					}}
-					onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)"; }}
-					onBlur={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-default)"; }}
+					style={{ flex: 1 }}
 				/>
 				<Button
-					appearance="subtle"
-					size="sm"
+					appearance="default"
+					icon={<IconPlus />}
+					size="md"
 					onClick={add}
 					style={{ flexShrink: 0 }}
 				>
@@ -202,7 +166,7 @@ export function StyleDescriptorsTab() {
 			<Box display="flex" justifyContent="end">
 				<Button
 					appearance="primary"
-					size="sm"
+					size="md"
 					icon={saved ? <IconCheck /> : undefined}
 					onClick={save}
 				>

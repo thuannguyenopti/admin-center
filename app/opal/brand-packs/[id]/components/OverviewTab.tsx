@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Button, Text } from "@optiaxiom/react";
+import { Badge, Box, Button, Text } from "@optiaxiom/react";
 import { IconPenToSquare as IconEdit } from "@optimizely/axiom-icons";
 import { ColorPalette } from "../../components/ColorSwatchBar";
 import type { BrandPack } from "../../types";
@@ -24,12 +24,14 @@ type OverviewTabProps = {
 function Tile({
 	children,
 	description,
+	featured = false,
 	metric,
 	onSelect,
 	title,
 }: {
 	children: React.ReactNode;
 	description: string;
+	featured?: boolean;
 	metric?: string;
 	onSelect: () => void;
 	title: string;
@@ -43,12 +45,12 @@ function Tile({
 			flexDirection="column"
 			gap="16"
 			onClick={onSelect}
-			p="20"
+			p={featured ? "24" : "20"}
 			rounded="xl"
-			shadow="sm"
+			shadow={featured ? "sm" : undefined}
 			style={{
 				cursor: "pointer",
-				minHeight: 220,
+				minHeight: featured ? 240 : 212,
 				transition: "box-shadow 0.18s ease, transform 0.18s ease",
 			}}
 			onMouseEnter={(event) => {
@@ -94,11 +96,9 @@ function Tile({
 
 function SmallPill({ children }: { children: React.ReactNode }) {
 	return (
-		<Box bg="bg.secondary" rounded="full" style={{ padding: "4px 10px" }}>
-			<Text color="fg.secondary" fontSize="xs" fontWeight="500">
-				{children}
-			</Text>
-		</Box>
+		<Badge intent="neutral" variant="subtle" style={{ whiteSpace: "nowrap", width: "fit-content" }}>
+			{children}
+		</Badge>
 	);
 }
 
@@ -118,9 +118,9 @@ export function OverviewTab({ pack, onSelectTab }: OverviewTabProps) {
 			style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}
 		>
 			<Tile
-				title="Colours"
+				title="Colors"
 				description="Palette roles, hex values, and brand-safe color usage."
-				metric={`${pack.colors.length} colours`}
+				metric={`${pack.colors.length} colors`}
 				onSelect={() => onSelectTab("colours")}
 			>
 				<ColorPalette colors={pack.colors} size="lg" />
@@ -134,16 +134,27 @@ export function OverviewTab({ pack, onSelectTab }: OverviewTabProps) {
 			<Tile
 				title="Typography"
 				description="Typeface roles and weights for generated assets."
+				featured
 				metric={`${pack.typography.heading} heading`}
 				onSelect={() => onSelectTab("typography")}
 			>
-				<Text fontWeight="700" style={{ fontSize: 34, lineHeight: 1 }}>
-					{pack.typography.heading}
-				</Text>
-				<Text color="fg.secondary" fontSize="sm">
-					Body: {pack.typography.body}
-					{pack.typography.mono ? ` · Mono: ${pack.typography.mono}` : ""}
-				</Text>
+				<Box alignItems="end" display="grid" gap="16" style={{ gridTemplateColumns: "minmax(0, 1fr) 120px" }}>
+					<Box display="flex" flexDirection="column" gap="8">
+						<Text fontWeight="700" style={{ fontSize: 42, letterSpacing: 0, lineHeight: 1 }}>
+							{pack.typography.heading}
+						</Text>
+						<Text fontWeight="600" style={{ fontSize: 20, lineHeight: 1.25 }}>
+							The quick brown fox jumps over the lazy dog.
+						</Text>
+						<Text color="fg.secondary" fontSize="sm">
+							Body: {pack.typography.body}
+							{pack.typography.mono ? ` · Mono: ${pack.typography.mono}` : ""}
+						</Text>
+					</Box>
+					<Text color="fg.secondary" style={{ fontSize: 74, fontWeight: 700, letterSpacing: 0, lineHeight: 0.8 }}>
+						Aa
+					</Text>
+				</Box>
 			</Tile>
 
 			<Tile
@@ -191,7 +202,7 @@ export function OverviewTab({ pack, onSelectTab }: OverviewTabProps) {
 				onSelect={() => onSelectTab("descriptors")}
 			>
 				<Box display="flex" gap="6" style={{ flexWrap: "wrap" }}>
-					{["Photography", "Colour mood", "Composition", "Do not use"].map((label) => (
+					{["Photography", "Color mood", "Composition", "Do not use"].map((label) => (
 						<SmallPill key={label}>{label}</SmallPill>
 					))}
 				</Box>
@@ -213,12 +224,13 @@ export function OverviewTab({ pack, onSelectTab }: OverviewTabProps) {
 			<Tile
 				title="Templates"
 				description="Approved formats for social, email, paid, and web."
+				featured
 				metric={`${pack.templateCount} templates`}
 				onSelect={() => onSelectTab("templates")}
 			>
 				<Box display="flex" gap="8">
 					{pack.templates.slice(0, 3).map((template) => (
-						<Box key={template.id} rounded="lg" style={{ height: 72, overflow: "hidden", width: 96 }}>
+						<Box key={template.id} rounded="lg" style={{ flex: 1, height: 104, overflow: "hidden" }}>
 							<img alt={template.name} src={template.thumb} style={{ height: "100%", objectFit: "cover", width: "100%" }} />
 						</Box>
 					))}
@@ -243,7 +255,7 @@ export function OverviewTab({ pack, onSelectTab }: OverviewTabProps) {
 				onSelect={() => onSelectTab("publish")}
 			>
 				<Box display="flex" flexDirection="column" gap="8">
-					{["Colours", "Typography", "Tone", "Assets"].map((label) => (
+					{["Colors", "Typography", "Tone", "Assets"].map((label) => (
 						<Box key={label} alignItems="center" display="flex" gap="8">
 							<Box bg="bg.success.subtle" rounded="full" style={{ height: 8, width: 8 }} />
 							<Text color="fg.secondary" fontSize="sm">{label} configured</Text>

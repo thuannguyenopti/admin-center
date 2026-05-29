@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, Text } from "@optiaxiom/react";
+import { Badge, Box, Button, Text, Textarea } from "@optiaxiom/react";
 import {
 	IconPenToSquare as IconEdit,
 	IconCheck,
@@ -334,23 +334,11 @@ export function BrandBriefTab({ pack }: BrandBriefTabProps) {
 				</Box>
 
 				{isEditing ? (
-					<textarea
+					<Textarea
 						value={briefText}
 						onChange={(e) => setBriefText(e.target.value)}
 						rows={8}
-						style={{
-							background: "var(--ax-colors-bg-secondary)",
-							border: "1.5px solid var(--ax-colors-border-accent)",
-							borderRadius: 10,
-							color: "var(--ax-colors-fg-default)",
-							fontFamily: "inherit",
-							fontSize: 14,
-							lineHeight: 1.6,
-							outline: "none",
-							padding: "12px 16px",
-							resize: "vertical",
-							width: "100%",
-						}}
+						style={{ lineHeight: 1.6 }}
 					/>
 				) : (
 					<Text color="fg.secondary" fontSize="sm" style={{ lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
@@ -364,11 +352,9 @@ export function BrandBriefTab({ pack }: BrandBriefTabProps) {
 				<Box display="flex" flexDirection="column" gap="12">
 					<Box display="flex" gap="8" style={{ flexWrap: "wrap" }}>
 						{pack.toneKeywords.map((kw) => (
-							<Box key={kw} bg="bg.accent.subtle" rounded="full" style={{ padding: "6px 14px" }}>
-								<Text color="fg.accent" fontWeight="500" style={{ fontSize: 13 }}>
-									{kw}
-								</Text>
-							</Box>
+							<Badge key={kw} intent="success" variant="subtle" style={{ width: "fit-content", whiteSpace: "nowrap" }}>
+								{kw}
+							</Badge>
 						))}
 					</Box>
 					<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)" }} />

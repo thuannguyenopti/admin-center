@@ -3,7 +3,7 @@
 import { use } from "react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Box, Button, Input, Switch, Tabs, TabsList, TabsTrigger, Text } from "@optiaxiom/react";
+import { Badge, Box, Button, Input, Switch, Tabs, TabsList, TabsTrigger, Text } from "@optiaxiom/react";
 import { IconCheck, IconPenToSquare as IconEdit } from "@optimizely/axiom-icons";
 import { BrandPackPageHeader } from "../components/BrandPackPageHeader";
 import { StatusBadge } from "../components/StatusBadge";
@@ -18,6 +18,7 @@ import { ToneOfVoiceTab } from "./components/ToneOfVoiceTab";
 import { BrandBriefTab } from "./components/BrandBriefTab";
 import { TestPublishTab } from "./components/TestPublishTab";
 import { getBrandPackById } from "../data";
+import styles from "./BrandPackDetailPage.module.css";
 
 type Tab =
 	| "overview"
@@ -39,7 +40,7 @@ type TabDef = {
 
 const TAB_DEFS: TabDef[] = [
 	{ id: "overview",    label: "Overview" },
-	{ id: "colours",     label: "Colours",          count: (p) => p.colors.length },
+	{ id: "colours",     label: "Colors",           count: (p) => p.colors.length },
 	{ id: "typography",  label: "Typography" },
 	{ id: "logos",       label: "Logos",             count: (p) => p.assets.filter((a) => a.type === "logo").length },
 	{ id: "images",      label: "Images",            count: (p) => p.assets.filter((a) => a.type !== "logo").length },
@@ -89,16 +90,18 @@ export default function BrandPackDetailPage({ params }: PageProps) {
 
 	return (
 		<Box
+			className={styles.detailPage}
 			display="flex"
 			flexDirection="column"
 			h="full"
 			overflow="auto"
-			style={{ padding: "32px 40px 64px" }}
+			pb="64"
+			pt="0"
 		>
 			<Box
 				display="flex"
 				flexDirection="column"
-				gap="24"
+				gap="16"
 				style={{ margin: "0 auto", maxWidth: 1240, width: "100%" }}
 			>
 				<BrandPackPageHeader
@@ -131,19 +134,10 @@ export default function BrandPackDetailPage({ params }: PageProps) {
 								</Box>
 							)}
 							{isActive ? (
-								<Box
-									alignItems="center"
-									bg="bg.success.subtle"
-									display="inline-flex"
-									gap="4"
-									rounded="full"
-									style={{ padding: "2px 10px" }}
-								>
+								<Badge intent="success" variant="subtle">
 									<IconCheck size={10} style={{ color: "var(--ax-colors-fg-success)" }} />
-									<Text color="fg.success" style={{ fontSize: 11, fontWeight: 600 }}>
-										ACTIVE
-									</Text>
-								</Box>
+									Active
+								</Badge>
 							) : (
 								<StatusBadge status={pack.status === "active" ? "published" : pack.status} />
 							)}
@@ -159,7 +153,7 @@ export default function BrandPackDetailPage({ params }: PageProps) {
 				/>
 
 				<Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as Tab)}>
-					<TabsList style={{ maxWidth: "100%", overflowX: "auto" }}>
+					<TabsList className={styles.tabsList} style={{ maxWidth: "100%" }}>
 						{TAB_DEFS.map((tab) => {
 							const count = tab.count?.(pack);
 							return (
@@ -167,15 +161,7 @@ export default function BrandPackDetailPage({ params }: PageProps) {
 									<Box alignItems="center" display="flex" gap="6">
 										{tab.label}
 										{count !== undefined && (
-											<Box
-												bg="bg.secondary"
-												rounded="full"
-												style={{ padding: "1px 6px" }}
-											>
-												<Text color="fg.tertiary" fontSize="xs" fontWeight="600">
-													{count}
-												</Text>
-											</Box>
+											<Badge intent="neutral" variant="subtle">{count}</Badge>
 										)}
 									</Box>
 								</TabsTrigger>
@@ -184,7 +170,6 @@ export default function BrandPackDetailPage({ params }: PageProps) {
 					</TabsList>
 				</Tabs>
 
-				{/* Tab content */}
 				<Box>
 					{activeTab === "overview"    && <OverviewTab pack={pack} onSelectTab={setActiveTab} />}
 					{activeTab === "colours"     && <ColoursTab pack={pack} />}

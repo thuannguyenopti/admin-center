@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Box, Button, Input, Text, Textarea } from "@optiaxiom/react";
+import { Badge, Box, Button, Input, Text, Textarea } from "@optiaxiom/react";
 import { IconCheck, IconPlus, IconXmark } from "@optimizely/axiom-icons";
 import type { BrandPack } from "../../types";
 
@@ -18,8 +18,10 @@ const INITIAL_RULES = [
 
 function TonePill({ label, onRemove }: { label: string; onRemove: () => void }) {
 	return (
-		<Box alignItems="center" bg="bg.accent.subtle" display="inline-flex" gap="6" rounded="full" style={{ padding: "4px 6px 4px 12px" }}>
-			<Text color="fg.accent" fontSize="sm" fontWeight="500">{label}</Text>
+		<Box alignItems="center" display="inline-flex" gap="4">
+			<Badge intent="success" variant="subtle" style={{ width: "fit-content", whiteSpace: "nowrap" }}>
+				{label}
+			</Badge>
 			<Button appearance="subtle" aria-label={`Remove ${label}`} icon={<IconXmark />} onClick={onRemove} size="sm" />
 		</Box>
 	);
@@ -148,9 +150,9 @@ export function ToneOfVoiceTab({ pack }: ToneOfVoiceTabProps) {
 				>
 					<Box display="flex" gap="6" style={{ flexWrap: "wrap" }}>
 						{pack.channels.map((channel) => (
-							<Box key={channel} bg="bg.secondary" rounded="full" style={{ padding: "5px 12px" }}>
-								<Text color="fg.secondary" fontSize="xs" fontWeight="500">{channel}</Text>
-							</Box>
+							<Badge key={channel} intent="neutral" variant="subtle" style={{ width: "fit-content", whiteSpace: "nowrap" }}>
+								{channel}
+							</Badge>
 						))}
 					</Box>
 				</SectionCard>
