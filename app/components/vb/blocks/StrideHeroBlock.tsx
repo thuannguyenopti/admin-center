@@ -3,6 +3,13 @@
 import React from "react";
 import { getProperty } from "./utils";
 
+function renderMultiline(text: string) {
+	if (!text || !text.includes("\n")) return text;
+	return text.split("\n").map((line, i, arr) => (
+		<React.Fragment key={i}>{line}{i < arr.length - 1 && <br />}</React.Fragment>
+	));
+}
+
 export const HeroBlock = React.memo(function StrideHeroBlock({
 	properties,
 	hasBgImage
@@ -74,7 +81,7 @@ export const HeroBlock = React.memo(function StrideHeroBlock({
 					)}
 
 					<h1 className="text-7xl font-stride-bold font-stride-sans tracking-tight text-stride-dark mx-auto mb-6">
-						{heading}
+						{renderMultiline(heading)}
 					</h1>
 
 					<p className="text-xl font-stride-normal font-stride-sans leading-relaxed text-stride-dark mx-auto max-w-[800px]">
@@ -108,7 +115,7 @@ export const HeroBlock = React.memo(function StrideHeroBlock({
 						</div>
 					)}
 					<h1 className="text-5xl md:text-7xl font-stride-bold font-stride-sans tracking-tight text-white pb-4 max-w-3xl">
-						{heading}
+						{renderMultiline(heading)}
 					</h1>
 					{subheading && (
 						<p className="text-xl md:text-2xl font-stride-sans text-white/80 max-w-2xl mb-8">
@@ -173,7 +180,7 @@ export const HeroBlock = React.memo(function StrideHeroBlock({
 							</div>
 						)}
 						<h1 className="text-7xl font-stride-bold font-stride-sans tracking-tight text-stride-dark pb-4">
-							{heading}
+							{renderMultiline(heading)}
 						</h1>
 
 						<p className="text-2xl font-stride-semibold font-stride-sans text-stride-dark py-4">

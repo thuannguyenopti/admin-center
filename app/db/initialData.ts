@@ -732,7 +732,7 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Block",
 		description: "A text block",
 		properties: [
-			{ id: "text", name: "Text", displayName: "Text", type: "String", required: true, groupName: "Content", order: 1 },
+			{ id: "text", name: "Text", displayName: "Text", type: "LongString", required: true, groupName: "Content", order: 1 },
 			{
 				id: "template",
 				name: "Template",
@@ -810,7 +810,7 @@ export const initialContentTypes: ContentType[] = [
 				id: "heading",
 				name: "Heading",
 				displayName: "Heading",
-				type: "String",
+				type: "LongString",
 				required: true,
 				groupName: "Content",
 				order: 3,
@@ -849,7 +849,7 @@ export const initialContentTypes: ContentType[] = [
 				id: "heading",
 				name: "Heading",
 				displayName: "Heading",
-				type: "String",
+				type: "LongString",
 				required: true,
 				groupName: "Content",
 				order: 1,
