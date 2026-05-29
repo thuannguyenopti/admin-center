@@ -40,7 +40,18 @@ This is a **multi-product UI prototype** built with Next.js 16 (App Router), Rea
 
 ### Navigation & Layout
 
-**`app/layout.tsx`** is a client component that defines the entire sidebar navigation structure for each product as a `structure` object keyed by the first path segment. It passes the matching nav tree to `app/components/template.tsx`.
+**`app/layout.tsx`** is a thin shell. It imports each product's navigation module, assembles them into a `structure` object keyed by the first path segment, and passes the matching nav tree to `app/components/template.tsx`. **Do not edit `app/layout.tsx` to add or change nav items** — it is locked down via CODEOWNERS. Edit the per-product navigation file instead:
+
+| Product | File | Export | Notes |
+|---|---|---|---|
+| CMS | `app/cms/navigation.tsx` | `useCmsNav()` | Hook — reads algorithm / webhook / content-type detail IDs from the path and pulls dynamic sub-nav titles from `usePersistentState` |
+| CMP | `app/cmp/navigation.tsx` | `cmpNav` | Static const |
+| Opal | `app/opal/navigation.tsx` | `useOpalNav()` | Hook — listens to `im-layout-change` window events for IM layout A / B / C variants |
+| Connect Platform | `app/connect-platform/navigation.tsx` | `connectPlatformNav` | Static const |
+| FE Hosting | `app/fe-hosting/navigation.tsx` | `feHostingNav` | Static const |
+| Web Experimentation | `app/web-experimentation/navigation.tsx` | `webExperimentationNav` | Static const |
+
+Hook vs. const: export a hook (`useXxxNav()`) only when the nav needs hooks (path-detail substitution, persistent state, window events). Static product navs stay constants.
 
 **`app/components/template.tsx`** renders the shell: primary sidebar (`Sidebar`/`Nav`), optional secondary sidebar (VT drill-down or Content Manager sidebar), a scrollable main content area, an optional footer bar, and the Opal slide-out panel. Pages get `px="32" py="24"` padding and an auto-generated `<Heading>` page title by default.
 
@@ -64,7 +75,7 @@ For frontend/product UI work, also read **[.claude/skills/frontend-design.md](.c
 - `app/opal/` — uses **Axiom V3** (`@optiaxiom/react@3.0.0-next.0`) + Opal design layer (see `OPAL_DESIGN_SYSTEM.md`)
 - All other product areas — uses **Axiom V2** (`@optiaxiom/react@^1.9.1`)
 
-**`data-brand="v3"` is applied globally** (all routes) via a wrapper `<div>` in `app/layout.tsx`. V3 CSS tokens (`--ax-colors-bg-accent`, `--ax-colors-fg-accent`, etc.) and the lime-green palette are therefore active on every page in this branch — not just `/opal/*`. When working on CMS, CMP, or other non-Opal routes, expect V3 token values; do not add a local `data-brand="v3"` wrapper.
+**`data-brand="v3"` is applied to every route except `/site/*`** via the `<body>` and a wrapper `<div>` in `app/layout.tsx` (`brand = path.startsWith("/site") ? undefined : "v3"`). V3 CSS tokens (`--ax-colors-bg-accent`, `--ax-colors-fg-accent`, etc.) and the lime-green palette are therefore active on every product page — not just `/opal/*`. When working on CMS, CMP, or other non-Opal product routes, expect V3 token values; do not add a local `data-brand="v3"` wrapper. `/site/*` pages render without the v3 brand layer so they look like a real customer site.
 
 **Primary button text color** — V2 Axiom primary buttons in a `[data-brand="v3"]` context use `--v3iotm` to override the default white text with dark (`#202320`) text on the lime-green background. This is set in `app/globals.css` on the `[data-brand="v3"]` rule. Do not remove it.
 
@@ -106,7 +117,7 @@ For frontend/product UI work, also read **[.claude/skills/frontend-design.md](.c
 
 **When adding a new icon in `app/opal/`**: check `@optiaxiom/icons` first. If missing, fall back to `@optimizely/axiom-icons` (not Tabler).
 
-**Sub Agent icon placeholder** — the `Sub Agent` nav item (`app/layout.tsx`) and the agents type column (`app/opal/agents/page.tsx`) currently use `IconAgent` from `@optimizely/axiom-icons` as a temporary stand-in. The intended icon is the Material `web_traffic` icon (cursor with 3 radiating splash lines). Replace with the correct `@optiaxiom/icons` export once it is added to the package. Note: `IconSubAgent` in `@optimizely/axiom-icons` is a dashed-border box — do NOT use it for this.
+**Sub Agent icon placeholder** — the `Sub Agent` nav item (`app/opal/navigation.tsx`) and the agents type column (`app/opal/agents/page.tsx`) currently use `IconAgent` from `@optimizely/axiom-icons` as a temporary stand-in. The intended icon is the Material `web_traffic` icon (cursor with 3 radiating splash lines). Replace with the correct `@optiaxiom/icons` export once it is added to the package. Note: `IconSubAgent` in `@optimizely/axiom-icons` is a dashed-border box — do NOT use it for this.
 
 **When adding a new icon outside `app/opal/`**: check `@optimizely/axiom-icons` first. If missing, add a Tabler fallback entry to `app/lib/axiom-icons.tsx`.
 
