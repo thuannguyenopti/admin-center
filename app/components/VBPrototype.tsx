@@ -440,11 +440,10 @@ export default function VBPrototype({
 		).length;
 	}, [initialData?.contentTypeId, onConnectContent, cmpContentInstances, persistentContentTypes]);
 
-	const [preview, setPreview] = useState<PreviewSettings>({
-		mode: "responsive",
-		width: 1100,
-		maxWidth: 1100,
-	});
+	const [preview, setPreview] = usePersistentState("cms-preview-settings", {
+		mode: "scale",
+		width: 1440,
+	}) as [PreviewSettings, (v: PreviewSettings) => void];
 
 	const onPreviewChange = (patch: Partial<PreviewSettings>) => {
 		setPreview((p) => ({...p, ...patch}));
