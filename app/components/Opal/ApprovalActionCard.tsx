@@ -1,162 +1,331 @@
 "use client";
 
-import { Box, Button } from "@optiaxiom/react";
+import { Box, Button, Separator } from "@optiaxiom/react";
 import { Text } from "../Text";
-import { IconCheck, IconXmark, IconArrowUpRightFromSquare } from "@/app/lib/axiom-icons";
+import {
+  IconCheck,
+  IconCode,
+  IconArrowUpRightFromSquare,
+  IconSparkles,
+  IconListCheck,
+} from "@optiaxiom/icons";
 import { useState } from "react";
 
-type ApprovalState = "pending" | "approved" | "rejected";
+type ApprovalState = "pending" | "approved" | "changes-requested";
 
 type ApprovalActionCardProps = {
-  title: string;
-  description: string;
-  thumbnail?: string;
+  /** Author of the artifact */
+  authorName: string;
+  authorAvatar?: string;
+  isVAU?: boolean;
+  /** Pill badge shown in header row, e.g. "UPDATED" */
+  badge?: string;
+
+  /** Artifact file row */
+  fileName: string;
+  fileSubtitle: string;
+  /** Clicking the card body (or Preview button) opens the preview panel */
+  onPreview?: () => void;
+
+  /** Task link — opens task panel on the right */
+  onViewTask?: () => void;
+
+  /** Approval prompt section */
+  approvalTitle: string;
+  approvalDescription: string;
+
   onApprove?: () => void;
-  onReject?: () => void;
-  onOpenTask?: () => void;
+  onRequestChanges?: () => void;
 };
 
 export function ApprovalActionCard({
-  title,
-  description,
-  thumbnail,
+  authorName,
+  authorAvatar,
+  isVAU,
+  badge,
+  fileName,
+  fileSubtitle,
+  onPreview,
+  onViewTask,
+  approvalTitle,
+  approvalDescription,
   onApprove,
-  onReject,
-  onOpenTask,
+  onRequestChanges,
 }: ApprovalActionCardProps) {
   const [state, setState] = useState<ApprovalState>("pending");
+  const [hovered, setHovered] = useState(false);
 
-  const handleApprove = () => {
+  const handleApprove = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setState("approved");
     onApprove?.();
   };
 
-  const handleReject = () => {
-    setState("rejected");
-    onReject?.();
+  const handleRequestChanges = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setState("changes-requested");
+    onRequestChanges?.();
   };
 
   return (
     <Box
-      display="flex"
-      alignItems="stretch"
       rounded="lg"
-      border="1"
-      borderColor="border.default"
-      bg="bg.default"
+      onClick={onPreview}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        minWidth: "66.667%",
-        width: "fit-content",
-        maxWidth: "100%",
+        border: "1px solid var(--ax-colors-border-default)",
+        background: hovered ? "var(--ax-colors-bg-secondary)" : "var(--ax-colors-bg-default)",
         overflow: "hidden",
+        maxWidth: 560,
+        cursor: onPreview ? "pointer" : "default",
+        transition: "background 0.15s ease",
       }}
     >
-      {/* Thumbnail / preview area */}
-      <Box
-        bg="bg.secondary"
-        display="flex"
-        flexDirection="column"
-        style={{ width: 120, flexShrink: 0, position: "relative" }}
-      >
-        {thumbnail ? (
-          <img src={thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-        ) : (
-          <Box
-            display="flex"
-            flexDirection="column"
-            gap="4"
-            p="12"
-            style={{ height: "100%" }}
-          >
-            {/* Mock doc preview lines */}
-            <Box style={{ height: 6, borderRadius: 3, background: "var(--ax-colors-bg-tertiary)", width: "80%" }} />
-            <Box style={{ height: 6, borderRadius: 3, background: "var(--ax-colors-bg-tertiary)", width: "60%" }} />
-            <Box style={{ height: 6, borderRadius: 3, background: "var(--ax-colors-bg-tertiary)", width: "70%" }} />
-            <Box style={{ height: 6, borderRadius: 3, background: "var(--ax-colors-bg-tertiary)", width: "50%" }} />
-            <Box style={{ height: 6, borderRadius: 3, background: "var(--ax-colors-bg-tertiary)", width: "65%" }} />
-            {/* Label */}
-            <Box mt="auto">
-              <Text fontSize="xs" color="fg.tertiary" fontWeight="500">Vari.</Text>
+      {/* Author + file section */}
+      <Box px="16" py="12" display="flex" flexDirection="column" gap="10">
+        {/* Author row */}
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box display="flex" alignItems="center" gap="6">
+            <span style={{ position: "relative", display: "inline-flex", flexShrink: 0 }}>
+              {authorAvatar ? (
+                <img
+                  src={authorAvatar}
+                  alt={authorName}
+                  width={20}
+                  height={20}
+                  style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }}
+                />
+              ) : (
+                <span
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: "50%",
+                    background: "var(--ax-colors-bg-avatar-green)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    color: "var(--ax-colors-fg-avatar-green)",
+                  }}
+                >
+                  {authorName[0]?.toUpperCase()}
+                </span>
+              )}
+              {isVAU && (
+                <span
+                  style={{
+                    position: "absolute",
+                    bottom: -1,
+                    right: -1,
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    background: "var(--ax-colors-bg-accent)",
+                    border: "1.5px solid var(--ax-colors-bg-default)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <IconSparkles style={{ width: 6, height: 6, color: "var(--ax-colors-fg-on-accent, #202320)" }} />
+                </span>
+              )}
+            </span>
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: "var(--ax-colors-fg-default)",
+              }}
+            >
+              {authorName}
+            </Text>
+            {isVAU && (
+              <IconSparkles style={{ width: 10, height: 10, color: "var(--ax-colors-fg-accent)", flexShrink: 0 }} />
+            )}
+          </Box>
+          {badge && (
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: state === "approved" ? "var(--ax-colors-fg-success)" : "var(--ax-colors-fg-accent)",
+                background: state === "approved"
+                  ? "color-mix(in srgb, var(--ax-colors-fg-success) 12%, transparent)"
+                  : "color-mix(in srgb, var(--ax-colors-bg-accent) 15%, transparent)",
+                borderRadius: 999,
+                padding: "2px 8px",
+              }}
+            >
+              {state === "approved" ? "APPROVED" : state === "changes-requested" ? "CHANGES" : badge}
+            </span>
+          )}
+        </Box>
+
+        {/* File row */}
+        <Box display="flex" alignItems="center" gap="10" justifyContent="space-between">
+          <Box display="flex" alignItems="center" gap="10" style={{ flex: 1, minWidth: 0 }}>
+            <span
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                background: "color-mix(in srgb, var(--ax-colors-bg-accent) 12%, var(--ax-colors-bg-secondary))",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <IconCode style={{ width: 16, height: 16, color: "var(--ax-colors-fg-secondary)" }} />
+            </span>
+            <Box style={{ flex: 1, minWidth: 0 }}>
+              <Text
+                fontWeight="600"
+                style={{
+                  fontSize: 13,
+                  lineHeight: "18px",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  display: "block",
+                }}
+              >
+                {fileName}
+              </Text>
+              <Text
+                color="fg.secondary"
+                style={{
+                  fontSize: 12,
+                  lineHeight: "16px",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  display: "block",
+                }}
+              >
+                {fileSubtitle}
+              </Text>
             </Box>
           </Box>
-        )}
+          {onPreview && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onPreview(); }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 3,
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 500,
+                color: "var(--ax-colors-fg-secondary)",
+                flexShrink: 0,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Preview
+              <IconArrowUpRightFromSquare style={{ width: 11, height: 11 }} />
+            </button>
+          )}
+        </Box>
       </Box>
 
-      {/* Content + actions */}
-      <Box display="flex" flexDirection="column" justifyContent="space-between" p="16" style={{ flex: 1, minWidth: 0 }}>
-        <Box display="flex" flexDirection="column" gap="4">
-          <Text fontWeight="600" style={{ fontSize: 14, lineHeight: "20px" }}>
-            {title}
+      <Separator />
+
+      {/* Approval section */}
+      <Box
+        px="16"
+        py="12"
+        display="flex"
+        flexDirection="column"
+        gap="12"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Box
+          px="12"
+          py="10"
+          rounded="md"
+          style={{ background: "var(--ax-colors-bg-secondary)" }}
+        >
+          <Text
+            fontWeight="600"
+            style={{ fontSize: 13, lineHeight: "18px", display: "block" }}
+          >
+            {approvalTitle}
           </Text>
           <Text
             color="fg.secondary"
-            style={{
-              fontSize: 13,
-              lineHeight: "18px",
-              overflow: "hidden",
-              display: "-webkit-box",
-              WebkitBoxOrient: "vertical",
-              WebkitLineClamp: 3,
-            }}
+            mt="4"
+            style={{ fontSize: 13, lineHeight: "18px", display: "block" }}
           >
-            {description}
+            {approvalDescription}
           </Text>
         </Box>
 
-        {state === "pending" ? (
-          <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" mt="12">
-            {onOpenTask ? (
-              <button
-                type="button"
-                onClick={onOpenTask}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: "var(--ax-colors-fg-accent)",
-                }}
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          {/* View task link */}
+          {onViewTask && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onViewTask(); }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 500,
+                color: "var(--ax-colors-fg-tertiary)",
+              }}
+            >
+              <IconListCheck style={{ width: 13, height: 13 }} />
+              View task
+            </button>
+          )}
+
+          {state === "pending" ? (
+            <Box display="flex" alignItems="center" gap="8" style={{ marginLeft: "auto" }}>
+              <Button
+                appearance="subtle"
+                size="sm"
+                onClick={handleRequestChanges}
               >
-                View Task
-                <IconArrowUpRightFromSquare size={12} />
-              </button>
-            ) : (
-              <Box />
-            )}
-            <Box display="flex" alignItems="center" gap="8">
+                Ask Changes
+              </Button>
               <Button
-                appearance="subtle"
+                appearance="primary"
                 size="sm"
-                icon={<IconXmark size={14} />}
-                onClick={handleReject}
-                aria-label="Reject"
-              />
-              <Button
-                appearance="subtle"
-                size="sm"
-                icon={<IconCheck size={14} />}
+                icon={<IconCheck />}
                 onClick={handleApprove}
-                aria-label="Approve"
-                style={{ color: "var(--ax-colors-fg-success)" }}
-              />
+              >
+                Approve
+              </Button>
             </Box>
-          </Box>
-        ) : (
-          <Box mt="12">
+          ) : (
             <Text
               fontSize="sm"
               fontWeight="500"
-              color={state === "approved" ? "fg.success" : "fg.error"}
+              color={state === "approved" ? "fg.success" : "fg.warning"}
+              style={{ marginLeft: "auto" }}
             >
-              {state === "approved" ? "Approved" : "Rejected"}
+              {state === "approved" ? "Approved" : "Changes requested"}
             </Text>
-          </Box>
-        )}
+          )}
+        </Box>
       </Box>
     </Box>
   );

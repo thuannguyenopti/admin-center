@@ -277,6 +277,8 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
             maxWidth: variant === 'home' ? '768px' : 'none',
             margin: variant === 'home' ? '0 auto' : '0',
             width: '100%',
+            paddingLeft: imMode ? '24px' : undefined,
+            paddingRight: imMode ? '24px' : undefined,
           }}
         >
           {augmented.map(({ message, skip, collapsed, collapsedOpal, agentContext, showOpalHeader }) => {
@@ -292,19 +294,18 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
                     gap: 8,
                     padding: '6px 8px',
                     borderRadius: 6,
-                    border: '1px solid #e9edf5',
-                    background: '#f9fafc',
+                    border: '1px solid var(--ax-colors-border-secondary)',
+                    background: 'var(--ax-colors-bg-secondary)',
                     cursor: 'pointer',
-                    color: '#4f576e',
+                    color: 'var(--ax-colors-fg-secondary)',
                     fontSize: 13,
-                    fontFamily: 'Inter, sans-serif',
                     width: '100%',
                     textAlign: 'left',
                   }}
                 >
                   <span style={{ fontSize: 15 }}>{collapsed.emoji}</span>
                   <span>Conversation with {collapsed.name}</span>
-                  <span style={{ marginLeft: 'auto', color: '#9ca3af', fontSize: 12 }}>›</span>
+                  <span style={{ marginLeft: 'auto', color: 'var(--ax-colors-fg-tertiary)', fontSize: 12 }}>›</span>
                 </button>
               );
             }

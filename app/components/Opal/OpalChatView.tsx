@@ -6,6 +6,8 @@ import { OpalInput, MentionableAgent } from "./OpalInput";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { IMActivityFeed } from "@/app/opal/im/components/IMActivityFeed";
+import { IMFilesList } from "@/app/opal/im/components/IMFilesList";
 import { OpalHeader } from "./OpalHeader";
 import { OpalHistorySidebar } from "./OpalHistorySidebar";
 import { OpalLoaderDevPanel } from "@/app/opal/components/OpalLoaderDevPanel";
@@ -135,6 +137,20 @@ type OpalChatViewProps = {
     sectionAddTooltips?: Record<string, string>;
     /** When provided, renders an X close button at the top-left of the chat sidebar (canvas mode only). */
     onCloseChat?: () => void;
+    /** IM mode: active thread/conversation name */
+    imThreadName?: string;
+    /** IM mode: true when talking to a VAU (adds Activities tab) */
+    imIsVAU?: boolean;
+    /** IM mode: true when viewing a channel */
+    imIsChannel?: boolean;
+    /** IM mode: avatar URL for the thread header */
+    imThreadAvatar?: string;
+    /** IM mode: VAU template name shown below the thread name */
+    imTemplateName?: string;
+    /** IM mode: simplified header — X instead of hamburger, no tabs */
+    imSimplified?: boolean;
+    /** IM mode: when set, clicking the avatar+name navigates */
+    onImThreadNameClick?: () => void;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -198,10 +214,21 @@ export function OpalChatView({
     onCreateInSection,
     sectionAddTooltips,
     onCloseChat,
+    imThreadName,
+    imIsVAU,
+    imIsChannel,
+    imThreadAvatar,
+    imTemplateName,
+    imSimplified,
+    onImThreadNameClick,
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
     const [chatWidth, setChatWidth] = useState(400);
     const [imMode, setImMode] = useState(canvasMode);
+    const [imActiveTab, setImActiveTab] = useState<'messages' | 'files' | 'activities'>('messages');
+
+    // Reset to Messages tab when the selected conversation changes.
+    useEffect(() => { setImActiveTab('messages'); }, [activeChat]);
 
     // Sync imMode on when canvas opens
     useEffect(() => {
@@ -410,10 +437,31 @@ export function OpalChatView({
                             onImModeChange={setImMode}
                             titleOverride={headerTitle}
                             newChatLabel={newChatLabel}
+                            imThreadName={imThreadName}
+                            imIsVAU={imIsVAU}
+                            imIsChannel={imIsChannel}
+                            imThreadAvatar={imThreadAvatar}
+                            imTemplateName={imTemplateName}
+                            imSimplified={imSimplified}
+                            onImThreadNameClick={onImThreadNameClick}
+                            imActiveTab={imActiveTab}
+                            onImTabChange={setImActiveTab}
                         />
                     </Box>
                 )}
 
+                {/* Activities tab */}
+                {imMode && imIsVAU && imActiveTab === 'activities' && (
+                    <IMActivityFeed vauName={imThreadName} />
+                )}
+
+                {/* Files tab — available for all IM conversations */}
+                {imMode && imActiveTab === 'files' && (
+                    <IMFilesList vauName={imThreadName} />
+                )}
+
+                {/* Messages tab (default) — hidden when on a non-messages tab */}
+                {(!imMode || imActiveTab === 'messages') && (
                 <Box
                     display="flex"
                     flexDirection="column"
@@ -422,7 +470,7 @@ export function OpalChatView({
                         flex: 1,
                         overflow: 'hidden',
                         width: '100%',
-                        alignItems: variant === 'home' ? 'center' : 'stretch',
+                        alignItems: (variant === 'home' && !imMode) ? 'center' : 'stretch',
                         paddingTop: variant === 'home' ? '16px' : '0',
                         minHeight: 0,
                     }}
@@ -455,7 +503,9 @@ export function OpalChatView({
                         onQuoteReply={onQuoteReply}
                     />
                 </Box>
+                )}
 
+                {(!imMode || imActiveTab === 'messages') && (
                 <Box
                     w="full"
                     style={{ flexShrink: 0, display: 'flex', justifyContent: 'center', width: '100%' }}
@@ -464,7 +514,7 @@ export function OpalChatView({
                         display="flex"
                         flexDirection="column"
                         gap="16"
-                        style={{ width: '100%', maxWidth: variant === 'home' ? '800px' : 'none' }}
+                        style={{ width: '100%', maxWidth: variant === 'home' ? '800px' : 'none', minWidth: 0, paddingLeft: imMode ? '24px' : undefined, paddingRight: imMode ? '24px' : undefined }}
                     >
                         {inputOverride ? (
                             inputOverride
@@ -491,6 +541,7 @@ export function OpalChatView({
                         )}
                     </Box>
                 </Box>
+                )}
             </Box>
             <OpalLoaderDevPanel />
         </Box>
