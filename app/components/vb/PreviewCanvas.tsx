@@ -728,7 +728,24 @@ export default function PreviewCanvas({
 																setCurrentHoverEle("none");
 															}}
 														>
-															{/* selection outline */}
+															{/* element render */}
+															{(() => {
+																const BlockComponent =
+																	BlockRegistry[type];
+																if (BlockComponent) {
+																	return (
+																		<BlockComponent
+																			properties={
+																				ele.properties
+																			}
+																			hasBgImage={hasBgImage}
+																		/>
+																	);
+																}
+																return null;
+															})()}
+
+															{/* selection outline — rendered AFTER block so it sits on top in DOM order */}
 															<div
 																onClick={(e) => {
 																	e.stopPropagation();
@@ -831,23 +848,6 @@ export default function PreviewCanvas({
 																	{getElementDisplayName(type) || "Unknown"}
 																</div>
 															</div>
-
-															{/* element render */}
-															{(() => {
-																const BlockComponent =
-																	BlockRegistry[type];
-																if (BlockComponent) {
-																	return (
-																		<BlockComponent
-																			properties={
-																				ele.properties
-																			}
-																			hasBgImage={hasBgImage}
-																		/>
-																	);
-																}
-																return null;
-															})()}
 														</div>
 													</React.Fragment>
 												);
@@ -1007,13 +1007,74 @@ export default function PreviewCanvas({
 													{colChildren.map((element: any, eleIndex: number) => {
 														const ele = heroElements[element.id];
 														if (!ele) return null;
-														const BlockComponent = BlockRegistry[ele.type];
+														const type = ele.type;
+														const BlockComponent = BlockRegistry[type];
 														if (!BlockComponent) return null;
+														const isActive = currentEle === element.id || currentHoverEle === element.id;
+														const isSelected = currentEle === element.id;
 														return (
-															<BlockComponent
+															<div
 																key={element.id ?? eleIndex}
-																properties={ele.properties}
-															/>
+																className="relative group"
+																data-element-id={element.id}
+																onMouseEnter={(e) => {
+																	e.stopPropagation();
+																	setCurrentHoverEle(element.id);
+																	setCurrentHoverSection?.(null);
+																	setCurrentHoverRow?.(null);
+																	setCurrentHoverColumn?.(null);
+																}}
+																onMouseLeave={() => {
+																	setCurrentHoverEle("none");
+																}}
+															>
+																<BlockComponent properties={ele.properties} />
+																<div
+																	onClick={(e) => {
+																		e.stopPropagation();
+																		setCurrentEle(element.id);
+																		setCurrentHoverEle("none");
+																		setCurrentSection?.(null);
+																		setCurrentRow?.(null);
+																		setCurrentColumn?.(null);
+																	}}
+																	style={{
+																		visibility: isActive ? "visible" : undefined,
+																		opacity: isActive ? (isSelected ? 1 : 0.5) : undefined,
+																		top: isActive ? "-8px" : undefined,
+																		left: isActive ? "-8px" : undefined,
+																		right: isActive ? "-8px" : undefined,
+																		bottom: isActive ? "-8px" : undefined,
+																	}}
+																	className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
+																>
+																	<div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-7 -left-[2px] rounded-b-none">
+																		{(() => {
+																			switch (type) {
+																				case "Heading":
+																				case "ct-heading":
+																					return <IconHeading size={12} />;
+																				case "Text":
+																				case "ct-text":
+																					return <IconPilcrow size={12} />;
+																				case "Input":
+																				case "ct-input":
+																					return <IconForms size={12} />;
+																				case "Button":
+																				case "ct-button":
+																					return <IconRectangle size={12} />;
+																				case "Image":
+																				case "ct-image":
+																				case "ct-image-block":
+																					return <IconPhoto size={12} />;
+																				default:
+																					return <IconBrackets size={12} />;
+																			}
+																		})()}
+																		{getElementDisplayName(type) || "Unknown"}
+																	</div>
+																</div>
+															</div>
 														);
 													})}
 												</div>
