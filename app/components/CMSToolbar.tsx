@@ -207,14 +207,10 @@ export default function CMSToolbar({
 			label: "Responsive (reflow)",
 			execute: () => onPreviewChange({mode: "responsive", maxWidth: 1100}),
 		},
-		{label: "Desktop 1440", execute: () => onPreviewChange({mode: "fixed", width: 1440})},
-		{label: "Desktop 1100", execute: () => onPreviewChange({mode: "fixed", width: 1100})},
-		{label: "Tablet 768", execute: () => onPreviewChange({mode: "fixed", width: 768})},
-		{label: "Mobile 390", execute: () => onPreviewChange({mode: "fixed", width: 390})},
-		{
-			label: "Scale to fit (1100)",
-			execute: () => onPreviewChange({mode: "scale", width: 1100}),
-		},
+		{label: "Desktop 1440", execute: () => onPreviewChange({mode: "scale", width: 1440})},
+		{label: "Desktop 1100", execute: () => onPreviewChange({mode: "scale", width: 1100})},
+		{label: "Tablet 768", execute: () => onPreviewChange({mode: "scale", width: 768})},
+		{label: "Mobile 390", execute: () => onPreviewChange({mode: "scale", width: 390})},
 	];
 
 	const isVariation = selectedVariation !== "original";
