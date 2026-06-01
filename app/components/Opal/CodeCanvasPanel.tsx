@@ -36,7 +36,6 @@ import {
   IconFloppyDisk,
   IconArrowLeft,
   IconCirclePlus,
-  IconAgent,
   IconCodeBranch,
   IconComments,
   IconEllipsisSolid,
@@ -46,8 +45,13 @@ import {
   IconShieldCheck,
   IconTrashCan,
   IconLock,
+  IconArrowsMaximize,
+  IconArrowsMinimize,
 } from "@optiaxiom/icons";
+import { IconAgent } from "@optimizely/axiom-icons";
+import { CollabRail } from "./CollabRail";
 import { useState, useCallback, useEffect, useRef, type ReactNode, type KeyboardEvent } from "react";
+import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { InitialsAvatar, initialsFromName } from "@/app/opal/components/InitialsAvatar";
 import { useCollabDoc } from "./editor/useCollabDoc";
@@ -84,7 +88,18 @@ type CodeCanvasPanelProps = {
   initialHtml?: string;
   chatOpen?: boolean;
   onChatToggle?: () => void;
+  isExpanded?: boolean;
+  onExpandToggle?: () => void;
+  collabRailOpen?: boolean;
+  onCollabRailToggle?: () => void;
 };
+
+// ── Collaboration cursor indicators (mock) ────────────────────────────────────
+
+const CURSOR_INDICATORS = [
+  { id: "lisa",   name: "Lisa",   color: "#7c3aed", top: 120, left: 32 },
+  { id: "marcus", name: "Marcus", color: "#2563eb", top: 340, left: 96 },
+];
 
 // ── Example HTML content ──────────────────────────────────────────────────────
 
@@ -912,6 +927,10 @@ export function CodeCanvasPanel({
   initialHtml,
   chatOpen,
   onChatToggle,
+  isExpanded,
+  onExpandToggle,
+  collabRailOpen,
+  onCollabRailToggle,
 }: CodeCanvasPanelProps) {
   const collabDoc = useCollabDoc(EXAMPLE_HTML);
   const [mode, setMode] = useState<CanvasMode>("preview");
@@ -1014,13 +1033,21 @@ export function CodeCanvasPanel({
     setMode(next);
   }, [collabDoc]);
 
-  return (
+  const panel = (
+    <Box
+      display="flex"
+      flexDirection="row"
+      style={isExpanded
+        ? { position: "fixed", inset: 0, zIndex: 50, background: "var(--ax-colors-bg-default)", flexDirection: "row" }
+        : { flex: 1, minWidth: 0, height: "100%", overflow: "hidden", display: "flex", flexDirection: "row" }
+      }
+    >
     <Box
       ref={panelRef as unknown as React.Ref<HTMLDivElement>}
       display="flex"
       flexDirection="column"
       bg="bg.secondary"
-      style={{ flex: 1, minWidth: 0, height: "100%", overflow: "hidden", borderRight: BORDER }}
+      style={{ flex: 1, minWidth: 0, height: "100%", overflow: "hidden", borderRight: isExpanded ? "none" : BORDER }}
     >
       {/* ── Toolbar ── */}
       <Box
@@ -1123,6 +1150,37 @@ export function CodeCanvasPanel({
             <>
               <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
 
+          {/* Fullscreen expand toggle */}
+          {onExpandToggle && (
+            <Tooltip content={isExpanded ? "Exit fullscreen" : "Fullscreen"} delayDuration={300}>
+              <span>
+                <Button
+                  appearance="subtle"
+                  size="md"
+                  icon={isExpanded ? <IconArrowsMinimize size={14} /> : <IconArrowsMaximize size={14} />}
+                  aria-label={isExpanded ? "Exit fullscreen" : "Fullscreen"}
+                  onClick={onExpandToggle}
+                />
+              </span>
+            </Tooltip>
+          )}
+
+          {/* Collaborators rail toggle */}
+          {onCollabRailToggle && (
+            <Tooltip content={collabRailOpen ? "Hide collaborators" : "Collaborators"} delayDuration={300}>
+              <span>
+                <ToggleButton
+                  appearance="subtle"
+                  size="md"
+                  pressed={!!collabRailOpen}
+                  onPressedChange={onCollabRailToggle}
+                  icon={<IconUsers size={14} />}
+                  aria-label="Collaborators"
+                />
+              </span>
+            </Tooltip>
+          )}
+
               {/* Share */}
               <Button appearance="default" size="md" icon={<IconUserPlus size={18} />} onClick={() => setShareDialogOpen(true)} style={{ whiteSpace: "nowrap" }}>Share</Button>
             </>
@@ -1148,6 +1206,40 @@ export function CodeCanvasPanel({
 
       {/* ── Blame legend bar ── */}
       {blameActive && blameSegments.length > 0 && <BlameLegend segments={blameSegments} />}
+
+      {/* ── Collaboration mode banner (Option D) ── */}
+      {isExpanded && collabRailOpen && (
+        <Box display="flex" alignItems="center" gap="8" px="12" style={{
+          height: 32,
+          flexShrink: 0,
+          background: "#f5f0ff",
+          borderBottom: "1px solid #ede9fe",
+        }}>
+          <style>{`@keyframes collab-pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+          <Box style={{
+            width: 7, height: 7, borderRadius: "50%",
+            background: "#7c3aed", flexShrink: 0,
+            animation: "collab-pulse 1.5s ease-in-out infinite",
+          }} />
+          <Text fontWeight="600" style={{ fontSize: 12, color: "#6d28d9" }}>Collaboration mode</Text>
+          <Text style={{ fontSize: 12, color: "#a78bfa" }}>·</Text>
+          <Box display="flex" alignItems="center" gap="4" style={{ flexShrink: 0 }}>
+            {[
+              { name: "Lisa Gray",     src: "https://i.pravatar.cc/150?img=5"  },
+              { name: "Marcus Santos", src: "https://i.pravatar.cc/150?img=12" },
+            ].map(c => (
+              <img
+                key={c.name}
+                src={c.src}
+                alt={c.name}
+                title={c.name}
+                style={{ width: 18, height: 18, borderRadius: "50%", border: "1.5px solid white", marginLeft: -4, flexShrink: 0 }}
+              />
+            ))}
+          </Box>
+          <Text style={{ fontSize: 12, color: "#6d28d9" }}>Lisa and Marcus are here</Text>
+        </Box>
+      )}
 
       {/* ── Editor card ── */}
       <Box style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "16px", display: "flex", flexDirection: "column" }}>
@@ -1183,6 +1275,35 @@ export function CodeCanvasPanel({
                   />
                 </Box>
               )}
+
+              {/* Collaboration cursor indicators */}
+              {collabRailOpen && (
+                <Box style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 5 }}>
+                  {CURSOR_INDICATORS.map(ci => (
+                    <Box key={ci.id} style={{
+                      position: "absolute", top: ci.top, left: ci.left,
+                      padding: "2px 8px", borderRadius: 4,
+                      background: ci.color, color: "white",
+                      fontSize: 11, fontWeight: 500, lineHeight: "16px",
+                      pointerEvents: "none", whiteSpace: "nowrap",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.22)",
+                      display: "flex", alignItems: "center", gap: 3,
+                    }}>
+                      {ci.name} <span style={{ opacity: 0.7 }}>▌</span>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+
+              {/* Version History panel — overlays right side of editor card */}
+              {versionPanelOpen && (
+                <VersionHistoryPanel
+                  versions={versions}
+                  onSave={handleSaveVersion}
+                  onRevert={handleRevertVersion}
+                  onClose={() => setVersionPanelOpen(false)}
+                />
+              )}
             </>
           )}
         </Box>
@@ -1214,5 +1335,12 @@ export function CodeCanvasPanel({
         artifactCreator={artifactCreator ?? DEFAULT_ARTIFACT_CREATOR}
       />
     </Box>
+    {/* CollabRail — rendered as sibling inside the overlay wrapper */}
+    <CollabRail open={!!collabRailOpen} onClose={onCollabRailToggle} />
+    </Box>
   );
+
+  return isExpanded && typeof document !== "undefined"
+    ? createPortal(panel, document.body)
+    : panel;
 }

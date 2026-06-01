@@ -23,6 +23,8 @@ export type ChatHistoryItem = {
   isVAU?: boolean;
   /** Template name for VAU DMs (e.g. "Experiment Monitor"). */
   vauTemplateName?: string;
+  /** When true, this item represents a channel (public or private). */
+  isChannel?: boolean;
 };
 
 export type OpalMode = 'docked' | 'popped-out';

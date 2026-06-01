@@ -53,6 +53,19 @@ This is a **multi-product UI prototype** built with Next.js 16 (App Router), Rea
 
 Hook vs. const: export a hook (`useXxxNav()`) only when the nav needs hooks (path-detail substitution, persistent state, window events). Static product navs stay constants.
 
+**Per-product CSS** follows the same pattern. `app/globals.css` keeps only truly cross-cutting rules (imports, fonts, theme machinery, body resets, scrollbars, generic animations like `.appear`/`@keyframes shimmer`, template grid `.parent`/`.div1-3`, VT slide animation, modal lock). Product-specific rules live in `app/<product>/styles.css` and are pulled into the cascade via `@import` from `globals.css`:
+
+| Product | File |
+|---|---|
+| CMS | `app/cms/styles.css` — `.newly-imported` highlight, `.vb-outline`/`.chevron` |
+| CMP | `app/cmp/styles.css` — empty placeholder |
+| Opal | `app/opal/styles.css` — `.opalGenerateButton`, `.vau-card`, `.pinned-card`, `.file-card` |
+| Connect Platform | `app/connect-platform/styles.css` — empty placeholder |
+| FE Hosting | `app/fe-hosting/styles.css` — empty placeholder |
+| Web Experimentation | `app/web-experimentation/styles.css` — empty placeholder |
+
+There's also a legacy `app/styles/opalStyles.css` with older Opal rules — additions can go in either Opal file, but prefer `app/opal/styles.css` for new rules so they sit with the product they belong to. **Do not edit `app/globals.css` to add product-specific CSS** — same lockdown rationale as `app/layout.tsx`. If your rule only matters for one product, put it in that product's `styles.css`.
+
 **`app/components/template.tsx`** renders the shell: primary sidebar (`Sidebar`/`Nav`), optional secondary sidebar (VT drill-down or Content Manager sidebar), a scrollable main content area, an optional footer bar, and the Opal slide-out panel. Pages get `px="32" py="24"` padding and an auto-generated `<Heading>` page title by default.
 
 **`customLayout: true`** on a nav item bypasses the padding and page header — required for full-bleed pages (e.g., Opal chat, CMS Edit). Full-width table pages instead use negative margins: `-m-6 -mt-[72px]`.

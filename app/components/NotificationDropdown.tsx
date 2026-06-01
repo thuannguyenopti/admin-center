@@ -26,8 +26,32 @@ function CompactNotificationCard({ notification, onDismiss, readIds }: { notific
     const isUnread = notification.status === "unread" && !readIds.has(notification.id);
     const [isHovered, setIsHovered] = useState(false);
 
+    // VAU avatar map — agent ID → avatar path (using existing vau-*.png paths)
+    const VAU_AVATARS: Record<string, string> = {
+        "vau-frank":   "/avatars/avatar-4.png",
+        "vau-tony":    "/avatars/vau-tony.png",
+        "vau-henry":   "/avatars/vau-henry.png",
+        "vau-poppy":   "/avatars/vau-poppy.png",
+        "vau-kerby":   "/avatars/vau-kerby.png",
+        "vau-jonas":   "/avatars/vau-jonas.png",
+        "vau-mayling": "/avatars/vau-mayling.png",
+    };
+
     // Status icon by notification type (matches Figma spec)
     const getAvatar = () => {
+        // VAU notifications — show the agent's avatar image
+        if (notification.agentId && VAU_AVATARS[notification.agentId]) {
+            return (
+                <Box pt="2" style={{ flexShrink: 0 }}>
+                    <img
+                        src={VAU_AVATARS[notification.agentId]}
+                        alt={notification.agentName ?? "VAU"}
+                        style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover", display: "block" }}
+                    />
+                </Box>
+            );
+        }
+
         let icon;
         switch (notification.type) {
             case "agent_execution_chat":

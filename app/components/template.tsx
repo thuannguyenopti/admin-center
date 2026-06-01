@@ -97,7 +97,8 @@ function TemplateContent({
 	);
 	const path = usePathname();
 	const searchParams = useSearchParams();
-	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
+	const [isExpanded, setIsExpanded] = useState(false);
+	const isHydrated = true;
 	const [mounted, setMounted] = useState(false);
 	const [pendingOpalPrompt, setPendingOpalPrompt] = useState<PendingOpalPrompt | null>(null);
 	const [opalContextChip, setOpalContextChip] = useState<{label: string; content: string} | null>(

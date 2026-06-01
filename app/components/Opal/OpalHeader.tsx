@@ -1,8 +1,9 @@
 "use client";
 
-import { Box, Button } from "@optiaxiom/react";
+import { Box, Button, Tabs, TabsList, TabsTrigger } from "@optiaxiom/react";
 import { Text } from "../Text";
-import { IconXmark, IconBars, IconCirclePlus } from "@/app/lib/axiom-icons";
+import { InitialsAvatar, initialsFromName } from "@/app/opal/components/InitialsAvatar";
+import { IconXmark, IconBars, IconCirclePlus, IconSparkles, IconArrowUpRightFromSquare } from "@/app/lib/axiom-icons";
 import IconDropdown from "@/app/assets/opal/icon-dropdown.svg";
 import IconMaximize from "@/app/assets/opal/icon-maximize.svg";
 import { opalTypography } from "@/app/styles/opalTypography";
@@ -26,6 +27,24 @@ type OpalHeaderProps = {
     newChatLabel?: string;
     /** When provided, renders an X close button as the first item in the header (top-left). */
     leadingClose?: () => void;
+    /** IM mode: the active conversation/thread name to show in the header */
+    imThreadName?: string;
+    /** IM mode: whether the active conversation is with a VAU (adds Activities tab) */
+    imIsVAU?: boolean;
+    /** IM mode: whether the active conversation is a channel (rounded-square avatar) */
+    imIsChannel?: boolean;
+    /** IM mode: avatar URL for the active thread */
+    imThreadAvatar?: string;
+    /** IM mode: VAU template name shown below the thread name */
+    imTemplateName?: string;
+    /** IM mode: when set, clicking the avatar+name navigates (e.g. artifact → /opal/im) */
+    onImThreadNameClick?: () => void;
+    /** IM mode: simplified header — hamburger becomes X, tabs hidden */
+    imSimplified?: boolean;
+    /** IM mode: controlled active tab value */
+    imActiveTab?: 'messages' | 'files' | 'activities';
+    /** IM mode: callback when the user switches tabs */
+    onImTabChange?: (tab: 'messages' | 'files' | 'activities') => void;
 };
 
 export function OpalHeader({
@@ -39,8 +58,24 @@ export function OpalHeader({
     titleOverride,
     newChatLabel = 'New chat',
     leadingClose,
+    imThreadName,
+    imIsVAU = false,
+    imIsChannel = false,
+    imThreadAvatar,
+    imTemplateName,
+    onImThreadNameClick,
+    imSimplified = false,
+    imActiveTab: imActiveTabProp,
+    onImTabChange,
 }: OpalHeaderProps) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [imActiveTabLocal, setImActiveTabLocal] = useState<'messages' | 'files' | 'activities'>('messages');
+    const imActiveTab = imActiveTabProp ?? imActiveTabLocal;
+    const setImActiveTab = (tab: 'messages' | 'files' | 'activities') => {
+        setImActiveTabLocal(tab);
+        onImTabChange?.(tab);
+    };
+    const [hoverThreadTitle, setHoverThreadTitle] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const { enabled: devMode, sequence, update } = useLoaderDev();
 
@@ -55,6 +90,169 @@ export function OpalHeader({
     }, []);
 
     const showWindowControls = typeof onClose === "function";
+
+    const imTabs = imIsVAU
+        ? ['messages', 'files', 'activities'] as const
+        : ['messages', 'files'] as const;
+
+    const tabLabels: Record<string, string> = {
+        messages: 'Messages',
+        files: 'Files',
+        activities: 'Activities',
+    };
+
+    // ── IM mode: single row — hamburger · avatar · title · tabs · spacer · right actions ──
+    if (imMode && imThreadName) {
+        return (
+            <Box
+                display="flex"
+                alignItems="stretch"
+                style={{
+                    padding: '0 16px 0 8px',
+                    width: '100%',
+                    height: imSimplified ? '48px' : '56px',
+                    flexShrink: 0,
+                    zIndex: 10,
+                    position: sticky ? 'sticky' : 'relative',
+                    top: sticky ? 0 : undefined,
+                    borderBottom: '1px solid var(--ax-colors-border-secondary)',
+                }}
+            >
+                {/* Hamburger (or X in simplified mode) */}
+                <Box display="flex" alignItems="center" style={{ flexShrink: 0, marginRight: '6px' }}>
+                    <Button
+                        appearance="subtle"
+                        size="sm"
+                        aria-label={imSimplified ? "Close" : "Toggle history"}
+                        onClick={imSimplified ? (leadingClose ?? onToggleHistory) : onToggleHistory}
+                        style={{ flexShrink: 0, padding: 0, minWidth: 'auto', width: '32px', height: '32px' }}
+                    >
+                        {imSimplified ? <IconXmark size={20} /> : <IconBars size={16} />}
+                    </Button>
+                </Box>
+
+                {/* Avatar + title */}
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    style={{
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        flexShrink: 1,
+                        gap: '8px',
+                        ...(onImThreadNameClick ? { cursor: 'pointer' } : {}),
+                    }}
+                    onClick={onImThreadNameClick}
+                >
+                    {/* Avatar — rounded-square for channels, circular img for DMs, initials fallback */}
+                    <Box display="flex" alignItems="center" style={{ flexShrink: 0 }}>
+                        {imIsChannel ? (() => {
+                            const chanName = (imThreadName ?? '').replace(/^[#🔒⚠️]\s*/, '').trim();
+                            const CHANNEL_COLORS = ['#4f46e5', '#0891b2', '#059669', '#d97706', '#7c3aed'];
+                            let h = 0;
+                            for (const c of chanName) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
+                            const bg = CHANNEL_COLORS[Math.abs(h) % CHANNEL_COLORS.length];
+                            return (
+                                <div style={{
+                                    width: imSimplified ? 22 : 28, height: imSimplified ? 22 : 28,
+                                    borderRadius: imSimplified ? 5 : 7, flexShrink: 0,
+                                    background: bg, display: 'flex', alignItems: 'center',
+                                    justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 700,
+                                    letterSpacing: '-0.3px',
+                                }}>
+                                    {chanName.slice(0, 2).toUpperCase()}
+                                </div>
+                            );
+                        })() : imThreadAvatar ? (
+                            <img
+                                src={imThreadAvatar}
+                                alt={imThreadName}
+                                width={imSimplified ? 22 : 28}
+                                height={imSimplified ? 22 : 28}
+                                style={{ width: imSimplified ? 22 : 28, height: imSimplified ? 22 : 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                            />
+                        ) : (
+                            <InitialsAvatar initials={initialsFromName(imThreadName ?? '')} size={imSimplified ? 22 : 28} withBorder={false} />
+                        )}
+                    </Box>
+
+                    {/* Title + optional template name stacked */}
+                    <Box
+                        display="flex"
+                        style={{ flexDirection: 'column', minWidth: 0, overflow: 'hidden', gap: '1px' }}
+                        onMouseEnter={() => setHoverThreadTitle(true)}
+                        onMouseLeave={() => setHoverThreadTitle(false)}
+                    >
+                        <Box display="flex" alignItems="center" style={{ gap: '6px', minWidth: 0 }}>
+                            <Text
+                                style={{
+                                    fontSize: imSimplified ? '14px' : '18px',
+                                    fontWeight: 600,
+                                    lineHeight: '20px',
+                                    color: 'var(--ax-colors-fg-default)',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    minWidth: 0,
+                                }}
+                            >
+                                {imThreadName}
+                            </Text>
+                            {imIsVAU && <IconSparkles size={14} style={{ color: '#7c5cff', flexShrink: 0 }} />}
+                            {imSimplified && hoverThreadTitle && (
+                                <IconArrowUpRightFromSquare size={18} style={{ color: 'var(--ax-colors-fg-tertiary)', flexShrink: 0 }} />
+                            )}
+                        </Box>
+                        {imTemplateName && (
+                            <Text
+                                style={{
+                                    fontSize: '11px',
+                                    lineHeight: '14px',
+                                    color: 'var(--ax-colors-fg-tertiary)',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                }}
+                            >
+                                {imTemplateName}
+                            </Text>
+                        )}
+                    </Box>
+                </Box>
+
+                {/* Tabs — hidden in simplified mode */}
+                {!imSimplified && (
+                    <Box display="flex" alignItems="stretch" style={{ flexShrink: 1, marginLeft: 'clamp(8px, 4%, 64px)' }}>
+                        <Tabs value={imActiveTab} onValueChange={(v) => setImActiveTab(v as typeof imActiveTab)} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                            <TabsList style={{ border: 'none', height: '100%', alignSelf: 'stretch', flex: 1, alignItems: 'stretch' }}>
+                                {imTabs.map(tab => (
+                                    <TabsTrigger key={tab} value={tab}>
+                                        {tabLabels[tab]}
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
+                        </Tabs>
+                    </Box>
+                )}
+
+                {/* Right actions */}
+                <Box display="flex" alignItems="center" gap="4" style={{ flex: '1 1 0', justifyContent: 'flex-end' }}>
+                    {showWindowControls ? (
+                        <>
+                            <Button appearance="subtle" size="sm" aria-label="Maximize" onClick={onToggleMode}
+                                style={{ padding: 0, minWidth: 'auto', width: '32px', height: '32px' }}>
+                                <IconMaximize style={{ width: '14px', height: '14px' }} />
+                            </Button>
+                            <Button appearance="subtle" size="sm" aria-label="Close" onClick={onClose}
+                                style={{ padding: 0, minWidth: 'auto', width: '32px', height: '32px' }}>
+                                <IconXmark size={16} />
+                            </Button>
+                        </>
+                    ) : null}
+                </Box>
+            </Box>
+        );
+    }
 
     return (
         <Box
