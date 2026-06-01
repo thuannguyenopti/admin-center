@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Box, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
-import { Button } from "@/app/components/Button";
+import { Button } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { initialContentTypes, type ContentType } from "@/app/db/initialData";
 import { initialCmpContentModels } from "@/app/db/cmpInitialData";
