@@ -85,11 +85,13 @@ export function conversationToHistoryItem(
     hasRedDot: c.unread_count > 0,
     preview: c.last_message_preview ?? "",
   };
-  if (!isChannel) {
+  if (isChannel) {
+    item.isChannel = true;
+  } else {
     if (c.conversation_type === "dm" && c.other_participant_ids.length === 1) {
       const other = c.other_participant_ids[0];
-      item.avatarUrl = avatarFor(other);
       const vau = getVAU(other);
+      item.avatarUrl = avatarFor(other);
       if (vau) {
         item.isVAU = true;
         item.vauTemplateName = vau.template_name;

@@ -71,7 +71,6 @@ function AvatarTile({
           fontSize: Math.max(10, Math.floor(size * 0.4)),
           fontWeight: 700,
           color: "var(--ax-colors-fg-avatar-purple)",
-          fontFamily: "Inter, sans-serif",
           letterSpacing: "0.02em",
         }}
       >
@@ -234,8 +233,8 @@ export function OpalHistoryItem({ item, isActive, onClick, onDelete }: OpalHisto
       </Box>
 
       <Box
-        display="flex" 
-        alignItems="center" 
+        display="flex"
+        alignItems="center"
         gap="4"
         style={{
           minWidth: 'auto',
@@ -245,7 +244,7 @@ export function OpalHistoryItem({ item, isActive, onClick, onDelete }: OpalHisto
         }}
       >
         <div style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {isHovered && (
+          {isHovered ? (
             <Button
               appearance="subtle"
               size="sm"
@@ -263,7 +262,19 @@ export function OpalHistoryItem({ item, isActive, onClick, onDelete }: OpalHisto
             >
               <IconTrashCan style={{ width: 16, height: 16 }} />
             </Button>
-          )}
+          ) : (item.hasRedDot && !isActive) ? (
+            <span
+              aria-label="Unread"
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: 'var(--ax-colors-bg-accent)',
+                display: 'block',
+                flexShrink: 0,
+              }}
+            />
+          ) : null}
         </div>
       </Box>
     </Box>

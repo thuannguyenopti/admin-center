@@ -3,7 +3,7 @@
 import { Box, Button as AxiomButton, Textarea } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconAgent, IconCircleCheckSolid, IconArrowLeft } from "@optimizely/axiom-icons";
+import { IconAgent, IconCircleCheckSolid, IconArrowUpRightFromSquare } from "@optimizely/axiom-icons";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useOpalContext } from "@/app/context/OpalContext";
@@ -294,8 +294,8 @@ function ApprovalActionCard({ state, changesMessage, noteValue, onApprove, onAsk
               gap: 6,
             }}
           >
-            <IconArrowLeft size={14} />
             View Task
+            <IconArrowUpRightFromSquare size={14} />
           </button>
         )}
       </Box>
@@ -607,7 +607,13 @@ export default function OpalPage() {
         <OpalChatView
           variant="home"
           streamingMode="expanded"
-          headerTitle={landingPageReady ? "Threads" : undefined}
+          headerTitle={undefined}
+          imThreadName={landingPageReady ? "Frank" : undefined}
+          imIsVAU={landingPageReady || undefined}
+          imTemplateName={landingPageReady ? "GEO Content Strategist" : undefined}
+          imThreadAvatar={landingPageReady ? "/avatars/vau-frank.png" : undefined}
+          imSimplified={landingPageReady || undefined}
+          onImThreadNameClick={landingPageReady ? () => { window.location.href = '/opal/im'; } : undefined}
           messages={messages}
           inputValue={inputValue}
           isLoading={isLoading}

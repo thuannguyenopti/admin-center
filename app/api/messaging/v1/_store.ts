@@ -12,7 +12,7 @@ import type {
 } from "@/app/opal/im/lib/types";
 
 const DATA_FILE = path.join(process.cwd(), ".messaging-data.json");
-// seed v2 — Jamie as DM participant for proactive VAU demos
+// seed v3 — add conv-demo-geo-qa group (Frank/Jamie/Mary Anne artifact thread)
 
 type StoreShape = {
   conversations: Conversation[];
@@ -186,6 +186,22 @@ const SEED: StoreShape = {
       member_count: 2,
     },
     {
+      id: "conv-demo-geo-qa",
+      instance_id: "im-prototype",
+      type: "group",
+      name: "Q&A: Discover the Unknown",
+      created_by: "vau-frank",
+      created_at: new Date(Date.now() - 5400000).toISOString(),
+      updated_at: new Date(Date.now() - 600000).toISOString(),
+      archived: false,
+      participants: [
+        unreadParticipant("jamie", "owner"),
+        participant("vau-frank", "member"),
+        participant("mary-anne", "member"),
+      ],
+      member_count: 3,
+    },
+    {
       id: "conv-launch-room",
       instance_id: "im-prototype",
       type: "group",
@@ -280,6 +296,12 @@ const SEED: StoreShape = {
     "conv-gtm": [
       message("msg-gtm1", "conv-gtm", "jamie", "Reminder: GTM sync next Tuesday 10am — competitive section is on the agenda."),
     ],
+    "conv-demo-geo-qa": [
+      message("msg-dg1", "conv-demo-geo-qa", "vau-frank", "I've started drafting the GEO Q&A article for Stride's Discover the Unknown. First pass is ready — 7 Q&A pairs covering the core product questions. Sharing for review."),
+      message("msg-dg2", "conv-demo-geo-qa", "jamie", "Nice start. A few things: can we make the first answer less spec-y and more story-driven? Also needs a team use case — right now it reads very individual-athlete."),
+      message("msg-dg3", "conv-demo-geo-qa", "mary-anne", "Agree on the tone. Opening tone should feel more explorer-first. Also — are we covering AI overview queries specifically? That's the GEO angle."),
+      message("msg-dg4", "conv-demo-geo-qa", "vau-frank", "Done — all three rounds of feedback incorporated:\n✓ **Activities** — Explicitly listed trail running, climbing, diving, skydiving, and multi-terrain endurance challenges\n✓ **Team use cases** — Rewired around competitive multi-sport group challenges, not generic team building\n✓ **Opening tone** — Rewrote the first 3 Q&As in Stride's adventurous, explorer-first voice\n\nThe updated article is ready for final review. See the revised artifact below."),
+    ],
     "conv-launch-room": [
       message("msg-lr1", "conv-launch-room", "pei", "@Henry @Poppy — let's spin up the spring launch room. What's the rough timeline looking like?"),
       message("msg-lr2", "conv-launch-room", "vau-poppy", "Tracking. Rough plan: kickoff Mon, dependency map by Wed, exec preview Fri. Want me to draft a launch timeline?"),
@@ -343,7 +365,7 @@ function message(id: string, convId: string, sender: string, content: string): I
 }
 
 // Bump this when SEED participants change so old persisted cache is discarded.
-const SEED_VERSION = "v9-unread-state";
+const SEED_VERSION = "v11-qa-unread";
 
 async function load(): Promise<StoreShape> {
   if (cache) return cache;
@@ -373,6 +395,19 @@ async function persist(): Promise<void> {
 }
 
 type IdentitySource = Request | Headers | { headers: Headers } | string | null | undefined;
+
+/**
+ * Reset all demo data — wipes the persisted cache so the next load re-seeds
+ * from SEED, including participant read state (unread dots reappear).
+ */
+export async function resetAll(): Promise<void> {
+  cache = null;
+  try {
+    await fs.unlink(DATA_FILE);
+  } catch {
+    // File may not exist in serverless environments — ignore.
+  }
+}
 
 /**
  * Reset a single conversation's messages back to the SEED's version. Useful

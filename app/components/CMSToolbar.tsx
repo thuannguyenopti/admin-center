@@ -176,7 +176,7 @@ export default function CMSToolbar({
 	onRevert,
 	onShowVersionHistory,
 
-	preview = {mode: "responsive", width: 1100, maxWidth: 1100},
+	preview = {mode: "scale", width: 1440},
 	onPreviewChange = () => {},
 
 	contentTypeIcon,

@@ -31,16 +31,12 @@ function readStoredLayout(): LayoutKey {
   }
 }
 
-const DEMO_CONVERSATIONS = [
-  { id: "conv-vau-tony", label: "Reset Tony's killswitch thread" },
-];
-
 export function LayoutSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
   const [current, setCurrent] = useState<LayoutKey>("A");
   const [open, setOpen] = useState(false);
-  const [resetting, setResetting] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   // Sync active pill from localStorage after hydration
@@ -66,20 +62,13 @@ export function LayoutSwitcher() {
     }
   };
 
-  const resetConversation = async (convId: string) => {
-    setResetting(convId);
+  const resetDemo = async () => {
+    setResetting(true);
     try {
-      await fetch(`/api/messaging/v1/conversations/${convId}/reset`, {
-        method: "POST",
-      });
-      try {
-        sessionStorage.setItem("im-initial-chat", convId);
-      } catch {
-        // ignore storage errors
-      }
+      await fetch("/api/messaging/v1/reset-all", { method: "POST" });
       window.location.reload();
     } catch {
-      setResetting(null);
+      setResetting(false);
     }
   };
 
@@ -182,19 +171,16 @@ export function LayoutSwitcher() {
             <Text fontSize="xs" fontWeight="500" color="fg.tertiary" style={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
               Demo
             </Text>
-            {DEMO_CONVERSATIONS.map((c) => (
-              <Button
-                key={c.id}
-                appearance="subtle"
-                size="md"
-                icon={<IconArrowsRotate size={16} />}
-                onClick={() => resetConversation(c.id)}
-                disabled={resetting === c.id}
-                style={{ justifyContent: "flex-start" }}
-              >
-                {resetting === c.id ? "Resetting…" : c.label}
-              </Button>
-            ))}
+            <Button
+              appearance="subtle"
+              size="md"
+              icon={<IconArrowsRotate size={16} />}
+              onClick={resetDemo}
+              disabled={resetting}
+              style={{ justifyContent: "flex-start" }}
+            >
+              {resetting ? "Resetting…" : "Reset Demo"}
+            </Button>
           </Box>
         </Box>
       )}
