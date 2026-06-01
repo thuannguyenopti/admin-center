@@ -107,10 +107,24 @@ function PillMenuSelect({
 		return menuOptions;
 	}, [availableItems, selectedItems, inputValue, onToggle, onCreateNew]);
 
+	const value = useMemo<MenuOption[]>(
+		() =>
+			availableItems
+				.filter((item) => selectedItems.includes(item.slug))
+				.map((item) => ({
+					execute: () => onToggle(item.slug),
+					label: item.name,
+					multi: true,
+					selected: () => true,
+				})),
+		[availableItems, selectedItems, onToggle]
+	);
+
 	return (
 		<Field label={label}>
 			<PillMenu
 				options={options}
+				value={value}
 				placeholder={placeholder}
 				inputValue={inputValue}
 				onInputValueChange={setInputValue}
