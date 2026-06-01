@@ -463,6 +463,39 @@ export function useOpalState({
       return;
     }
 
+    // Detect brief/content generation on CMP task pages
+    const lower = trimmed.toLowerCase();
+    const isBriefRequest = (lower.includes('generate') || lower.includes('create')) && lower.includes('brief');
+    const isOnTaskPage = typeof window !== 'undefined' && /^\/cmp\/task\//.test(window.location.pathname);
+
+    if (isBriefRequest && isOnTaskPage) {
+      const taskId = window.location.pathname.split('/cmp/task/')[1]?.split('/')[0] || '';
+      let taskTitle = "Task";
+      try {
+        const tasks = JSON.parse(localStorage.getItem('cmpTasks') || '[]');
+        taskTitle = tasks.find((t: any) => t.id === taskId)?.title || "Task";
+      } catch { /* use default */ }
+
+      addMessage({
+        role: 'user',
+        content: trimmed,
+        authorName: 'Jamie Chen',
+      });
+
+      addMessage({
+        role: 'assistant',
+        content: `Let's create a brief for "${taskTitle}". Fill in the details below.`,
+        messageType: 'brief-wizard-step',
+        metadata: {
+          blockType: 'brief-wizard-step',
+          taskId,
+          taskTitle,
+        },
+      });
+
+      return;
+    }
+
     const isExperimentCreationRun = trimmed.startsWith('Run the Experiment Creation agent');
     const isSummarizeRequest =
       optimizationId != null &&

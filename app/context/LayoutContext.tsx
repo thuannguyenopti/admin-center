@@ -3,7 +3,7 @@
 import {createContext, useContext, useState, useEffect, ReactNode} from "react";
 import type {ChatMessage} from "@/app/hooks/useOpalState";
 
-type OpalPanelControls = {
+export type OpalPanelControls = {
 	openPanel: () => void;
 	togglePanel: () => void;
 	closePanel: () => void;
