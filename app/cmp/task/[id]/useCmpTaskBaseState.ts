@@ -14,7 +14,7 @@ import type { TaskWorkflowState } from "./workflowTypes";
 import { formatInitialBriefHtml } from "./utils";
 
 export function useCmpTaskBaseState(taskId: string) {
-	const taskBriefHtml = formatInitialBriefHtml(taskBriefContents[taskId] ?? initialBriefContent);
+	const taskBriefHtml = formatInitialBriefHtml(taskBriefContents[taskId] ?? "");
 	const [scene, setScene] = useState<Scene>("brief");
 	const [selectedAsset, setSelectedAsset] = useState<AssetItem>(suggestedAssets[6]);
 	const [selectedTaskAssetId, setSelectedTaskAssetId] = useState<string | null>(null);

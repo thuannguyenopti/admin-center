@@ -1,10 +1,11 @@
 "use client";
 
 import { toaster } from "@optiaxiom/react";
-import { type ContentInstance, initialCmpTasks } from "@/app/db/cmpInitialData";
+import { type ContentInstance, initialCmpTasks, type CmpTask } from "@/app/db/cmpInitialData";
 import type { ContentType } from "@/app/db/initialData";
 import { createPageFromInstance } from "@/app/lib/contentConnection";
 import { useCallback, useEffect, useRef } from "react";
+import usePersistentState from "@/app/usePersistentState";
 import type { TaskWorkflowState } from "./workflowTypes";
 import { workflowTemplates } from "./mockData";
 import type { AssetItem, Scene } from "./types";
@@ -21,7 +22,8 @@ import {
 } from "./utils/workflowState";
 
 export function useTaskDetailState(taskId: string) {
-	const currentTaskName = initialCmpTasks.find((t) => t.id === taskId)?.title ?? "Unknown Task";
+	const [tasks] = usePersistentState("cmpTasks", initialCmpTasks) as [CmpTask[], any, boolean];
+	const currentTaskName = tasks.find((t) => t.id === taskId)?.title ?? "Unknown Task";
 	const state = useCmpTaskBaseState(taskId);
 	const computed = useCmpTaskComputedData({
 		briefContent: state.briefContent,
