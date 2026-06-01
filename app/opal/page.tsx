@@ -23,6 +23,10 @@ const CodeCanvasPanel = dynamic(
   () => import("@/app/components/Opal/CodeCanvasPanel").then((mod) => mod.CodeCanvasPanel),
   { ssr: false }
 );
+const CollabRail = dynamic(
+  () => import("@/app/components/Opal/CollabRail").then((mod) => mod.CollabRail),
+  { ssr: false }
+);
 
 const OpalChatView = dynamic(
   () => import("@/app/components/Opal/OpalChatView").then((mod) => mod.OpalChatView)
@@ -359,6 +363,8 @@ export default function OpalPage() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorVersion, setEditorVersion] = useState<'v1' | 'v2'>('v1');
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
+  const [canvasExpanded, setCanvasExpanded] = useState(false);
+  const [collabRailOpen, setCollabRailOpen] = useState(false);
   const [headlessTaskOpen, setHeadlessTaskOpen] = useState(false);
   const [taskPanelWidth, setTaskPanelWidth] = useState(460);
   const handleTaskResize = useCallback((dx: number) => {
@@ -373,6 +379,39 @@ export default function OpalPage() {
   });
   const isFirstMount = useRef(true);
   const hasSeededThread = useRef(false);
+  const hasSeededWorkInOpal = useRef(false);
+
+  // ── Fullscreen canvas: Escape to exit + body scroll lock ──────────────────
+  useEffect(() => {
+    if (!canvasExpanded) return;
+    document.body.style.overflow = "hidden";
+    const handleKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") setCanvasExpanded(false);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, [canvasExpanded]);
+
+  // ── Deep-link: ?file=...&title=... from "Work in Opal" in IM messages ──
+  useEffect(() => {
+    if (hasSeededWorkInOpal.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const file = params.get('file');
+    const title = params.get('title');
+    const prompt = params.get('prompt');
+    if (file) {
+      hasSeededWorkInOpal.current = true;
+      if (prompt) {
+        setInputValue(prompt);
+      } else {
+        const label = title ? `"${title}"` : file;
+        setInputValue(`I'm working on a blog post — ${label} (${file}). Can you help me refine it?`);
+      }
+    }
+  }, [setInputValue]);
 
   // Drive seeded/triggered messages through the IM adapter so avatars,
   // timestamps, and VAU template names render identically to the live IM module.
@@ -663,7 +702,7 @@ export default function OpalPage() {
             editorOpen || headlessTaskOpen ? (
               <Box display="flex" flexDirection="row" h="full" w="full" style={{ minHeight: 0 }}>
                 {editorOpen && (
-                  <Box style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden' }}>
+                  <Box display="flex" style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden' }}>
                     <CodeCanvasPanel
                       onClose={() => setEditorOpen(false)}
                       filename="discover-the-unknown-qa.md"
@@ -673,9 +712,16 @@ export default function OpalPage() {
                       language="markdown"
                       artifactCreator={{ name: "Jamie Chen" }}
                       initialHtml={editorVersion === 'v2' ? GEO_QA_HTML_V2 : GEO_QA_HTML_V1}
-                      chatOpen={chatPanelVisible}
+                      chatOpen={chatPanelVisible && (!collabRailOpen || canvasExpanded)}
                       onChatToggle={() => setChatPanelVisible(v => !v)}
+                      isExpanded={canvasExpanded}
+                      onExpandToggle={() => setCanvasExpanded(v => !v)}
+                      collabRailOpen={collabRailOpen}
+                      onCollabRailToggle={() => setCollabRailOpen(v => !v)}
                     />
+                    {!canvasExpanded && (
+                      <CollabRail open={collabRailOpen} onClose={() => setCollabRailOpen(false)} />
+                    )}
                   </Box>
                 )}
                 {editorOpen && headlessTaskOpen && <GrabHandle onResize={handleTaskResize} />}

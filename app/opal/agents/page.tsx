@@ -21,7 +21,7 @@ import {
 import { Table, Tr, Td } from "@/app/components/Table";
 import { DataTableHeaderCell } from "@optiaxiom/react/unstable";
 import { useReactTable, getCoreRowModel, type ColumnDef } from "@tanstack/react-table";
-import { IconAgent, IconCodeBranch, IconUpload, IconSearch, IconPlus, IconChevronDown, IconPen, IconTrashCan, IconDownload, IconEllipsisSolid, IconEye, IconEyeSlash, IconArrowRightArrowLeft } from "@optiaxiom/icons";
+import { IconUserRobot as IconAgent, IconCodeBranch, IconUpload, IconSearch, IconPlus, IconChevronDown, IconPen, IconTrashCan, IconDownload, IconEllipsisSolid, IconEye, IconEyeSlash, IconArrowRightArrowLeft } from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import { NewAgentDialog } from "./components/NewAgentDialog";
 import { ImportAgentDialog } from "./components/ImportAgentDialog";

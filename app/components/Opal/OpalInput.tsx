@@ -38,7 +38,7 @@ import {
   IconUpload,
   IconUser,
   IconXmark,
-  IconAgent,
+  IconUserRobot as IconAgent,
 } from "@optiaxiom/icons";
 import { IconBuilding } from "@/app/lib/axiom-icons";
 import { IconMicrophone } from "@/app/lib/axiom-icons";

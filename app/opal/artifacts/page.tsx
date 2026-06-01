@@ -35,7 +35,7 @@ import {
     IconTrashCan,
     IconDownload,
     IconEllipsisSolid,
-    IconAgent,
+    IconUserRobot as IconAgent,
     IconCodeBranch,
     IconGrid,
     IconList,
