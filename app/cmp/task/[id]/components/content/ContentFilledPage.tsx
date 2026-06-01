@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge, Box, Menu, MenuContent, MenuTrigger } from "@optiaxiom/react";
-import { Button } from "@/app/components/Button";
+import { Button } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import Grid2Icon from "@/app/cmp/assets/grid2.svg";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
@@ -9,7 +9,7 @@ import { initialContentInstances } from "@/app/db/cmpInitialData";
 import type { Application, ContentType, Page } from "@/app/db/initialData";
 import { initialContentTypes } from "@/app/db/initialData";
 import usePersistentState from "@/app/usePersistentState";
-import { IconChevronDown, IconCopy, IconDots, IconLink, IconPencil, IconTag } from "@tabler/icons-react";
+import { IconChevronDown, IconCopy, IconDots, IconLink, IconPencil, IconPlus, IconTag } from "@tabler/icons-react";
 import { IconBolt } from "@/app/lib/axiom-icons";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -163,8 +163,10 @@ export function ContentFilledPage({
 				<Box alignItems="center" display="flex" justifyContent="space-between">
 					<Menu options={buildAddContentMenuOptions({ onAddArticle, onAddAsset: onAddContent, onAddContentFromModel })}>
 						<MenuTrigger asChild>
-							<Button appearance="primary" size="sm" style={{ background: "#0037FF", borderRadius: 6, height: 40, padding: "0 12px" }}>
-								<AddContentButtonLabel />
+							<Button appearance="primary" icon={<IconChevronDown size={14} />} iconPosition="end">
+								<Box asChild display="inline-flex" alignItems="center" gap="4">
+									<span><IconPlus size={16} />Add Content</span>
+								</Box>
 							</Button>
 						</MenuTrigger>
 						<MenuContent />

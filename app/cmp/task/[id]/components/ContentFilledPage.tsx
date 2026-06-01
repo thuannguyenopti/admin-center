@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Badge, Box, Menu, MenuTrigger, MenuContent, toaster } from "@optiaxiom/react";
-import { Button } from "@/app/components/Button";
+import { Button } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { initialContentTypes, type ContentType, type Page, type Application } from "@/app/db/initialData";
 import { type ContentInstance, initialCmpContentModels } from "@/app/db/cmpInitialData";
@@ -176,18 +176,11 @@ export function ContentFilledPage({
 						<MenuTrigger asChild>
 							<Button
 								appearance="primary"
-								size="sm"
-								style={{
-									background: "#0037FF",
-									borderRadius: 6,
-									height: 40,
-									padding: "0 12px",
-								}}
+								icon={<IconChevronDown size={14} />}
+								iconPosition="end"
 							>
-								<Box alignItems="center" display="flex" gap="4">
-									<IconPlus size={16} />
-									<span>Add Content</span>
-									<IconChevronDown size={16} />
+								<Box asChild display="inline-flex" alignItems="center" gap="4">
+									<span><IconPlus size={16} />Add Content</span>
 								</Box>
 							</Button>
 						</MenuTrigger>
