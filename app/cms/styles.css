@@ -1,5 +1,15 @@
 /* CMS-specific styles. Imported by app/globals.css. */
 
+
+/* Lenis parallax effect - only on desktop */
+@media screen and (min-width: 768px) {
+	[data-lenis-parallax] {
+		transform: translate3d(0, calc(var(--lenis-parallax, 0) * 1px), 0);
+		will-change: transform;
+	}
+}
+
+
 /* Visual Builder outline hover — reveal chevron on outline hover */
 .chevron {
 	visibility: hidden;
@@ -36,4 +46,43 @@ body.dark .newly-imported {
 	100% {
 		background-color: transparent;
 	}
+}
+
+
+.parent {
+	display: grid;
+	grid-template-columns: 0fr 1fr;
+	grid-template-rows: 0fr 1fr;
+	grid-column-gap: 0px;
+	grid-row-gap: 0px;
+}
+
+.div1 {
+	grid-area: 1 / 1 / 2 / 6;
+}
+
+.div2 {
+	grid-area: 2 / 1 / 6 / 2;
+}
+
+.div3 {
+	grid-area: 2 / 2 / 6 / 6;
+}
+
+.vt {
+	overflow: hidden;
+}
+
+.noSlide {
+	transform: translateX(0px);
+	transition: transform 0.7s cubic-bezier(0, 1, 0, 1);
+}
+
+.slidex {
+	animation: slide 0.7s both cubic-bezier(0, 1, 0, 1);
+}
+
+.extension-icon > svg {
+	width: 16px;
+	height: 16px;
 }

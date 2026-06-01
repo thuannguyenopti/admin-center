@@ -10,14 +10,6 @@
 @import "lenis/dist/lenis.css";
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
 
-/* Lenis parallax effect - only on desktop */
-@media screen and (min-width: 768px) {
-	[data-lenis-parallax] {
-		transform: translate3d(0, calc(var(--lenis-parallax, 0) * 1px), 0);
-		will-change: transform;
-	}
-}
-
 /* Nudge SemiNormal — Optimizely brand heading font */
 @font-face {
   font-family: "Nudge SemiNormal";
@@ -129,20 +121,11 @@ html {
 	height: 100%;
 }
 body {
-	font-family: Arial, Helvetica, sans-serif;
+	font-family: "DI Grotesk B", Arial, Helvetica, sans-serif;
 	margin: 0;
 	height: 100%;
 	/* fix body text readability */
 	letter-spacing: 0.015em;
-}
-
-/*
- * Axiom 1.9 primary buttons still default strong button text to fg.white.
- * The V3 rebrand primary is lime, so scope the strong text bridge to
- * primary buttons only and leave danger/inverse strong buttons unchanged.
- */
-.vre7li._47vzdo {
-	--_6o2eap: var(--ax-colors-fg-default-inverse);
 }
 
 /* Prevent page scroll when a modal is open (single scrollbar inside modal only) */
@@ -160,44 +143,6 @@ body[data-modal-open] .main-scroll-area {
 }
 .scrollbar-hide::-webkit-scrollbar {
 	display: none;
-}
-
-.parent {
-	display: grid;
-	grid-template-columns: 0fr 1fr;
-	grid-template-rows: 0fr 1fr;
-	grid-column-gap: 0px;
-	grid-row-gap: 0px;
-}
-
-.div1 {
-	grid-area: 1 / 1 / 2 / 6;
-}
-
-.div2 {
-	grid-area: 2 / 1 / 6 / 2;
-}
-
-.div3 {
-	grid-area: 2 / 2 / 6 / 6;
-}
-
-.vt {
-	overflow: hidden;
-}
-
-.noSlide {
-	transform: translateX(0px);
-	transition: transform 0.7s cubic-bezier(0, 1, 0, 1);
-}
-
-.slidex {
-	animation: slide 0.7s both cubic-bezier(0, 1, 0, 1);
-}
-
-.extension-icon > svg {
-	width: 16px;
-	height: 16px;
 }
 
 @keyframes slide {
