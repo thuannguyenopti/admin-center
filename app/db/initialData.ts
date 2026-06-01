@@ -469,9 +469,18 @@ export const initialContentTypes: ContentType[] = [
 		properties: [
 			{ id: "title", name: "Title", displayName: "Title", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "String", groupName: "Content", order: 2 },
-			{ id: "featuredImage", name: "Featured Image", displayName: "Featured Image", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 3 },
-			{ id: "body", name: "Body", displayName: "Body", type: "XhtmlString", required: true, groupName: "Content", order: 4 },
-			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", allowedTypes: ["ct-author"], required: true, groupName: "Content", order: 5 },
+			{ id: "category", name: "Category", displayName: "Category", type: "String", groupName: "Content", order: 3 },
+			{ id: "readingTime", name: "Reading Time", displayName: "Reading Time", type: "String", groupName: "Content", order: 4 },
+			{ id: "publishDate", name: "Publish Date", displayName: "Publish Date", type: "String", groupName: "Content", order: 5 },
+			{ id: "featuredImage", name: "Featured Image", displayName: "Featured Image", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 6 },
+			{ id: "heroLogo", name: "Hero Logo", displayName: "Hero Logo", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 7 },
+			{ id: "body", name: "Body", displayName: "Body", type: "XhtmlString", required: true, groupName: "Content", order: 7 },
+			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", allowedTypes: ["ct-author"], required: true, groupName: "Content", order: 8 },
+			{ id: "ctaHeading", name: "CTA Heading", displayName: "CTA Heading", type: "String", groupName: "CTA", order: 1 },
+			{ id: "ctaPrimaryText", name: "CTA Primary Text", displayName: "CTA Primary Button", type: "String", groupName: "CTA", order: 2 },
+			{ id: "ctaPrimaryLink", name: "CTA Primary Link", displayName: "CTA Primary Link", type: "String", groupName: "CTA", order: 3 },
+			{ id: "ctaSecondaryText", name: "CTA Secondary Text", displayName: "CTA Secondary Button", type: "String", groupName: "CTA", order: 4 },
+			{ id: "ctaSecondaryLink", name: "CTA Secondary Link", displayName: "CTA Secondary Link", type: "String", groupName: "CTA", order: 5 },
 			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
 		],
 	},
@@ -1232,6 +1241,7 @@ export const initialContentTypes: ContentType[] = [
 					{ id: "pm-bp-title", sourcePropertyId: "field-bp-title", targetPropertyId: "title", transformation: "direct", required: true, description: "Title → Title" },
 					{ id: "pm-bp-excerpt", sourcePropertyId: "field-bp-excerpt", targetPropertyId: "subtitle", transformation: "direct", description: "Excerpt → Subtitle" },
 					{ id: "pm-bp-featured-image", sourcePropertyId: "field-bp-featured-image", targetPropertyId: "featuredImage", transformation: "direct", description: "Featured Image → Featured Image" },
+					{ id: "pm-bp-hero-logo", sourcePropertyId: "field-bp-hero-logo", targetPropertyId: "heroLogo", transformation: "direct", description: "Hero Logo → Hero Logo" },
 					{ id: "pm-bp-content", sourcePropertyId: "field-bp-content", targetPropertyId: "body", transformation: "direct", required: true, description: "Content → Body" },
 					{ id: "pm-bp-author", sourcePropertyId: "field-bp-author", targetPropertyId: "author", transformation: "direct", required: true, description: "Author → Author" },
 				],
@@ -5261,112 +5271,152 @@ export const initialPages: Page[] = [
 		name: "5 Tips for Your First Marathon",
 		parentId: "page-site-blog",
 		status: "Published",
-		lastModified: "2023-10-24",
+		lastModified: "2026-04-12",
 		contentTypeId: "ct-blog-post",
 		slug: "5-tips-for-your-first-marathon",
 		data: {
-			title: "5 Tips for Your First Marathon",
+			title: "5 Tips for Your First Marathon with Stride",
 			subtitle: "Build confidence, stay consistent, and make race day feel familiar.",
-			body: `<p>Training for 26.2 miles starts with a single step — and a plan you can actually stick to. Here are five practical tips that help first-timers build fitness without burning out.</p>
+			category: "Training",
+			heroLogo: "/boston-marathon-logo.png",
+			readingTime: "8 min read",
+			publishDate: "Apr 12, 2026",
+			featuredImage: "/cmp/assets/recommendation/panel-01-image.jpg",
+			body: `<p>Training for 26.2 miles starts with a single step — and a plan you can actually stick to. Whether you're lacing up your Stride Pros for the first time or graduating from 10Ks, these five tips will help you build fitness without burning out.</p>
 <h2>1) Keep the easy runs easy</h2>
-<p>Your easy pace should feel conversational. That’s where most of your aerobic gains come from.</p>
+<p>Your easy pace should feel conversational. That's where most of your aerobic gains come from. The Stride Pro's cushioned midsole is built for exactly this — absorbing miles without breaking you down.</p>
 <h2>2) Long runs are practice, not a test</h2>
-<p>Focus on time-on-feet and fueling. Don’t race your long run.</p>
+<p>Focus on time-on-feet and fueling. Don't race your long run. Use it to rehearse your race-day nutrition and hydration strategy.</p>
 <h2>3) Fuel early and often</h2>
 <ul>
   <li><p>Start fueling around 30–45 minutes in</p></li>
-  <li><p>Aim for consistent carbs + water</p></li>
+  <li><p>Aim for 30–60g of carbs per hour</p></li>
+  <li><p>Practice with the same gels and drinks you'll use on race day</p></li>
 </ul>
-<h2>4) Don’t skip recovery</h2>
-<p>Sleep, easy days, and lower-intensity weeks are part of the training.</p>
+<h2>4) Don't skip recovery</h2>
+<p>Sleep, easy days, and lower-intensity weeks are part of the training. Your body adapts during rest, not during the run. Stride's recovery line is designed to support this phase.</p>
 <h2>5) Rehearse race day</h2>
-<p>Try your breakfast, gels, and outfit on a long run so there are no surprises.</p>`,
-			author: "1",
+<p>Try your breakfast, gels, shoes, and outfit on a long run so there are no surprises. If you're running a Stride event, check in early and walk the start area the day before.</p>`,
+			author: { name: "Rachel Voss", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face" },
+			ctaHeading: "Ready to compete?",
+			ctaPrimaryText: "GET STARTED",
+			ctaPrimaryLink: "/registration",
+			ctaSecondaryText: "REQUEST A DEMO",
+			ctaSecondaryLink: "/demo",
 		},
 	},
 	{
 		id: "page-site-blog-post-2",
-		name: "Intervals for Beginners",
+		name: "Interval Training with Stride",
 		parentId: "page-site-blog",
 		status: "Published",
-		lastModified: "2023-10-28",
+		lastModified: "2026-04-18",
 		contentTypeId: "ct-blog-post",
-		slug: "intervals-for-beginners",
+		slug: "interval-training-with-stride",
 		data: {
-			title: "Intervals for Beginners",
-			subtitle: "A simple approach to speedwork that won’t fry your legs.",
-			body: `<p>Intervals don’t have to be scary. Think of them as controlled effort followed by recovery, repeated a few times. The goal is better form, efficiency, and confidence — not exhaustion.</p>
+			title: "Speed Sessions: A Runner's Guide to Intervals",
+			subtitle: "How to add speedwork to your training without burning out.",
+			category: "Performance",
+			readingTime: "6 min read",
+			publishDate: "Apr 18, 2026",
+			featuredImage: "/cmp/assets/recommendation/panel-06-image.jpg",
+			body: `<p>Intervals don't have to be scary. Think of them as controlled effort followed by recovery, repeated a few times. The goal is better form, efficiency, and confidence — not exhaustion.</p>
 <h2>A starter workout</h2>
 <ul>
   <li><p><strong>Warm up:</strong> 10 minutes easy + 3 short strides</p></li>
   <li><p><strong>Main set:</strong> 6 × (1 min steady-hard, 2 min easy)</p></li>
   <li><p><strong>Cool down:</strong> 10 minutes easy</p></li>
 </ul>
-<p>During the hard minute, aim for “comfortably hard” — you should finish feeling like you could do one more rep.</p>
+<p>During the hard minute, aim for "comfortably hard" — you should finish feeling like you could do one more rep. The Stride Racer's responsive plate gives you that extra snap without the crash.</p>
+<h2>When to level up</h2>
+<p>Once 1-minute reps feel manageable, try 2–3 minute reps at a slightly slower pace. The key is progressive overload — small, sustainable jumps in volume or intensity.</p>
 <h2>Common mistakes</h2>
 <ul>
   <li><p>Starting too fast on rep 1</p></li>
   <li><p>Skipping the warm-up</p></li>
   <li><p>Doing intervals on tired legs every week</p></li>
 </ul>
-<p>One interval session per week is plenty for most runners.</p>`,
-			author: "2",
+<p>One interval session per week is plenty for most runners. Quality over quantity — always.</p>`,
+			author: { name: "Todd Slayton", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face" },
+			ctaHeading: "Find your next event",
+			ctaPrimaryText: "VIEW EVENTS",
+			ctaPrimaryLink: "/events",
+			ctaSecondaryText: "JOIN THE COMMUNITY",
+			ctaSecondaryLink: "/community",
 		},
 	},
-
 	{
 		id: "page-site-blog-post-3",
 		name: "Race Day Checklist",
 		parentId: "page-site-blog",
-		status: "Draft",
-		lastModified: "2023-10-29",
+		status: "Published",
+		lastModified: "2026-05-02",
 		contentTypeId: "ct-blog-post",
 		slug: "race-day-checklist",
 		data: {
-			title: "Race Day Checklist",
+			title: "The Stride Race Day Checklist",
 			subtitle: "Remove the stress by planning the small stuff ahead of time.",
-			body: `<p>Race mornings get chaotic fast. The best way to stay calm is to remove decisions and make the day feel like a routine workout.</p>
+			category: "Race Day",
+			readingTime: "5 min read",
+			publishDate: "May 2, 2026",
+			featuredImage: "/cmp/assets/recommendation/panel-05-image.jpg",
+			body: `<p>Race mornings get chaotic fast. The best way to stay calm is to remove decisions and make the day feel like a routine workout. Here's the checklist our Stride athletes swear by.</p>
 <h2>The night before</h2>
 <ul>
-  <li><p>Lay out your kit (shoes, socks, top, shorts/tights)</p></li>
-  <li><p>Pin your bib and pack safety pins (or your belt)</p></li>
+  <li><p>Lay out your kit — Stride shoes, socks, top, shorts or tights</p></li>
+  <li><p>Pin your bib and attach your timing chip</p></li>
   <li><p>Charge your watch and phone</p></li>
   <li><p>Plan breakfast + pack a backup snack</p></li>
+  <li><p>Check the weather and adjust layers accordingly</p></li>
 </ul>
 <h2>Race morning</h2>
 <ul>
   <li><p>Arrive early and find toilets first</p></li>
-  <li><p>Do 5–10 minutes easy jogging + a few strides (if appropriate)</p></li>
+  <li><p>Do 5–10 minutes easy jogging + a few strides</p></li>
   <li><p>Start conservatively for the first 5–10 minutes</p></li>
+  <li><p>Smile at the crowd — they're there for you</p></li>
 </ul>
-<blockquote><p><strong>Pro tip:</strong> Write your plan (pace + fueling) on a note in your phone. When nerves spike, you’ll follow the plan.</p></blockquote>`,
-			author: "3",
+<blockquote><p><strong>Pro tip:</strong> Write your plan (pace + fueling) on your wrist or a card in your pocket. When nerves spike, you'll follow the plan instead of the adrenaline.</p></blockquote>`,
+			author: { name: "Rachel Voss", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face" },
+			ctaHeading: "Ready to compete?",
+			ctaPrimaryText: "GET STARTED",
+			ctaPrimaryLink: "/registration",
+			ctaSecondaryText: "REQUEST A DEMO",
+			ctaSecondaryLink: "/demo",
 		},
 	},
-
 	{
 		id: "page-site-blog-post-4",
 		name: "How to Choose Running Shoes",
 		parentId: "page-site-blog",
 		status: "Published",
-		lastModified: "2023-10-30",
+		lastModified: "2026-05-10",
 		contentTypeId: "ct-blog-post",
 		slug: "how-to-choose-running-shoes",
 		data: {
-			title: "How to Choose Running Shoes",
+			title: "Finding Your Perfect Stride: A Shoe Guide",
 			subtitle: "Comfort first, then match the shoe to your training.",
-			body: `<p>The “best” shoe is the one that fits your foot and your running. Start with comfort and stability, then refine based on your training goals.</p>
+			category: "Gear",
+			readingTime: "7 min read",
+			publishDate: "May 10, 2026",
+			featuredImage: "/cmp/assets/recommendation/panel-08-image.jpg",
+			body: `<p>The "best" shoe is the one that fits your foot and your running. Start with comfort and stability, then refine based on your training goals. Here's how the Stride lineup breaks down.</p>
 <h2>Fit comes first</h2>
-<p>Look for a secure heel, a roomy toe box, and no hot spots. Your toes should be able to wiggle, and the shoe shouldn’t slip when you walk or jog.</p>
+<p>Look for a secure heel, a roomy toe box, and no hot spots. Your toes should be able to wiggle, and the shoe shouldn't slip when you walk or jog. Every Stride shoe is designed with an anatomical last that mirrors the natural foot shape.</p>
 <h2>Match the shoe to the session</h2>
 <ul>
-  <li><p><strong>Daily trainer:</strong> comfortable, durable, forgiving</p></li>
-  <li><p><strong>Workout shoe:</strong> lighter, snappier, more responsive</p></li>
-  <li><p><strong>Trail shoe:</strong> grip, protection, stable platform</p></li>
+  <li><p><strong>Stride Pro:</strong> daily trainer — comfortable, durable, forgiving. Built for the miles that matter most.</p></li>
+  <li><p><strong>Stride Racer:</strong> workout shoe — lighter, snappier, carbon plate for race-day performance.</p></li>
+  <li><p><strong>Stride Trail:</strong> trail shoe — aggressive grip, rock plate protection, stable platform for technical terrain.</p></li>
 </ul>
-<h2>Don’t overthink pronation labels</h2>
-<p>Unless you have a specific injury history, prioritize what feels natural and stable. If possible, test-run them on a treadmill or outside.</p>`,
-			author: "1",
+<h2>Don't overthink pronation labels</h2>
+<p>Unless you have a specific injury history, prioritize what feels natural and stable. Visit a Stride retail partner for a free gait analysis, or test-run them at any Stride event expo.</p>`,
+			author: { name: "Todd Slayton", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face" },
+			ctaHeading: "Find your fit",
+			ctaPrimaryText: "SHOP STRIDE",
+			ctaPrimaryLink: "/shop",
+			ctaSecondaryText: "FIND A STORE",
+			ctaSecondaryLink: "/stores",
 		},
 	},
 

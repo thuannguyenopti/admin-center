@@ -68,3 +68,13 @@ export type PublishingChannel = {
 	channelTypeId: string;
 	selectedContentIds: string[];
 };
+
+export type BriefWizardInputs = {
+	coreMessage: string;
+	valueProposition: string;
+	targetAudience: string;
+	metric: "awareness" | "conversion" | "retention" | "education";
+	selectedChannels: string[];
+	attachments: File[];
+	imageGuidelines?: string;
+};
