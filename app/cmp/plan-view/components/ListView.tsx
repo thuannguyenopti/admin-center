@@ -72,7 +72,7 @@ export function ListView({ data, expandedGroups, toggleGroup, onRowClick }: List
 									</Box>
 								</TableCell>
 								<TableCell px="16" py="12" className="align-middle" style={{ width: "280px", minWidth: "280px" }}>
-									<Box display="flex" alignItems="center" gap="8">
+									<Box display="flex" alignItems="center" gap="8" style={item.parentCampaign ? {paddingLeft: 52} : undefined}>
 										{item.isGroup && (
 											<Button
 												appearance="subtle"
