@@ -31,7 +31,8 @@ export const BlogPostBlock = React.memo(function BlogPostBlock({
 	const category = toText(properties?.category) || "";
 	const readingTime = toText(properties?.readingTime) || "";
 	const publishDate = toText(properties?.publishDate) || "";
-	const body = toText(properties?.body);
+	const rawBody = properties?.body;
+	const body = typeof rawBody === "string" ? rawBody : toText(rawBody);
 	const featuredImage = properties?.featuredImage;
 	const heroLogo = properties?.heroLogo;
 	const author = properties?.author;
@@ -172,8 +173,8 @@ export const BlogPostBlock = React.memo(function BlogPostBlock({
 				)}
 			</div>
 
-			{/* Blog body styles */}
-			<style jsx>{`
+			{/* Blog body styles — regular style tag (not jsx) for reliable rendering */}
+			<style dangerouslySetInnerHTML={{__html: `
 				.blog-body h2 {
 					font-size: 24px;
 					font-weight: 600;
@@ -208,7 +209,11 @@ export const BlogPostBlock = React.memo(function BlogPostBlock({
 				.blog-body strong {
 					font-weight: 650;
 				}
-			`}</style>
+				.blog-body a {
+					color: #0980F6;
+					text-decoration: underline;
+				}
+			`}} />
 		</article>
 	);
 });
