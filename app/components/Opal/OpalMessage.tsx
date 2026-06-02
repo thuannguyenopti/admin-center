@@ -21,6 +21,7 @@ import {
   IconThumbtack,
   IconLink,
   IconBolt,
+  IconSparkles as IconWand,
 } from "@optiaxiom/icons";
 import { Text } from "../Text";
 import { ChatMessage } from "@/app/hooks/useOpalState";
@@ -1032,6 +1033,7 @@ export function OpalMessage({
         {/* Name + time row, inset to clear avatar+gap */}
         <Box display="flex" alignItems="center" gap="8" style={{ paddingLeft: 44, marginBottom: 4 }}>
           <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--ax-colors-fg-default)' }}>{authorName}</span>
+          {isVAU && <IconWand size={13} style={{ color: 'var(--ax-colors-fg-secondary)', flexShrink: 0 }} />}
           <span style={{ fontSize: 11, color: 'var(--ax-colors-fg-tertiary)' }}>{time}</span>
         </Box>
         {/* Avatar + bubble row — avatar top-aligns with the bubble */}

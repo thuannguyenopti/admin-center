@@ -169,7 +169,7 @@ export function OpalHistoryItem({ item, isActive, onClick, onDelete }: OpalHisto
             )}
           </Text>
           {item.isVAU && (
-            <IconSparkles style={{ width: 12, height: 12, color: 'var(--ax-colors-fg-accent)', flexShrink: 0 }} />
+            <IconSparkles style={{ width: 12, height: 12, color: 'var(--ax-colors-fg-secondary)', flexShrink: 0 }} />
           )}
         </span>
         {item.vauTemplateName && (
@@ -269,7 +269,7 @@ export function OpalHistoryItem({ item, isActive, onClick, onDelete }: OpalHisto
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                background: 'var(--ax-colors-bg-accent)',
+                background: 'var(--ax-colors-fg-success)',
                 display: 'block',
                 flexShrink: 0,
               }}

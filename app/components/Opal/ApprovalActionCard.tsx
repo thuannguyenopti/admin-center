@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Button, Separator } from "@optiaxiom/react";
+import { Badge, Box, Button, Separator } from "@optiaxiom/react";
 import { Text } from "../Text";
 import {
   IconCheck,
@@ -9,33 +9,28 @@ import {
   IconSparkles,
   IconListCheck,
 } from "@optiaxiom/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type ApprovalState = "pending" | "approved" | "changes-requested";
 
 type ApprovalActionCardProps = {
-  /** Author of the artifact */
   authorName: string;
   authorAvatar?: string;
   isVAU?: boolean;
-  /** Pill badge shown in header row, e.g. "UPDATED" */
   badge?: string;
-
-  /** Artifact file row */
   fileName: string;
   fileSubtitle: string;
-  /** Clicking the card body (or Preview button) opens the preview panel */
   onPreview?: () => void;
-
-  /** Task link — opens task panel on the right */
   onViewTask?: () => void;
-
-  /** Approval prompt section */
   approvalTitle: string;
   approvalDescription: string;
-
   onApprove?: () => void;
   onRequestChanges?: () => void;
+  selected?: boolean;
+  /** localStorage key — persists approval state across navigation until demo reset */
+  persistKey?: string;
+  /** Controlled approval state — overrides internal state when provided */
+  approvalState?: ApprovalState;
 };
 
 export function ApprovalActionCard({
@@ -51,19 +46,43 @@ export function ApprovalActionCard({
   approvalDescription,
   onApprove,
   onRequestChanges,
+  selected = false,
+  persistKey,
+  approvalState: controlledState,
 }: ApprovalActionCardProps) {
-  const [state, setState] = useState<ApprovalState>("pending");
+  const [state, setState] = useState<ApprovalState>(() => {
+    if (controlledState) return controlledState;
+    if (!persistKey) return "pending";
+    try {
+      const saved = localStorage.getItem(persistKey);
+      if (saved === "approved" || saved === "changes-requested") return saved;
+    } catch {}
+    return "pending";
+  });
+
+  useEffect(() => {
+    if (controlledState) setState(controlledState);
+  }, [controlledState]);
   const [hovered, setHovered] = useState(false);
+
+  const setPersistedState = (next: ApprovalState) => {
+    setState(next);
+    if (persistKey) {
+      try { localStorage.setItem(persistKey, next); } catch {}
+    }
+  };
 
   const handleApprove = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setState("approved");
+    // Call onApprove before persisting so the handler's localStorage guard
+    // hasn't been set yet and can run its send logic first.
     onApprove?.();
+    setPersistedState("approved");
   };
 
   const handleRequestChanges = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setState("changes-requested");
+    setPersistedState("changes-requested");
     onRequestChanges?.();
   };
 
@@ -74,7 +93,13 @@ export function ApprovalActionCard({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        border: "1px solid var(--ax-colors-border-default)",
+        border: selected
+          ? "1.5px solid var(--ax-colors-border-accent)"
+          : "1px solid var(--ax-colors-border-default)",
+        outline: selected
+          ? "3px solid color-mix(in srgb, var(--ax-colors-border-accent) 30%, transparent)"
+          : "none",
+        outlineOffset: 0,
         background: hovered ? "var(--ax-colors-bg-secondary)" : "var(--ax-colors-bg-default)",
         overflow: "hidden",
         maxWidth: 560,
@@ -114,25 +139,6 @@ export function ApprovalActionCard({
                   {authorName[0]?.toUpperCase()}
                 </span>
               )}
-              {isVAU && (
-                <span
-                  style={{
-                    position: "absolute",
-                    bottom: -1,
-                    right: -1,
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    background: "var(--ax-colors-bg-accent)",
-                    border: "1.5px solid var(--ax-colors-bg-default)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <IconSparkles style={{ width: 6, height: 6, color: "var(--ax-colors-fg-on-accent, #202320)" }} />
-                </span>
-              )}
             </span>
             <Text
               style={{
@@ -146,47 +152,37 @@ export function ApprovalActionCard({
               {authorName}
             </Text>
             {isVAU && (
-              <IconSparkles style={{ width: 10, height: 10, color: "var(--ax-colors-fg-accent)", flexShrink: 0 }} />
+              <IconSparkles style={{ width: 10, height: 10, color: "var(--ax-colors-fg-secondary)", flexShrink: 0 }} />
             )}
           </Box>
           {badge && (
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                color: state === "approved" ? "var(--ax-colors-fg-success)" : "var(--ax-colors-fg-accent)",
-                background: state === "approved"
-                  ? "color-mix(in srgb, var(--ax-colors-fg-success) 12%, transparent)"
-                  : "color-mix(in srgb, var(--ax-colors-bg-accent) 15%, transparent)",
-                borderRadius: 999,
-                padding: "2px 8px",
-              }}
+            <Badge
+              intent={state === "approved" ? "success" : state === "changes-requested" ? "warning" : "neutral"}
+              variant="subtle"
             >
               {state === "approved" ? "APPROVED" : state === "changes-requested" ? "CHANGES" : badge}
-            </span>
+            </Badge>
           )}
         </Box>
 
         {/* File row */}
-        <Box display="flex" alignItems="center" gap="10" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap="10" style={{ flex: 1, minWidth: 0 }}>
-            <span
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 8,
-                background: "color-mix(in srgb, var(--ax-colors-bg-accent) 12%, var(--ax-colors-bg-secondary))",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <IconCode style={{ width: 16, height: 16, color: "var(--ax-colors-fg-secondary)" }} />
-            </span>
-            <Box style={{ flex: 1, minWidth: 0 }}>
+        <Box display="flex" alignItems="center" gap="10" style={{ flex: 1, minWidth: 0 }}>
+          <span
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              background: "color-mix(in srgb, var(--ax-colors-bg-accent) 12%, var(--ax-colors-bg-secondary))",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <IconCode style={{ width: 16, height: 16, color: "var(--ax-colors-fg-secondary)" }} />
+          </span>
+          <Box style={{ flex: 1, minWidth: 0 }}>
+            <Box display="flex" alignItems="center" gap="4">
               <Text
                 fontWeight="600"
                 style={{
@@ -195,49 +191,30 @@ export function ApprovalActionCard({
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
-                  display: "block",
                 }}
               >
                 {fileName}
               </Text>
-              <Text
-                color="fg.secondary"
-                style={{
-                  fontSize: 12,
-                  lineHeight: "16px",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  display: "block",
-                }}
-              >
-                {fileSubtitle}
-              </Text>
+              {onPreview && (
+                <IconArrowUpRightFromSquare
+                  style={{ width: 11, height: 11, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }}
+                />
+              )}
             </Box>
-          </Box>
-          {onPreview && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onPreview(); }}
+            <Text
+              color="fg.secondary"
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 3,
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
                 fontSize: 12,
-                fontWeight: 500,
-                color: "var(--ax-colors-fg-secondary)",
-                flexShrink: 0,
+                lineHeight: "16px",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
+                display: "block",
               }}
             >
-              Preview
-              <IconArrowUpRightFromSquare style={{ width: 11, height: 11 }} />
-            </button>
-          )}
+              {fileSubtitle}
+            </Text>
+          </Box>
         </Box>
       </Box>
 
@@ -252,12 +229,7 @@ export function ApprovalActionCard({
         gap="12"
         onClick={(e) => e.stopPropagation()}
       >
-        <Box
-          px="12"
-          py="10"
-          rounded="md"
-          style={{ background: "var(--ax-colors-bg-secondary)" }}
-        >
+        <Box>
           <Text
             fontWeight="600"
             style={{ fontSize: 13, lineHeight: "18px", display: "block" }}
@@ -266,66 +238,48 @@ export function ApprovalActionCard({
           </Text>
           <Text
             color="fg.secondary"
-            mt="4"
-            style={{ fontSize: 13, lineHeight: "18px", display: "block" }}
+            style={{ fontSize: 13, lineHeight: "18px", display: "block", marginTop: 4 }}
           >
             {approvalDescription}
           </Text>
         </Box>
 
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          {/* View task link */}
-          {onViewTask && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onViewTask(); }}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                fontSize: 12,
-                fontWeight: 500,
-                color: "var(--ax-colors-fg-tertiary)",
-              }}
-            >
-              <IconListCheck style={{ width: 13, height: 13 }} />
-              View task
-            </button>
-          )}
+        {onViewTask && (
+          <Button
+            appearance="subtle"
+            size="sm"
+            icon={<IconListCheck />}
+            onClick={(e) => { e.stopPropagation(); onViewTask(); }}
+            style={{ alignSelf: "flex-start", color: "var(--ax-colors-fg-link)" }}
+          >
+            View Task
+          </Button>
+        )}
 
-          {state === "pending" ? (
-            <Box display="flex" alignItems="center" gap="8" style={{ marginLeft: "auto" }}>
-              <Button
-                appearance="subtle"
-                size="sm"
-                onClick={handleRequestChanges}
-              >
-                Ask Changes
-              </Button>
-              <Button
-                appearance="primary"
-                size="sm"
-                icon={<IconCheck />}
-                onClick={handleApprove}
-              >
-                Approve
-              </Button>
-            </Box>
-          ) : (
-            <Text
-              fontSize="sm"
-              fontWeight="500"
-              color={state === "approved" ? "fg.success" : "fg.warning"}
-              style={{ marginLeft: "auto" }}
+        {state === "pending" ? (
+          <Box display="flex" alignItems="center" gap="8" justifyContent="flex-end">
+            <Button appearance="subtle" size="sm" onClick={handleRequestChanges}>
+              Ask Changes
+            </Button>
+            <Button
+              appearance="primary"
+              size="sm"
+              icon={<IconCheck />}
+              onClick={handleApprove}
             >
-              {state === "approved" ? "Approved" : "Changes requested"}
-            </Text>
-          )}
-        </Box>
+              Approve
+            </Button>
+          </Box>
+        ) : (
+          <Text
+            fontSize="sm"
+            fontWeight="500"
+            color={state === "approved" ? "fg.success" : "fg.warning"}
+            style={{ textAlign: "right" }}
+          >
+            {state === "approved" ? "Approved" : "Changes requested"}
+          </Text>
+        )}
       </Box>
     </Box>
   );

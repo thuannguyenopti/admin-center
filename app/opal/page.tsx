@@ -1,9 +1,9 @@
 "use client";
 
-import { Box, Button as AxiomButton, Textarea } from "@optiaxiom/react";
+import { Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconAgent, IconCircleCheckSolid, IconArrowUpRightFromSquare } from "@optimizely/axiom-icons";
+import { IconAgent } from "@optimizely/axiom-icons";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useOpalContext } from "@/app/context/OpalContext";
@@ -12,6 +12,7 @@ import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
 import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { InlineEditorCard } from "@/app/components/Opal/InlineEditorCard";
+import { ApprovalActionCard } from "@/app/components/Opal/ApprovalActionCard";
 import { HeadlessTaskPanel, useTaskController } from "./components/HeadlessTaskPanel";
 import { GrabHandle } from "@/app/components/Opal/OpalChatView";
 import { imToChatMessage } from "@/app/opal/im/lib/adapters";
@@ -21,10 +22,6 @@ import type { IMMessage } from "@/app/opal/im/lib/types";
 // browser-only and must not be included in the SSR bundle.
 const CodeCanvasPanel = dynamic(
   () => import("@/app/components/Opal/CodeCanvasPanel").then((mod) => mod.CodeCanvasPanel),
-  { ssr: false }
-);
-const CollabRail = dynamic(
-  () => import("@/app/components/Opal/CollabRail").then((mod) => mod.CollabRail),
   { ssr: false }
 );
 
@@ -145,173 +142,7 @@ const VAU_PUBLISHED_MSG = `🚀 **discover-the-unknown-qa.md** is live.
 
 Published to the answer-engine surface just now. I'll monitor citation pickup over the next 24h and flag if anything looks off.`;
 
-type ApprovalState = 'pending' | 'approved' | 'changes' | 'requesting';
-
-function ApprovalActionCard({ state, changesMessage, noteValue, onApprove, onAskChanges, onNoteChange, onNoteSubmit, onNoteCancel, onOpenTask }: {
-  state: ApprovalState;
-  changesMessage?: string;
-  noteValue?: string;
-  onApprove: () => void;
-  onAskChanges: () => void;
-  onNoteChange: (v: string) => void;
-  onNoteSubmit: () => void;
-  onNoteCancel: () => void;
-  onOpenTask?: () => void;
-}) {
-  if (state === 'approved') {
-    return (
-      <Box display="flex" flexDirection="column" gap="4" p="16" rounded="xl" style={{ border: '1px solid var(--ax-colors-border-default)', background: 'var(--ax-colors-bg-default)', opacity: 0.6 }}>
-        <Text fontWeight="500" style={{ fontSize: 14, color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
-          Team approval needed for discover-the-unknown-qa.md
-        </Text>
-        <Text style={{ fontSize: 14, color: 'var(--ax-colors-fg-tertiary)', lineHeight: 1.43 }}>
-          Jamie Chen: Approved
-        </Text>
-      </Box>
-    );
-  }
-
-  if (state === 'requesting') {
-    return (
-      <Box
-        display="flex"
-        flexDirection="column"
-        gap="12"
-        p="16"
-        rounded="xl"
-        style={{ border: '1px solid var(--ax-colors-border-default)', background: 'var(--ax-colors-bg-default)' }}
-      >
-        <Box display="flex" flexDirection="column" gap="4">
-          <Text fontWeight="500" style={{ fontSize: 14, color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
-            Request changes
-          </Text>
-          <Text style={{ fontSize: 13, color: 'var(--ax-colors-fg-secondary)', lineHeight: 1.43 }}>
-            Let Frank know what needs to be updated before publishing.
-          </Text>
-        </Box>
-        <Textarea
-          autoFocus
-          value={noteValue ?? ''}
-          onChange={e => onNoteChange(e.target.value)}
-          placeholder="Describe the changes needed…"
-          rows={3}
-          w="full"
-        />
-        <Box display="flex" justifyContent="flex-end" gap="4">
-          <AxiomButton appearance="subtle" size="md" onClick={onNoteCancel}>Cancel</AxiomButton>
-          <AxiomButton appearance="primary" size="md" onClick={onNoteSubmit}>Send</AxiomButton>
-        </Box>
-      </Box>
-    );
-  }
-
-  if (state === 'changes') {
-    return (
-      <Box display="flex" flexDirection="column" gap="12" p="16" rounded="xl" style={{ border: '1px solid var(--ax-colors-border-default)', background: 'var(--ax-colors-bg-default)' }}>
-        <Box display="flex" alignItems="center" gap="8">
-          <Text fontWeight="500" style={{ fontSize: 14, color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
-            ✓ Changes requested
-          </Text>
-        </Box>
-        {changesMessage && (
-          <Box p="12" rounded="lg" style={{ background: 'var(--ax-colors-bg-page)', borderLeft: '3px solid var(--ax-colors-border-focus)' }}>
-            <Text style={{ fontSize: 13, color: 'var(--ax-colors-fg-default)', lineHeight: 1.5 }}>
-              {changesMessage}
-            </Text>
-          </Box>
-        )}
-      </Box>
-    );
-  }
-
-  return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      gap="12"
-      p="20"
-      rounded="lg"
-      style={{
-        border: '1px solid var(--ax-colors-border-default)',
-        background: 'var(--ax-colors-bg-default)',
-      }}
-    >
-      {/* VAU product indicator */}
-      <Box display="flex" alignItems="center" gap="4">
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          rounded="xs"
-          style={{ width: 20, height: 20, background: 'var(--ax-colors-bg-secondary)', flexShrink: 0, overflow: 'hidden' }}
-        >
-          <Image src="/avatars/vau-frank.png" alt="GEO" width={14} height={14} />
-        </Box>
-        <Text style={{ fontSize: 12, fontWeight: 400, letterSpacing: '0.36px', textTransform: 'uppercase', color: 'var(--ax-colors-fg-tertiary)', lineHeight: 1.25 }}>
-          Frank
-        </Text>
-      </Box>
-
-      {/* File info */}
-      <Box display="flex" flexDirection="column" gap="4">
-        <Text fontWeight="600" style={{ fontSize: 16, lineHeight: 1.3, color: 'var(--ax-colors-fg-default)' }}>
-          discover-the-unknown-qa.md
-        </Text>
-        <Text style={{ fontSize: 14, letterSpacing: '0.28px', color: 'var(--ax-colors-fg-secondary)', lineHeight: 1.43 }}>
-          GEO Q&amp;A article
-        </Text>
-      </Box>
-
-      {/* Divider */}
-      <Box style={{ height: 1, background: 'var(--ax-colors-border-default)', width: '100%' }} />
-
-      {/* Key insight banner */}
-      <Box
-        display="flex"
-        flexDirection="column"
-        gap="8"
-        p="16"
-        rounded="sm"
-        style={{ background: 'var(--ax-colors-bg-page)' }}
-      >
-        <Text fontWeight="500" style={{ fontSize: 14, letterSpacing: '0.28px', color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
-          Team approval needed
-        </Text>
-        <Text style={{ fontSize: 14, letterSpacing: '0.28px', color: 'var(--ax-colors-fg-secondary)', lineHeight: 1.43 }}>
-          Review the updated Q&amp;A article. Approve to proceed with publishing, or request further changes.
-        </Text>
-        {onOpenTask && (
-          <button
-            type="button"
-            onClick={onOpenTask}
-            style={{
-              alignSelf: 'flex-start',
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              fontSize: 13,
-              fontWeight: 500,
-              color: 'var(--ax-colors-fg-accent)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
-          >
-            View Task
-            <IconArrowUpRightFromSquare size={14} />
-          </button>
-        )}
-      </Box>
-
-      {/* Actions */}
-      <Box display="flex" alignItems="center" justifyContent="flex-end" gap="4">
-        <AxiomButton appearance="subtle" size="md" onClick={onAskChanges}>Ask Changes</AxiomButton>
-        <AxiomButton appearance="primary" size="md" onClick={onApprove} icon={<IconCircleCheckSolid size={14} />}>Approve</AxiomButton>
-      </Box>
-    </Box>
-  );
-}
+type ApprovalState = 'pending' | 'approved' | 'changes';
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
@@ -363,55 +194,23 @@ export default function OpalPage() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorVersion, setEditorVersion] = useState<'v1' | 'v2'>('v1');
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
-  const [canvasExpanded, setCanvasExpanded] = useState(false);
-  const [collabRailOpen, setCollabRailOpen] = useState(false);
   const [headlessTaskOpen, setHeadlessTaskOpen] = useState(false);
   const [taskPanelWidth, setTaskPanelWidth] = useState(460);
   const handleTaskResize = useCallback((dx: number) => {
     setTaskPanelWidth(w => Math.max(320, Math.min(720, w + dx)));
   }, []);
-  const [approvalState, setApprovalState] = useState<ApprovalState>('pending');
-  const [approvalNote, setApprovalNote] = useState('');
-  const [approvalChangesNote, setApprovalChangesNote] = useState('');
+  const [approvalState, setApprovalState] = useState<ApprovalState>(() => {
+    try {
+      if (localStorage.getItem('geo-qa-approval') === 'approved') return 'approved';
+    } catch {}
+    return 'pending';
+  });
   const [landingPageReady, setLandingPageReady] = useState(() => {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('artifacts') === '1';
   });
   const isFirstMount = useRef(true);
   const hasSeededThread = useRef(false);
-  const hasSeededWorkInOpal = useRef(false);
-
-  // ── Fullscreen canvas: Escape to exit + body scroll lock ──────────────────
-  useEffect(() => {
-    if (!canvasExpanded) return;
-    document.body.style.overflow = "hidden";
-    const handleKey = (e: globalThis.KeyboardEvent) => {
-      if (e.key === "Escape") setCanvasExpanded(false);
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKey);
-    };
-  }, [canvasExpanded]);
-
-  // ── Deep-link: ?file=...&title=... from "Work in Opal" in IM messages ──
-  useEffect(() => {
-    if (hasSeededWorkInOpal.current) return;
-    const params = new URLSearchParams(window.location.search);
-    const file = params.get('file');
-    const title = params.get('title');
-    const prompt = params.get('prompt');
-    if (file) {
-      hasSeededWorkInOpal.current = true;
-      if (prompt) {
-        setInputValue(prompt);
-      } else {
-        const label = title ? `"${title}"` : file;
-        setInputValue(`I'm working on a blog post — ${label} (${file}). Can you help me refine it?`);
-      }
-    }
-  }, [setInputValue]);
 
   // Drive seeded/triggered messages through the IM adapter so avatars,
   // timestamps, and VAU template names render identically to the live IM module.
@@ -453,7 +252,10 @@ export default function OpalPage() {
   const taskController = useTaskController('geo-qa', (stepId) => {
     if (stepId === '2') {
       setApprovalState('approved');
-      pushIMMessage('jamie', '✓ Approved');
+      try { localStorage.setItem('geo-qa-approval', 'approved'); } catch {}
+      pushIMMessage('jamie', '**Approved** — great work, Frank. This is ready to publish.');
+      pushIMMessage('vau-frank', "Perfect — I'll handle publishing now and send you the live link once it's indexed.", { senderType: 'agent' });
+      pushIMMessage('vau-frank', "Tracking. If you want, I can turn this into a serp shift digest — say the word.", { senderType: 'agent' });
     }
     if (stepId === '3') {
       pushIMMessage('vau-frank', VAU_PUBLISHED_MSG, { senderType: 'agent' });
@@ -475,6 +277,14 @@ export default function OpalPage() {
         pushIMMessage('jamie', JC_MSG, { minutesAgo: 14 });
         pushIMMessage('mary-anne', TEAMMATE_MSG, { minutesAgo: 10 });
         pushIMMessage('vau-frank', VAU_MSG_2, { minutesAgo: 2, senderType: 'agent' });
+        // If already approved (localStorage persisted from a prior session), re-seed the follow-up messages
+        try {
+          if (localStorage.getItem('geo-qa-approval') === 'approved') {
+            pushIMMessage('jamie', '**Approved** — great work, Frank. This is ready to publish.');
+            pushIMMessage('vau-frank', "Perfect — I'll handle publishing now and send you the live link once it's indexed.", { senderType: 'agent' });
+            pushIMMessage('vau-frank', "Tracking. If you want, I can turn this into a serp shift digest — say the word.", { senderType: 'agent' });
+          }
+        } catch {}
         setLandingPageReady(true);
         setTimeout(() => { setEditorVersion('v2'); setEditorOpen(true); }, 500);
       };
@@ -591,14 +401,16 @@ export default function OpalPage() {
           selected={editorOpen && editorVersion === 'v1'}
         />
         <ApprovalActionCard
-          state="changes"
-          changesMessage="The FAQ section needs more specific examples for each answer."
+          authorName="Frank"
+          authorAvatar="/avatars/vau-frank.png"
+          isVAU
+          fileName="discover-the-unknown-qa.md"
+          fileSubtitle="GEO Q&A article · 7 Q&A pairs · v1"
+          approvalTitle="Team approval needed"
+          approvalDescription="Review the updated Q&A article. Approve to proceed with publishing, or request further changes."
           onApprove={() => {}}
-          onAskChanges={() => {}}
-          onNoteChange={() => {}}
-          onNoteSubmit={() => {}}
-          onNoteCancel={() => {}}
-          onOpenTask={() => setHeadlessTaskOpen(true)}
+          onRequestChanges={() => {}}
+          onViewTask={() => setHeadlessTaskOpen(true)}
         />
       </Box>
     ),
@@ -615,15 +427,18 @@ export default function OpalPage() {
           }}
         />
         <ApprovalActionCard
-          state={approvalState}
-          changesMessage={approvalChangesNote || undefined}
-          noteValue={approvalNote}
+          authorName="Frank"
+          authorAvatar="/avatars/vau-frank.png"
+          isVAU
+          badge="UPDATED"
+          fileName="discover-the-unknown-qa.md"
+          fileSubtitle="GEO Q&A article · 7 Q&A pairs · updated"
+          approvalTitle="Team approval needed"
+          approvalDescription="Review the updated Q&A article. Approve to proceed with publishing, or request further changes."
           onApprove={handleApprove}
-          onAskChanges={() => setApprovalState('requesting')}
-          onNoteChange={setApprovalNote}
-          onNoteSubmit={() => { const n = approvalNote; setApprovalChangesNote(n); setApprovalNote(''); setApprovalState('changes'); if (n.trim()) addMessage({ role: 'user', content: n, metadata: { authorName: 'Jamie Chen' } }); }}
-          onNoteCancel={() => { setApprovalNote(''); setApprovalState('pending'); }}
-          onOpenTask={() => setHeadlessTaskOpen(true)}
+          onRequestChanges={() => { setApprovalState('changes'); }}
+          onViewTask={() => setHeadlessTaskOpen(true)}
+          persistKey="geo-qa-approval"
         />
       </Box>
     ),
@@ -647,12 +462,12 @@ export default function OpalPage() {
           variant="home"
           streamingMode="expanded"
           headerTitle={undefined}
-          imThreadName={landingPageReady ? "Frank" : undefined}
-          imIsVAU={landingPageReady || undefined}
-          imTemplateName={landingPageReady ? "GEO Content Strategist" : undefined}
-          imThreadAvatar={landingPageReady ? "/avatars/vau-frank.png" : undefined}
-          imSimplified={landingPageReady || undefined}
-          onImThreadNameClick={landingPageReady ? () => { window.location.href = '/opal/im'; } : undefined}
+          imThreadName={(editorOpen || headlessTaskOpen) ? "Frank" : undefined}
+          imIsVAU={(editorOpen || headlessTaskOpen) || undefined}
+          imTemplateName={(editorOpen || headlessTaskOpen) ? "GEO Content Strategist" : undefined}
+          imThreadAvatar={(editorOpen || headlessTaskOpen) ? "/avatars/vau-frank.png" : undefined}
+          imSimplified={editorOpen || headlessTaskOpen}
+          onImThreadNameClick={landingPageReady ? () => { try { sessionStorage.setItem('im-initial-chat', 'conv-demo-geo-qa'); } catch {} window.location.href = '/opal/im'; } : undefined}
           messages={messages}
           inputValue={inputValue}
           isLoading={isLoading}
@@ -690,8 +505,8 @@ export default function OpalPage() {
           contextualActionCard={
             approvalState === 'approved'
               ? undefined
-              : landingPageReady && (approvalState === 'pending' || approvalState === 'requesting' || approvalState === 'changes')
-              ? <ApprovalActionCard state={approvalState} changesMessage={approvalChangesNote || undefined} noteValue={approvalNote} onApprove={handleApprove} onAskChanges={() => setApprovalState('requesting')} onNoteChange={setApprovalNote} onNoteSubmit={() => { const n = approvalNote; setApprovalChangesNote(n); setApprovalNote(''); setApprovalState('changes'); if (n.trim()) addMessage({ role: 'user', content: n, metadata: { authorName: 'Jamie Chen' } }); }} onNoteCancel={() => { setApprovalNote(''); setApprovalState('pending'); }} onOpenTask={() => setHeadlessTaskOpen(true)} />
+              : landingPageReady
+              ? <ApprovalActionCard authorName="Frank" authorAvatar="/avatars/vau-frank.png" isVAU badge="UPDATED" fileName="discover-the-unknown-qa.md" fileSubtitle="GEO Q&A article · 7 Q&A pairs · updated" approvalTitle="Team approval needed" approvalDescription="Review the updated Q&A article. Approve to proceed with publishing, or request further changes." onApprove={handleApprove} onRequestChanges={() => { setApprovalState('changes'); }} onViewTask={() => setHeadlessTaskOpen(true)} persistKey="geo-qa-approval" />
               : (atlassianActionCard ?? undefined)
           }
           messageCards={messageCards}
@@ -702,7 +517,7 @@ export default function OpalPage() {
             editorOpen || headlessTaskOpen ? (
               <Box display="flex" flexDirection="row" h="full" w="full" style={{ minHeight: 0 }}>
                 {editorOpen && (
-                  <Box display="flex" style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden' }}>
+                  <Box style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden' }}>
                     <CodeCanvasPanel
                       onClose={() => setEditorOpen(false)}
                       filename="discover-the-unknown-qa.md"
@@ -712,16 +527,9 @@ export default function OpalPage() {
                       language="markdown"
                       artifactCreator={{ name: "Jamie Chen" }}
                       initialHtml={editorVersion === 'v2' ? GEO_QA_HTML_V2 : GEO_QA_HTML_V1}
-                      chatOpen={chatPanelVisible && (!collabRailOpen || canvasExpanded)}
+                      chatOpen={chatPanelVisible}
                       onChatToggle={() => setChatPanelVisible(v => !v)}
-                      isExpanded={canvasExpanded}
-                      onExpandToggle={() => setCanvasExpanded(v => !v)}
-                      collabRailOpen={collabRailOpen}
-                      onCollabRailToggle={() => setCollabRailOpen(v => !v)}
                     />
-                    {!canvasExpanded && (
-                      <CollabRail open={collabRailOpen} onClose={() => setCollabRailOpen(false)} />
-                    )}
                   </Box>
                 )}
                 {editorOpen && headlessTaskOpen && <GrabHandle onResize={handleTaskResize} />}
@@ -754,7 +562,7 @@ export default function OpalPage() {
 
   // Landing state
   return (
-    <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
+    <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0, backgroundColor: 'var(--opal-bg-page)' }}>
       {modalElement}
       <OpalLanding
         topSlot={null}

@@ -66,6 +66,7 @@ export function LayoutSwitcher() {
     setResetting(true);
     try {
       await fetch("/api/messaging/v1/reset-all", { method: "POST" });
+      try { localStorage.removeItem("geo-qa-approval"); } catch {}
       window.location.reload();
     } catch {
       setResetting(false);

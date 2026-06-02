@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Box, Button, Text, Tooltip } from "@optiaxiom/react";
-import { IconXmark, IconArrowLeft, IconCode, IconListCheck, IconCircleCheck, IconArrowsMaximize } from "@optiaxiom/icons";
+import { IconXmark, IconCode, IconArrowsMaximize, IconArrowUpRightFromSquare } from "@optiaxiom/icons";
 import {
   groupConversationsByType,
   imToChatMessage,
@@ -17,12 +17,14 @@ import { formatQuoteMarkdown } from "../lib/quote";
 import { sendMessageAsVAU } from "../lib/virtualTeammates";
 import { AskQuestionsActionCard } from "@/app/components/Opal/AskQuestionsActionCard";
 import { ApprovalActionCard } from "@/app/components/Opal/ApprovalActionCard";
+import { HeadlessTaskPanel, useTaskController } from "../../components/HeadlessTaskPanel";
 
 const TONY_CONV_ID = "conv-vau-tony";
 const TONY_FOLLOWUP_MSG_ID = "msg-vt3";
 const HENRY_CONV_ID = "conv-vau-henry";
 const GEO_QA_CONV_ID = "conv-demo-geo-qa";
 const GEO_QA_ARTIFACT_MSG_ID = "msg-dg4";
+const FRANK_DM_CONV_ID = "conv-demo-frank-dm";
 
 const OpalChatView = dynamic(
   () => import("@/app/components/Opal/OpalChatView").then((m) => m.OpalChatView),
@@ -242,152 +244,7 @@ function IMPreviewPanel({
   );
 }
 
-/** Task panel — right side, resizable */
-function IMTaskPanel({
-  width,
-  onDelta,
-  onClose,
-  onApprove,
-  onRequestChanges,
-}: {
-  width: number;
-  onDelta: (delta: number) => void;
-  onClose: () => void;
-  onApprove: () => void;
-  onRequestChanges: () => void;
-}) {
-  const [taskState, setTaskState] = useState<"pending" | "approved" | "changes">("pending");
 
-  const handleApprove = () => { setTaskState("approved"); onApprove(); };
-  const handleChanges = () => { setTaskState("changes"); onRequestChanges(); };
-
-  return (
-    <Box
-      display="flex"
-      style={{
-        width,
-        flexShrink: 0,
-        height: "100%",
-        borderLeft: "1px solid var(--ax-colors-border-secondary)",
-        overflow: "hidden",
-        animation: "panelSlideIn 0.25s cubic-bezier(0.16,1,0.3,1) both",
-      }}
-    >
-      <PanelResizeHandle onDelta={onDelta} />
-      <Box display="flex" flexDirection="column" style={{ flex: 1, minWidth: 0, height: "100%", background: "var(--ax-colors-bg-default)" }}>
-        <PanelHeader
-          icon={<IconListCheck size={14} style={{ color: "var(--ax-colors-fg-secondary)" }} />}
-          title="Review GEO Q&A article"
-          subtitle="Task · assigned to you"
-          onClose={onClose}
-        />
-        <Box flex="1" style={{ overflow: "auto", padding: "20px 24px" }}>
-          {/* Status chip */}
-          <Box display="flex" alignItems="center" gap="8" mb="20">
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 5,
-                fontSize: 12,
-                fontWeight: 500,
-                borderRadius: 999,
-                padding: "3px 10px",
-                background: taskState === "approved"
-                  ? "color-mix(in srgb, var(--ax-colors-fg-success) 12%, transparent)"
-                  : taskState === "changes"
-                    ? "color-mix(in srgb, var(--ax-colors-fg-warning) 12%, transparent)"
-                    : "color-mix(in srgb, var(--ax-colors-bg-accent) 15%, transparent)",
-                color: taskState === "approved"
-                  ? "var(--ax-colors-fg-success)"
-                  : taskState === "changes"
-                    ? "var(--ax-colors-fg-warning)"
-                    : "var(--ax-colors-fg-accent)",
-              }}
-            >
-              {taskState === "approved" && <IconCircleCheck size={12} />}
-              {taskState === "approved" ? "Approved" : taskState === "changes" ? "Changes requested" : "Pending your approval"}
-            </span>
-          </Box>
-
-          {/* Meta */}
-          {[
-            ["Artifact", "discover-the-unknown-qa.md"],
-            ["Created by", "Frank (VAU)"],
-            ["Assigned to", "You"],
-            ["Due", "Today"],
-          ].map(([label, value]) => (
-            <Box key={label} display="flex" alignItems="start" mb="12">
-              <Text color="fg.tertiary" style={{ fontSize: 12, width: 96, flexShrink: 0 }}>{label}</Text>
-              <Text style={{ fontSize: 12 }}>{value}</Text>
-            </Box>
-          ))}
-
-          {/* Description */}
-          <Box mt="8" p="12" rounded="md" style={{ background: "var(--ax-colors-bg-secondary)" }}>
-            <Text style={{ fontSize: 13, lineHeight: "20px", display: "block", color: "var(--ax-colors-fg-secondary)" }}>
-              Review the updated GEO Q&A article for Stride's Discover the Unknown. Approve to proceed with publishing, or request further changes.
-            </Text>
-          </Box>
-
-          {/* Actions */}
-          {taskState === "pending" && (
-            <Box display="flex" alignItems="center" gap="8" mt="16" justifyContent="end">
-              <Button appearance="subtle" size="sm" onClick={handleChanges}>Ask Changes</Button>
-              <Button appearance="primary" size="sm" icon={<IconCircleCheck size={14} />} onClick={handleApprove}>Approve</Button>
-            </Box>
-          )}
-        </Box>
-      </Box>
-    </Box>
-  );
-}
-
-/** Full-screen artifact view shown as leftCanvas */
-function GeoQaFullArtifact({ onClose }: { onClose: () => void }) {
-  return (
-    <Box display="flex" flexDirection="column" h="full" style={{ background: "var(--ax-colors-bg-default)", minHeight: 0 }}>
-      <Box
-        display="flex" alignItems="center" gap="10" px="20" py="12"
-        style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}
-      >
-        <Button appearance="subtle" size="sm" icon={<IconArrowLeft size={16} />} aria-label="Back" onClick={onClose} />
-        <span
-          style={{
-            width: 28, height: 28, borderRadius: 6, flexShrink: 0,
-            background: "color-mix(in srgb, var(--ax-colors-bg-accent) 12%, var(--ax-colors-bg-secondary))",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <IconCode size={14} style={{ color: "var(--ax-colors-fg-secondary)" }} />
-        </span>
-        <Box style={{ flex: 1, minWidth: 0 }}>
-          <Text fontWeight="600" style={{ fontSize: 13, display: "block" }}>discover-the-unknown-qa.md</Text>
-          <Text color="fg.tertiary" style={{ fontSize: 11, display: "block" }}>GEO Q&A article · 7 Q&A pairs · updated</Text>
-        </Box>
-      </Box>
-      <Box flex="1" style={{ overflow: "auto", padding: "32px 40px" }}>
-        <Box style={{ maxWidth: 680, margin: "0 auto" }}>
-          {GEO_QA_ARTICLE.split("\n\n").map((block, i) => {
-            if (block.startsWith("# ")) return <p key={i} style={{ fontSize: 22, fontWeight: 700, marginBottom: 4, marginTop: 0 }}>{block.slice(2)}</p>;
-            if (block.startsWith("**Brand:**")) return <Text key={i} color="fg.tertiary" style={{ fontSize: 12, marginBottom: 24, display: "block" }}>{block.replace(/\*\*/g, "")}</Text>;
-            if (block === "---") return <Box key={i} style={{ height: 1, background: "var(--ax-colors-border-secondary)", marginBottom: 24 }} />;
-            if (block.startsWith("**Q:")) {
-              const [q, ...aParts] = block.split("\nA:");
-              return (
-                <Box key={i} mb="20">
-                  <Text fontWeight="600" style={{ fontSize: 14, lineHeight: "22px", display: "block" }}>{q.replace(/\*\*/g, "")}</Text>
-                  <Text color="fg.secondary" style={{ fontSize: 14, lineHeight: "22px", display: "block", marginTop: 4 }}>{aParts.join("A:").trim()}</Text>
-                </Box>
-              );
-            }
-            return null;
-          })}
-        </Box>
-      </Box>
-    </Box>
-  );
-}
 
 export function LayoutASidebar() {
   const {
@@ -439,15 +296,9 @@ export function LayoutASidebar() {
   const geoQaConv = conversations.find((c) => c.conversation_id === GEO_QA_CONV_ID);
   const geoQaFlowPending =
     !!geoQaConv && geoQaConv.last_message_sender_id === "vau-frank";
-  const geoQaCardAlreadyAnswered = messages.some(
-    (m) =>
-      m.conversation_id === GEO_QA_CONV_ID &&
-      (m.content?.startsWith("**Approved") || m.content?.startsWith("**Changes requested")),
-  );
   const showGeoQaCard =
     selectedId === GEO_QA_CONV_ID &&
-    messages.some((m) => m.id === GEO_QA_ARTIFACT_MSG_ID) &&
-    !geoQaCardAlreadyAnswered;
+    messages.some((m) => m.id === GEO_QA_ARTIFACT_MSG_ID);
 
   // Hide the card once JC has already posted the confirmation summary —
   // otherwise a page refresh would re-show the card on top of a completed flow.
@@ -489,10 +340,10 @@ export function LayoutASidebar() {
         if (item.id === GEO_QA_CONV_ID && geoQaFlowPending) item.needsInput = true;
       }
     }
-    // Pin priority threads to the top of Direct messages: geo-qa first, tony second.
+    // Pin priority threads to the top of Direct messages: Frank DM first, geo-qa second, tony third.
     const dms = grouped["Direct messages"];
     if (dms) {
-      const priority = [TONY_CONV_ID, GEO_QA_CONV_ID]; // reverse order so geo-qa ends up first
+      const priority = [TONY_CONV_ID, GEO_QA_CONV_ID, FRANK_DM_CONV_ID]; // reverse order so Frank DM ends up first
       for (const id of priority) {
         const idx = dms.findIndex((i) => i.id === id);
         if (idx > 0) {
@@ -617,7 +468,34 @@ export function LayoutASidebar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tonyCardBlocking, tonyCardQuestions]);
 
+  // Mirrors the geo-qa approval state so the card updates immediately when the
+  // task panel (not the button) triggers the approval.
+  const [geoQaApprovalState, setGeoQaApprovalState] = useState<"pending" | "approved" | "changes-requested">(() => {
+    try {
+      const saved = localStorage.getItem("geo-qa-approval");
+      if (saved === "approved" || saved === "changes-requested") return saved;
+    } catch {}
+    return "pending";
+  });
+
+  // Always holds the latest messages so the guard below never reads a stale closure.
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
   const handleGeoQaApprove = async () => {
+    // Primary guard: localStorage persists across navigation and survives Vercel
+    // serverless resets (where the server-side message store is re-seeded).
+    try {
+      if (localStorage.getItem("geo-qa-approval") === "approved") return;
+      localStorage.setItem("geo-qa-approval", "approved");
+    } catch {}
+    setGeoQaApprovalState("approved");
+    // Secondary guard: check via ref so we always see the latest messages even
+    // though this function may be captured in a stale geoQaMessageCards closure.
+    const alreadySent = messagesRef.current.some(
+      (m) => m.sender_id === "vau-frank" && m.content?.includes("handle publishing")
+    );
+    if (alreadySent) return;
     const convId = selectedId;
     await sendCurrent("**Approved** — great work, Frank. This is ready to publish.");
     if (convId) {
@@ -635,11 +513,14 @@ export function LayoutASidebar() {
     await refreshCurrentMessages();
   };
 
+  const taskController = useTaskController("geo-qa", (stepId) => {
+    if (stepId === "2") handleGeoQaApprove();
+  });
+
   const [previewOpen, setPreviewOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
   const [previewWidth, setPreviewWidth] = useState(360);
   const [taskWidth, setTaskWidth] = useState(360);
-  const [fullArtifactOpen, setFullArtifactOpen] = useState(false);
 
   const geoQaMessageCards = useMemo(() => {
     if (!showGeoQaCard) return undefined;
@@ -656,13 +537,16 @@ export function LayoutASidebar() {
           onViewTask={() => setTaskOpen(true)}
           approvalTitle="Team approval needed"
           approvalDescription="Review the updated Q&A article. Approve to proceed with publishing, or request further changes."
-          onApprove={handleGeoQaApprove}
+          onApprove={async () => { await handleGeoQaApprove(); taskController.completeStep("2"); }}
           onRequestChanges={handleGeoQaReject}
+          selected={previewOpen}
+          persistKey="geo-qa-approval"
+          approvalState={geoQaApprovalState}
         />
       ),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showGeoQaCard]);
+  }, [showGeoQaCard, previewOpen, taskOpen, geoQaApprovalState]);
 
   const mentionableAgents = useMemo(
     () =>
@@ -691,10 +575,10 @@ export function LayoutASidebar() {
       display="flex"
       alignItems="start"
       gap="8"
+      rounded="sm"
       style={{
         borderLeft: "3px solid var(--ax-colors-bg-accent)",
         background: "var(--ax-colors-bg-secondary)",
-        borderRadius: 4,
         padding: "6px 8px",
       }}
     >
@@ -755,7 +639,7 @@ export function LayoutASidebar() {
             mentionableAgents={mentionableAgents}
             onMentionSelect={(agent) => insertMention(agent.handle)}
             canvasMode={true}
-            leftCanvas={fullArtifactOpen ? <GeoQaFullArtifact onClose={() => setFullArtifactOpen(false)} /> : undefined}
+            leftCanvas={undefined}
             currentUserId={currentUserId}
             messageReactions={messageReactions}
             onToggleReaction={toggleReaction}
@@ -772,26 +656,54 @@ export function LayoutASidebar() {
             imIsChannel={imIsChannel}
             imThreadAvatar={imThreadAvatar}
             imTemplateName={imTemplateName}
+            imSimplified={previewOpen}
+            onOpenArtifact={() => setPreviewOpen(true)}
+            onCloseChat={previewOpen ? () => setPreviewOpen(false) : undefined}
+            imHeaderRight={previewOpen ? (
+              <Tooltip content="View in Messaging">
+                <Button
+                  appearance="subtle"
+                  size="sm"
+                  icon={<IconArrowUpRightFromSquare style={{ width: 15, height: 15 }} />}
+                  aria-label="View in Messaging"
+                  onClick={() => window.open('/opal/im', '_blank')}
+                  style={{ padding: 0, minWidth: 'auto', width: 32, height: 32 }}
+                />
+              </Tooltip>
+            ) : undefined}
           />
         </Box>
 
         {/* Right-side panels — both can be open simultaneously */}
-        {previewOpen && !fullArtifactOpen && (
+        {previewOpen && (
           <IMPreviewPanel
             width={previewWidth}
             onDelta={(d) => setPreviewWidth((w) => Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, w + d)))}
             onClose={() => setPreviewOpen(false)}
-            onLoadArtifact={() => { setPreviewOpen(false); setFullArtifactOpen(true); }}
+            onLoadArtifact={() => { window.location.href = '/opal?artifacts=1'; }}
           />
         )}
-        {taskOpen && !fullArtifactOpen && (
-          <IMTaskPanel
-            width={taskWidth}
-            onDelta={(d) => setTaskWidth((w) => Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, w + d)))}
-            onClose={() => setTaskOpen(false)}
-            onApprove={handleGeoQaApprove}
-            onRequestChanges={handleGeoQaReject}
-          />
+        {taskOpen && (
+          <Box
+            display="flex"
+            style={{
+              width: taskWidth,
+              flexShrink: 0,
+              height: "100%",
+              borderLeft: "1px solid var(--ax-colors-border-secondary)",
+              overflow: "hidden",
+              animation: "panelSlideIn 0.25s cubic-bezier(0.16,1,0.3,1) both",
+            }}
+          >
+            <PanelResizeHandle onDelta={(d) => setTaskWidth((w) => Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, w + d)))} />
+            <Box style={{ flex: 1, minWidth: 0, height: "100%", overflow: "hidden" }}>
+              <HeadlessTaskPanel
+                open={taskOpen}
+                onClose={() => setTaskOpen(false)}
+                controller={taskController}
+              />
+            </Box>
+          </Box>
         )}
       </Box>
 
@@ -814,8 +726,8 @@ export function LayoutASidebar() {
             top: 84,
             right:
               24 +
-              (previewOpen && !fullArtifactOpen ? previewWidth : 0) +
-              (taskOpen && !fullArtifactOpen ? taskWidth : 0),
+              (previewOpen ? previewWidth : 0) +
+              (taskOpen ? taskWidth : 0),
             zIndex: 30,
             transition: "right 0.25s cubic-bezier(0.16,1,0.3,1)",
           }}
