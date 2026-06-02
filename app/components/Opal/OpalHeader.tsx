@@ -3,7 +3,8 @@
 import { Box, Button, Tabs, TabsList, TabsTrigger } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { InitialsAvatar, initialsFromName } from "@/app/opal/components/InitialsAvatar";
-import { IconXmark, IconBars, IconCirclePlus, IconSparkles, IconArrowUpRightFromSquare } from "@/app/lib/axiom-icons";
+import { IconXmark, IconBars, IconCirclePlus } from "@/app/lib/axiom-icons";
+import { IconSparkles } from "@optiaxiom/icons";
 import IconDropdown from "@/app/assets/opal/icon-dropdown.svg";
 import IconMaximize from "@/app/assets/opal/icon-maximize.svg";
 import { opalTypography } from "@/app/styles/opalTypography";
@@ -41,6 +42,8 @@ type OpalHeaderProps = {
     onImThreadNameClick?: () => void;
     /** IM mode: simplified header — hamburger becomes X, tabs hidden */
     imSimplified?: boolean;
+    /** IM mode: extra actions rendered on the right side of the simplified header */
+    imHeaderRight?: React.ReactNode;
     /** IM mode: controlled active tab value */
     imActiveTab?: 'messages' | 'files' | 'activities';
     /** IM mode: callback when the user switches tabs */
@@ -65,6 +68,7 @@ export function OpalHeader({
     imTemplateName,
     onImThreadNameClick,
     imSimplified = false,
+    imHeaderRight,
     imActiveTab: imActiveTabProp,
     onImTabChange,
 }: OpalHeaderProps) {
@@ -157,7 +161,7 @@ export function OpalHeader({
                                     width: imSimplified ? 22 : 28, height: imSimplified ? 22 : 28,
                                     borderRadius: imSimplified ? 5 : 7, flexShrink: 0,
                                     background: bg, display: 'flex', alignItems: 'center',
-                                    justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 700,
+                                    justifyContent: 'center', color: 'var(--ax-colors-fg-default-inverse)', fontSize: 11, fontWeight: 700,
                                     letterSpacing: '-0.3px',
                                 }}>
                                     {chanName.slice(0, 2).toUpperCase()}
@@ -198,10 +202,7 @@ export function OpalHeader({
                             >
                                 {imThreadName}
                             </Text>
-                            {imIsVAU && <IconSparkles size={14} style={{ color: '#7c5cff', flexShrink: 0 }} />}
-                            {imSimplified && hoverThreadTitle && (
-                                <IconArrowUpRightFromSquare size={18} style={{ color: 'var(--ax-colors-fg-tertiary)', flexShrink: 0 }} />
-                            )}
+                            {imIsVAU && <IconSparkles size={14} style={{ color: 'var(--ax-colors-fg-secondary)', flexShrink: 0 }} />}
                         </Box>
                         {imTemplateName && (
                             <Text
@@ -237,6 +238,7 @@ export function OpalHeader({
 
                 {/* Right actions */}
                 <Box display="flex" alignItems="center" gap="4" style={{ flex: '1 1 0', justifyContent: 'flex-end' }}>
+                    {imSimplified && imHeaderRight}
                     {showWindowControls ? (
                         <>
                             <Button appearance="subtle" size="sm" aria-label="Maximize" onClick={onToggleMode}

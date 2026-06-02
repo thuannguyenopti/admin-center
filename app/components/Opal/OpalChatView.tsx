@@ -149,8 +149,12 @@ type OpalChatViewProps = {
     imTemplateName?: string;
     /** IM mode: simplified header — X instead of hamburger, no tabs */
     imSimplified?: boolean;
+    /** IM mode: extra actions on the right side of the simplified header */
+    imHeaderRight?: React.ReactNode;
     /** IM mode: when set, clicking the avatar+name navigates */
     onImThreadNameClick?: () => void;
+    /** IM mode: when set, the first file in the Files tab opens the artifact preview */
+    onOpenArtifact?: () => void;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -220,7 +224,9 @@ export function OpalChatView({
     imThreadAvatar,
     imTemplateName,
     imSimplified,
+    imHeaderRight,
     onImThreadNameClick,
+    onOpenArtifact,
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
     const [chatWidth, setChatWidth] = useState(400);
@@ -288,6 +294,14 @@ export function OpalChatView({
                                 titleOverride={headerTitle}
                                 newChatLabel={newChatLabel}
                                 leadingClose={onCloseChat}
+                                imThreadName={imThreadName}
+                                imThreadAvatar={imThreadAvatar}
+                                imIsVAU={imIsVAU}
+                                imIsChannel={imIsChannel}
+                                imTemplateName={imTemplateName}
+                                imSimplified={imSimplified}
+                                imHeaderRight={imHeaderRight}
+                                onImThreadNameClick={onImThreadNameClick}
                             />
                         </Box>
                     )}
@@ -437,12 +451,14 @@ export function OpalChatView({
                             onImModeChange={setImMode}
                             titleOverride={headerTitle}
                             newChatLabel={newChatLabel}
+                            leadingClose={onCloseChat}
                             imThreadName={imThreadName}
                             imIsVAU={imIsVAU}
                             imIsChannel={imIsChannel}
                             imThreadAvatar={imThreadAvatar}
                             imTemplateName={imTemplateName}
                             imSimplified={imSimplified}
+                            imHeaderRight={imHeaderRight}
                             onImThreadNameClick={onImThreadNameClick}
                             imActiveTab={imActiveTab}
                             onImTabChange={setImActiveTab}
@@ -457,7 +473,7 @@ export function OpalChatView({
 
                 {/* Files tab — available for all IM conversations */}
                 {imMode && imActiveTab === 'files' && (
-                    <IMFilesList vauName={imThreadName} />
+                    <IMFilesList vauName={imThreadName} onOpenArtifact={onOpenArtifact} />
                 )}
 
                 {/* Messages tab (default) — hidden when on a non-messages tab */}

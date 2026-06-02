@@ -132,7 +132,7 @@ const artifacts: Artifact[] = [
         source: { name: "Frank", type: "chat", link: "/opal?artifacts=1" },
         agentBadgeIntent: "success",
         createdBy: { name: "Frank", avatar: "" },
-        owner: { name: "Jamie Chen", avatar: "" },
+        owner: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
         sharedWithTeam: true,
         tags: ["GEO", "Q&A", "Stride"],
         created: "May 15, 2026",
@@ -152,10 +152,10 @@ const artifacts: Artifact[] = [
         id: "1",
         name: "Q2 Email Nurture Draft",
         type: "Document",
-        source: { name: "Copywriter", type: "chat", link: "/opal/chat/1" },
+        source: { name: "Opal chat", type: "chat", link: "/opal/chat/1" },
         agentBadgeIntent: "warning",
-        createdBy: { name: "Jamie Chen", avatar: "" },
-        owner: { name: "Jamie Chen", avatar: "" },
+        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        owner: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
         isPrivate: true,
         tags: ["Email", "Q2", "Nurture"],
         created: "May 13, 2026",
@@ -176,7 +176,7 @@ const artifacts: Artifact[] = [
         source: { name: "Scout", type: "agent", link: "/opal/agents/setup?id=2" },
         agentBadgeIntent: "danger",
         createdBy: { name: "Poppy", avatar: "" },
-        owner: { name: "William Mo.", avatar: "/avatars/user2.png" },
+        owner: { name: "Stefan S.", avatar: "/avatars/stefan-svebeck.svg" },
         isPrivate: true,
         created: "May 13, 2026",
         createdRaw: NOW - 21600,
@@ -235,7 +235,7 @@ const artifacts: Artifact[] = [
         id: "5",
         name: "A/B Test Checkout CTA",
         type: "Code",
-        source: { name: "Compass", type: "chat", link: "/opal/chat/5" },
+        source: { name: "Opal chat", type: "chat", link: "/opal/chat/5" },
         agentBadgeIntent: "neutral",
         createdBy: { name: "Jamie Chen", avatar: "" },
         owner: { name: "Jamie Chen", avatar: "" },
@@ -294,7 +294,7 @@ const artifacts: Artifact[] = [
         id: "8",
         name: "Q1 Sales Deck",
         type: "Presentation",
-        source: { name: "Compass", type: "agent", link: "/opal/agents/setup?id=8" },
+        source: { name: "Opal chat", type: "chat", link: "/opal/chat/8" },
         agentBadgeIntent: "neutral",
         createdBy: { name: "Henry", avatar: "" },
         owner: { name: "Jamie Chen", avatar: "" },
@@ -335,7 +335,7 @@ const artifacts: Artifact[] = [
         id: "10",
         name: "Content Calendar — April",
         type: "Spreadsheet",
-        source: { name: "Compass", type: "chat", link: "/opal/chat/10" },
+        source: { name: "Opal chat", type: "chat", link: "/opal/chat/10" },
         agentBadgeIntent: "neutral",
         createdBy: { name: "Jamie Chen", avatar: "" },
         owner: { name: "Jamie Chen", avatar: "" },
@@ -374,7 +374,7 @@ const artifacts: Artifact[] = [
         id: "12",
         name: "Meeting Notes — Weekly Product Sync",
         type: "Document",
-        source: { name: "Copywriter", type: "chat", link: "/opal/chat/12" },
+        source: { name: "Opal chat", type: "chat", link: "/opal/chat/12" },
         agentBadgeIntent: "warning",
         createdBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
         owner: { name: "Mary Anne", avatar: "/avatars/user.png" },
@@ -446,13 +446,16 @@ const sourceAvatar: Record<string, string> = {
     "Henry": "/avatars/vau-henry.png",
     "Kerby": "/avatars/vau-kerby.png",
     "Jonas": "/avatars/vau-jonas.png",
+    "Opal chat": "/opal-orb.png",
 };
 
 function AgentCell({ name }: { name: string }) {
     const avatar = sourceAvatar[name];
     return (
         <Box display="flex" alignItems="center" gap="8">
-            {avatar ? (
+            {avatar && name === "Opal chat" ? (
+                <img src={avatar} alt={name} style={{ width: 18, height: 18, display: "block", flexShrink: 0 }} />
+            ) : avatar ? (
                 <span style={{ width: 18, height: 18, borderRadius: 4, background: "var(--ax-colors-bg-secondary)", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
                     <img src={avatar} alt={name} style={{ width: 13, height: 13, display: "block" }} />
                 </span>
@@ -1548,9 +1551,13 @@ function FilterSidebar({
                                 style={{ ...navItem, background: isActive ? "var(--ax-colors-bg-secondary)" : "transparent", padding: "0 12px" }}
                             >
                                 {avatar ? (
-                                    <span style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-secondary)", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-                                        <img src={avatar} alt={name} style={{ width: 14, height: 14, display: "block" }} />
-                                    </span>
+                                    name === "Opal chat" ? (
+                                        <img src={avatar} alt={name} style={{ width: 20, height: 20, display: "block", flexShrink: 0 }} />
+                                    ) : (
+                                        <span style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-secondary)", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                                            <img src={avatar} alt={name} style={{ width: 14, height: 14, display: "block" }} />
+                                        </span>
+                                    )
                                 ) : (
                                     <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{sourceEmoji[name] ?? "🤖"}</span>
                                 )}
@@ -1579,9 +1586,13 @@ function FilterSidebar({
                                 style={{ ...navItem, background: isActive ? "var(--ax-colors-bg-secondary)" : "transparent", padding: "0 12px" }}
                             >
                                 {avatar ? (
-                                    <span style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-secondary)", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-                                        <img src={avatar} alt={name} style={{ width: 14, height: 14, display: "block" }} />
-                                    </span>
+                                    name === "Opal chat" ? (
+                                        <img src={avatar} alt={name} style={{ width: 20, height: 20, display: "block", flexShrink: 0 }} />
+                                    ) : (
+                                        <span style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-secondary)", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                                            <img src={avatar} alt={name} style={{ width: 14, height: 14, display: "block" }} />
+                                        </span>
+                                    )
                                 ) : (
                                     <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{sourceEmoji[name] ?? "🤖"}</span>
                                 )}
@@ -2122,9 +2133,8 @@ export default function ArtifactsPage() {
                                 <Tr>
                                     <Th style={{ width: 110 }}>Type</Th>
                                     <SortHeader label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={handleSort} />
-                                    <Th>Created by</Th>
+                                    <Th>Source</Th>
                                     <Th>Owner</Th>
-                                    <Th>Agent</Th>
                                     <Th>Tags</Th>
                                     <Th>Visibility</Th>
                                     <SortHeader label="Activity" sortKey="created" current={sortKey} dir={sortDir} onSort={handleSort} />
@@ -2148,13 +2158,10 @@ export default function ArtifactsPage() {
                                             <Text fontWeight="500">{artifact.name}</Text>
                                         </Td>
                                         <Td>
-                                            <PersonCell person={artifact.createdBy} />
+                                            <AgentCell name={artifact.source.name} />
                                         </Td>
                                         <Td>
                                             <PersonCell person={artifact.owner} />
-                                        </Td>
-                                        <Td>
-                                            <AgentCell name={artifact.source.name} />
                                         </Td>
                                         <Td>
                                             <Box display="flex" alignItems="center" gap="4" flexWrap="wrap">

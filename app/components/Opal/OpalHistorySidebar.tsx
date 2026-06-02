@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Box, Button, Tooltip } from "@optiaxiom/react";
-import { IconPlus, IconAngleDown, IconAngleRight } from "@optiaxiom/icons";
+import { IconPenToSquare, IconPlus, IconAngleDown, IconAngleRight } from "@optiaxiom/icons";
 import { Text } from "../Text";
 import { Input } from "../Input";
 import { OpalHistoryItem } from "./OpalHistoryItem";
@@ -83,17 +83,16 @@ export function OpalHistorySidebar({
           <IconSearch style={{ width: '16px', height: '16px' }} />
         </Button>
 
-        <Box style={{ width: 120, marginLeft: 'auto' }}>
+        <Tooltip content={newChatLabel} delayDuration={300}>
           <Button
-            appearance="default"
-            size="md"
+            appearance="subtle"
+            size="sm"
             onClick={onNewChat}
-            icon={<IconPlus size={16} />}
-            w="full"
-          >
-            {newChatLabel}
-          </Button>
-        </Box>
+            icon={<IconPenToSquare />}
+            aria-label={newChatLabel}
+            style={{ marginLeft: 'auto', flexShrink: 0 }}
+          />
+        </Tooltip>
       </Box>
 
       {/* Chat History Groups */}
@@ -148,7 +147,6 @@ export function OpalHistorySidebar({
                         height: 20,
                         minWidth: 20,
                         padding: 0,
-                        borderRadius: 4,
                         color: 'var(--opal-text-secondary)',
                       }}
                     />

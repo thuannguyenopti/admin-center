@@ -12,7 +12,7 @@ import type {
 } from "@/app/opal/im/lib/types";
 
 const DATA_FILE = path.join(process.cwd(), ".messaging-data.json");
-// seed v3 — add conv-demo-geo-qa group (Frank/Jamie/Mary Anne artifact thread)
+// seed v12 — rename geo-qa conv to "Stride GEO — Q&A review" (matches v2)
 
 type StoreShape = {
   conversations: Conversation[];
@@ -35,7 +35,7 @@ const VAU_USERS: UserProfile[] = VAUS.map((v) => ({
 const SEED: StoreShape = {
   users: [
     { user_id: "pei", display_name: "Emily Park", email: "emily.park@optimizely.com" },
-    { user_id: "frank", display_name: "Frank Lin", email: "frank@optimizely.com" },
+    { user_id: "frank", display_name: "Daniel Park", email: "daniel.park@optimizely.com" },
     { user_id: "jamie", display_name: "Jamie Chen", email: "jamie@optimizely.com" },
     { user_id: "mary-anne", display_name: "Mary Anne Torres", email: "maryanne@optimizely.com" },
     { user_id: "opal-bot", display_name: "Opal", email: "opal@optimizely.com" },
@@ -186,10 +186,24 @@ const SEED: StoreShape = {
       member_count: 2,
     },
     {
+      id: "conv-demo-frank-dm",
+      instance_id: "im-prototype",
+      type: "dm",
+      created_by: "vau-frank",
+      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      updated_at: new Date(Date.now() - 3600000).toISOString(),
+      archived: false,
+      participants: [
+        participant("jamie", "owner"),
+        participant("vau-frank", "member"),
+      ],
+      member_count: 2,
+    },
+    {
       id: "conv-demo-geo-qa",
       instance_id: "im-prototype",
       type: "group",
-      name: "Q&A: Discover the Unknown",
+      name: "Stride GEO — Q&A review",
       created_by: "vau-frank",
       created_at: new Date(Date.now() - 5400000).toISOString(),
       updated_at: new Date(Date.now() - 600000).toISOString(),
@@ -296,6 +310,11 @@ const SEED: StoreShape = {
     "conv-gtm": [
       message("msg-gtm1", "conv-gtm", "jamie", "Reminder: GTM sync next Tuesday 10am — competitive section is on the agenda."),
     ],
+    "conv-demo-frank-dm": [
+      message("msg-fd1", "conv-demo-frank-dm", "vau-frank", "Hey — I'm starting research on the GEO opportunity for Stride. Do you want me to focus on AI overview queries or broader discovery content?"),
+      message("msg-fd2", "conv-demo-frank-dm", "jamie", "AI overview queries for now. Let's keep scope tight."),
+      message("msg-fd3", "conv-demo-frank-dm", "vau-frank", "Got it. I'll start with Discover the Unknown — it's the strongest match. I'll loop in the group chat once I have a draft."),
+    ],
     "conv-demo-geo-qa": [
       message("msg-dg1", "conv-demo-geo-qa", "vau-frank", "I've started drafting the GEO Q&A article for Stride's Discover the Unknown. First pass is ready — 7 Q&A pairs covering the core product questions. Sharing for review."),
       message("msg-dg2", "conv-demo-geo-qa", "jamie", "Nice start. A few things: can we make the first answer less spec-y and more story-driven? Also needs a team use case — right now it reads very individual-athlete."),
@@ -365,7 +384,7 @@ function message(id: string, convId: string, sender: string, content: string): I
 }
 
 // Bump this when SEED participants change so old persisted cache is discarded.
-const SEED_VERSION = "v11-qa-unread";
+const SEED_VERSION = "v13-human-frank-rename";
 
 async function load(): Promise<StoreShape> {
   if (cache) return cache;

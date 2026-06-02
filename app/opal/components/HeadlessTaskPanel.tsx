@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, Box, Checkbox, Spinner, Tabs, TabsList, TabsTrigger, TabsContent } from "@optiaxiom/react";
+import { Badge, Box, Checkbox, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Spinner, Tabs, TabsList, TabsTrigger, TabsContent } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
 import {
@@ -487,10 +487,18 @@ export function HeadlessTaskPanel({ open, onClose, controller }: HeadlessTaskPan
           </Box>
 
           <Box display="flex" alignItems="center" gap="8">
-            {!allStepsDone && (
-              <Button appearance="default" size="sm">Mark Complete</Button>
-            )}
-            <Button appearance="subtle" size="sm" icon={<IconEllipsisStroke size={14} />} aria-label="More" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button appearance="subtle" size="sm" icon={<IconEllipsisStroke size={14} />} aria-label="More" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {!allStepsDone && (
+                  <DropdownMenuItem onClick={() => controller.completeStep('2')}>
+                    <Box display="flex" alignItems="center" gap="8"><IconCircleCheckSolid size={14} />Mark Complete</Box>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </Box>
         </Box>
 
