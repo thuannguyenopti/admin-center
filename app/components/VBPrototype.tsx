@@ -443,7 +443,7 @@ export default function VBPrototype({
 	const [preview, setPreview] = usePersistentState("cms-preview-settings", {
 		mode: "scale",
 		width: 1440,
-	}) as [PreviewSettings, (v: PreviewSettings) => void];
+	}) as [PreviewSettings, React.Dispatch<React.SetStateAction<PreviewSettings>>];
 
 	const onPreviewChange = (patch: Partial<PreviewSettings>) => {
 		setPreview((p) => ({...p, ...patch}));
