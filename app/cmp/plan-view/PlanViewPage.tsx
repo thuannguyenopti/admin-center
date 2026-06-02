@@ -25,7 +25,7 @@ export function PlanViewPage() {
 	};
 
 	return (
-		<Box style={{ height: "100vh", display: "flex", flexDirection: "column", margin: "-24px", marginTop: "-72px" }}>
+		<Box style={{ height: "100vh", display: "flex", flexDirection: "column", margin: "-24px", marginTop: "-6px" }}>
 			{/* Row 1 - Tab Navigation */}
 			<Box borderB="1" borderColor="border.tertiary" bg="bg.default" px="16" display="flex" alignItems="center">
 				<Tabs value={state.activeView} onValueChange={state.setActiveView}>
