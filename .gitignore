@@ -34,7 +34,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # env files (can opt-in for committing if needed)
-.env*
 
 # vercel
 .vercel
@@ -62,3 +61,4 @@ logs/*.log*
 .messaging-data.json
 # IM mock backend uploads
 /public/im-uploads/
+config.bat

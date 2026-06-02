@@ -49,6 +49,7 @@ export const initialCmpTasks: CmpTask[] = [
 		startDate: "No start date",
 		endDate: "No end date",
 		lastModified: "Nov 25, 2025",
+		parentCampaignId: "ironman-miami-2026",
 	},
 	{
 		id: "2",
