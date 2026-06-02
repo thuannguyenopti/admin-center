@@ -775,6 +775,41 @@ export default function VBPrototype({
 		setStyleEditorSource("elementEditor");
 	}, [currentEle]);
 
+	const removeCurrentEle = useCallback(() => {
+		if (currentEle === "none") return;
+		const id = currentEle;
+		setData((prev) =>
+			prev.map((section: any) => ({
+				...section,
+				children: (section.children || []).map((row: any) => ({
+					...row,
+					children: (row.children || []).map((col: any) => {
+						const cur = (col.elements || col.children || []) as any[];
+						const nextElements = cur.filter((ele: any) => ele.id !== id);
+						const {children: _old, ...rest} = col;
+						return {...rest, elements: nextElements};
+					}),
+				})),
+			}))
+		);
+		setOutlines((prev) =>
+			prev.map((outline) => {
+				if (!outline.elements[id]) return outline;
+				const {[id]: _gone, ...rest} = outline.elements;
+				return {...outline, elements: rest};
+			})
+		);
+		setTheEles((prev) => {
+			if (!prev[id]) return prev;
+			const {[id]: _gone, ...rest} = prev;
+			return rest;
+		});
+		setCurrentEle("none");
+		setCurrentHoverEle("none");
+		setStyleEditorEle(null);
+		setStyleEditorSource(null);
+	}, [currentEle, setData, setOutlines, setTheEles]);
+
 	const onStyleChange = useCallback(
 		(templateKey: string) => {
 			if (!styleEditorEle) return;
@@ -1812,19 +1847,19 @@ export default function VBPrototype({
 										<div className="flex-1 overflow-y-auto">
 											{editingSectionId ? (
 												<Box p="24">
-													<Text
-														fontSize="sm"
-														fontWeight="400"
-														color="fg.accent"
-														className="cursor-pointer mb-1"
+													<Button
+														className="-translate-x-2"
+														size="sm"
+														appearance="subtle"
+														icon={<IconArrowLeft />}
 														onClick={() => {
 															setSidebarTab("outlines");
 															setOutlineView("tree");
 															setEditingSectionId(null);
 														}}
 													>
-														← {activeOutline?.title || "Page"}
-													</Text>
+														{activeOutline?.title || "Page"}
+													</Button>
 													<Heading level="4" mb="16">
 														Section Properties
 													</Heading>
@@ -1906,6 +1941,7 @@ export default function VBPrototype({
 									{/* PANE 4: Element Editor or Style Editor */}
 									<div className="min-w-[25%] w-[25%] h-full">
 										<div className="h-full overflow-y-auto">
+											af
 											{styleEditorEle && theEles[styleEditorEle] ? (
 												<StyleEditor
 													outlineTitle={
@@ -1949,6 +1985,11 @@ export default function VBPrototype({
 													onOpenStyleEditor={
 														currentEle !== "none"
 															? onOpenStyleEditorFromElementEditor
+															: undefined
+													}
+													onRemove={
+														currentEle !== "none"
+															? removeCurrentEle
 															: undefined
 													}
 												/>
@@ -2065,18 +2106,18 @@ export default function VBPrototype({
 										<div className="flex-1 overflow-y-auto">
 											{editingSectionId ? (
 												<Box p="24">
-													<Text
-														fontSize="sm"
-														fontWeight="400"
-														color="fg.accent"
-														className="cursor-pointer mb-1"
+													<Button
+														className="-translate-x-2"
+														size="sm"
+														appearance="subtle"
+														icon={<IconArrowLeft />}
 														onClick={() => {
 															setSidebarTab("outline");
 															setEditingSectionId(null);
 														}}
 													>
-														← {activeOutline?.title || "Page"}
-													</Text>
+														{activeOutline?.title || "Page"}
+													</Button>
 													<Heading level="4" mb="16">
 														Section Properties
 													</Heading>
@@ -2171,6 +2212,11 @@ export default function VBPrototype({
 													onOpenStyleEditor={
 														currentEle !== "none"
 															? onOpenStyleEditorFromElementEditor
+															: undefined
+													}
+													onRemove={
+														currentEle !== "none"
+															? removeCurrentEle
 															: undefined
 													}
 												/>

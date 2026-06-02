@@ -5,20 +5,44 @@ import {IconBook} from "@tabler/icons-react";
 
 type ElementOption = {type: string; label: string};
 
+/** A thumbnail can be supplied as either:
+ *  - a string URL (rendered as an `<img>` that scales to fit the tile), or
+ *  - a custom ReactNode for full control. */
+type Thumbnail = string | ReactNode;
+
 type ColElementGridPickerProps = {
 	elementOptions: ElementOption[];
 	addElement: (type: string) => void;
 	iconForType: (type: string) => ReactNode;
 	/** Optional trigger node. Wrap your button in PopoverTrigger or pass plain children. */
 	trigger: ReactNode;
-	/** Optional thumbnail content keyed by element type. Renders inside the tile's preview square. */
-	thumbnails?: Record<string, ReactNode>;
+	/** Optional thumbnail content keyed by element type. Renders inside the tile's preview
+	 *  square. Pass a URL string for the simple image case, or a ReactNode for custom content. */
+	thumbnails?: Record<string, Thumbnail>;
 	/** Optional Storybook URL keyed by element type. When provided, the book icon's
 	 *  hover overlay shows an embedded Storybook page; otherwise a placeholder is shown. */
 	storybookUrls?: Record<string, string>;
 	/** Notified when the popover opens or closes. */
 	onOpenChange?: (open: boolean) => void;
 };
+
+function renderThumbnail(thumb: Thumbnail | undefined, label: string): ReactNode {
+	if (thumb == null) return null;
+	if (typeof thumb === "string") {
+		return (
+			<img
+				src={thumb}
+				alt={label}
+				style={{
+					maxWidth: "100%",
+					maxHeight: "100%",
+					objectFit: "contain",
+				}}
+			/>
+		);
+	}
+	return thumb;
+}
 
 const ColElementGridPicker: React.FC<ColElementGridPickerProps> = ({
 	elementOptions,
@@ -109,16 +133,16 @@ const ColElementGridPicker: React.FC<ColElementGridPickerProps> = ({
 										borderColor="border.tertiary"
 										border="1"
 										rounded="md"
-										className="relative w-full aspect-square flex items-center justify-center overflow-hidden transition-shadow group-hover:shadow-[0_0_0_2px_var(--ax-colors-border-focus)]"
+										className="relative w-full aspect-square flex items-center justify-center overflow-hidden transition-shadow group-hover:shadow-[0_0_0_2px_var(--ax-colors-border-default)]"
 									>
-										{thumbnails?.[opt.type]}
+										{renderThumbnail(thumbnails?.[opt.type], opt.label)}
 										<HoverCard openDelay={120} closeDelay={80}>
 											<HoverCardTrigger asChild>
 												<span
 													role="button"
 													aria-label={`Preview ${opt.label}`}
 													onClick={(e) => e.stopPropagation()}
-													className="absolute top-1 right-1 transition-opacity duration-500 group-hover:opacity-50 flex items-center justify-center w-5 h-5 rounded bg-[var(--ax-colors-fg-default)] text-[var(--ax-colors-bg-default)] !hover:opacity-100 opacity-0 shadow-sm"
+													className="absolute top-1 right-1 transition-opacity duration-500 group-hover:opacity-50 flex items-center justify-center w-5 h-5 rounded bg-[var(--ax-colors-fg-default)] text-[var(--ax-colors-bg-default)] group-hover:hover:opacity-100 opacity-0 shadow-sm"
 												>
 													<IconBook size={16} />
 												</span>
@@ -181,6 +205,7 @@ const ColElementGridPicker: React.FC<ColElementGridPickerProps> = ({
 									<Box
 										display="flex"
 										alignItems="center"
+										justifyContent="center"
 										gap="4"
 										color="fg.default"
 									>

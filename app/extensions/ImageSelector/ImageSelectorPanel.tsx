@@ -1,14 +1,12 @@
 "use client";
 
-import { Box, Menu, MenuTrigger, MenuContent, LabelMenuButton } from "@optiaxiom/react";
-import { Button } from "@/app/components/Button";
-import { useState } from "react";
+import {Box, Menu, MenuTrigger, MenuContent, LabelMenuButton, Button} from "@optiaxiom/react";
+import {useState} from "react";
 import ImageCard from "./ImageCard";
-import { mockImages } from "./mockImageData";
-import SearchIcon from "@/app/assets/search-icon.svg";
-import FilterIcon from "@/app/assets/filter-icon.svg";
+import {mockImages} from "./mockImageData";
 import ViewIcon from "@/app/assets/view-icon.svg";
-import { Flex } from "@/app/components/Flex";
+import {Flex} from "@/app/components/Flex";
+import {IconFilter, IconSearch} from "@optimizely/axiom-icons";
 
 export default function ImageSelectorPanel() {
 	const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
@@ -21,24 +19,37 @@ export default function ImageSelectorPanel() {
 				{/* Source Dropdown */}
 				<Menu
 					options={[
-						{ label: "CMS", execute: () => setSourceFilter("CMS") },
-						{ label: "Library", execute: () => setSourceFilter("Library") },
-						{ label: "Uploads", execute: () => setSourceFilter("Uploads") },
+						{label: "CMS", execute: () => setSourceFilter("CMS")},
+						{label: "Library", execute: () => setSourceFilter("Library")},
+						{label: "Uploads", execute: () => setSourceFilter("Uploads")},
 					]}
 				>
 					<MenuTrigger asChild>
-						<LabelMenuButton label="Source" h="40">
-							{sourceFilter}
-						</LabelMenuButton>
+						<LabelMenuButton label="Source">{sourceFilter}</LabelMenuButton>
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>
 
 				{/* Action Buttons */}
 				<Box display="flex" gap="4">
-					<Button appearance="default" aria-label="Search" icon={<SearchIcon />} />
-					<Button appearance="default" aria-label="Filter" icon={<FilterIcon />} />
-					<Button appearance="default" aria-label="View options" icon={<ViewIcon />} />
+					<Button
+						size="lg"
+						appearance="default"
+						aria-label="Search"
+						icon={<IconSearch />}
+					/>
+					<Button
+						size="lg"
+						appearance="default"
+						aria-label="Filter"
+						icon={<IconFilter />}
+					/>
+					<Button
+						size="lg"
+						appearance="default"
+						aria-label="View options"
+						icon={<ViewIcon />}
+					/>
 				</Box>
 			</Box>
 			{/* Image Grid */}

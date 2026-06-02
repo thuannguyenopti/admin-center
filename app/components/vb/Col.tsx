@@ -130,28 +130,38 @@ const Col: React.FC<{
 						addElement={addElement}
 						iconForType={iconForType}
 						onOpenChange={setGridOpen}
+						thumbnails={{
+							"ct-button": "/cms/stride-storybook/button.png",
+							"ct-heading": "/cms/stride-storybook/heading.png",
+							"ct-text": "/cms/stride-storybook/text.png",
+							"ct-image-block": "/cms/stride-storybook/image.png",
+							"ct-product": "/cms/stride-storybook/product.png",
+						}}
 						trigger={
 							<Button
 								appearance="subtle"
 								size="sm"
-								icon={<IconLayoutGrid />}
+								icon={<IconPlus />}
 								aria-label="add element (grid)"
 								onClick={(e: any) => e.stopPropagation()}
 							/>
 						}
 					/>
 					<Menu
-						inputVisible="always"
-						onOpenChange={setAddMenuOpen}
-						options={optionsSource.map((opt, idx) => ({
-							group: idx === 0 ? {label: "Add Element"} : undefined,
-							addon: iconForType(opt.type),
-							label: opt.label,
-							execute: () => addElement(opt.type),
-						}))}
+						onOpenChange={setRemoveMenuOpen}
+						options={[
+							{
+								addon: <IconTrash size={16} />,
+								label: "Remove Column",
+								intent: "danger",
+								execute: () => {
+									removeCol();
+								},
+							},
+						]}
 					>
 						<MenuTrigger
-							icon={<IconPlus />}
+							icon={<IconDots />}
 							aria-label="add ele"
 							appearance="subtle"
 							size="sm"
@@ -160,36 +170,7 @@ const Col: React.FC<{
 							}}
 							iconPosition="start"
 						/>
-						<MenuContent
-							onClick={(e: any) => {
-								e.stopPropagation();
-							}}
-						/>
-						<Menu
-							onOpenChange={setRemoveMenuOpen}
-							options={[
-								{
-									addon: <IconTrash size={16} />,
-									label: "Remove Column",
-									intent: "danger",
-									execute: () => {
-										removeCol();
-									},
-								},
-							]}
-						>
-							<MenuTrigger
-								icon={<IconDots />}
-								aria-label="add ele"
-								appearance="subtle"
-								size="sm"
-								onClick={(e: any) => {
-									e.stopPropagation();
-								}}
-								iconPosition="start"
-							/>
-							<MenuContent />
-						</Menu>
+						<MenuContent />
 					</Menu>
 				</div>
 			</div>

@@ -2,7 +2,7 @@
 
 import React, {Fragment, useEffect, useRef, useState, useMemo} from "react";
 import {Box, Text, Heading, Menu, MenuTrigger, MenuContent, Separator} from "@optiaxiom/react";
-import {IconDots, IconPalette} from "@tabler/icons-react";
+import {IconDots, IconPalette, IconTrash} from "@tabler/icons-react";
 import {initialContentTypes, Property, ContentType} from "@/app/db/initialData";
 import {groupPropertiesByGroup} from "./utils/propertyGroups";
 import {PropertyRenderer} from "@/app/components/property-renderers";
@@ -22,6 +22,7 @@ type Props = {
 	onInputChange: (value: any, keyOrIndex: string | number) => void;
 	outlineTitle?: string;
 	onOpenStyleEditor?: () => void;
+	onRemove?: () => void;
 };
 
 export default function ElementEditor({
@@ -32,6 +33,7 @@ export default function ElementEditor({
 	onInputChange,
 	outlineTitle,
 	onOpenStyleEditor,
+	onRemove,
 }: Props) {
 	const rootRef = useRef<HTMLDivElement | null>(null);
 	const [menuOpen, setMenuOpen] = useState(false);
@@ -105,7 +107,6 @@ export default function ElementEditor({
 			>
 				{outlineTitle || "Outline"}
 			</Button>
-
 			<Box
 				display="flex"
 				alignItems="center"
@@ -119,19 +120,36 @@ export default function ElementEditor({
 				</Heading>
 
 				<Box display="flex" alignItems="center" gap="8">
-					{onOpenStyleEditor && (
+					{(onOpenStyleEditor || onRemove) && (
 						<Menu
 							onOpenChange={() => setMenuOpen(!menuOpen)}
 							open={menuOpen}
 							options={[
-								{
-									addon: <IconPalette size={16} />,
-									label: "Style",
-									execute: () => {
-										onOpenStyleEditor();
-										setMenuOpen(false);
-									},
-								},
+								...(onOpenStyleEditor
+									? [
+											{
+												addon: <IconPalette size={16} />,
+												label: "Style",
+												execute: () => {
+													onOpenStyleEditor();
+													setMenuOpen(false);
+												},
+											},
+										]
+									: []),
+								...(onRemove
+									? [
+											{
+												addon: <IconTrash size={16} />,
+												label: "Remove Element",
+												intent: "danger" as const,
+												execute: () => {
+													onRemove();
+													setMenuOpen(false);
+												},
+											},
+										]
+									: []),
 							]}
 						>
 							<MenuTrigger
@@ -150,7 +168,6 @@ export default function ElementEditor({
 					)}
 				</Box>
 			</Box>
-
 			{/* Render properties grouped by groupName */}
 			<Box mt="16">
 				{(() => {

@@ -88,7 +88,6 @@ export default function StyleEditor({
 			>
 				{outlineTitle || "Outline"}
 			</Button>
-
 			<Box
 				display="flex"
 				alignItems="center"
@@ -99,7 +98,6 @@ export default function StyleEditor({
 			>
 				<Heading level="4">Style</Heading>
 			</Box>
-
 			<Box py="8">
 				<Field label="Template">
 					<Select
@@ -120,7 +118,6 @@ export default function StyleEditor({
 					</Text>
 				)}
 			</Box>
-
 			{/* Template Settings */}
 			{currentTemplateObj &&
 				Object.keys(currentTemplateObj.settings).length > 0 &&
@@ -186,7 +183,6 @@ export default function StyleEditor({
 							})}
 					</Box>
 				)}
-
 			{/* Template Details */}
 			<Box mt="16" pt="16" borderT="1" borderColor="border.tertiary">
 				<Text fontSize="sm" fontWeight="600" mb="8">
