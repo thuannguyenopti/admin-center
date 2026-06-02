@@ -476,11 +476,11 @@ export const initialContentTypes: ContentType[] = [
 			{ id: "heroLogo", name: "Hero Logo", displayName: "Hero Logo", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 7 },
 			{ id: "body", name: "Body", displayName: "Body", type: "XhtmlString", required: true, groupName: "Content", order: 7 },
 			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", allowedTypes: ["ct-author"], required: true, groupName: "Content", order: 8 },
-			{ id: "ctaHeading", name: "CTA Heading", displayName: "CTA Heading", type: "String", groupName: "CTA", order: 1 },
-			{ id: "ctaPrimaryText", name: "CTA Primary Text", displayName: "CTA Primary Button", type: "String", groupName: "CTA", order: 2 },
-			{ id: "ctaPrimaryLink", name: "CTA Primary Link", displayName: "CTA Primary Link", type: "String", groupName: "CTA", order: 3 },
-			{ id: "ctaSecondaryText", name: "CTA Secondary Text", displayName: "CTA Secondary Button", type: "String", groupName: "CTA", order: 4 },
-			{ id: "ctaSecondaryLink", name: "CTA Secondary Link", displayName: "CTA Secondary Link", type: "String", groupName: "CTA", order: 5 },
+			{ id: "ctaHeading", name: "CTA Heading", displayName: "CTA Heading", type: "String", groupName: "Actions", order: 1 },
+			{ id: "ctaPrimaryText", name: "CTA Primary Text", displayName: "CTA Primary Button", type: "String", groupName: "Actions", order: 2 },
+			{ id: "ctaPrimaryLink", name: "CTA Primary Link", displayName: "CTA Primary Link", type: "String", groupName: "Actions", order: 3 },
+			{ id: "ctaSecondaryText", name: "CTA Secondary Text", displayName: "CTA Secondary Button", type: "String", groupName: "Actions", order: 4 },
+			{ id: "ctaSecondaryLink", name: "CTA Secondary Link", displayName: "CTA Secondary Link", type: "String", groupName: "Actions", order: 5 },
 			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
 		],
 	},
@@ -5428,20 +5428,7 @@ export const initialPages: Page[] = [
 		lastModified: "2026-05-29",
 		contentTypeId: "exp-event-page",
 		slug: "boston-marathon-2027",
-		data: {
-			seo: {
-				en: {
-					original: {
-						title: "Boston Marathon 2027 | Stride",
-						description: "Set it. Sweat it. Sign up now! Join Stride for the world's most iconic marathon.",
-						canonicalUrl: "https://stride.com/boston-marathon-2027",
-						robots: "index,follow",
-						ogTitle: "Boston Marathon 2027 — Sign up today!",
-						ogDescription: "The world's most iconic marathon is back. Sign up now.",
-					},
-				},
-			},
-		},
+		data: {},
 		variations: [
 			{
 				id: "original",
