@@ -320,6 +320,30 @@ export function getDisplayTemplateClasses(
 		return "text-stride-blue px-3 py-2 text-xs uppercase tracking-wider font-stride-medium font-stride-sans hover:text-stride-blue-dark transition-colors underline-offset-2 hover:underline";
 	}
 
+	if (displayTemplateKey === "blueFullWidthButton") {
+		return "w-full bg-[#0980F6] hover:bg-[#0668C4] text-white px-6 py-4 rounded-xl text-sm uppercase tracking-wider font-semibold font-stride-sans transition-colors mt-2 text-center block";
+	}
+
+	// =========================================================================
+	// COMPONENT (ELEMENT) RENDERING - HEADINGS
+	// =========================================================================
+
+	if (displayTemplateKey === "blueHeading") {
+		return "text-[#0980F6] font-stride-sans text-4xl md:text-5xl font-normal leading-tight border-t-[3px] border-[#0980F6] pt-6";
+	}
+
+	// =========================================================================
+	// COLUMN TEMPLATES
+	// =========================================================================
+
+	if (displayTemplateKey === "formCard") {
+		const layout = getSetting("layout");
+		if (layout === "form-2col") {
+			return "bg-[#EBF3FB] rounded-2xl p-8 -mt-8 grid grid-cols-2 gap-4 [&>*:first-child]:col-span-2 [&>*:last-child]:col-span-2";
+		}
+		return "bg-[#EBF3FB] rounded-2xl p-8 -mt-8";
+	}
+
 	// =========================================================================
 	// COMPONENT (ELEMENT) RENDERING - CARDS
 	// =========================================================================

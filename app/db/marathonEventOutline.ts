@@ -42,6 +42,8 @@ export const MARATHON_EVENT_OUTLINE: Outline = {
 						{
 							id: "col-marathon-signup-form",
 							open: true,
+							displayTemplateKey: "formCard",
+							displaySettings: [{ key: "layout", value: "form-2col" }],
 							elements: [
 								{ id: "ele-marathon-form-heading" },
 								{ id: "ele-marathon-form-name" },
@@ -131,6 +133,7 @@ export const MARATHON_EVENT_OUTLINE: Outline = {
 			type: "ct-heading",
 			properties: {
 				text: "Sign up for Boston Marathon 2027",
+				displayTemplateKey: "blueHeading",
 			},
 		},
 		"ele-marathon-form-name": {
@@ -164,8 +167,8 @@ export const MARATHON_EVENT_OUTLINE: Outline = {
 		"ele-marathon-form-button": {
 			type: "ct-button",
 			properties: {
-				label: "Sign up",
-				displayTemplateKey: "primaryButton",
+				label: "SIGN UP",
+				displayTemplateKey: "blueFullWidthButton",
 			},
 		},
 		"ele-marathon-community-header": {
