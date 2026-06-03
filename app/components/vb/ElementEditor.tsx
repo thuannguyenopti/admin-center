@@ -161,11 +161,11 @@ export default function ElementEditor({
 								aria-label="Element options"
 								appearance="subtle"
 								size="sm"
-								iconPosition="start"
 							/>
 							<MenuContent />
 						</Menu>
 					)}
+					<Button size="sm" appearance="subtle" icon={<IconDots size="16" />}></Button>
 				</Box>
 			</Box>
 			{/* Render properties grouped by groupName */}

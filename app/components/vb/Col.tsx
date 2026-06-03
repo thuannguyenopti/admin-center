@@ -136,6 +136,7 @@ const Col: React.FC<{
 							"ct-text": "/cms/stride-storybook/text.png",
 							"ct-image-block": "/cms/stride-storybook/image.png",
 							"ct-product": "/cms/stride-storybook/product.png",
+							"ct-input": "/cms/stride-storybook/input.png",
 						}}
 						trigger={
 							<Button

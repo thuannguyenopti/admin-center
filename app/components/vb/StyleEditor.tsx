@@ -191,13 +191,15 @@ export default function StyleEditor({
 				{templates.map((template) => (
 					<Box
 						key={template.key}
-						py="8"
-						px="12"
-						mb="8"
+						p="8"
+						mb="4"
 						rounded="md"
 						bg={currentTemplate === template.key ? "bg.accent.subtle" : "transparent"}
-						className="cursor-pointer hover:bg-gray-50 transition-colors"
+						className="cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)] transition-colors"
 						onClick={() => onStyleChange(template.key)}
+						style={{
+							marginLeft: -8,
+						}}
 					>
 						<Text fontWeight="600" fontSize="sm" mb="4">
 							{template.displayName}

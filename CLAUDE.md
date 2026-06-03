@@ -103,6 +103,13 @@ For frontend/product UI work, also read **[.claude/skills/frontend-design.md](.c
 - Main CTAs: use `Button appearance="primary"` with `size="md"` or `size="lg"` unless matching an existing dense-toolbar pattern
 - Empty ellipsis menus, decorative controls, and Settings tabs for one or two fields are not allowed
 
+**Menus — always use `Menu` with the `options` prop, not `DropdownMenu`.** Axiom V3 has two menu components and they look similar from the outside, but they're different:
+
+- **`Menu`** — data-driven. You pass a `MenuOption[]` array via the `options` prop, plus a `MenuTrigger` and `MenuContent`. Supports search/filter (`inputVisible`), nested sub-menus (`subOptions`, `subOptionsInputVisible`), groups with labels and separators (`group: { label, separator, hidden }`), per-item icons (`addon`), right-side detail (`detail`), danger styling (`intent: "danger"`), disabled with reason (`disabledReason`), and keyword matching (`keywords`). This is what almost every menu in the codebase should use.
+- **`DropdownMenu`** — JSX-tree-driven (`DropdownMenuItem`, `DropdownMenuSub`, `DropdownMenuLabel`, `DropdownMenuSeparator`, etc.). Legacy from earlier Axiom versions. Don't introduce new usages.
+
+When converting existing `DropdownMenu` code to `Menu`, helpers that previously rendered JSX (e.g. `<MyMenuItems />`) should export functions returning `MenuOption[]` instead — the caller spreads them into the parent `options` array. Search input inside a sub-menu uses `subOptionsInputVisible: true` + `keywords: "..."` on each sub-option; do not build manual `useState` + `Input` filtering inside menu content.
+
 **Additional rules for `app/opal/` (Axiom V3 + Opal layer):**
 - Opal gradient colors → CSS custom properties (`--opal-gradient-*`), never `bg.*` tokens
 - Action Cards → must use `@optiaxiom/proteus`, never custom HTML
