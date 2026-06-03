@@ -4,23 +4,15 @@ import React from "react";
 import {
 	Box,
 	Text,
+	Button,
 	Badge,
 	Menu,
 	MenuTrigger,
 	MenuContent,
 	LabelMenuButton,
-	DropdownMenu,
-	DropdownMenuTrigger,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSub,
-	DropdownMenuSubTrigger,
-	DropdownMenuSubContent,
-	DropdownMenuSeparator,
-	DropdownMenuLabel,
 	toaster,
 } from "@optiaxiom/react";
-import {Button} from "./Button";
+import type {MenuOption} from "@optiaxiom/react";
 import {
 	IconListTree,
 	IconFile,
@@ -54,6 +46,7 @@ import {
 	IconRestore,
 	IconSparkles,
 	IconExternalLink,
+	IconShieldPlus,
 } from "@tabler/icons-react";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import {group} from "console";
@@ -68,9 +61,10 @@ import {useBrandTone} from "@/app/components/ai/BrandToneProvider";
 import {useLayout} from "@/app/context/LayoutContext";
 import {usePreflightContext} from "@/app/components/ai/PreflightContext";
 import type {PageField} from "@/app/components/ai/PreflightAuditTypes";
-import ContentConnectionMenuItems from "./ContentConnectionMenuItems";
-import TaskAssignmentMenu from "./TaskAssignmentMenu";
-import { initialCmpTasks, type CmpTask } from "@/app/db/cmpInitialData";
+import {contentConnectionMenuOptions} from "./ContentConnectionMenuItems";
+import {taskAssignmentMenuOptions} from "./TaskAssignmentMenu";
+import {initialCmpTasks, type CmpTask} from "@/app/db/cmpInitialData";
+import {IconShip} from "@/vendor/axiom-icons/dist";
 
 interface CMSToolbarProps {
 	pageName?: string;
@@ -221,7 +215,7 @@ export default function CMSToolbar({
 	// Get enabled Opal Actions for Improve button and context menu
 	const [opalConfig] = usePersistentState("opal-config", defaultOpalConfiguration) as [
 		OpalConfiguration,
-		any
+		any,
 	];
 	const {analyzePage} = useBrandTone();
 	const {opalPanelControls} = useLayout();
@@ -239,7 +233,13 @@ export default function CMSToolbar({
 			return [];
 		}
 
-		const fields: Array<{fieldId: string; fieldLabel: string; text: string; src?: string; alt?: string}> = [];
+		const fields: Array<{
+			fieldId: string;
+			fieldLabel: string;
+			text: string;
+			src?: string;
+			alt?: string;
+		}> = [];
 
 		Object.entries(pageElements).forEach(([elementId, element]) => {
 			// Extract text from various property types
@@ -258,10 +258,14 @@ export default function CMSToolbar({
 			// Common text properties
 			else if (element.properties.text?.value) {
 				text = element.properties.text.value;
-				label = element.type === "heading" ? "Heading" :
-				        element.type === "text" ? "Text" :
-				        element.type === "button" ? "Button" :
-				        element.type;
+				label =
+					element.type === "heading"
+						? "Heading"
+						: element.type === "text"
+							? "Text"
+							: element.type === "button"
+								? "Button"
+								: element.type;
 			} else if (element.properties.content?.value) {
 				text = element.properties.content.value;
 			} else if (element.properties.label?.value) {
@@ -319,19 +323,23 @@ export default function CMSToolbar({
 		const fields = getPageFields();
 
 		if (fields.length === 0) {
-			toaster.create("No text content found on the page", { intent: "warning" });
+			toaster.create("No text content found on the page", {intent: "warning"});
 			return;
 		}
 
 		// Create field-to-element mapping (fieldId is already the elementId)
 		const fieldToElementMap: Record<string, string> = {};
-		fields.forEach(field => {
+		fields.forEach((field) => {
 			fieldToElementMap[field.fieldId] = field.fieldId;
 		});
 
 		console.log("[CMSToolbar] Brand tone analysis:", {
 			fieldsCount: fields.length,
-			fields: fields.map(f => ({ id: f.fieldId, label: f.fieldLabel, textLength: f.text.length })),
+			fields: fields.map((f) => ({
+				id: f.fieldId,
+				label: f.fieldLabel,
+				textLength: f.text.length,
+			})),
 			mapping: fieldToElementMap,
 		});
 
@@ -610,8 +618,9 @@ export default function CMSToolbar({
 				</Menu>
 
 				<Button
+					size="lg"
 					appearance="default"
-					icon={<IconMessage size={16} />}
+					icon={<IconMessage />}
 					aria-label="Comments"
 				/>
 
@@ -624,102 +633,18 @@ export default function CMSToolbar({
 				</Menu>
 
 				{/* Improve Button with Opal Actions */}
-				{improveGroups.length > 0 && (() => {
-					const totalAgents = improveGroups.reduce((sum, g) => sum + g.agents.length, 0);
-					const hasMultipleGroups = improveGroups.length > 1;
-					const useSubmenus = totalAgents > 5 && hasMultipleGroups;
-
-					if (useSubmenus) {
-						// Use dropdown with submenus (like context menu)
-						return (
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button
-										appearance="default"
-										icon={<IconChevronDown size={12} />}
-										iconPosition="end"
-									>
-										<Box display="flex" alignItems="center" gap="4">
-											<IconSparkles size={16} />
-											Improve
-										</Box>
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent>
-									{improveGroups.map((group) => {
-										// If group has multiple agents, create nested submenu
-										if (group.agents.length > 1) {
-											return (
-												<DropdownMenuSub key={group.id}>
-													<DropdownMenuSubTrigger>
-														{group.name}
-													</DropdownMenuSubTrigger>
-													<DropdownMenuSubContent>
-														{group.agents.map((groupAgent) => {
-															const agent = availableAgents.find(
-																(a) => a.id === groupAgent.id
-															);
-															return (
-																<DropdownMenuItem
-																	key={groupAgent.id}
-																	onSelect={() => {
-																		if (groupAgent.id === "preflight-audit") {
-																			handlePreflightAudit();
-																		} else if (groupAgent.id === "brand-tone-audit") {
-																			handleBrandToneAnalysis();
-																		} else {
-																			console.log(
-																				"Execute Opal Action:",
-																				group.name,
-																				"- Agent:",
-																				agent?.name
-																			);
-																		}
-																	}}
-																>
-																	{agent?.name || groupAgent.id}
-																</DropdownMenuItem>
-															);
-														})}
-													</DropdownMenuSubContent>
-												</DropdownMenuSub>
-											);
-										}
-										// Single agent, just show the group name
-										const singleAgent = group.agents[0];
-										return (
-											<DropdownMenuItem
-												key={group.id}
-												onSelect={() => {
-													if (singleAgent.id === "preflight-audit") {
-														handlePreflightAudit();
-													} else if (singleAgent.id === "brand-tone-audit") {
-														handleBrandToneAnalysis();
-													} else {
-														console.log("Execute Opal Action:", group.name);
-													}
-												}}
-											>
-												{group.name}
-											</DropdownMenuItem>
+				{improveGroups.length > 0 && (
+					<Menu
+						options={improveGroups.map((group): MenuOption => {
+							if (group.agents.length > 1) {
+								return {
+									label: group.name,
+									subOptions: group.agents.map((groupAgent) => {
+										const agent = availableAgents.find(
+											(a) => a.id === groupAgent.id
 										);
-									})}
-								</DropdownMenuContent>
-							</DropdownMenu>
-						);
-					}
-
-					// Use flat menu with groups
-					return (
-						<Menu
-							options={improveGroups.flatMap((group) => {
-								// If group has multiple agents, create submenu items
-								if (group.agents.length > 1) {
-									return group.agents.map((groupAgent, index) => {
-										const agent = availableAgents.find((a) => a.id === groupAgent.id);
 										return {
 											label: agent?.name || groupAgent.id,
-											group: {label: group.name, hidden: index > 0},
 											execute: () => {
 												if (groupAgent.id === "preflight-audit") {
 													handlePreflightAudit();
@@ -735,42 +660,36 @@ export default function CMSToolbar({
 												}
 											},
 										};
-									});
-								}
-								// Single agent, just show the group name
-								const singleAgent = group.agents[0];
-								return [
-									{
-										label: group.name,
-										execute: () => {
-											if (singleAgent.id === "preflight-audit") {
-												handlePreflightAudit();
-											} else if (singleAgent.id === "brand-tone-audit") {
-												handleBrandToneAnalysis();
-											} else {
-												console.log("Execute Opal Action:", group.name);
-											}
-										},
-									},
-								];
-							})}
+									}),
+								};
+							}
+							const singleAgent = group.agents[0];
+							return {
+								label: group.name,
+								execute: () => {
+									if (singleAgent.id === "preflight-audit") {
+										handlePreflightAudit();
+									} else if (singleAgent.id === "brand-tone-audit") {
+										handleBrandToneAnalysis();
+									} else {
+										console.log("Execute Opal Action:", group.name);
+									}
+								},
+							};
+						})}
+					>
+						<MenuTrigger
+							appearance="default"
+							icon={<IconSparkles />}
+							iconPosition="start"
+							addonAfter={<IconChevronDown size={20} />}
+							size="lg"
 						>
-							<MenuTrigger asChild>
-								<Button
-									appearance="default"
-									icon={<IconChevronDown size={12} />}
-									iconPosition="end"
-								>
-									<Box display="flex" alignItems="center" gap="4">
-										<IconSparkles size={16} />
-										Improve
-									</Box>
-								</Button>
-							</MenuTrigger>
-							<MenuContent />
-						</Menu>
-					);
-				})()}
+							Improve
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
+				)}
 
 				{/* Publish Button with Menu */}
 				<Menu
@@ -803,163 +722,137 @@ export default function CMSToolbar({
 						},
 					]}
 				>
-					<MenuTrigger asChild>
-						<Button
-							appearance={pageStatus === "Published" ? "default" : "primary"}
-							icon={<IconChevronDown size={12} />}
-							iconPosition="end"
-						>
-							{pageStatus === "Published" ? "Published" : "Publish"}
-						</Button>
+					<MenuTrigger
+						size="lg"
+						appearance={pageStatus === "Published" ? "default" : "primary"}
+						icon={<IconWorld />}
+						iconPosition="start"
+						addonAfter={<IconChevronDown size={20} />}
+					>
+						{pageStatus === "Published" ? "Published" : "Publish"}
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>
 
 				{/* Options */}
-				<DropdownMenu>
-					<DropdownMenuTrigger
+				<Menu
+					options={[
+						...(contextMenuGroups.length > 0
+							? [
+									{
+										label: "Opal",
+										addon: <IconSparkles size={16} />,
+										subOptions: contextMenuGroups.map((group): MenuOption => {
+											if (group.agents.length > 1) {
+												return {
+													label: group.name,
+													subOptions: group.agents.map((groupAgent) => {
+														const agent = availableAgents.find(
+															(a) => a.id === groupAgent.id
+														);
+														return {
+															label: agent?.name || groupAgent.id,
+															execute: () => {
+																if (
+																	groupAgent.id ===
+																	"brand-tone-audit"
+																) {
+																	handleBrandToneAnalysis();
+																} else {
+																	console.log(
+																		"Execute Opal Action:",
+																		group.name,
+																		"- Agent:",
+																		agent?.name
+																	);
+																}
+															},
+														};
+													}),
+												};
+											}
+											const singleAgent = group.agents[0];
+											return {
+												label: group.name,
+												execute: () => {
+													if (singleAgent.id === "brand-tone-audit") {
+														handleBrandToneAnalysis();
+													} else {
+														console.log(
+															"Execute Opal Action:",
+															group.name
+														);
+													}
+												},
+											};
+										}),
+									} satisfies MenuOption,
+								]
+							: []),
+						...contentConnectionMenuOptions({
+							onConnectContent,
+							onDisconnectContent,
+							hasConnection,
+							compatibleInstancesCount,
+						}),
+						...(onViewOnWebsite
+							? [
+									{
+										label: "View on website",
+										addon: <IconWorld size={16} />,
+										detail: <IconExternalLink size={16} />,
+										execute: onViewOnWebsite,
+										group: {label: "Page", separator: true},
+									} satisfies MenuOption,
+								]
+							: []),
+						{
+							label: "Rename",
+							addon: <IconPencil size={16} />,
+							execute: onRenamePage,
+							group: {label: "Page", separator: true},
+						},
+						...(onAddToTask
+							? taskAssignmentMenuOptions({
+									currentTaskId,
+									tasks: cmpTasks,
+									onAddToTask,
+									onRemoveFromTask,
+								})
+							: []),
+						{
+							label: "Move to trash",
+							addon: <IconTrash size={16} />,
+							intent: "danger",
+							execute: onTrash,
+							group: {label: "Page", separator: true},
+						},
+						...(isVariation
+							? [
+									{
+										label: "Rename Variation",
+										addon: <IconStack2 size={16} />,
+										execute: onRenameVariation,
+										group: {label: "Variation", separator: true},
+									} satisfies MenuOption,
+									{
+										label: "Delete Variation",
+										addon: <IconTrash size={16} />,
+										intent: "danger",
+										execute: onDeleteVariationRequest,
+										group: {label: "Variation", separator: true},
+									} satisfies MenuOption,
+								]
+							: []),
+					]}
+				>
+					<MenuTrigger
 						aria-label={"Status " + pageStatus}
 						size="lg"
 						icon={<IconDots size={16} />}
 					/>
-					<DropdownMenuContent>
-						{/* Opal Actions Submenu */}
-						{contextMenuGroups.length > 0 && (
-							<>
-								<DropdownMenuSub>
-									<DropdownMenuSubTrigger>
-										<Box display="flex" alignItems="center" gap="8">
-											<IconSparkles size={16} />
-											Opal
-										</Box>
-									</DropdownMenuSubTrigger>
-									<DropdownMenuSubContent>
-										{contextMenuGroups.map((group) => {
-											// If group has multiple agents, create nested submenu
-											if (group.agents.length > 1) {
-												return (
-													<DropdownMenuSub key={group.id}>
-														<DropdownMenuSubTrigger>
-															{group.name}
-														</DropdownMenuSubTrigger>
-														<DropdownMenuSubContent>
-															{group.agents.map((groupAgent) => {
-																const agent = availableAgents.find(
-																	(a) => a.id === groupAgent.id
-																);
-																return (
-																	<DropdownMenuItem
-																		key={groupAgent.id}
-																		onSelect={() => {
-																			if (groupAgent.id === "brand-tone-audit") {
-																				handleBrandToneAnalysis();
-																			} else {
-																				console.log(
-																					"Execute Opal Action:",
-																					group.name,
-																					"- Agent:",
-																					agent?.name
-																				);
-																			}
-																		}}
-																	>
-																		{agent?.name || groupAgent.id}
-																	</DropdownMenuItem>
-																);
-															})}
-														</DropdownMenuSubContent>
-													</DropdownMenuSub>
-												);
-											}
-											// Single agent, just show the group name
-											const singleAgent = group.agents[0];
-											return (
-												<DropdownMenuItem
-													key={group.id}
-													onSelect={() => {
-														if (singleAgent.id === "brand-tone-audit") {
-															handleBrandToneAnalysis();
-														} else {
-															console.log("Execute Opal Action:", group.name);
-														}
-													}}
-												>
-													{group.name}
-												</DropdownMenuItem>
-											);
-										})}
-									</DropdownMenuSubContent>
-								</DropdownMenuSub>
-								<DropdownMenuSeparator />
-							</>
-						)}
-
-						{/* Content Connection (CMP Integration) */}
-						<ContentConnectionMenuItems
-							onConnectContent={onConnectContent}
-							onDisconnectContent={onDisconnectContent}
-							hasConnection={hasConnection}
-							compatibleInstancesCount={compatibleInstancesCount}
-						/>
-
-						{/* Page Actions */}
-						<DropdownMenuLabel>Page</DropdownMenuLabel>
-						{onViewOnWebsite && (
-							<DropdownMenuItem onSelect={onViewOnWebsite}>
-								<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
-									<Box display="flex" alignItems="center" gap="8">
-										<IconWorld size={16} />
-										<Text>View on website</Text>
-									</Box>
-									<IconExternalLink size={16} />
-								</Box>
-							</DropdownMenuItem>
-						)}
-						<DropdownMenuItem onSelect={onRenamePage}>
-							<Box display="flex" alignItems="center" gap="8">
-								<IconPencil size={16} />
-								Rename
-							</Box>
-						</DropdownMenuItem>
-
-						{/* Add to Task / Remove from Task */}
-						{onAddToTask && (
-							<TaskAssignmentMenu
-								currentTaskId={currentTaskId}
-								tasks={cmpTasks}
-								onAddToTask={onAddToTask}
-								onRemoveFromTask={onRemoveFromTask}
-							/>
-						)}
-
-						<DropdownMenuItem intent="danger" onSelect={onTrash}>
-							<Box display="flex" alignItems="center" gap="8">
-								<IconTrash size={16} />
-								Move to trash
-							</Box>
-						</DropdownMenuItem>
-
-						{/* Variation Actions */}
-						{isVariation && (
-							<>
-								<DropdownMenuSeparator />
-								<DropdownMenuLabel>Variation</DropdownMenuLabel>
-								<DropdownMenuItem onSelect={onRenameVariation}>
-									<Box display="flex" alignItems="center" gap="8">
-										<IconStack2 size={16} />
-										Rename Variation
-									</Box>
-								</DropdownMenuItem>
-								<DropdownMenuItem intent="danger" onSelect={onDeleteVariationRequest}>
-									<Box display="flex" alignItems="center" gap="8">
-										<IconTrash size={16} />
-										Delete Variation
-									</Box>
-								</DropdownMenuItem>
-							</>
-						)}
-					</DropdownMenuContent>
-				</DropdownMenu>
+					<MenuContent />
+				</Menu>
 			</Box>
 		</Box>
 	);

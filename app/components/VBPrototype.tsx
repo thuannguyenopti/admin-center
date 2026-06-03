@@ -58,6 +58,7 @@ import type {useVersionHistory} from "@/app/hooks/useVersionHistory";
 import DragHandle from "@/app/components/DragHandle";
 import {getCompatibleInstances} from "@/app/lib/contentConnection";
 import {initialContentTypes} from "@/app/db/initialData";
+import {IconArrowLeft} from "@optiaxiom/icons";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
@@ -774,6 +775,41 @@ export default function VBPrototype({
 		setStyleEditorSource("elementEditor");
 	}, [currentEle]);
 
+	const removeCurrentEle = useCallback(() => {
+		if (currentEle === "none") return;
+		const id = currentEle;
+		setData((prev) =>
+			prev.map((section: any) => ({
+				...section,
+				children: (section.children || []).map((row: any) => ({
+					...row,
+					children: (row.children || []).map((col: any) => {
+						const cur = (col.elements || col.children || []) as any[];
+						const nextElements = cur.filter((ele: any) => ele.id !== id);
+						const {children: _old, ...rest} = col;
+						return {...rest, elements: nextElements};
+					}),
+				})),
+			}))
+		);
+		setOutlines((prev) =>
+			prev.map((outline) => {
+				if (!outline.elements[id]) return outline;
+				const {[id]: _gone, ...rest} = outline.elements;
+				return {...outline, elements: rest};
+			})
+		);
+		setTheEles((prev) => {
+			if (!prev[id]) return prev;
+			const {[id]: _gone, ...rest} = prev;
+			return rest;
+		});
+		setCurrentEle("none");
+		setCurrentHoverEle("none");
+		setStyleEditorEle(null);
+		setStyleEditorSource(null);
+	}, [currentEle, setData, setOutlines, setTheEles]);
+
 	const onStyleChange = useCallback(
 		(templateKey: string) => {
 			if (!styleEditorEle) return;
@@ -791,60 +827,82 @@ export default function VBPrototype({
 				};
 			});
 
-			setOutlines((prev) => prev.map((outline) => {
-				if (!outline.elements[styleEditorEle]) return outline;
-				const ele = outline.elements[styleEditorEle];
-				const properties = {...(ele.properties || {})};
-				properties.displayTemplateKey = templateKey;
-				return {...outline, elements: {...outline.elements, [styleEditorEle]: {...ele, properties}}};
-			}));
+			setOutlines((prev) =>
+				prev.map((outline) => {
+					if (!outline.elements[styleEditorEle]) return outline;
+					const ele = outline.elements[styleEditorEle];
+					const properties = {...(ele.properties || {})};
+					properties.displayTemplateKey = templateKey;
+					return {
+						...outline,
+						elements: {...outline.elements, [styleEditorEle]: {...ele, properties}},
+					};
+				})
+			);
 		},
 		[styleEditorEle, setTheEles, setOutlines]
 	);
 
-	const onSettingChange = useCallback((settingKey: string, value: string) => {
-		if (!styleEditorEle) return;
+	const onSettingChange = useCallback(
+		(settingKey: string, value: string) => {
+			if (!styleEditorEle) return;
 
-		setTheEles((prev) => {
-			if (!prev[styleEditorEle]) return prev;
-			const ele = prev[styleEditorEle];
-			const properties = {...(ele.properties || {})};
-			const displaySettings = [...(properties.displaySettings || [])];
-			const idx = displaySettings.findIndex(s => s.key === settingKey);
-			if (idx >= 0) displaySettings[idx] = { key: settingKey, value };
-			else displaySettings.push({ key: settingKey, value });
-			properties.displaySettings = displaySettings;
-			return {...prev, [styleEditorEle]: {...ele, properties}};
-		});
+			setTheEles((prev) => {
+				if (!prev[styleEditorEle]) return prev;
+				const ele = prev[styleEditorEle];
+				const properties = {...(ele.properties || {})};
+				const displaySettings = [...(properties.displaySettings || [])];
+				const idx = displaySettings.findIndex((s) => s.key === settingKey);
+				if (idx >= 0) displaySettings[idx] = {key: settingKey, value};
+				else displaySettings.push({key: settingKey, value});
+				properties.displaySettings = displaySettings;
+				return {...prev, [styleEditorEle]: {...ele, properties}};
+			});
 
-		setOutlines((prev) => prev.map((outline) => {
-			if (!outline.elements[styleEditorEle]) return outline;
-			const ele = outline.elements[styleEditorEle];
-			const properties = {...(ele.properties || {})};
-			const displaySettings = [...(properties.displaySettings || [])];
-			const idx = displaySettings.findIndex(s => s.key === settingKey);
-			if (idx >= 0) displaySettings[idx] = { key: settingKey, value };
-			else displaySettings.push({ key: settingKey, value });
-			properties.displaySettings = displaySettings;
-			return {...outline, elements: {...outline.elements, [styleEditorEle]: {...ele, properties}}};
-		}));
-	}, [styleEditorEle, setTheEles, setOutlines]);
+			setOutlines((prev) =>
+				prev.map((outline) => {
+					if (!outline.elements[styleEditorEle]) return outline;
+					const ele = outline.elements[styleEditorEle];
+					const properties = {...(ele.properties || {})};
+					const displaySettings = [...(properties.displaySettings || [])];
+					const idx = displaySettings.findIndex((s) => s.key === settingKey);
+					if (idx >= 0) displaySettings[idx] = {key: settingKey, value};
+					else displaySettings.push({key: settingKey, value});
+					properties.displaySettings = displaySettings;
+					return {
+						...outline,
+						elements: {...outline.elements, [styleEditorEle]: {...ele, properties}},
+					};
+				})
+			);
+		},
+		[styleEditorEle, setTheEles, setOutlines]
+	);
 
-	const onSectionSettingChange = useCallback((settingKey: string, value: string) => {
-		if (!styleEditorEle) return;
+	const onSectionSettingChange = useCallback(
+		(settingKey: string, value: string) => {
+			if (!styleEditorEle) return;
 
-		setOutlines((prev) => prev.map((outline) => ({
-			...outline,
-			tree: outline.tree.map((section) => {
-				if (section.id !== styleEditorEle) return section;
-				const displaySettings = [...(section.displaySettings || [])];
-				const idx = displaySettings.findIndex(s => s.key === settingKey);
-				if (idx >= 0) displaySettings[idx] = { key: settingKey, value };
-				else displaySettings.push({ key: settingKey, value });
-				return {...section, displayTemplateKey: section.displayTemplateKey || "defaultSection", displaySettings};
-			}),
-		})));
-	}, [styleEditorEle, setOutlines]);
+			setOutlines((prev) =>
+				prev.map((outline) => ({
+					...outline,
+					tree: outline.tree.map((section) => {
+						if (section.id !== styleEditorEle) return section;
+						const displaySettings = [...(section.displaySettings || [])];
+						const idx = displaySettings.findIndex((s) => s.key === settingKey);
+						if (idx >= 0) displaySettings[idx] = {key: settingKey, value};
+						else displaySettings.push({key: settingKey, value});
+						return {
+							...section,
+							displayTemplateKey: section.displayTemplateKey || "defaultSection",
+							displaySettings,
+						};
+					}),
+				}))
+			);
+		},
+		[styleEditorEle, setOutlines]
+	);
 
 	// Update element by ID (for Brand Tone suggestions)
 	const onUpdateElementById = useCallback(
@@ -878,7 +936,7 @@ export default function VBPrototype({
 	const showGenerateInHeader =
 		sidebarTab === "properties" && activePropertiesSection === "categories-tags";
 	const HeaderActions = (
-		<Box display="flex" alignItems="center" gap="2" className="relative">
+		<Box display="flex" alignItems="center" gap="2" className="relative" pr="8">
 			{showGenerateInHeader && (
 				<Tooltip content="Generate tag and category suggestions using Opal">
 					<Button
@@ -1689,19 +1747,20 @@ export default function VBPrototype({
 									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
 										<div className="pt-4 pb-2">
 											{activeOutline ? (
-												<div className="pl-6 pr-6 flex flex-col gap-1">
-													<Text
-														fontSize="sm"
-														fontWeight="400"
-														className="cursor-pointer"
+												<div className="pl-6 pr-6 gap-1">
+													<Button
+														className="-translate-x-2"
+														appearance="subtle"
+														icon={<IconArrowLeft />}
+														size="sm"
 														onClick={() => {
 															setOutlineView("list");
 															setCurrentEle("none");
 															setCurrentHoverEle("none");
 														}}
 													>
-														← Page
-													</Text>
+														Page
+													</Button>
 
 													<div className="flex items-center gap-2">
 														<Heading level="4">
@@ -1748,53 +1807,36 @@ export default function VBPrototype({
 									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
 										{!editingSectionId && (
 											<div className="pl-6 pr-6 pt-4 pb-2">
-												<div
-													className="relative mb-1"
-													style={{height: "20px"}}
-												>
-													<Text
-														fontSize="sm"
-														fontWeight="400"
-														className="cursor-pointer absolute top-0 left-0"
-														onClick={() => {
-															setActivePropertiesSection("menu");
-														}}
-														style={{
-															visibility:
-																activePropertiesSection === "menu"
-																	? "hidden"
-																	: "visible",
-															pointerEvents:
-																activePropertiesSection === "menu"
-																	? "none"
-																	: "auto",
-														}}
-													>
-														← Properties
-													</Text>
-													<Text
-														fontSize="sm"
-														fontWeight="400"
-														color="fg.accent"
-														className="cursor-pointer absolute top-0 left-0"
-														onClick={() => {
-															setSidebarTab("outlines");
-															setOutlineView("list");
-															setEditingSectionId(null);
-														}}
-														style={{
-															visibility:
-																activePropertiesSection !== "menu"
-																	? "hidden"
-																	: "visible",
-															pointerEvents:
-																activePropertiesSection !== "menu"
-																	? "none"
-																	: "auto",
-														}}
-													>
-														← Main
-													</Text>
+												<div className="mb-1">
+													{activePropertiesSection !== "menu" && (
+														<Button
+															className="-translate-x-2"
+															appearance="subtle"
+															icon={<IconArrowLeft />}
+															size="sm"
+															onClick={() => {
+																setActivePropertiesSection("menu");
+															}}
+														>
+															Properties
+														</Button>
+													)}
+
+													{activePropertiesSection === "menu" && (
+														<Button
+															className="-translate-x-2"
+															appearance="subtle"
+															icon={<IconArrowLeft />}
+															size="sm"
+															onClick={() => {
+																setSidebarTab("outlines");
+																setOutlineView("list");
+																setEditingSectionId(null);
+															}}
+														>
+															Main
+														</Button>
+													)}
 												</div>
 												<div className="flex items-center gap-2">
 													<Heading level="4">Properties</Heading>
@@ -1805,19 +1847,19 @@ export default function VBPrototype({
 										<div className="flex-1 overflow-y-auto">
 											{editingSectionId ? (
 												<Box p="24">
-													<Text
-														fontSize="sm"
-														fontWeight="400"
-														color="fg.accent"
-														className="cursor-pointer mb-1"
+													<Button
+														className="-translate-x-2"
+														size="sm"
+														appearance="subtle"
+														icon={<IconArrowLeft />}
 														onClick={() => {
 															setSidebarTab("outlines");
 															setOutlineView("tree");
 															setEditingSectionId(null);
 														}}
 													>
-														← {activeOutline?.title || "Page"}
-													</Text>
+														{activeOutline?.title || "Page"}
+													</Button>
 													<Heading level="4" mb="16">
 														Section Properties
 													</Heading>
@@ -1899,6 +1941,7 @@ export default function VBPrototype({
 									{/* PANE 4: Element Editor or Style Editor */}
 									<div className="min-w-[25%] w-[25%] h-full">
 										<div className="h-full overflow-y-auto">
+											af
 											{styleEditorEle && theEles[styleEditorEle] ? (
 												<StyleEditor
 													outlineTitle={
@@ -1942,6 +1985,11 @@ export default function VBPrototype({
 													onOpenStyleEditor={
 														currentEle !== "none"
 															? onOpenStyleEditorFromElementEditor
+															: undefined
+													}
+													onRemove={
+														currentEle !== "none"
+															? removeCurrentEle
 															: undefined
 													}
 												/>
@@ -2058,18 +2106,18 @@ export default function VBPrototype({
 										<div className="flex-1 overflow-y-auto">
 											{editingSectionId ? (
 												<Box p="24">
-													<Text
-														fontSize="sm"
-														fontWeight="400"
-														color="fg.accent"
-														className="cursor-pointer mb-1"
+													<Button
+														className="-translate-x-2"
+														size="sm"
+														appearance="subtle"
+														icon={<IconArrowLeft />}
 														onClick={() => {
 															setSidebarTab("outline");
 															setEditingSectionId(null);
 														}}
 													>
-														← {activeOutline?.title || "Page"}
-													</Text>
+														{activeOutline?.title || "Page"}
+													</Button>
 													<Heading level="4" mb="16">
 														Section Properties
 													</Heading>
@@ -2164,6 +2212,11 @@ export default function VBPrototype({
 													onOpenStyleEditor={
 														currentEle !== "none"
 															? onOpenStyleEditorFromElementEditor
+															: undefined
+													}
+													onRemove={
+														currentEle !== "none"
+															? removeCurrentEle
 															: undefined
 													}
 												/>

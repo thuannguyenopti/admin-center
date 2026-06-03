@@ -7,7 +7,6 @@
 
 .sectionWithBorder:hover {
   background: var(--ax-colors-bg-default-hovered);
-  border-color: var(--ax-colors-border-control-hovered);
 }
 
 .sectionWithBorder:active {
