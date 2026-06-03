@@ -175,7 +175,7 @@ export const MARATHON_EVENT_OUTLINE: Outline = {
 			type: "ct-section-header",
 			properties: {
 				accent: "",
-				heading: "Brin Stride — Team up, keep track and celebrate",
+				heading: "Join Stride — Team up, keep track and celebrate",
 				body: "Stride is your go-to personal training app that boosts your workout efficiency with all the essential tools you need. Whether you're at home or on the go, Stride makes communication with your trainer effortless and affordable. Plus, joining the Stride community gives you access to a network of support and collaboration to help you reach your fitness goals.",
 				number: "",
 			},
