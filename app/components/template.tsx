@@ -41,6 +41,8 @@ import {useOpalState} from "@/app/hooks/useOpalState";
 import {useOpalHistory} from "@/app/hooks/useOpalHistory";
 import {CodePanel} from "./CodePanel";
 import {IconSidebar} from "@optimizely/axiom-icons";
+import {FEATURED_AGENTS} from "@/app/opal/opalAgents";
+import {useAgentChatMode} from "@/app/hooks/useAgentChatMode";
 
 type PendingOpalPrompt = {
 	chatId: string;
@@ -152,6 +154,16 @@ function TemplateContent({
 		activeChatId: activeChat,
 		opalContext: stableOpalCtx,
 		onNavigate: onOpalNavigate,
+	});
+
+	const {
+		agentSession: panelAgentSession,
+		agentBarElement: panelAgentBar,
+		sortedAgents: panelSortedAgents,
+		handleSelectAgent: panelHandleSelectAgent,
+		handleSendMessage: panelHandleSendMessage,
+	} = useAgentChatMode({
+		messages, inputValue, setInputValue, sendMessage, addMessage,
 	});
 
 	useEffect(() => {
@@ -745,7 +757,7 @@ function TemplateContent({
 						error={error}
 						isInputDisabled={isInputDisabled}
 						setInputValue={setInputValue}
-						sendMessage={sendMessage}
+						sendMessage={panelHandleSendMessage}
 						regenerate={regenerate}
 						groupedHistory={groupedHistory}
 						activeChat={activeChat}
@@ -761,6 +773,10 @@ function TemplateContent({
 						contextChip={opalContextChip?.label ?? null}
 						contextContent={opalContextChip?.content ?? null}
 						onContextChipRemove={() => setOpalContextChip(null)}
+						mentionableAgents={panelSortedAgents}
+						onMentionSelect={panelHandleSelectAgent}
+						agentBar={panelAgentBar}
+						inputAgentCtx={panelAgentSession ? { name: panelAgentSession.agent.name, handle: panelAgentSession.agent.handle } : null}
 					/>
 					<CodePanel
 						isOpen={isCodePanelOpen}
