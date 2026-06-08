@@ -42,16 +42,8 @@ import {
 	IconSparkles,
 	IconFileLines,
 	IconSquareUser,
-	IconFlag,
 	IconCircleQuestion,
-	IconGauge,
 	IconUser,
-	IconRobot,
-	IconPeopleSimple,
-	IconGrid,
-	IconClockRotateLeft,
-	IconShieldCheck,
-	IconCircleDollar,
 } from "@optiaxiom/icons";
 import {IconSettingsSearch} from "@tabler/icons-react";
 
@@ -710,6 +702,7 @@ export default function RootLayout({
 				highlight: "admin-center/access-setup",
 				url: "/admin-center/access-setup/product-access",
 				icon: <AdminCenterIcons.AccessSetup />,
+				hidePageHeader: true,
 				children: [
 					{label: "Product Access", url: "/admin-center/access-setup/product-access", icon: <AdminCenterIcons.ProductAccess />},
 					{label: "Roles", url: "/admin-center/access-setup/roles", icon: <AdminCenterIcons.Roles />},
@@ -720,6 +713,7 @@ export default function RootLayout({
 				highlight: "admin-center/settings",
 				url: "/admin-center/settings/usage-billing",
 				icon: <AdminCenterIcons.Settings />,
+				hidePageHeader: true,
 				children: [
 					{label: "Usage & Billing", url: "/admin-center/settings/usage-billing", icon: <AdminCenterIcons.UsageBilling />},
 					{label: "Activity log", url: "/admin-center/settings/activity-log", icon: <AdminCenterIcons.ActivityLog />},
@@ -727,6 +721,7 @@ export default function RootLayout({
 					{label: "Notifications", url: "/admin-center/settings/notification", icon: <AdminCenterIcons.Notifications />},
 					{label: "Authentication", url: "/admin-center/settings/authentication", icon: <AdminCenterIcons.Authentication />},
 					{label: "Opal AI", url: "/admin-center/settings/opal-ai", icon: <AdminCenterIcons.OpalAI />},
+					{label: "Account", url: "/admin-center/settings/account", icon: <IconUser />},
 				],
 			},
 			{

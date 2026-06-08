@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
-	Alert,
+	Badge,
 	Box,
 	Button,
 	Heading,
@@ -12,36 +12,64 @@ import {
 import {
 	IconUser,
 	IconRobot,
-	IconUserGroup,
-	IconPeopleSimple,
 	IconGrid,
 	IconEnvelopeOpen,
 	IconCircleDollar,
 	IconArrowRight,
+	IconUsers,
+	IconWavePulse,
+	IconChartColumn,
+	IconBell,
 } from "@optiaxiom/icons";
+
+import {
+	NotificationsPanel,
+	UNREAD_NOTIFICATION_COUNT,
+} from "./components/NotificationsPanel";
 
 import { USERS } from "../user-management/users/data";
 import {
 	BILLING,
 	SEATS,
-	GROUPS_SUMMARY,
 	AGENTS_SUMMARY,
-	TEAMS_SUMMARY,
 	PRODUCTS_SUMMARY,
-	seatStatus,
-	billingDueSoon,
-	formatAmount,
 } from "./data";
 
 type StatCardProps = {
 	icon: React.ReactNode;
 	label: string;
 	value: string | number;
-	helper?: string;
+	helper?: React.ReactNode;
 	href?: string;
+	extra?: React.ReactNode;
 };
 
-function StatCard({ icon, label, value, helper, href }: StatCardProps) {
+function ProgressBar({ pct }: { pct: number }) {
+	const capped = Math.min(100, pct);
+	return (
+		<Box
+			rounded="full"
+			bg="bg.tertiary"
+			style={{ height: 8, width: "100%", overflow: "hidden" }}
+		>
+			<Box
+				style={{
+					height: "100%",
+					width: `${capped}%`,
+					background:
+						pct >= 95
+							? "var(--ax-colors-fg-error)"
+							: pct >= 80
+								? "var(--ax-colors-fg-warning)"
+								: "var(--ax-colors-fg-accent-strong)",
+					transition: "width 200ms ease",
+				}}
+			/>
+		</Box>
+	);
+}
+
+function StatCard({ icon, label, value, helper, href, extra }: StatCardProps) {
 	const inner = (
 		<Box
 			display="flex"
@@ -76,6 +104,7 @@ function StatCard({ icon, label, value, helper, href }: StatCardProps) {
 					{helper}
 				</Text>
 			)}
+			{extra}
 		</Box>
 	);
 	if (!href) return inner;
@@ -83,32 +112,6 @@ function StatCard({ icon, label, value, helper, href }: StatCardProps) {
 		<Link href={href} style={{ textDecoration: "none", color: "inherit", height: "100%" }}>
 			{inner}
 		</Link>
-	);
-}
-
-function SeatUsageBar({ used, total }: { used: number; total: number }) {
-	const pct = Math.min(100, Math.round((used / total) * 100));
-	const isOver = used > total;
-	const fillColor = isOver
-		? "var(--ax-colors-fg-error)"
-		: pct >= 90
-			? "var(--ax-colors-fg-warning)"
-			: "var(--ax-colors-fg-accent-strong)";
-	return (
-		<Box
-			rounded="full"
-			bg="bg.tertiary"
-			style={{ height: 8, width: "100%", overflow: "hidden" }}
-		>
-			<Box
-				style={{
-					height: "100%",
-					width: `${pct}%`,
-					background: fillColor,
-					transition: "width 200ms ease",
-				}}
-			/>
-		</Box>
 	);
 }
 
@@ -121,15 +124,13 @@ export default function AdminCenterDashboardPage() {
 		return { total, active, pending, expired };
 	}, []);
 
-	const seatState = seatStatus(SEATS);
-	const seatOverage = SEATS.used - SEATS.total;
-	const dueSoon = billingDueSoon(BILLING);
+	const [notifPanelOpen, setNotifPanelOpen] = useState(false);
 
 	return (
 		<Box>
 			<Box display="flex" alignItems="center" justifyContent="space-between" mb="24">
 				<Box>
-					<Heading level="1">Dashboard</Heading>
+					<Heading level="2">Dashboard</Heading>
 					<Text color="fg.secondary" fontSize="md">
 						Overview of users, access, and billing for your organization.
 					</Text>
@@ -142,251 +143,200 @@ export default function AdminCenterDashboardPage() {
 				</Box>
 			</Box>
 
-			{(seatState !== "ok" || dueSoon) && (
-				<Box display="flex" flexDirection="column" gap="12" mb="24">
-					{seatState === "overage" && (
-						<Alert intent="danger" rounded="md">
-							<Box display="flex" alignItems="center" justifyContent="space-between" w="full" gap="16">
-								<Box>
-									<Text fontWeight="600">Seat limit exceeded</Text>
-									<Text fontSize="sm" color="fg.secondary">
-										You are using {SEATS.used} of {SEATS.total} seats ({seatOverage} over your plan limit). Additional seats will be billed at the per-seat rate.
-									</Text>
-								</Box>
-								<Button appearance="primary" size="sm">
-									Upgrade plan
-								</Button>
-							</Box>
-						</Alert>
-					)}
-					{seatState === "near-limit" && (
-						<Alert intent="warning" rounded="md">
-							<Box display="flex" alignItems="center" justifyContent="space-between" w="full" gap="16">
-								<Box>
-									<Text fontWeight="600">Approaching seat limit</Text>
-									<Text fontSize="sm" color="fg.secondary">
-										{SEATS.used} of {SEATS.total} seats in use. Consider upgrading before inviting more users.
-									</Text>
-								</Box>
-								<Button appearance="default" size="sm">
-									Review plan
-								</Button>
-							</Box>
-						</Alert>
-					)}
-					{dueSoon && (
-						<Alert intent="information" rounded="md">
-							<Box display="flex" alignItems="center" justifyContent="space-between" w="full" gap="16">
-								<Box>
-									<Text fontWeight="600">Renewal in {BILLING.nextRenewalDaysAway} days</Text>
-									<Text fontSize="sm" color="fg.secondary">
-										Your {BILLING.plan} plan renews on {BILLING.nextRenewalDate} for {formatAmount(BILLING.amount, BILLING.currency)}.
-									</Text>
-								</Box>
-								<Button appearance="default" size="sm">
-									View billing
-								</Button>
-							</Box>
-						</Alert>
+			<Box
+				onClick={() => setNotifPanelOpen(true)}
+				cursor="pointer"
+				display="flex"
+				alignItems="center"
+				gap="12"
+				p="16"
+				mb="24"
+				rounded="md"
+				border="1"
+				borderColor="border.tertiary"
+				bg="bg.default"
+			>
+				<Box
+					display="inline-flex"
+					alignItems="center"
+					justifyContent="center"
+					rounded="full"
+					style={{
+						width: 36,
+						height: 36,
+						flexShrink: 0,
+						position: "relative",
+						backgroundColor: "rgba(255, 93, 82, 0.16)",
+						color: "rgba(143, 71, 100, 1)",
+					}}
+				>
+					<IconBell size={18} />
+					{UNREAD_NOTIFICATION_COUNT > 0 && (
+						<Box
+							rounded="full"
+							display="flex"
+							alignItems="center"
+							justifyContent="center"
+							style={{
+								position: "absolute",
+								top: -4,
+								right: -4,
+								minWidth: 18,
+								height: 18,
+								padding: "0 5px",
+								background: "var(--ax-colors-fg-error)",
+								color: "var(--ax-colors-fg-white)",
+								fontSize: 10,
+								fontWeight: 700,
+								lineHeight: "18px",
+								border: "2px solid var(--ax-colors-bg-default)",
+								boxShadow: "0 0 0 0 var(--ax-colors-fg-error)",
+								animation: "noti-pulse 1.8s ease-out infinite",
+							}}
+							aria-label={`${UNREAD_NOTIFICATION_COUNT} unread`}
+						>
+							{UNREAD_NOTIFICATION_COUNT > 9
+								? "9+"
+								: UNREAD_NOTIFICATION_COUNT}
+						</Box>
 					)}
 				</Box>
-			)}
+				<style>{`
+					@keyframes noti-pulse {
+						0%   { box-shadow: 0 0 0 0   rgba(217, 45, 32, 0.5); }
+						70%  { box-shadow: 0 0 0 8px rgba(217, 45, 32, 0);   }
+						100% { box-shadow: 0 0 0 0   rgba(217, 45, 32, 0);   }
+					}
+				`}</style>
+				<Box flex="1">
+					<Text fontWeight="600">
+						{UNREAD_NOTIFICATION_COUNT > 0
+							? `${UNREAD_NOTIFICATION_COUNT} new notification${UNREAD_NOTIFICATION_COUNT === 1 ? "" : "s"}`
+							: "You're all caught up"}
+					</Text>
+					<Text fontSize="sm" color="fg.tertiary">
+						{UNREAD_NOTIFICATION_COUNT > 0
+							? "Click to view recent activity."
+							: "No new notifications."}
+					</Text>
+				</Box>
+				<IconArrowRight
+					size={16}
+					color="var(--ax-colors-fg-tertiary)"
+				/>
+			</Box>
 
 			<Box mb="32">
-				<Heading level="4">At a glance</Heading>
+				<Heading level="4">Organization Overview</Heading>
 				<Text fontSize="sm" color="fg.secondary" mb="16">
 					Live counts across your admin center.
 				</Text>
 				<Box
 					display="grid"
 					gap="16"
-					style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}
+					style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
 				>
 					<StatCard
 						icon={<IconUser size={14} />}
-						label="Total users"
+						label="Users"
 						value={userStats.total}
 						helper={`${userStats.active} active`}
 						href="/admin-center/user-management/users"
 					/>
 					<StatCard
 						icon={<IconEnvelopeOpen size={14} />}
-						label="Pending invitations"
+						label="Pending Invites"
 						value={userStats.pending}
 						helper="Awaiting activation"
 						href="/admin-center/user-management/users"
 					/>
 					<StatCard
-						icon={<IconUserGroup size={14} />}
-						label={GROUPS_SUMMARY.label}
-						value={GROUPS_SUMMARY.count}
-						helper={GROUPS_SUMMARY.delta ? `+${GROUPS_SUMMARY.delta} this month` : undefined}
-						href={GROUPS_SUMMARY.href}
-					/>
-					<StatCard
 						icon={<IconRobot size={14} />}
 						label={AGENTS_SUMMARY.label}
 						value={AGENTS_SUMMARY.count}
-						helper={AGENTS_SUMMARY.delta ? `+${AGENTS_SUMMARY.delta} this month` : undefined}
+						helper={
+							AGENTS_SUMMARY.delta
+								? `+${AGENTS_SUMMARY.delta} this month`
+								: undefined
+						}
 						href={AGENTS_SUMMARY.href}
 					/>
 					<StatCard
-						icon={<IconPeopleSimple size={14} />}
-						label={TEAMS_SUMMARY.label}
-						value={TEAMS_SUMMARY.count}
-						helper="No change this month"
-						href={TEAMS_SUMMARY.href}
-					/>
-					<StatCard
 						icon={<IconGrid size={14} />}
-						label={PRODUCTS_SUMMARY.label}
+						label="Products"
 						value={PRODUCTS_SUMMARY.count}
 						helper="Across your org"
-						href={PRODUCTS_SUMMARY.href}
+						href="/admin-center/access-setup/product-access"
 					/>
 				</Box>
 			</Box>
 
-			<Box
-				display="grid"
-				gap="16"
-				style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}
-			>
+			<Box mb="32">
+				<Heading level="4">Subscription & Usage</Heading>
+				<Text fontSize="sm" color="fg.secondary" mb="16">
+					Click any card to view full usage & billing details.
+				</Text>
 				<Box
-					p="20"
-					rounded="md"
-					border="1"
-					borderColor="border.tertiary"
-					bg="bg.default"
+					display="grid"
+					gap="16"
+					style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
 				>
-					<Box display="flex" alignItems="center" justifyContent="space-between" mb="12">
-						<Box display="flex" alignItems="center" gap="8">
-							<IconCircleDollar size={14} color="var(--ax-colors-fg-accent)" />
-							<Heading level="4">Billing</Heading>
-						</Box>
-						<Link href="#" fontSize="md">
-							View invoices
-						</Link>
-					</Box>
-					<Box
-						display="grid"
-						gap="12"
-						style={{ gridTemplateColumns: "1fr 1fr" }}
-					>
-						<Box>
-							<Text fontSize="sm" color="fg.tertiary">
-								Plan
-							</Text>
-							<Text fontWeight="600">
-								{BILLING.plan} · {BILLING.cycle}
-							</Text>
-						</Box>
-						<Box>
-							<Text fontSize="sm" color="fg.tertiary">
-								Amount
-							</Text>
-							<Text fontWeight="600">{formatAmount(BILLING.amount, BILLING.currency)}</Text>
-						</Box>
-						<Box>
-							<Text fontSize="sm" color="fg.tertiary">
-								Next renewal
-							</Text>
-							<Text fontWeight="600">{BILLING.nextRenewalDate}</Text>
-							<Text fontSize="sm" color={dueSoon ? "fg.warning" : "fg.tertiary"}>
-								In {BILLING.nextRenewalDaysAway} days
-							</Text>
-						</Box>
-						<Box>
-							<Text fontSize="sm" color="fg.tertiary">
-								Payment method
-							</Text>
-							<Text fontWeight="600">{BILLING.paymentMethod}</Text>
-						</Box>
-					</Box>
-					<Box mt="16" display="flex" gap="8">
-						<Button appearance="default" size="sm">
-							Update payment
-						</Button>
-						<Button
-							appearance="subtle"
-							size="sm"
-							addonAfter={<IconArrowRight size={14} />}
-						>
-							Manage subscription
-						</Button>
-					</Box>
-				</Box>
-
-				<Box
-					p="20"
-					rounded="md"
-					border="1"
-					borderColor="border.tertiary"
-					bg="bg.default"
-				>
-					<Box display="flex" alignItems="center" justifyContent="space-between" mb="12">
-						<Heading level="4">Seats</Heading>
-						<Text
-							fontSize="sm"
-							color={
-								seatState === "overage"
-									? "fg.error"
-									: seatState === "near-limit"
-										? "fg.warning"
-										: "fg.tertiary"
-							}
-							fontWeight="500"
-						>
-							{seatState === "overage"
-								? `${seatOverage} over limit`
-								: seatState === "near-limit"
-									? "Approaching limit"
-									: "Within limit"}
-						</Text>
-					</Box>
-					<Box display="flex" alignItems="end" gap="4" mb="8">
-						<Heading level="2">{SEATS.used}</Heading>
-						<Text color="fg.tertiary" fontSize="md">
-							/ {SEATS.total} seats used
-						</Text>
-					</Box>
-					<SeatUsageBar used={SEATS.used} total={SEATS.total} />
-					<Box
-						display="flex"
-						alignItems="center"
-						justifyContent="space-between"
-						mt="16"
-					>
-						<Box>
-							<Text fontSize="sm" color="fg.tertiary">
-								Pending invitations
-							</Text>
-							<Text fontWeight="600">{SEATS.pendingInvites}</Text>
-						</Box>
-						<Box>
-							<Text fontSize="sm" color="fg.tertiary">
-								Available
-							</Text>
-							<Text fontWeight="600">
-								{Math.max(0, SEATS.total - SEATS.used)}
-							</Text>
-						</Box>
-						<Box>
-							<Text fontSize="sm" color="fg.tertiary">
-								Password expired
-							</Text>
-							<Text fontWeight="600">{userStats.expired}</Text>
-						</Box>
-					</Box>
-					{seatState !== "ok" && (
-						<Box mt="16">
-							<Button appearance="primary" size="sm">
-								{seatState === "overage" ? "Upgrade plan" : "Add seats"}
-							</Button>
-						</Box>
-					)}
+					<StatCard
+						icon={<IconChartColumn size={14} />}
+						label="Opal credits"
+						value="8.2K / 15K"
+						helper="+5% WoW"
+						href="/admin-center/settings/usage-billing"
+						extra={<ProgressBar pct={Math.round((8200 / 15000) * 100)} />}
+					/>
+					<StatCard
+						icon={<IconWavePulse size={14} />}
+						label="MAU"
+						value="50K / 100K"
+						helper="+12% MoM"
+						href="/admin-center/settings/usage-billing"
+						extra={<ProgressBar pct={Math.round((50000 / 100000) * 100)} />}
+					/>
+					<StatCard
+						icon={<IconUsers size={14} />}
+						label="Seats"
+						value={`${SEATS.used} / ${SEATS.total}`}
+						helper={`${SEATS.used} of ${SEATS.total} seats used`}
+						href="/admin-center/settings/usage-billing"
+						extra={
+							<Box display="flex" flexDirection="column" gap="6">
+								<ProgressBar
+									pct={Math.round((SEATS.used / SEATS.total) * 100)}
+								/>
+								{SEATS.used > SEATS.total && (
+									<Text fontSize="sm" color="fg.error">
+										{SEATS.used - SEATS.total} over limit
+									</Text>
+								)}
+							</Box>
+						}
+					/>
+					<StatCard
+						icon={<IconCircleDollar size={14} />}
+						label="Plan"
+						value={BILLING.plan}
+						helper={`${BILLING.cycle} · Renews ${BILLING.nextRenewalDate}`}
+						href="/admin-center/settings/usage-billing"
+						extra={
+							<Box>
+								<Badge intent="success" variant="strong">
+									Active
+								</Badge>
+							</Box>
+						}
+					/>
 				</Box>
 			</Box>
+
+			<NotificationsPanel
+				open={notifPanelOpen}
+				onClose={() => setNotifPanelOpen(false)}
+			/>
 		</Box>
 	);
 }

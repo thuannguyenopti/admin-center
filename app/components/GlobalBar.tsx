@@ -40,6 +40,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {useTheme} from "@/app/hooks/useTheme";
 import {useLayout} from "@/app/context/LayoutContext";
+import {useAccountProfile, FALLBACK_AVATAR_SRC} from "@/app/hooks/useAccountProfile";
 import NotificationDropdown from "./NotificationDropdown";
 import { IconXmark } from "@optimizely/axiom-icons";
 import { useState, useEffect, Suspense } from "react";
@@ -61,6 +62,9 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const isOpalRoute = pathname.startsWith("/opal");
 	const isImRoute = pathname.startsWith("/opal/im");
 	const {codePanelControls} = useLayout();
+	const {profile: accountProfile} = useAccountProfile();
+	const accountAvatarSrc = accountProfile.avatarDataUrl || FALLBACK_AVATAR_SRC;
+	const accountFullName = `${accountProfile.firstName} ${accountProfile.lastName}`.trim();
 
 	const handleCodeClick = () => {
 		codePanelControls?.openPanel(pathname);
@@ -191,11 +195,12 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
 						<Button appearance="subtle" size="md" aria-label="Account" style={{ minWidth: 32, padding: 0 }}>
 							<Image
-								src={activeVAU?.avatar ?? "/avatars/user.png"}
-								alt={activeVAU?.name ?? "Account"}
+								src={activeVAU?.avatar ?? accountAvatarSrc}
+								alt={activeVAU?.name ?? accountFullName ?? "Account"}
 								width={28}
 								height={28}
-								style={{ borderRadius: 999 }}
+								style={{ borderRadius: 999, objectFit: "cover" }}
+								unoptimized
 							/>
 						</Button>
 					</Box>
@@ -485,11 +490,11 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 							]}
 						>
 							<MenuTrigger asChild>
-								<Button appearance="subtle" size="md" aria-label={activeVAU ? activeVAU.name : "Jamie Chen"}>
+								<Button appearance="subtle" size="md" aria-label={activeVAU ? activeVAU.name : accountFullName || "Account"}>
 									{activeVAU ? (
 										<Image src={activeVAU.avatar} alt={activeVAU.name} width={24} height={24} style={{ borderRadius: 999, flexShrink: 0 }} />
 									) : (
-										<Image src="/avatars/avatar-3.png" alt="Jamie Chen" width={24} height={24} style={{ borderRadius: 999, flexShrink: 0, objectFit: "cover" }} />
+										<Image src={accountAvatarSrc} alt={accountFullName || "Account"} width={24} height={24} style={{ borderRadius: 999, flexShrink: 0, objectFit: "cover" }} unoptimized />
 									)}
 								</Button>
 							</MenuTrigger>
@@ -686,16 +691,15 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						] : []),
 					]}
 				>
-					<MenuTrigger icon={!isCmpTaskDetail && <IconUser />} appearance="subtle" size="sm" aria-label="User profile">
-							{isCmpTaskDetail && (
-								<Image
-									src="/avatars/aamr-fakhry.png"
-									alt="User profile"
-									width={24}
-									height={24}
-									style={{borderRadius: 999}}
-								/>
-							)}
+					<MenuTrigger appearance="subtle" size="sm" aria-label="User profile">
+						<Image
+							src={accountAvatarSrc}
+							alt={accountFullName || "User profile"}
+							width={24}
+							height={24}
+							style={{borderRadius: 999, objectFit: "cover"}}
+							unoptimized
+						/>
 					</MenuTrigger>
 					<MenuContent style={{ minWidth: "240px" }} />
 				</Menu>

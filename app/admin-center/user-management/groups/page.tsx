@@ -101,7 +101,7 @@ export default function AdminCenterGroupsPage() {
 				mb="16"
 			>
 				<Box display="flex" alignItems="center" gap="12">
-					<Heading level="1">Group Access</Heading>
+					<Heading level="2">Group Access</Heading>
 					<Link href="#" fontSize="md">
 						Learn more
 					</Link>
@@ -120,6 +120,7 @@ export default function AdminCenterGroupsPage() {
 			<Box display="flex" alignItems="center" gap="16" mb="16" flexWrap="wrap">
 				<Box style={{ width: 280 }}>
 					<SearchInput
+						size="lg"
 						placeholder="Search group by name"
 						value={filters.search}
 						onChange={(e) =>

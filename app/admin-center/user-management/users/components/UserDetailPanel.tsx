@@ -20,7 +20,7 @@ import {
 } from "@optiaxiom/icons";
 import { type User, type UserType } from "../data";
 
-const PANEL_WIDTH = 640;
+const PANEL_WIDTH = 700;
 
 function StatusText({ status }: { status: User["activationStatus"] }) {
 	if (status === "Active")

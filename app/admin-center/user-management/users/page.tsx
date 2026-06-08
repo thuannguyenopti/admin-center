@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { IconFilter2Search } from '@tabler/icons-react';
 import {
 	Box,
 	Button,
@@ -25,11 +24,7 @@ import {
 	AlertDialogAction,
 	AlertDialogCancel,
 } from "@optiaxiom/react";
-import {
-	IconFileExport,
-	IconFileImport,
-	IconAngleDown,
-} from "@optiaxiom/icons";
+import { IconAngleDown, IconFileExport, IconFileImport, IconFilter } from "@optimizely/axiom-icons";
 
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
@@ -38,6 +33,10 @@ import {
 	type InvitedUser,
 } from "./components/InviteUserPanel";
 import { UserDetailPanel } from "./components/UserDetailPanel";
+import {
+	BulkActionModals,
+	type BulkModal,
+} from "./components/bulk/BulkActionModals";
 import {
 	USERS,
 	PRODUCTS,
@@ -115,9 +114,10 @@ export default function AdminCenterUsersPage() {
 	const [isEditing, setIsEditing] = useState(false);
 	const [editDraft, setEditDraft] = useState<{ firstName: string; lastName: string } | null>(null);
 	const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
-	const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 	const [filtersOpen, setFiltersOpen] = useState(false);
 	const [invitePanelOpen, setInvitePanelOpen] = useState(false);
+	const [inviteMode, setInviteMode] = useState<"manual" | "upload">("manual");
+	const [bulkModal, setBulkModal] = useState<BulkModal>(null);
 
 	const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
@@ -204,10 +204,37 @@ export default function AdminCenterUsersPage() {
 		setConfirmDelete(null);
 	};
 
-	const bulkDelete = () => {
-		setUsers((list) => list.filter((u) => !selectedIds.has(u.id)));
+	const selectedUsers = useMemo(
+		() => users.filter((u) => selectedIds.has(u.id)),
+		[users, selectedIds],
+	);
+
+	const applyInfoUpdate = (
+		updates: { id: string; firstName: string; lastName: string }[],
+	) => {
+		const map = new Map(updates.map((u) => [u.id, u]));
+		setUsers((list) =>
+			list.map((u) =>
+				map.has(u.id)
+					? { ...u, firstName: map.get(u.id)!.firstName, lastName: map.get(u.id)!.lastName }
+					: u,
+			),
+		);
 		clearSelection();
-		setConfirmBulkDelete(false);
+	};
+
+	const applyTypeUpdate = (updates: { id: string; userType: User["userType"] }[]) => {
+		const map = new Map(updates.map((u) => [u.id, u.userType]));
+		setUsers((list) =>
+			list.map((u) => (map.has(u.id) ? { ...u, userType: map.get(u.id)! } : u)),
+		);
+		clearSelection();
+	};
+
+	const applyBulkDelete = (ids: string[]) => {
+		const set = new Set(ids);
+		setUsers((list) => list.filter((u) => !set.has(u.id)));
+		clearSelection();
 	};
 
 	const handleInviteSubmit = (invited: InvitedUser[], access: AccessEntry[]) => {
@@ -242,7 +269,7 @@ export default function AdminCenterUsersPage() {
 		<Box>
 			<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
 				<Box display="flex" alignItems="center" gap="12">
-					<Heading level="1">Users</Heading>
+					<Heading level="2">Users</Heading>
 					<Link href="#" fontSize="md">
 						Learn more
 					</Link>
@@ -256,8 +283,20 @@ export default function AdminCenterUsersPage() {
 					</Button>
 					<Menu
 						options={[
-							{ label: "Invite manually", execute: () => setInvitePanelOpen(true) },
-							{ label: "Bulk invite", execute: () => {} },
+							{
+								label: "Invite manually",
+								execute: () => {
+									setInviteMode("manual");
+									setInvitePanelOpen(true);
+								},
+							},
+							{
+								label: "Bulk invite",
+								execute: () => {
+									setInviteMode("upload");
+									setInvitePanelOpen(true);
+								},
+							},
 						]}
 					>
 						<MenuTrigger asChild>
@@ -313,6 +352,7 @@ export default function AdminCenterUsersPage() {
 						<Box display="flex" alignItems="center" gap="16" > 
 							<Box style={{ width: 280 }}>
 								<SearchInput
+									size="lg"
 									placeholder="Search users by name or email"
 									value={filters.search}
 									onChange={(e) =>
@@ -320,20 +360,26 @@ export default function AdminCenterUsersPage() {
 									}
 								/>
 							</Box>
-							<Box style={{ position: "relative", display: "inline-flex" }}>
+							<Box
+								display="inline-flex"
+								border="1"
+								rounded="sm"
+								style={{
+									position: "relative",
+									borderColor: "var(--ax-colors-bg-accent-subtle-hovered)",
+								}}
+							>
 								<ToggleButton
 									appearance="subtle"
-									size="md"
+									size="lg"
 									pressed={filtersOpen}
 									onPressedChange={setFiltersOpen}
 									aria-expanded={filtersOpen}
 									icon={
-										<Box asChild display="inline-flex" alignItems="center" gap="4">
-											<span>
-											 <IconFilter2Search stroke={1.5} size={16} />
-												<IconAngleDown size={16} />
-											</span>
-										</Box>
+										<div style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+											<IconFilter />
+											<IconAngleDown />
+										</div>
 									}
 									iconPosition="end"
 								>
@@ -449,26 +495,38 @@ export default function AdminCenterUsersPage() {
 									<Button appearance="default" size="sm">
 										Edit access
 									</Button>
-									<Button appearance="default" size="sm">
+									<Button
+										appearance="default"
+										size="sm"
+										onClick={() => setBulkModal("addAccess")}
+									>
 										Add access
 									</Button>
-									<Button appearance="default" size="sm">
+									<Button
+										appearance="default"
+										size="sm"
+										onClick={() => setBulkModal("removeAccess")}
+									>
 										Remove access
 									</Button>
 									<Menu
 										options={[
 											{
-												label: "Export selected",
-												execute: () => {},
+												label: "Edit user info",
+												execute: () => setBulkModal("editInfo"),
+											},
+											{
+												label: "Edit user type",
+												execute: () => setBulkModal("editType"),
 											},
 											{
 												label: "Reset password",
-												execute: () => {},
+												execute: () => setBulkModal("resetPw"),
 											},
 											{
 												intent: "danger",
-												label: "Delete users",
-												execute: () => setConfirmBulkDelete(true),
+												label: "Delete selected users",
+												execute: () => setBulkModal("delete"),
 											},
 										]}
 									>
@@ -486,7 +544,7 @@ export default function AdminCenterUsersPage() {
 								</Box>
 							</Box>
 						) : (
-							<Box p="12" border="1" borderColor="border.secondary">
+							<Box p="12" border="1" borderColor="border.secondary" rounded="md">
 								<Text fontSize="sm" color="fg.secondary">
 									Select users from the list to manage them in bulk.
 								</Text>
@@ -638,26 +696,21 @@ export default function AdminCenterUsersPage() {
 				</AlertDialogContent>
 			</AlertDialog>
 
-			<AlertDialog open={confirmBulkDelete} onOpenChange={setConfirmBulkDelete}>
-				<AlertDialogContent>
-					<AlertDialogHeader>Delete {selectedIds.size} users?</AlertDialogHeader>
-					<AlertDialogBody>
-						This will permanently remove the selected users. This action cannot be
-						undone.
-					</AlertDialogBody>
-					<AlertDialogFooter>
-						<AlertDialogCancel />
-						<AlertDialogAction appearance="danger" onClick={bulkDelete}>
-							Delete
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-
 			<InviteUserPanel
 				open={invitePanelOpen}
+				mode={inviteMode}
 				onClose={() => setInvitePanelOpen(false)}
 				onSubmit={handleInviteSubmit}
+			/>
+
+			<BulkActionModals
+				modal={bulkModal}
+				users={selectedUsers}
+				onClose={() => setBulkModal(null)}
+				onUpdateInfo={applyInfoUpdate}
+				onUpdateType={applyTypeUpdate}
+				onDeleteUsers={applyBulkDelete}
+				onClearSelection={clearSelection}
 			/>
 		</Box>
 	);

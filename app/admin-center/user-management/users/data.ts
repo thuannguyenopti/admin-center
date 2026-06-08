@@ -141,3 +141,62 @@ export function filterUsers(users: User[], filters: UserFilters): User[] {
 		return true;
 	});
 }
+
+/**
+ * Sample rows parsed from an uploaded "user_list_50_users" spreadsheet.
+ * Used by the bulk-invite upload flow to simulate importing a CSV/XLSX file.
+ */
+export type ImportedUser = { email: string; first: string; last: string };
+
+export const BULK_IMPORT_USERS: ImportedUser[] = [
+	{ first: "Olivia", last: "Bennett", email: "olivia.bennett@optimizely.com" },
+	{ first: "Liam", last: "Carter", email: "liam.carter@optimizely.com" },
+	{ first: "Emma", last: "Dawson", email: "emma.dawson@optimizely.com" },
+	{ first: "Noah", last: "Ellis", email: "noah.ellis@optimizely.com" },
+	{ first: "Ava", last: "Fischer", email: "ava.fischer@optimizely.com" },
+	{ first: "William", last: "Grant", email: "william.grant@optimizely.com" },
+	{ first: "Sophia", last: "Hughes", email: "sophia.hughes@optimizely.com" },
+	{ first: "James", last: "Irving", email: "james.irving@optimizely.com" },
+	{ first: "Isabella", last: "Jensen", email: "isabella.jensen@optimizely.com" },
+	{ first: "Benjamin", last: "Klein", email: "benjamin.klein@optimizely.com" },
+	{ first: "Mia", last: "Lawson", email: "mia.lawson@optimizely.com" },
+	{ first: "Lucas", last: "Morgan", email: "lucas.morgan@optimizely.com" },
+	{ first: "Charlotte", last: "Nguyen", email: "charlotte.nguyen@optimizely.com" },
+	{ first: "Henry", last: "Owens", email: "henry.owens@optimizely.com" },
+	{ first: "Amelia", last: "Porter", email: "amelia.porter@optimizely.com" },
+	{ first: "Alexander", last: "Quinn", email: "alexander.quinn@optimizely.com" },
+	{ first: "Harper", last: "Reed", email: "harper.reed@optimizely.com" },
+	{ first: "Daniel", last: "Sullivan", email: "daniel.sullivan@optimizely.com" },
+	{ first: "Evelyn", last: "Turner", email: "evelyn.turner@optimizely.com" },
+	{ first: "Matthew", last: "Underwood", email: "matthew.underwood@optimizely.com" },
+	{ first: "Abigail", last: "Vance", email: "abigail.vance@optimizely.com" },
+	{ first: "Joseph", last: "Walker", email: "joseph.walker@optimizely.com" },
+	{ first: "Emily", last: "Xiong", email: "emily.xiong@optimizely.com" },
+	{ first: "David", last: "Young", email: "david.young@optimizely.com" },
+	{ first: "Elizabeth", last: "Zimmer", email: "elizabeth.zimmer@optimizely.com" },
+	{ first: "Samuel", last: "Adams", email: "samuel.adams@optimizely.com" },
+	{ first: "Sofia", last: "Brooks", email: "sofia.brooks@optimizely.com" },
+	{ first: "Jackson", last: "Coleman", email: "jackson.coleman@optimizely.com" },
+	{ first: "Avery", last: "Diaz", email: "avery.diaz@optimizely.com" },
+	{ first: "Sebastian", last: "Evans", email: "sebastian.evans@optimizely.com" },
+	{ first: "Scarlett", last: "Foster", email: "scarlett.foster@optimizely.com" },
+	{ first: "Jack", last: "Gibson", email: "jack.gibson@optimizely.com" },
+	{ first: "Victoria", last: "Hayes", email: "victoria.hayes@optimizely.com" },
+	{ first: "Owen", last: "Ingram", email: "owen.ingram@optimizely.com" },
+	{ first: "Grace", last: "Jacobs", email: "grace.jacobs@optimizely.com" },
+	{ first: "Gabriel", last: "Knight", email: "gabriel.knight@optimizely.com" },
+	{ first: "Chloe", last: "Lambert", email: "chloe.lambert@optimizely.com" },
+	{ first: "Carter", last: "Mason", email: "carter.mason@optimizely.com" },
+	{ first: "Penelope", last: "Norris", email: "penelope.norris@optimizely.com" },
+	{ first: "Wyatt", last: "Olsen", email: "wyatt.olsen@optimizely.com" },
+	{ first: "Layla", last: "Park", email: "layla.park@optimizely.com" },
+	{ first: "Julian", last: "Reyes", email: "julian.reyes@optimizely.com" },
+	{ first: "Riley", last: "Stewart", email: "riley.stewart@optimizely.com" },
+	{ first: "Levi", last: "Thompson", email: "levi.thompson@optimizely.com" },
+	{ first: "Nora", last: "Vargas", email: "nora.vargas@optimizely.com" },
+	{ first: "Isaac", last: "Wallace", email: "isaac.wallace@optimizely.com" },
+	{ first: "Zoey", last: "Yates", email: "zoey.yates@optimizely.com" },
+	{ first: "Lincoln", last: "Bradley", email: "lincoln.bradley@optimizely.com" },
+	{ first: "Hannah", last: "Castro", email: "hannah.castro@optimizely.com" },
+	{ first: "Aaron", last: "Doyle", email: "aaron.doyle@optimizely.com" },
+];

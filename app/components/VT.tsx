@@ -19,10 +19,12 @@ export default function VT({
 	backLink,
 	title,
 	description,
+	collapsed = false,
 }: Readonly<{
 	backLink?: {label: string; url?: string};
 	title?: string;
 	description?: string;
+	collapsed?: boolean;
 	items:
 		| Array<{label: string; url?: string; separator?: boolean; icon?: React.ReactNode}>
 		| undefined;
@@ -37,14 +39,15 @@ export default function VT({
 	return (
 		<NavBody
 			style={{
-				maxWidth: "224px",
+				maxWidth: collapsed ? "56px" : "224px",
+				minWidth: collapsed ? "56px" : "224px",
 				minHeight: "100%",
 				overflow: "auto",
 				height: "calc(100vh - 80px)",
 			}}
 		>
 			<NavList className="appear">
-				{(backLink || title) && (
+				{!collapsed && (backLink || title) && (
 					<Box px="12" py="16">
 						{backLink && (
 							<Link href={backLink.url as Url}>
@@ -71,11 +74,30 @@ export default function VT({
 				)}
 				{items?.map((menuItem, i) => {
 					if (menuItem.url) {
+						const url = menuItem.url;
+						// Sticky-active: a child item stays highlighted while the user is
+						// anywhere under its URL prefix (e.g. /product-access/[id]).
+						// Use longest-prefix matching among items so /product-access/[id]
+						// doesn't also light up shorter overlapping URLs.
+						const isPrefixMatch =
+							path === url ||
+							path.startsWith(url + "/") ||
+							path.startsWith(url + "?");
+						const longerCandidate = items?.some(
+							(other) =>
+								other !== menuItem &&
+								other.url &&
+								other.url.length > url.length &&
+								(path === other.url ||
+									path.startsWith(other.url + "/") ||
+									path.startsWith(other.url + "?")),
+						);
+						const active = isPrefixMatch && !longerCandidate;
 						return (
 							<Fragment key={`${menuItem.label}-${menuItem.url}`}>
 								<NavItem
 									onClick={() => menuClick(menuItem.url || "")}
-									active={menuItem.url === path}
+									active={active}
 									aria-label={menuItem.label}
 									icon={menuItem.icon}
 								>

@@ -3,6 +3,7 @@
 import {
 	Box,
 	Badge,
+	Button,
 	Sidebar,
 	NavBody,
 	NavFooter,
@@ -297,14 +298,23 @@ function TemplateContent({
 	const showSecondarySidebar =
 		!isOpalStudio && (isContentManager || showVT || showViaSubNavContent);
 	const {contentSubNavExpanded} = useContentManagerLayout();
-	// When Content Manager sub-nav is collapsed, reserve 56px; when expanded, 224px. Other secondary sidebars (VT) use 224px.
+	const [secondarySidebarCollapsed, setSecondarySidebarCollapsed] =
+		usePersistentState("secondarySidebarCollapsed", false) as [
+			boolean,
+			(next: boolean) => void,
+			boolean,
+		];
+	// When Content Manager sub-nav is collapsed, reserve 56px; when expanded, 224px.
+	// Other secondary sidebars (VT) honor the user-toggled collapse state.
 	const secondarySidebarWidth = showViaSubNavContent
 		? subNavWidth
 		: isContentManager
 			? contentSubNavExpanded
 				? 224
 				: 56
-			: 224;
+			: secondarySidebarCollapsed
+				? 56
+				: 224;
 	const customLayout =
 		lvl4?.customLayout ||
 		lvl3?.customLayout ||
@@ -548,56 +558,101 @@ function TemplateContent({
 									<Sidebar
 										className="flex"
 										h="full"
-										style={{overflowY: "auto", overflowX: "hidden"}}
+										expanded={!secondarySidebarCollapsed}
+										onExpandedChange={(v: boolean) =>
+											setSecondarySidebarCollapsed(!v)
+										}
+										defaultExpanded={!secondarySidebarCollapsed}
+										style={{
+											display: "flex",
+											flexDirection: "column",
+											overflowX: "hidden",
+											overflowY: "hidden",
+										}}
 									>
-										<SubNav
-											style={{
-												height: "100%",
-												overflowY: "auto",
-												overflowX: "hidden",
-												borderRight: 0,
-											}}
-										>
-											<div
-												className="flex w-[500%]"
+										<Box style={{flex: 1, minHeight: 0, overflow: "hidden"}}>
+											<SubNav
 												style={{
-													transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)}px)`,
-													transition: shellTransition,
-													minHeight: "100%",
+													height: "100%",
+													overflowY: "auto",
 													overflowX: "hidden",
+													borderRight: 0,
 												}}
 											>
-												{showVT && routeHighlight?.children && (
-													<VT
-														backLink={undefined}
-														title={
-															routeHighlight.children?.title ||
-															routeHighlight.label
-														}
-														description={
-															routeHighlight.children?.description
-														}
-														items={routeHighlight.children}
-													/>
-												)}
-												{showVT && lvl3 && (
-													<VT
-														backLink={lvl2}
-														title={lvl2.children?.title}
-														description={lvl2.children?.description}
-														items={lvl2.children?.children}
-													/>
-												)}
-												{showVT && lvl4 && (
-													<VT
-														backLink={lvl3}
-														title={lvl3.children?.title}
-														description={lvl3.children?.description}
-														items={lvl3.children?.children}
-													/>
-												)}
-											</div>
-										</SubNav>
+												<div
+													className="flex"
+													style={{
+														width: secondarySidebarCollapsed ? "100%" : "500%",
+														transform: `translateX(-${(secondarySidebarCollapsed ? 56 : 224) * (lvl4 ? 2 : lvl3 ? 1 : 0)}px)`,
+														transition: shellTransition,
+														minHeight: "100%",
+														overflowX: "hidden",
+													}}
+												>
+													{showVT && routeHighlight?.children && (
+														<VT
+															backLink={undefined}
+															title={
+																routeHighlight.children?.title ||
+																routeHighlight.label
+															}
+															description={
+																routeHighlight.children?.description
+															}
+															items={routeHighlight.children}
+															collapsed={secondarySidebarCollapsed}
+														/>
+													)}
+													{showVT && lvl3 && (
+														<VT
+															backLink={lvl2}
+															title={lvl2.children?.title}
+															description={lvl2.children?.description}
+															items={lvl2.children?.children}
+															collapsed={secondarySidebarCollapsed}
+														/>
+													)}
+													{showVT && lvl4 && (
+														<VT
+															backLink={lvl3}
+															title={lvl3.children?.title}
+															description={lvl3.children?.description}
+															items={lvl3.children?.children}
+															collapsed={secondarySidebarCollapsed}
+														/>
+													)}
+												</div>
+											</SubNav>
+										</Box>
+										<Box
+											display="flex"
+											justifyContent={
+												secondarySidebarCollapsed ? "center" : "end"
+											}
+											alignItems="center"
+											px="8"
+											py="8"
+											borderT="1"
+											borderColor="border.tertiary"
+											bg="bg.default"
+											style={{flexShrink: 0}}
+										>
+											<Button
+												appearance="subtle"
+												size="sm"
+												icon={<IconSidebar />}
+												aria-label={
+													secondarySidebarCollapsed
+														? "Expand sidebar"
+														: "Collapse sidebar"
+												}
+												onClick={() =>
+													setSecondarySidebarCollapsed(
+														!secondarySidebarCollapsed,
+													)
+												}
+											/>
+										</Box>
 									</Sidebar>
 								) : null}
 							</Box>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
 	Box,
@@ -9,6 +9,7 @@ import {
 	Field,
 	Heading,
 	Input,
+	Link,
 	Menu,
 	MenuContent,
 	MenuTrigger,
@@ -26,6 +27,7 @@ import {
 	IconCircleInfo,
 	IconPaperPlaneTop,
 	IconPen,
+	IconUpload,
 } from "@optiaxiom/icons";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
@@ -33,6 +35,7 @@ import {
 	INSTANCES,
 	ROLES,
 	GROUPS,
+	BULK_IMPORT_USERS,
 } from "../data";
 
 export type InvitedUser = { email: string; first: string; last: string };
@@ -46,16 +49,22 @@ export type AccessEntry = {
 };
 
 const STEP_LABELS = ["User list", "Product access", "Review"] as const;
-const PANEL_WIDTH = 560;
+const PANEL_WIDTH = 700;
 
 export function InviteUserPanel({
 	open,
 	onClose,
 	onSubmit,
+	presetProduct,
+	mode = "manual",
 }: {
 	open: boolean;
 	onClose: () => void;
 	onSubmit?: (invited: InvitedUser[], access: AccessEntry[]) => void;
+	/** Pre-fill the product field on Step 2 (e.g. when invoked from a product detail page). */
+	presetProduct?: string;
+	/** "manual" = type users one by one; "upload" = import a CSV on step 1. */
+	mode?: "manual" | "upload";
 }) {
 	const [step, setStep] = useState<1 | 2 | 3>(1);
 	const [users, setUsers] = useState<InvitedUser[]>([]);
@@ -159,12 +168,18 @@ export function InviteUserPanel({
 				</Box>
 
 				<Box flex="1" overflow="auto" px="24" py="20">
-					{step === 1 && <StepUsers users={users} setUsers={setUsers} />}
+					{step === 1 &&
+						(mode === "upload" ? (
+							<StepUploadUsers users={users} setUsers={setUsers} />
+						) : (
+							<StepUsers users={users} setUsers={setUsers} />
+						))}
 					{step === 2 && (
 						<StepAccess
 							accessList={accessList}
 							setAccessList={setAccessList}
 							onEditorChange={setEditorOpen}
+							presetProduct={presetProduct}
 						/>
 					)}
 					{step === 3 && (
@@ -416,21 +431,174 @@ function StepUsers({
 	);
 }
 
+function StepUploadUsers({
+	users,
+	setUsers,
+}: {
+	users: InvitedUser[];
+	setUsers: (u: InvitedUser[]) => void;
+}) {
+	const inputRef = useRef<HTMLInputElement>(null);
+	const [fileName, setFileName] = useState("");
+	const [bannerOpen, setBannerOpen] = useState(true);
+
+	const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		setFileName(file.name);
+		// Prototype: simulate parsing the uploaded spreadsheet into a list of users.
+		setUsers(BULK_IMPORT_USERS.map((u) => ({ ...u })));
+		setBannerOpen(true);
+		e.target.value = "";
+	};
+
+	return (
+		<Box display="flex" flexDirection="column" gap="16">
+			<Text fontSize="md" color="fg.secondary">
+				Please use{" "}
+				<Link href="#" onClick={(e) => e.preventDefault()}>
+					this template
+				</Link>{" "}
+				to format your CSV file (max 10MB and 1,000 users).
+			</Text>
+
+			<input
+				ref={inputRef}
+				type="file"
+				accept=".csv"
+				style={{ display: "none" }}
+				onChange={handleFile}
+			/>
+
+			{users.length === 0 ? (
+				<Field
+					label={
+						<Box display="inline-flex" alignItems="center" gap="4">
+							<span>Upload your CSV file</span>
+							<Text asChild color="fg.error">
+								<span>*</span>
+							</Text>
+						</Box>
+					}
+				>
+					<Box display="flex" alignItems="center" gap="12">
+						<Box flex="1">
+							<Input value={fileName} placeholder="No file chosen" readOnly />
+						</Box>
+						<Button
+							appearance="primary"
+							icon={<IconUpload size={16} />}
+							iconPosition="start"
+							onClick={() => inputRef.current?.click()}
+						>
+							Select file
+						</Button>
+					</Box>
+				</Field>
+			) : (
+				<>
+					{bannerOpen && (
+						<Box
+							display="flex"
+							alignItems="center"
+							justifyContent="space-between"
+							gap="12"
+							px="16"
+							py="12"
+							rounded="md"
+							border="1"
+							style={{
+								background: "var(--ax-colors-bg-success-subtle)",
+								borderColor: "var(--ax-colors-border-success)",
+							}}
+						>
+							<Text fontSize="md" color="fg.default">
+								{users.length} user{users.length === 1 ? " is" : "s are"} imported.
+							</Text>
+							<Button
+								appearance="subtle"
+								size="sm"
+								icon={<IconXmark size={16} />}
+								aria-label="Dismiss"
+								onClick={() => setBannerOpen(false)}
+							/>
+						</Box>
+					)}
+
+					<Table>
+						<thead>
+							<Tr>
+								<Th>Email</Th>
+								<Th>First name</Th>
+								<Th>Last name</Th>
+								<Th style={{ width: 48 }} />
+							</Tr>
+						</thead>
+						<tbody>
+							{users.map((u, i) => (
+								<Tr key={i}>
+									<Td>{u.email}</Td>
+									<Td>
+										{u.first || (
+											<Text asChild color="fg.tertiary">
+												<span>—</span>
+											</Text>
+										)}
+									</Td>
+									<Td>
+										{u.last || (
+											<Text asChild color="fg.tertiary">
+												<span>—</span>
+											</Text>
+										)}
+									</Td>
+									<Td type="raw" style={{ width: 48, textAlign: "right" }}>
+										<Button
+											appearance="subtle"
+											size="sm"
+											icon={<IconTrashCan size={16} />}
+											aria-label={`Remove row ${i + 1}`}
+											onClick={() => setUsers(users.filter((_, j) => j !== i))}
+										/>
+									</Td>
+								</Tr>
+							))}
+						</tbody>
+					</Table>
+				</>
+			)}
+		</Box>
+	);
+}
+
 function StepAccess({
 	accessList,
 	setAccessList,
 	onEditorChange,
+	presetProduct,
 }: {
 	accessList: AccessEntry[];
 	setAccessList: (a: AccessEntry[]) => void;
 	onEditorChange: (open: boolean) => void;
+	presetProduct?: string;
 }) {
 	const [editor, setEditor] = useState<
 		| { mode: "new" | "edit"; kind: AccessKind; id?: string; initial: AccessEntry | null }
 		| null
 	>(
 		accessList.length === 0
-			? { mode: "new", kind: "product", initial: null }
+			? {
+					mode: "new",
+					kind: "product",
+					initial: presetProduct
+						? {
+								id: "preset",
+								kind: "product",
+								name: presetProduct,
+								instances: [],
+							}
+						: null,
+				}
 			: null,
 	);
 
@@ -535,7 +703,7 @@ function StepAccess({
 	);
 }
 
-function AccessEditor({
+export function AccessEditor({
 	kind,
 	initial,
 	onSave,
@@ -656,7 +824,7 @@ function AccessEditor({
 	);
 }
 
-function AccessCard({
+export function AccessCard({
 	entry,
 	onEdit,
 	onDelete,
@@ -884,7 +1052,7 @@ function StepReview({
 	);
 }
 
-function SingleSelectMenu({
+export function SingleSelectMenu({
 	label,
 	value,
 	options,
@@ -912,7 +1080,7 @@ function SingleSelectMenu({
 	);
 }
 
-function MultiSelectMenu({
+export function MultiSelectMenu({
 	label,
 	values,
 	options,
