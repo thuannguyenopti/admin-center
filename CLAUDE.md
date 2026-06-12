@@ -175,6 +175,7 @@ Before writing code, check if files you're touching are monolithic (300+ lines, 
 - **Never merge locally** — merge via GitHub so CI checks run first
 - Vercel auto-deploys `main` to production; preview deploys on every PR branch
 - Verify build (`yarn build`) before pushing
+- **Never commit secrets** — `.env`, `.env.local`, API keys, tokens, and credentials must never be staged or committed. These files are in `.gitignore` for a reason. If you spot a secret already in git history, stop and tell the user immediately.
 
 ## Efficient Batch Workflow
 
