@@ -41,6 +41,7 @@
   ],
   "exclude": [
     "node_modules",
+    "temp-stride-source",
     "app/components/Opal/editor/multi-editor.ts",
     "app/components/Opal/editor/toolbar/editor-toolbar.ts",
     "app/components/Opal/editor/toolbar/editor-status-bar.ts",
