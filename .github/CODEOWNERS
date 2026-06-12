@@ -7,3 +7,4 @@ app/globals.css              @Ben-Holme
 app/layout.tsx               @Ben-Holme
 app/components/template.tsx  @Ben-Holme
 package.json                 @Ben-Holme
+.env                         @Ben-Holme
