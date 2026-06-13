@@ -396,7 +396,7 @@ const FILE_CONTENT: Record<string, string> = {
 // ── File type badge ───────────────────────────────────────────────────────────
 
 const EXT_COLORS: Record<string, { bg: string; fg: string }> = {
-  md:   { bg: "var(--ax-colors-bg-accent-subtle)",    fg: "var(--ax-colors-fg-accent)" },
+  md:   { bg: "var(--ax-colors-bg-information-subtle)", fg: "var(--ax-colors-fg-information)" },
   pdf:  { bg: "var(--ax-colors-bg-danger-subtle)",    fg: "var(--ax-colors-fg-danger)" },
   png:  { bg: "var(--ax-colors-bg-success-subtle)",   fg: "var(--ax-colors-fg-success)" },
   jpg:  { bg: "var(--ax-colors-bg-success-subtle)",   fg: "var(--ax-colors-fg-success)" },
@@ -1462,7 +1462,7 @@ export default function FilesPage() {
 
         {/* Tabs */}
         <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary" mb="16">
-          {(["skills", "files", "brand-packs", "memory", "rag"] as const).map((tab) => (
+          {(["skills", "files", "brand-packs", "rag"] as const).map((tab) => (
             <Box
               key={tab}
               pb="12"
@@ -1483,7 +1483,7 @@ export default function FilesPage() {
                 fontWeight={activeTab === tab ? "500" : "400"}
                 color={activeTab === tab ? "fg.default" : "fg.secondary"}
               >
-                {tab === "rag" ? "RAG" : tab === "brand-packs" ? "Brand Packs" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === "rag" ? "RAG" : tab === "brand-packs" ? "Brand Packs" : tab === "files" ? "Memory" : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </Text>
             </Box>
           ))}
@@ -1918,12 +1918,7 @@ export default function FilesPage() {
                       </Box>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => setShareOpen(true)}>
-                    <Box display="flex" alignItems="center" gap="8">
-                      <IconUserPlus size={13} />
-                      Share
-                    </Box>
-                  </DropdownMenuItem>
+
                   <DropdownMenuItem>
                     <Box display="flex" alignItems="center" gap="8">
                       <IconDownload size={13} />
