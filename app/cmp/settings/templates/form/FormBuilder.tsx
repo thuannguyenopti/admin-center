@@ -379,6 +379,7 @@ export function FormBuilder() {
 					icon: item?.icon,
 					required: fieldDef?.required ?? false,
 					fieldDefId: iconId,
+					...(fieldDef?.isSystemField ? { isSystemField: true } : {}),
 					...(nodeType === "formSection" ? { onToggleCollapse: () => {}, onDuplicate: () => {} } : {}),
 				},
 			};
@@ -456,7 +457,7 @@ export function FormBuilder() {
 					id: newId, type: "formField",
 					position: { x: sourceNode.position.x, y: sourceNode.position.y + offsetY },
 					...(inSection ? { parentId } : {}),
-					data: { label: "", typeLabel: f.typeLabel, icon: f.icon, required: f.required ?? false, fieldDefId: f.id },
+					data: { label: "", typeLabel: f.typeLabel, icon: f.icon, required: f.required ?? false, fieldDefId: f.id, ...(f.isSystemField ? { isSystemField: true } : {}) },
 				};
 			}
 
@@ -506,7 +507,7 @@ export function FormBuilder() {
 			} else if (type === "field" && fieldDefId) {
 				const f = WORK_REQUEST_FIELDS.find((fld) => fld.id === fieldDefId) ?? customFields.find((fld) => fld.id === fieldDefId);
 				if (!f) return;
-				newNode = { id: newId, type: "formField", position: { x, y }, parentId: sectionId, data: { label: "", typeLabel: f.typeLabel, icon: f.icon, required: f.required ?? false, fieldDefId: f.id } };
+				newNode = { id: newId, type: "formField", position: { x, y }, parentId: sectionId, data: { label: "", typeLabel: f.typeLabel, icon: f.icon, required: f.required ?? false, fieldDefId: f.id, ...(f.isSystemField ? { isSystemField: true } : {}) } };
 			}
 
 			if (!newNode) return;

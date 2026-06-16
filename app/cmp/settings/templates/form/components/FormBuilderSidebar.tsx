@@ -221,7 +221,7 @@ export function FormBuilderSidebar({
 									<Text fontSize="xs" color="fg.tertiary">No fields found.</Text>
 								</Box>
 							) : filteredStandard.map((item: any) => (
-								<SidebarItem key={item.id} item={{ ...item, typeLabel: "" }} onDragStart={onDragStart} />
+								<SidebarItem key={item.id} item={{ ...item, typeLabel: "System Field" }} onDragStart={onDragStart} />
 							))}
 						</Box>
 					</DisclosureContent>

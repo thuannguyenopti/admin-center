@@ -13,6 +13,7 @@ export type FormFieldDef = {
 	placeholder?: string;
 	options?: FieldOption[];
 	isMultiSelect?: boolean;
+	isSystemField?: boolean;
 };
 
 // ─── Inline logic rule (per-node) ────────────────────────────────────────────

@@ -1246,6 +1246,102 @@ export function FieldDetailsPanel({
 						<Button appearance="primary" onClick={() => onUpdateField?.({ label: fieldName })} style={{ width: "100%", justifyContent: "center" }}>
 							Save changes
 						</Button>
+
+					{/* System field node — read-only preview + Required + Helper text + Logic */}
+					</>) : d.isSystemField ? (<>
+						{/* Read-only preview */}
+						<Box display="flex" flexDirection="column" gap="6">
+							<Text fontSize="xs" fontWeight="500" color="fg.tertiary" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>Preview</Text>
+							<Box
+								p="12"
+								rounded="md"
+								bg="bg.secondary"
+								display="flex"
+								flexDirection="column"
+								gap="6"
+								style={{ border: "1px solid var(--ax-colors-border-tertiary)" }}
+							>
+								<Text fontSize="sm" fontWeight="500" color="fg.default">
+									{d.label || d.name || "Field"}
+									{isMandatory && <span style={{ color: "var(--ax-colors-fg-danger, #e53e3e)", marginLeft: 2 }}>*</span>}
+								</Text>
+								{(d.typeLabel === "Long Text") && (
+									<textarea readOnly placeholder={allFields.find((f) => f.id === d.fieldDefId)?.placeholder ?? ""} style={{ width: "100%", border: "1px solid var(--ax-colors-border-default)", borderRadius: 6, padding: "7px 10px", fontSize: 13, background: "var(--ax-colors-bg-default)", resize: "none", minHeight: 72, outline: "none", fontFamily: "inherit", color: "var(--ax-colors-fg-tertiary)", boxSizing: "border-box" }} />
+								)}
+								{(d.typeLabel === "Text" || d.typeLabel === "URL") && (
+									<input readOnly placeholder={d.typeLabel === "URL" ? "https://" : ""} style={{ width: "100%", border: "1px solid var(--ax-colors-border-default)", borderRadius: 6, padding: "7px 10px", fontSize: 13, background: "var(--ax-colors-bg-default)", outline: "none", fontFamily: "inherit", color: "var(--ax-colors-fg-tertiary)", boxSizing: "border-box" }} />
+								)}
+								{d.typeLabel === "Date" && (
+									<input type="date" readOnly style={{ width: "100%", border: "1px solid var(--ax-colors-border-default)", borderRadius: 6, padding: "7px 10px", fontSize: 13, background: "var(--ax-colors-bg-default)", outline: "none", fontFamily: "inherit", color: "var(--ax-colors-fg-tertiary)", boxSizing: "border-box" }} />
+								)}
+								{(d.typeLabel === "File Upload" || d.typeLabel === "Image") && (
+									<Box style={{ border: "1px dashed var(--ax-colors-border-default)", borderRadius: 6, padding: "16px", textAlign: "center", color: "var(--ax-colors-fg-tertiary)", fontSize: 13 }}>
+										{d.typeLabel === "Image" ? "Click to upload image" : "Click to upload or drag and drop"}
+									</Box>
+								)}
+								{helperText && <Text fontSize="xs" color="fg.tertiary">{helperText}</Text>}
+							</Box>
+						</Box>
+
+						{/* Required */}
+						<Box display="flex" alignItems="center" justifyContent="space-between">
+							<Text fontSize="md" color="fg.default">Required</Text>
+							<Switch
+								checked={isMandatory}
+								onCheckedChange={(v) => {
+									setIsMandatory(v);
+									onUpdateField?.({ required: v });
+								}}
+							/>
+						</Box>
+
+						{/* Helper text */}
+						<Box display="flex" flexDirection="column" gap="4">
+							<Field label="Helper text">
+								<Textarea
+									value={helperText}
+									onValueChange={(v) => setHelperText(v.slice(0, 1000))}
+									placeholder="Optional helper text shown below the field"
+									rows={2}
+									resize="none"
+								/>
+							</Field>
+							<Text fontSize="xs" color="fg.tertiary">{helperText.length}/1000</Text>
+						</Box>
+
+						{/* Logic */}
+						<Box>
+							<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "4px 0 0" }} />
+							<Box pt="16" display="flex" flexDirection="column" gap="16">
+								<Box display="flex" alignItems="center" justifyContent="space-between">
+									<Text fontSize="md" fontWeight="600" color="fg.default">Logic</Text>
+									{!isLogicEditMode && (d.ruleSets ?? []).length > 0 && (
+										<button onClick={() => setIsLogicEditMode(true)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "var(--ax-colors-fg-accent)", padding: 0 }}>
+											Edit
+										</button>
+									)}
+								</Box>
+								<LogicRulesManager
+									key={node.id}
+									initialRuleSets={d.ruleSets ?? []}
+									fieldOptions={[]}
+									allFields={allFields}
+									connectedTargetNodes={allCanvasNodes}
+									isEditMode={isLogicEditMode}
+									onApply={onApplyLogic}
+									onEnterEdit={() => setIsLogicEditMode(true)}
+									onExitEdit={() => setIsLogicEditMode(false)}
+									onHighlightRule={onHighlightNodes}
+									onClearHighlight={onClearHighlight}
+								/>
+							</Box>
+						</Box>
+
+						{/* Save helper text */}
+						<Button appearance="primary" onClick={() => onUpdateField?.({ description: helperText.trim(), required: isMandatory })} style={{ width: "100%", justifyContent: "center" }}>
+							Save changes
+						</Button>
+
 					</>) : (<>
 
 					{/* Field config — branches by type */}
