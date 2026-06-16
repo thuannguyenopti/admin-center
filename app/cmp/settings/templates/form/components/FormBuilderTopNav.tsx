@@ -156,10 +156,6 @@ export function FormBuilderTopNav({
 				<Button appearance="primary" onClick={onSave}>
 					Save
 				</Button>
-				<Box display="flex" alignItems="center" gap="8">
-					<Switch checked={isActive} onCheckedChange={onToggleActive} />
-					<Text fontSize="sm" color="fg.secondary">Active</Text>
-				</Box>
 				<Menu
 					options={[
 						{ label: "Edit Details",    execute: onEditDetails },
