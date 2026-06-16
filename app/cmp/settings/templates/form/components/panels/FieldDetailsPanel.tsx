@@ -1283,6 +1283,8 @@ export function FieldDetailsPanel({
 							</Box>
 						</Box>
 
+						<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)" }} />
+
 						{/* Required */}
 						<Box display="flex" alignItems="center" justifyContent="space-between">
 							<Text fontSize="md" color="fg.default">Required</Text>
@@ -1294,6 +1296,8 @@ export function FieldDetailsPanel({
 								}}
 							/>
 						</Box>
+
+						<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)" }} />
 
 						{/* Helper text */}
 						<Box display="flex" flexDirection="column" gap="4">
@@ -1311,7 +1315,7 @@ export function FieldDetailsPanel({
 
 						{/* Logic */}
 						<Box>
-							<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "4px 0 0" }} />
+							<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)" }} />
 							<Box pt="16" display="flex" flexDirection="column" gap="16">
 								<Box display="flex" alignItems="center" justifyContent="space-between">
 									<Text fontSize="md" fontWeight="600" color="fg.default">Logic</Text>
