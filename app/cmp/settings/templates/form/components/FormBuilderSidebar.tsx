@@ -4,7 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { Box, SearchInput, Tooltip, Disclosure, DisclosureTrigger, DisclosureContent } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconGripVertical, IconPlus, IconChevronRight } from "@tabler/icons-react";
+import { Button } from "@/app/components/Button";
+import { IconGripVertical, IconPlus, IconChevronRight, IconX } from "@tabler/icons-react";
 import {
 	STANDARD_FIELDS,
 	LAYOUT_COMPONENTS,
@@ -18,6 +19,8 @@ const SECTION_ITEM = LAYOUT_COMPONENTS[0];
 
 function SidebarItem({
 	item,
+	selected,
+	onToggle,
 	onDragStart,
 }: {
 	item: {
@@ -27,10 +30,21 @@ function SidebarItem({
 		typeLabel?: string;
 		icon: React.ReactNode;
 	};
+	selected: boolean;
+	onToggle: (id: string) => void;
 	onDragStart: (e: React.DragEvent, item: any) => void;
 }) {
+	const [hovered, setHovered] = useState(false);
+	const showCheckbox = hovered || selected;
+
 	return (
-		<div draggable onDragStart={(e) => onDragStart(e, item)} style={{ cursor: "grab" }}>
+		<div
+			draggable
+			onDragStart={(e) => onDragStart(e, item)}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+			style={{ cursor: "grab" }}
+		>
 			<Box
 				p="8"
 				display="flex"
@@ -38,7 +52,23 @@ function SidebarItem({
 				gap="8"
 				className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md"
 				mx="8"
+				style={{ background: selected ? "var(--ax-colors-bg-accent-subtle)" : undefined }}
 			>
+				{/* Checkbox — visible on hover or when selected */}
+				<div
+					style={{ width: 16, height: 16, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+					onClick={(e) => { e.stopPropagation(); onToggle(item.id); }}
+				>
+					{showCheckbox ? (
+						<input
+							type="checkbox"
+							checked={selected}
+							onChange={() => onToggle(item.id)}
+							onClick={(e) => e.stopPropagation()}
+							style={{ width: 14, height: 14, cursor: "pointer", accentColor: "var(--ax-colors-fg-accent)" }}
+						/>
+					) : null}
+				</div>
 				<Box
 					p="6"
 					rounded="sm"
@@ -104,16 +134,26 @@ export function FormBuilderSidebar({
 	customFields = [],
 	onCreateField,
 	onOpenOpal,
+	onAddMultipleFields,
 }: {
 	onDragStart: (e: React.DragEvent, item: any) => void;
 	customFields?: FormFieldDef[];
 	onCreateField?: (field: FormFieldDef) => void;
 	onOpenOpal?: () => void;
+	onAddMultipleFields?: (fieldIds: string[]) => void;
 }) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isCreateFieldOpen, setIsCreateFieldOpen] = useState(false);
+	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
 	const [customFieldsHovered, setCustomFieldsHovered] = useState(false);
+
+	const toggleSelected = (id: string) =>
+		setSelectedIds((prev) => {
+			const next = new Set(prev);
+			next.has(id) ? next.delete(id) : next.add(id);
+			return next;
+		});
 
 	const filteredStandard = searchQuery
 		? STANDARD_FIELDS.filter(
@@ -221,7 +261,7 @@ export function FormBuilderSidebar({
 									<Text fontSize="xs" color="fg.tertiary">No fields found.</Text>
 								</Box>
 							) : filteredStandard.map((item: any) => (
-								<SidebarItem key={item.id} item={{ ...item, typeLabel: "System Field" }} onDragStart={onDragStart} />
+								<SidebarItem key={item.id} item={{ ...item, typeLabel: "System Field" }} selected={selectedIds.has(item.id)} onToggle={toggleSelected} onDragStart={onDragStart} />
 							))}
 						</Box>
 					</DisclosureContent>
@@ -264,12 +304,47 @@ export function FormBuilderSidebar({
 									<Text fontSize="xs" color="fg.tertiary">No custom fields yet.</Text>
 								</Box>
 							) : filteredCustom.map((item: any) => (
-								<SidebarItem key={item.id} item={{ ...item, typeLabel: "" }} onDragStart={onDragStart} />
+								<SidebarItem key={item.id} item={{ ...item, typeLabel: "" }} selected={selectedIds.has(item.id)} onToggle={toggleSelected} onDragStart={onDragStart} />
 							))}
 						</Box>
 					</DisclosureContent>
 				</Disclosure>
 			</Box>
+
+			{/* Multi-select footer */}
+			{selectedIds.size > 0 && (
+				<Box
+					px="12"
+					py="10"
+					display="flex"
+					alignItems="center"
+					gap="8"
+					borderT="1"
+					borderColor="border.tertiary"
+					bg="bg.default"
+				>
+					<Text fontSize="sm" color="fg.default" style={{ flex: 1 }}>
+						{selectedIds.size} field{selectedIds.size > 1 ? "s" : ""} selected
+					</Text>
+					<Button
+						appearance="primary"
+						size="sm"
+						onClick={() => {
+							onAddMultipleFields?.(Array.from(selectedIds));
+							setSelectedIds(new Set());
+						}}
+					>
+						Add to canvas
+					</Button>
+					<button
+						onClick={() => setSelectedIds(new Set())}
+						aria-label="Clear selection"
+						style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--ax-colors-fg-tertiary)", display: "flex", alignItems: "center" }}
+					>
+						<IconX size={14} />
+					</button>
+				</Box>
+			)}
 
 			<CreateFieldModal
 				open={isCreateFieldOpen}

@@ -263,6 +263,7 @@ export function FormBuilder() {
 		onNodesChange,
 		onEdgesChange,
 		addNode,
+		addNodes,
 		addNodeWithEdge,
 		onConnect: onConnectBase,
 		updateNodeData,
@@ -572,6 +573,38 @@ export function FormBuilder() {
 			selectNode(newId);
 		},
 		[nodes, addNode, addNodeWithEdge],
+	);
+
+	const handleAddMultipleFields = useCallback(
+		(fieldIds: string[]) => {
+			const defs = fieldIds
+				.map((id) => WORK_REQUEST_FIELDS.find((f) => f.id === id) ?? customFields.find((f) => f.id === id))
+				.filter(Boolean) as typeof WORK_REQUEST_FIELDS;
+			if (defs.length === 0) return;
+
+			const topLevel = nodes.filter((n) => !(n as any).parentId);
+			const lastNode = [...topLevel].sort((a, b) => b.position.y - a.position.y)[0];
+			const startY = lastNode ? lastNode.position.y + ((lastNode as any).measured?.height ?? 80) + 80 : 100;
+			const x = lastNode?.position.x ?? 200;
+
+			const newNodes = defs.map((f, i) => ({
+				id: getNodeId(),
+				type: "formField",
+				position: { x, y: startY + i * 100 },
+				data: {
+					label: "",
+					typeLabel: f.typeLabel,
+					icon: f.icon,
+					required: f.required ?? false,
+					fieldDefId: f.id,
+					...(f.isSystemField ? { isSystemField: true } : {}),
+				},
+			}));
+
+			addNodes(newNodes as any);
+			selectNode(newNodes[newNodes.length - 1].id);
+		},
+		[nodes, customFields, addNodes, selectNode],
 	);
 
 	const handleModalSave = useCallback(
@@ -1079,6 +1112,7 @@ export function FormBuilder() {
 						onDragStart={onDragStart}
 						customFields={customFields}
 						onCreateField={handleCreateCustomField}
+						onAddMultipleFields={handleAddMultipleFields}
 					/>
 					) : null}
 					detailsPanel={detailsPanel}
