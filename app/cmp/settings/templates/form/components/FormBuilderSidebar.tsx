@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Box, SearchInput, Tooltip } from "@optiaxiom/react";
+import { Box, SearchInput, Tooltip, Disclosure, DisclosureTrigger, DisclosureContent } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconGripVertical, IconPlus } from "@tabler/icons-react";
+import { IconGripVertical, IconPlus, IconChevronRight } from "@tabler/icons-react";
 import {
 	STANDARD_FIELDS,
 	LAYOUT_COMPONENTS,
@@ -113,6 +113,8 @@ export function FormBuilderSidebar({
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isCreateFieldOpen, setIsCreateFieldOpen] = useState(false);
 
+	const [customFieldsHovered, setCustomFieldsHovered] = useState(false);
+
 	const filteredStandard = searchQuery
 		? STANDARD_FIELDS.filter(
 				(f) =>
@@ -120,6 +122,14 @@ export function FormBuilderSidebar({
 					f.typeLabel.toLowerCase().includes(searchQuery.toLowerCase()),
 		  )
 		: STANDARD_FIELDS;
+
+	const filteredCustom = searchQuery
+		? customFields.filter(
+				(f) =>
+					f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					f.typeLabel.toLowerCase().includes(searchQuery.toLowerCase()),
+		  )
+		: customFields;
 
 
 	return (
@@ -178,22 +188,7 @@ export function FormBuilderSidebar({
 
 			{/* Form fields */}
 			<Box flex="1" overflowY="auto" display="flex" flexDirection="column">
-				<Box px="16" pt="12" pb="8" display="flex" alignItems="center" justifyContent="space-between">
-					<Text fontSize="xs" fontWeight="600" color="fg.tertiary" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
-						Form Fields
-					</Text>
-					<Tooltip content="Create new field">
-						<button
-							onClick={() => setIsCreateFieldOpen(true)}
-							aria-label="Create new field"
-							style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--ax-colors-fg-tertiary)", display: "flex", alignItems: "center", borderRadius: 4 }}
-						>
-							<IconPlus size={14} />
-						</button>
-					</Tooltip>
-				</Box>
-
-				<Box px="12" pb="8">
+				<Box px="12" pt="8" pb="8">
 					<SearchInput
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
@@ -203,12 +198,77 @@ export function FormBuilderSidebar({
 				</Box>
 
 				{/* Standard fields */}
-				<Box display="flex" flexDirection="column" gap="4" pb="8">
-					{filteredStandard.map((item: any) => (
-						<SidebarItem key={item.id} item={{ ...item, typeLabel: "" }} onDragStart={onDragStart} />
-					))}
-				</Box>
+				<Disclosure defaultOpen>
+					<Box
+						display="flex"
+						alignItems="center"
+						px="8"
+						className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md"
+						mx="8"
+					>
+						<DisclosureTrigger style={{ flex: 1 }}>
+							<Box py="8" display="flex" alignItems="center" gap="6" cursor="pointer">
+								<Text fontSize="xs" fontWeight="600" color="fg.tertiary" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
+									Standard Fields
+								</Text>
+							</Box>
+						</DisclosureTrigger>
+					</Box>
+					<DisclosureContent>
+						<Box display="flex" flexDirection="column" gap="4" pb="8">
+							{filteredStandard.length === 0 ? (
+								<Box px="16" pb="4">
+									<Text fontSize="xs" color="fg.tertiary">No fields found.</Text>
+								</Box>
+							) : filteredStandard.map((item: any) => (
+								<SidebarItem key={item.id} item={{ ...item, typeLabel: "" }} onDragStart={onDragStart} />
+							))}
+						</Box>
+					</DisclosureContent>
+				</Disclosure>
 
+				{/* Custom fields */}
+				<Disclosure defaultOpen>
+					<Box
+						display="flex"
+						alignItems="center"
+						px="8"
+						className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md"
+						mx="8"
+						onMouseEnter={() => setCustomFieldsHovered(true)}
+						onMouseLeave={() => setCustomFieldsHovered(false)}
+					>
+						<DisclosureTrigger style={{ flex: 1 }}>
+							<Box py="8" display="flex" alignItems="center" gap="6" cursor="pointer">
+								<Text fontSize="xs" fontWeight="600" color="fg.tertiary" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>
+									Custom Fields
+								</Text>
+							</Box>
+						</DisclosureTrigger>
+						{customFieldsHovered && (
+							<Tooltip content="Create new field">
+								<button
+									onClick={(e) => { e.stopPropagation(); setIsCreateFieldOpen(true); }}
+									aria-label="Create new field"
+									style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--ax-colors-fg-tertiary)", display: "flex", alignItems: "center", borderRadius: 4, flexShrink: 0 }}
+								>
+									<IconPlus size={14} />
+								</button>
+							</Tooltip>
+						)}
+					</Box>
+					<DisclosureContent>
+						<Box display="flex" flexDirection="column" gap="4" pb="8">
+							{filteredCustom.length === 0 ? (
+								<Box px="16" pb="4">
+									<Text fontSize="xs" color="fg.tertiary">No custom fields yet.</Text>
+								</Box>
+							) : filteredCustom.map((item: any) => (
+								<SidebarItem key={item.id} item={{ ...item, typeLabel: "" }} onDragStart={onDragStart} />
+							))}
+						</Box>
+					</DisclosureContent>
+				</Disclosure>
 			</Box>
 
 			<CreateFieldModal
