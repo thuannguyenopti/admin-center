@@ -1189,8 +1189,8 @@ export default function VAUDetailPage() {
 							<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 20, fontWeight: 600, lineHeight: "1.1", letterSpacing: "0.4px", color: "#202320" }}>
 								My pitch
 							</Text>
-							<Text fontSize="sm" color="fg.tertiary">
-								{vau.pitchSubcopy ?? "Here's how Randy's will make your week easier."}
+							<Text fontSize="md" color="fg.tertiary" style={{ lineHeight: "1.5", letterSpacing: "0.32px" }}>
+								{vau.pitchSubcopy ?? "Here's how Randy's will make your week easier"}
 							</Text>
 						</Box>
 						<Box display="flex" gap="16">
@@ -1223,7 +1223,7 @@ export default function VAUDetailPage() {
 							<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 20, fontWeight: 600, lineHeight: "1.1", letterSpacing: "0.4px", color: "#202320" }}>
 								What I do
 							</Text>
-							<Text fontSize="sm" color="fg.tertiary">
+							<Text fontSize="md" color="fg.tertiary" style={{ lineHeight: "1.5", letterSpacing: "0.32px" }}>
 								Things {vau.characterName ?? vau.name} handles on your behalf
 							</Text>
 						</Box>
