@@ -916,10 +916,11 @@ export default function VAUDetailPage() {
 						style={{
 							fontFamily: "var(--ax-font-family-headings)",
 							fontSize: 36,
-							fontWeight: 900,
+							fontWeight: 800,
 							lineHeight: "1.1",
 							letterSpacing: "0.5px",
 							color: "#202320",
+							WebkitTextStroke: "1px #202320",
 							marginBottom: 8,
 							display: "block",
 						}}
@@ -963,6 +964,7 @@ export default function VAUDetailPage() {
 						<Button
 							appearance="primary"
 							size="lg"
+							disabled={!pickerSelected}
 							onClick={() => {
 								if (pickerSelected) setCustomAvatar(pickerSelected);
 								setPickerSelected(null);
