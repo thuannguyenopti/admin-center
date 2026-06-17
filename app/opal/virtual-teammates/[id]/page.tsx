@@ -621,6 +621,66 @@ function DailyBriefingPanel({ onClose }: { onClose: () => void }) {
 	);
 }
 
+const PICKER_AVATARS = [
+	{ src: "/avatars/vau-frank.png", bg: "#FAF6E8" },
+	{ src: "/avatars/bub.png",       bg: "#E0F0F8" },
+	{ src: "/avatars/bike.png",      bg: "#F5EDE0" },
+	{ src: "/avatars/tat.png",       bg: "#F0EBF8" },
+	{ src: "/avatars/rat.png",       bg: "#FDF4F0" },
+	{ src: "/avatars/vau-henry.png", bg: "#F5F0E8" },
+	{ src: "/avatars/vau-tony.png",  bg: "#E4F3EC" },
+	{ src: "/avatars/vau-kerby.png", bg: "#F5EBF8" },
+	{ src: "/avatars/vau-mayling.png", bg: "#F0F5E8" },
+	{ src: "/avatars/vau-poppy.png", bg: "#F0E8F8" },
+];
+
+function AvatarPickerCard({
+	avatar,
+	isSelected,
+	onClick,
+}: {
+	avatar: { src: string; bg: string };
+	isSelected: boolean;
+	onClick: () => void;
+}) {
+	const [hovered, setHovered] = useState(false);
+	return (
+		<Box
+			onClick={onClick}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+			style={{
+				position: "relative",
+				borderRadius: 12,
+				overflow: "hidden",
+				cursor: "pointer",
+				border: isSelected ? "2.5px solid #14B8A6" : "2.5px solid transparent",
+				backgroundColor: avatar.bg,
+				aspectRatio: "1 / 1",
+				transition: "border-color 0.15s ease",
+			}}
+		>
+			<Image
+				src={avatar.src}
+				alt=""
+				fill
+				unoptimized
+				style={{ objectFit: "cover" }}
+			/>
+			{!isSelected && (
+				<Box
+					style={{
+						position: "absolute",
+						inset: 0,
+						background: hovered ? "rgba(0,0,0,0.08)" : "rgba(0,0,0,0.32)",
+						transition: "background 0.15s ease",
+					}}
+				/>
+			)}
+		</Box>
+	);
+}
+
 export default function VAUDetailPage() {
 	const params = useParams<{ id: string }>();
 	const router = useRouter();
@@ -632,6 +692,9 @@ export default function VAUDetailPage() {
 	const [showToolConnect, setShowToolConnect] = useState(false);
 	const [vauName, setVauName] = useState("");
 	const [connectedTools, setConnectedTools] = useState<Set<string>>(new Set());
+	const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+	const [pickerSelected, setPickerSelected] = useState<{ src: string; bg: string } | null>(null);
+	const [customAvatar, setCustomAvatar] = useState<{ src: string; bg: string } | null>(null);
 
 	const vau = useMemo(() => VAUS.find((v) => v.id === params?.id), [params?.id]);
 	const candidates = useMemo<VAUCandidate[]>(() => {
@@ -833,10 +896,93 @@ export default function VAUDetailPage() {
 		);
 	}
 
+	// ─── Avatar picker ────────────────────────────────────────────────────────────
+	if (showOnboarding && showAvatarPicker) {
+		return (
+			<Box
+				style={{
+					background: "#F9FCF8",
+					height: "100%",
+					display: "flex",
+					flexDirection: "column",
+					alignItems: "center",
+					justifyContent: "center",
+					padding: "40px 48px",
+				}}
+			>
+				<Box style={{ width: "100%", maxWidth: 1100 }}>
+					{/* Title */}
+					<Text
+						style={{
+							fontFamily: "var(--ax-font-family-headings)",
+							fontSize: 36,
+							fontWeight: 800,
+							lineHeight: "1.1",
+							letterSpacing: "0.5px",
+							color: "#202320",
+							marginBottom: 8,
+							display: "block",
+						}}
+					>
+						Every teammate needs a look.
+					</Text>
+					<Text
+						color="fg.secondary"
+						style={{ fontSize: 16, lineHeight: "1.5", display: "block", marginBottom: 32 }}
+					>
+						Pick an avatar for your new co-worker.
+					</Text>
+
+					{/* Grid */}
+					<Box
+						style={{
+							display: "grid",
+							gridTemplateColumns: "repeat(5, 1fr)",
+							gap: 12,
+						}}
+					>
+						{PICKER_AVATARS.map((avatar) => (
+							<AvatarPickerCard
+								key={avatar.src}
+								avatar={avatar}
+								isSelected={(pickerSelected?.src ?? (customAvatar?.src ?? vau.avatar)) === avatar.src}
+								onClick={() => setPickerSelected(avatar)}
+							/>
+						))}
+					</Box>
+
+					{/* Actions */}
+					<Box display="flex" justifyContent="flex-end" gap="8" style={{ marginTop: 32 }}>
+						<Button
+							size="lg"
+							icon={<IconArrowLeft size={16} />}
+							onClick={() => { setPickerSelected(null); setShowAvatarPicker(false); }}
+						>
+							Go back
+						</Button>
+						<Button
+							appearance="primary"
+							size="lg"
+							onClick={() => {
+								if (pickerSelected) setCustomAvatar(pickerSelected);
+								setPickerSelected(null);
+								setShowAvatarPicker(false);
+							}}
+						>
+							Save appearance
+						</Button>
+					</Box>
+				</Box>
+			</Box>
+		);
+	}
+
 	// ─── Onboarding flow ─────────────────────────────────────────────────────────
 	if (showOnboarding) {
 		const displayName = vauName.trim() || vau.characterName || vau.name;
 		const suggestions = candidates.map((c) => c.characterName ?? c.name).filter(Boolean);
+		const displayAvatarSrc = customAvatar?.src ?? vau.avatar;
+		const displayAvatarBg = customAvatar?.bg ?? vau.avatarBg;
 
 		const KeyHandoffOverlay = showKeyHandoff ? (
 			<Box
@@ -937,11 +1083,11 @@ export default function VAUDetailPage() {
 										borderRadius: 12,
 										overflow: "hidden",
 										border: "1px solid var(--ax-colors-border-default)",
-										backgroundColor: vau.avatarBg,
+										backgroundColor: displayAvatarBg,
 									}}
 								>
 									<Image
-										src={vau.avatar}
+										src={displayAvatarSrc}
 										alt={vau.name}
 										width={139}
 										height={153}
@@ -950,12 +1096,14 @@ export default function VAUDetailPage() {
 									/>
 								</Box>
 								<Box
+									onClick={() => setShowAvatarPicker(true)}
 									style={{
 										position: "absolute", top: -8, right: -16,
 										width: 40, height: 40, borderRadius: "50%",
 										background: "white",
 										border: "1px solid var(--ax-colors-border-default)",
 										display: "flex", alignItems: "center", justifyContent: "center",
+										cursor: "pointer",
 									}}
 								>
 									<IconPen size={14} style={{ color: "var(--ax-colors-fg-secondary)" }} />
