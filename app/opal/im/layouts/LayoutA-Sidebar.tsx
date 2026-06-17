@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Box, Button, Text, Tooltip } from "@optiaxiom/react";
 import { IconXmark, IconCode, IconArrowsMaximize, IconArrowUpRightFromSquare, IconEye, IconArrowRotateLeft, IconArrowRotateRight, IconCopy } from "@optiaxiom/icons";
@@ -419,6 +419,56 @@ export function LayoutASidebar() {
     return null;
   });
 
+  const [suggestionSent, setSuggestionSent] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [localSuggestionMsgs, setLocalSuggestionMsgs] = useState<any[]>([]);
+
+  const sendSuggestion = useCallback((text: string, key: string) => {
+    if (suggestionSent) return;
+    setSuggestionSent(key);
+    const userMsg = {
+      id: `sugg-user-${key}`,
+      role: "user" as const,
+      content: text,
+      timestamp: Date.now(),
+      metadata: { imMode: true, authorName: "You", authorInlineAvatar: false, isVAU: false },
+    };
+    setLocalSuggestionMsgs([userMsg]);
+    const RESPONSES: Record<string, { content: string; cardKey: string }> = {
+      prioritize: {
+        content: "Here's your priority stack for today — ranked by deadlines, dependencies, and your calendar gaps.",
+        cardKey: "sugg-prioritize-card",
+      },
+      delegate: {
+        content: "What do you want off your plate? Pick one and I'll take it from here.",
+        cardKey: "sugg-delegate-card",
+      },
+      calendar: {
+        content: "Done. Here's your week blocked out — I've protected focus time and moved the non-urgent calls.",
+        cardKey: "sugg-calendar-card",
+      },
+    };
+    const r = RESPONSES[key];
+    if (!r) return;
+    setTimeout(() => {
+      const randyMsg = {
+        id: `sugg-randy-${key}`,
+        role: "assistant" as const,
+        content: r.content,
+        timestamp: Date.now() + 1,
+        cardAfterKey: r.cardKey,
+        metadata: {
+          imMode: true,
+          authorName: frankWelcome?.name ?? "Randy",
+          authorAvatar: frankWelcome?.avatar ?? "/avatars/vau-frank.png",
+          authorInlineAvatar: true,
+          isVAU: true,
+        },
+      };
+      setLocalSuggestionMsgs((prev) => [...prev, randyMsg]);
+    }, 1400);
+  }, [suggestionSent, frankWelcome]);
+
   // The Tony killswitch confirmation flow is "still pending" whenever Tony's
   // DM is in the conversation list AND the last message there is still Tony's
   // pre-confirmation prompt (msg-vt3 / "Got it — killing the test now..."),
@@ -523,8 +573,9 @@ export function LayoutASidebar() {
         };
       }
     }
-    return msgs;
-  }, [messages, profiles, showGeoQaCard, showFrankWelcome, frankWelcome]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return [...msgs, ...localSuggestionMsgs] as typeof msgs;
+  }, [messages, profiles, showGeoQaCard, showFrankWelcome, frankWelcome, localSuggestionMsgs]);
 
   // Derive IM header props from the selected conversation.
   const selectedConv = conversations.find((c) => c.conversation_id === selectedId);
@@ -712,44 +763,171 @@ export function LayoutASidebar() {
 
   const frankWelcomeCards = useMemo(() => {
     if (selectedId !== FRANK_DM_CONV_ID) return undefined;
+
+    const SUGGESTION_CHIPS = [
+      { key: "prioritize", label: "Tell me what to prioritize first" },
+      { key: "delegate", label: "Hand some work off to me" },
+      { key: "calendar", label: "Set up my week around these priorities" },
+    ];
+
+    const PRIORITY_ITEMS = [
+      { rank: "1", color: "#E85D2F", title: "Q3 Brief — Sarah's waiting", meta: "Due today · Deadline risk" },
+      { rank: "2", color: "#E8A52F", title: "Standup prep", meta: "3 open items from last week" },
+      { rank: "3", color: "#5BA85A", title: "Campaign assets review", meta: "2 overdue · team nudged" },
+    ];
+
+    const DELEGATE_TASKS = [
+      { emoji: "📝", title: "Draft stakeholder update", due: "Due Thursday" },
+      { emoji: "📧", title: "Follow up with Sarah on Q3 brief", due: "Overdue" },
+      { emoji: "📅", title: "Prep Tuesday standup agenda", due: "Tomorrow 9 AM" },
+    ];
+
+    const CALENDAR_ROWS = [
+      { day: "Mon", label: "Focus block", type: "focus" },
+      { day: "Tue", label: "Q3 review + 1:1s", type: "busy" },
+      { day: "Wed", label: "Deep work + Glossier review", type: "mixed" },
+      { day: "Thu", label: "Light — buffer day", type: "light" },
+      { day: "Fri", label: "Weekly wrap-up", type: "focus" },
+    ];
+    const CAL_COLOR: Record<string, string> = { focus: "#D8E4CB", busy: "#FDEDB0", mixed: "#E2EEF7", light: "#F0F0F0" };
+
+    const cardStyle: React.CSSProperties = {
+      background: "var(--ax-colors-bg-default)",
+      border: "1px solid var(--ax-colors-border-default)",
+      borderRadius: 12,
+      padding: 20,
+      maxWidth: 480,
+    };
+    const monoLabel: React.CSSProperties = {
+      fontFamily: "Roboto Mono, monospace",
+      fontSize: 11,
+      textTransform: "uppercase",
+      letterSpacing: "0.36px",
+      color: "var(--ax-colors-fg-tertiary)",
+      display: "block",
+      marginBottom: 14,
+    };
+
     return {
       "frank-welcome-brief": (
-        <Box
-          style={{
-            background: "var(--ax-colors-bg-default)",
-            border: "1px solid var(--ax-colors-border-default)",
-            borderRadius: 12,
-            padding: 20,
-            maxWidth: 560,
-          }}
-        >
+        <Box style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* Brief card */}
           <Box
             style={{
-              width: "100%",
-              borderRadius: 6,
-              overflow: "hidden",
-              marginBottom: 16,
+              background: "var(--ax-colors-bg-default)",
+              border: "1px solid var(--ax-colors-border-default)",
+              borderRadius: 12,
+              padding: 20,
             }}
           >
-            <img
-              src="/avatars/daily-brief.png"
-              alt="Daily brief"
-              style={{ width: "100%", height: "auto", display: "block" }}
-            />
+            <Box style={{ width: "100%", borderRadius: 6, overflow: "hidden", marginBottom: 16 }}>
+              <img
+                src="/avatars/daily-brief.png"
+                alt="Daily brief"
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </Box>
+            <Box display="flex" justifyContent="flex-end" gap="8">
+              <Button size="md" addonAfter={<span style={{ fontSize: 12 }}>▾</span>}>
+                Download
+              </Button>
+              <Button appearance="primary" size="md" onClick={() => setBriefOpen(true)}>
+                Open brief
+              </Button>
+            </Box>
           </Box>
-          <Box display="flex" justifyContent="flex-end" gap="8">
-            <Button size="md" addonAfter={<span style={{ fontSize: 12 }}>▾</span>}>
-              Download
-            </Button>
-            <Button appearance="primary" size="md" onClick={() => setBriefOpen(true)}>
-              Open brief
-            </Button>
+
+          {/* Suggestion chips — hidden once a chip is clicked */}
+          {!suggestionSent && (
+            <Box style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <Text style={{ fontFamily: "Roboto Mono, monospace", fontSize: 11, textTransform: "uppercase" as const, letterSpacing: "0.36px", color: "var(--ax-colors-fg-tertiary)" }}>
+                What would you like to do next?
+              </Text>
+              {SUGGESTION_CHIPS.map((chip) => (
+                <Box
+                  key={chip.key}
+                  onClick={() => sendSuggestion(chip.label, chip.key)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "9px 14px",
+                    borderRadius: 10,
+                    border: "1px solid var(--ax-colors-border-default)",
+                    background: "var(--ax-colors-bg-default)",
+                    cursor: "pointer",
+                    fontSize: 14,
+                    color: "var(--ax-colors-fg-default)",
+                    fontWeight: 400,
+                    lineHeight: "1.5",
+                    transition: "background 0.1s ease",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "var(--ax-colors-bg-secondary)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "var(--ax-colors-bg-default)"; }}
+                >
+                  {chip.label}
+                </Box>
+              ))}
+            </Box>
+          )}
+        </Box>
+      ),
+
+      "sugg-prioritize-card": (
+        <Box style={cardStyle}>
+          <Text style={monoLabel}>TODAY'S PRIORITY STACK</Text>
+          {PRIORITY_ITEMS.map((item, i) => (
+            <Box key={item.rank} display="flex" alignItems="center" gap="12" style={{ padding: "10px 0", borderBottom: i < 2 ? "1px solid var(--ax-colors-border-secondary)" : "none" }}>
+              <Box style={{ width: 26, height: 26, borderRadius: 6, background: item.color + "22", border: `1px solid ${item.color}55`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: item.color, flexShrink: 0 }}>
+                {item.rank}
+              </Box>
+              <Box style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: 500, display: "block" }}>{item.title}</Text>
+                <Text style={{ fontSize: 12, color: "var(--ax-colors-fg-tertiary)", display: "block" }}>{item.meta}</Text>
+              </Box>
+            </Box>
+          ))}
+          <Box display="flex" justifyContent="flex-end" style={{ marginTop: 14 }}>
+            <Button appearance="primary" size="md">Start with #1</Button>
+          </Box>
+        </Box>
+      ),
+
+      "sugg-delegate-card": (
+        <Box style={cardStyle}>
+          <Text style={monoLabel}>PICK SOMETHING TO HAND OFF</Text>
+          {DELEGATE_TASKS.map((task, i) => (
+            <Box key={task.title} display="flex" alignItems="center" gap="12" style={{ padding: "10px 0", borderBottom: i < 2 ? "1px solid var(--ax-colors-border-secondary)" : "none" }}>
+              <Text style={{ fontSize: 18, flexShrink: 0, lineHeight: 1 }}>{task.emoji}</Text>
+              <Box style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: 500, display: "block" }}>{task.title}</Text>
+                <Text style={{ fontSize: 12, color: "var(--ax-colors-fg-tertiary)", display: "block" }}>{task.due}</Text>
+              </Box>
+              <Button size="sm">Assign →</Button>
+            </Box>
+          ))}
+        </Box>
+      ),
+
+      "sugg-calendar-card": (
+        <Box style={cardStyle}>
+          <Text style={monoLabel}>WEEK OF JUNE 17</Text>
+          {CALENDAR_ROWS.map((row) => (
+            <Box key={row.day} display="flex" alignItems="center" gap="12" style={{ marginBottom: 8 }}>
+              <Text style={{ fontSize: 12, fontFamily: "Roboto Mono, monospace", width: 32, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }}>{row.day}</Text>
+              <Box style={{ flex: 1, height: 28, borderRadius: 6, background: CAL_COLOR[row.type], display: "flex", alignItems: "center", padding: "0 10px" }}>
+                <Text style={{ fontSize: 13, fontWeight: 500, color: "#202320" }}>{row.label}</Text>
+              </Box>
+            </Box>
+          ))}
+          <Box display="flex" gap="8" justifyContent="flex-end" style={{ marginTop: 14 }}>
+            <Button size="md">Adjust</Button>
+            <Button appearance="primary" size="md">Looks good</Button>
           </Box>
         </Box>
       ),
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, setBriefOpen]);
+  }, [selectedId, setBriefOpen, suggestionSent, sendSuggestion]);
 
   const mentionableAgents = useMemo(
     () =>
