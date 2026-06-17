@@ -17,6 +17,7 @@ export type VAU = {
 	avatarBg: string;
 	status: "active" | "draft";
 	isNew?: boolean;
+	isCandidate?: boolean;
 	description: string;
 	longDescription?: string;
 	pitchSubcopy?: string;
@@ -207,6 +208,7 @@ export const VAUS: VAU[] = [
 		name: "Chief of Staff",
 		characterName: "Fin",
 		templateName: "GEO Content Strategist",
+		isCandidate: true,
 		traits: ["Methodical", "Data-driven", "Quietly relentless"],
 		email: "fin@vau.opal-localdev.inte.opal.optimizely.com",
 		avatar: "/avatars/bub.png",

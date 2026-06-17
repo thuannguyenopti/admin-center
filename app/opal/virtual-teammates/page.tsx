@@ -29,7 +29,7 @@ import { VAUCard } from "./VAUCard";
 // ── Browse sidebar ─────────────────────────────────────────────────────────────
 
 const BROWSE_ITEMS = [
-  { label: "Virtual Teammates", count: VAUS.length, active: true },
+  { label: "Virtual Teammates", count: VAUS.filter((v) => !v.isCandidate).length, active: true },
   { label: "Agents",            count: 48 },
   { label: "Plugins",           count: 12 },
   { label: "Skills",            count: 30 },
@@ -128,8 +128,9 @@ export default function VirtualTeammatesPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return VAUS;
-    return VAUS.filter(
+    const base = VAUS.filter((vau) => !vau.isCandidate);
+    if (!q) return base;
+    return base.filter(
       (vau) =>
         vau.name.toLowerCase().includes(q) ||
         vau.templateName.toLowerCase().includes(q) ||
