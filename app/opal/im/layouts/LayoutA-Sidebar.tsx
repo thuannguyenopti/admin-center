@@ -547,9 +547,14 @@ export function LayoutASidebar() {
           dms.unshift(item);
         }
       }
+      // Override Frank DM avatar with the custom one chosen in the onboarding picker
+      if (frankWelcome?.avatar) {
+        const frankItem = dms.find((i) => i.id === FRANK_DM_CONV_ID);
+        if (frankItem) frankItem.avatarUrl = frankWelcome.avatar;
+      }
     }
     return grouped;
-  }, [conversations, profiles, tonyFlowPending, henryFlowPending, geoQaFlowPending]);
+  }, [conversations, profiles, tonyFlowPending, henryFlowPending, geoQaFlowPending, frankWelcome]);
 
   const showFrankWelcome = selectedId === FRANK_DM_CONV_ID;
 
@@ -585,7 +590,9 @@ export function LayoutASidebar() {
   );
   const imIsVAU = selectedItem?.isVAU ?? false;
   const imIsChannel = selectedItem?.isChannel ?? false;
-  const imThreadAvatar = selectedItem?.avatarUrl;
+  const imThreadAvatar = (showFrankWelcome && frankWelcome?.avatar)
+    ? frankWelcome.avatar
+    : selectedItem?.avatarUrl;
   const imTemplateName = selectedItem?.vauTemplateName;
   const imThreadName = selectedConv
     ? (selectedConv.name ??
