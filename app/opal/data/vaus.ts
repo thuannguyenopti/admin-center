@@ -4,7 +4,7 @@
 export type VAUTag = { label: string; bg: string; color: string };
 export type VAUAgent = { emoji: string; handle: string };
 export type VAUExample = { emoji: string; title: string; frequency: string; description?: string };
-export type VAUCandidate = { avatar: string; avatarBg: string; name: string; characterName?: string };
+export type VAUCandidate = { avatar: string; avatarBg: string; name: string; characterName?: string; id?: string };
 
 export type VAU = {
 	id: string;
@@ -19,6 +19,9 @@ export type VAU = {
 	isNew?: boolean;
 	description: string;
 	longDescription?: string;
+	pitchSubcopy?: string;
+	kpi1?: { label: string; value: string; sub: string; subGreen?: boolean };
+	kpi4?: { label: string; value: string; sub: string };
 	tags: VAUTag[];
 	agents: VAUAgent[];
 	tools: string[];
@@ -188,7 +191,46 @@ export const VAUS: VAU[] = [
 		candidates: [
 			{ avatar: "/avatars/tat.png",     avatarBg: "#F0EBF8", name: "Chief of Staff", characterName: "Iris" },
 			{ avatar: "/avatars/bike.png",    avatarBg: "#F5EDE0", name: "Chief of Staff", characterName: "Pip" },
-			{ avatar: "/avatars/bub.png",     avatarBg: "#E0F0F8", name: "Chief of Staff", characterName: "Fin" },
+			{ avatar: "/avatars/bub.png",     avatarBg: "#E0F0F8", name: "Chief of Staff", characterName: "Fin", id: "fin" },
+		],
+		examples: [
+			{ emoji: "📅", title: "Daily briefing", frequency: "First thing in the morning", description: "I'll round up overnight changes, your day's calendar, and what needs you first — so you start the day knowing where to focus. In addition to that I can do much more!" },
+			{ emoji: "👋", title: "Status nudges", frequency: "Sent when things stall", description: "I'll quietly nudge when a thread goes quiet or a commitment slips — to the right person, with the right context, at exactly the right moment. In addition to that I can do much more!" },
+			{ emoji: "✅", title: "Action item tracking", frequency: "Updated in real time", description: "I'll catch commitments from meetings, emails, and chats — and keep a running list of what's owed, who owes it, and when it's due. In addition to that I can do much more!" },
+			{ emoji: "📊", title: "Weekly recap", frequency: "Fridays at 4pm", description: "Every Friday, I'll recap what got done, what didn't, and what's worth sharing up in your team update — so nothing gets lost between meetings. In addition to that I can do much more!" },
+			{ emoji: "🗺️", title: "Stakeholder map", frequency: "Per initiative", description: "I'll map who owns what and flag who needs to be in the loop — so nothing stalls because the wrong person wasn't in the room. In addition to that I can do much more!" },
+			{ emoji: "⚡", title: "Meeting prep brief", frequency: "1 hour before", description: "I'll pull together the context, relevant docs, and open items before any important meeting — so you walk in prepared, not scrambling. In addition to that I can do much more!" },
+		],
+	},
+	{
+		id: "fin",
+		name: "Chief of Staff",
+		characterName: "Fin",
+		templateName: "GEO Content Strategist",
+		traits: ["Methodical", "Data-driven", "Quietly relentless"],
+		email: "fin@vau.opal-localdev.inte.opal.optimizely.com",
+		avatar: "/avatars/bub.png",
+		avatarBg: "#E0F0F8",
+		status: "draft",
+		description: "Systematic by default, relentless by design. Fin tracks every commitment, surfaces blockers before they land on your desk, and keeps the weekly rhythm so nothing slips through the cracks.",
+		pitchSubcopy: "Here's how Fin keeps your operation airtight.",
+		kpi1: { label: "Blockers surfaced", value: "3x", sub: "Before they hit your desk" },
+		kpi4: { label: "Hours freed", value: "5 more hrs", sub: "To actually leave at 5" },
+		tags: [
+			{ label: "Ops strategy", bg: "#fdf4ff", color: "#701a75" },
+			{ label: "Risk mgmt", bg: "#fffaea", color: "#7a2e0d" },
+			{ label: "Alignment", bg: "#e9f7f1", color: "#17492b" },
+		],
+		agents: [
+			{ emoji: "📊", handle: "@ops_tracker" },
+			{ emoji: "🔍", handle: "@blocker_radar" },
+			{ emoji: "⚡", handle: "@rhythm_agent" },
+		],
+		tools: ["opti-cms", "google", "notion", "slack", "asana", "figma"],
+		candidates: [
+			{ avatar: "/avatars/vau-frank.png", avatarBg: "#FAF6E8", name: "Chief of Staff", characterName: "Randy", id: "frank" },
+			{ avatar: "/avatars/tat.png",       avatarBg: "#F0EBF8", name: "Chief of Staff", characterName: "Iris" },
+			{ avatar: "/avatars/bike.png",      avatarBg: "#F5EDE0", name: "Chief of Staff", characterName: "Pip" },
 		],
 		examples: [
 			{ emoji: "📅", title: "Daily briefing", frequency: "First thing in the morning", description: "I'll round up overnight changes, your day's calendar, and what needs you first — so you start the day knowing where to focus. In addition to that I can do much more!" },

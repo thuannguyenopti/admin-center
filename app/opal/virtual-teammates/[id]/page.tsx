@@ -1073,7 +1073,7 @@ export default function VAUDetailPage() {
 								<CandidateThumbnail
 									key={c.characterName ?? c.name}
 									candidate={c}
-									onClick={() => {}}
+									onClick={() => { if (c.id) router.push(`/opal/virtual-teammates/${c.id}`); }}
 								/>
 							))}
 						</Box>
@@ -1094,14 +1094,14 @@ export default function VAUDetailPage() {
 								My pitch
 							</Text>
 							<Text fontSize="sm" color="fg.tertiary">
-								{"Here's how Randy's will make your week easier."}
+								{vau.pitchSubcopy ?? "Here's how Randy's will make your week easier."}
 							</Text>
 						</Box>
 						<Box display="flex" gap="16">
 							<KpiCard
-								label="Never drops the ball"
-								value="Zero"
-								sub="Missed follow-ups since forever"
+								label={vau.kpi1?.label ?? "Never drops the ball"}
+								value={vau.kpi1?.value ?? "Zero"}
+								sub={vau.kpi1?.sub ?? "Missed follow-ups since forever"}
 							/>
 							<KpiCard label="Runs" value="24/7" sub="No days off, no OOO" />
 							<KpiCard
@@ -1110,7 +1110,11 @@ export default function VAUDetailPage() {
 								sub="On day one"
 								toolKeys={vau.tools}
 							/>
-							<KpiCard label="Time back" value="6 more hrs" sub="To cuddle your cat" />
+							<KpiCard
+								label={vau.kpi4?.label ?? "Time back"}
+								value={vau.kpi4?.value ?? "6 more hrs"}
+								sub={vau.kpi4?.sub ?? "To cuddle your cat"}
+							/>
 						</Box>
 					</Box>
 
@@ -1124,7 +1128,7 @@ export default function VAUDetailPage() {
 								What I do
 							</Text>
 							<Text fontSize="sm" color="fg.tertiary">
-								Things Randy handles on your behalf
+								Things {vau.characterName ?? vau.name} handles on your behalf
 							</Text>
 						</Box>
 						<Box
