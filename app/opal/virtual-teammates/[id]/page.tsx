@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Badge, Box, Button, Field, Input, Text, Tooltip } from "@optiaxiom/react";
-import { IconArrowLeft, IconArrowRight, IconArrowRightArrowLeft, IconCheckCircleSolid, IconChevronRight, IconCircleInfo, IconComments, IconPen, IconXmark } from "@optiaxiom/icons";
+import { IconArrowLeft, IconArrowRight, IconArrowRightArrowLeft, IconCheckCircleSolid, IconChevronLeft, IconChevronRight, IconCircleInfo, IconComments, IconPen, IconXmark } from "@optiaxiom/icons";
 import Image from "next/image";
 import { DEFAULT_VAU_EXAMPLES, VAUS, type VAU, type VAUCandidate, type VAUExample } from "@/app/opal/data/vaus";
 import { TOOL_ICONS } from "../tool-icons";
@@ -155,7 +155,7 @@ function KpiCard({
 				style={{
 					fontFamily: "var(--ax-font-family-headings)",
 					fontSize: 28,
-					fontWeight: 800,
+					fontWeight: 900,
 					lineHeight: "1.04",
 					letterSpacing: "0.56px",
 					color: "#226b1e",
@@ -346,7 +346,73 @@ function PanelDivider() {
 	);
 }
 
+const BRIEFING_CARDS = [
+	{ emoji: "📅", title: "Tuesday standup", body: "3 open items from last week — I've flagged them for you." },
+	{ emoji: "✉️", title: "Sarah needs sign-off", body: "On the Q3 brief. Marked urgent, reply drafted and waiting." },
+	{ emoji: "⚡", title: "2 assets overdue", body: "I nudged the team. Both confirmed EOD." },
+];
+
+function BriefingActionCards({ animKey }: { animKey: number }) {
+	return (
+		<Box
+			style={{
+				width: "100%",
+				height: "100%",
+				backgroundImage: "url('/avatars/nature4.png')",
+			backgroundSize: "cover",
+			backgroundPosition: "center",
+				display: "flex",
+				flexDirection: "column",
+				alignItems: "center",
+				justifyContent: "center",
+				gap: 12,
+				padding: "28px 28px",
+			}}
+		>
+			{BRIEFING_CARDS.map((card, i) => (
+				<Box
+					key={`${animKey}-${i}`}
+					style={{
+						width: "100%",
+						background: "rgba(0,0,0,0.55)",
+						border: "1px solid rgba(255,255,255,0.18)",
+						borderRadius: 12,
+						padding: "14px 16px",
+						display: "flex",
+						gap: 12,
+						alignItems: "flex-start",
+						opacity: 0,
+						animation: `brief-card-in 0.4s cubic-bezier(0.34,1.56,0.64,1) ${i * 320 + 150}ms forwards`,
+					}}
+				>
+					<span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{card.emoji}</span>
+					<Box>
+						<Box style={{ fontSize: 13, fontWeight: 600, color: "#e8f5e8", lineHeight: 1.3, marginBottom: 4 }}>
+							{card.title}
+						</Box>
+						<Box style={{ fontSize: 12, color: "rgba(232,245,232,0.6)", lineHeight: 1.5 }}>
+							{card.body}
+						</Box>
+					</Box>
+				</Box>
+			))}
+			<style>{`
+				@keyframes brief-card-in {
+					from { opacity: 0; transform: translateY(10px) scale(0.96); }
+					to   { opacity: 1; transform: translateY(0)   scale(1); }
+				}
+			`}</style>
+		</Box>
+	);
+}
+
+const BRIEFING_SLIDES = [
+	{ component: true },
+	{ src: "https://www.figma.com/api/mcp/asset/1945ccb0-b55f-4ab9-a0ae-cd8c7efaa09e", alt: "Your morning priorities, served fresh" },
+];
+
 function DailyBriefingPanel({ onClose }: { onClose: () => void }) {
+	const [slide, setSlide] = useState(0);
 	return (
 		<>
 			{/* Backdrop */}
@@ -414,7 +480,7 @@ function DailyBriefingPanel({ onClose }: { onClose: () => void }) {
 					you today.
 				</Text>
 
-				{/* Preview image */}
+				{/* Slideshow */}
 				<Box
 					style={{
 						position: "relative",
@@ -425,30 +491,59 @@ function DailyBriefingPanel({ onClose }: { onClose: () => void }) {
 						flexShrink: 0,
 					}}
 				>
-					<img
-						src="https://www.figma.com/api/mcp/asset/1945ccb0-b55f-4ab9-a0ae-cd8c7efaa09e"
-						alt="Daily briefing preview"
-						style={{ width: "100%", height: "100%", objectFit: "cover" }}
-					/>
-					{/* Next arrow */}
-					<Box
-						style={{
-							position: "absolute",
-							top: "50%",
-							right: 8,
-							transform: "translateY(-50%)",
-							background: "rgba(57,62,50,0.32)",
-							borderRadius: 21,
-							width: 42,
-							height: 42,
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-							cursor: "pointer",
-						}}
-					>
-						<IconChevronRight size={18} style={{ color: "white" }} />
-					</Box>
+					{BRIEFING_SLIDES[slide].component
+						? <BriefingActionCards animKey={slide} />
+						: <img
+							key={slide}
+							src={BRIEFING_SLIDES[slide].src}
+							alt={BRIEFING_SLIDES[slide].alt}
+							style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+						/>
+					}
+					{/* Back arrow — only on slide > 0 */}
+					{slide > 0 && (
+						<Box
+							onClick={() => setSlide(slide - 1)}
+							style={{
+								position: "absolute",
+								top: "50%",
+								left: 8,
+								transform: "translateY(-50%)",
+								background: "rgba(57,62,50,0.32)",
+								borderRadius: 21,
+								width: 42,
+								height: 42,
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								cursor: "pointer",
+							}}
+						>
+							<IconChevronLeft size={18} style={{ color: "white" }} />
+						</Box>
+					)}
+					{/* Next arrow — only before last slide */}
+					{slide < BRIEFING_SLIDES.length - 1 && (
+						<Box
+							onClick={() => setSlide(slide + 1)}
+							style={{
+								position: "absolute",
+								top: "50%",
+								right: 8,
+								transform: "translateY(-50%)",
+								background: "rgba(57,62,50,0.32)",
+								borderRadius: 21,
+								width: 42,
+								height: 42,
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								cursor: "pointer",
+							}}
+						>
+							<IconChevronRight size={18} style={{ color: "white" }} />
+						</Box>
+					)}
 				</Box>
 
 				<PanelDivider />
