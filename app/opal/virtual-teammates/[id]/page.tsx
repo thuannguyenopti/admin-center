@@ -408,7 +408,6 @@ function BriefingActionCards({ animKey }: { animKey: number }) {
 
 const BRIEFING_SLIDES = [
 	{ component: true },
-	{ src: "https://www.figma.com/api/mcp/asset/1945ccb0-b55f-4ab9-a0ae-cd8c7efaa09e", alt: "Your morning priorities, served fresh" },
 ];
 
 function DailyBriefingPanel({ onClose }: { onClose: () => void }) {
@@ -522,28 +521,30 @@ function DailyBriefingPanel({ onClose }: { onClose: () => void }) {
 							<IconChevronLeft size={18} style={{ color: "white" }} />
 						</Box>
 					)}
-					{/* Next arrow — only before last slide */}
-					{slide < BRIEFING_SLIDES.length - 1 && (
-						<Box
-							onClick={() => setSlide(slide + 1)}
-							style={{
-								position: "absolute",
-								top: "50%",
-								right: 8,
-								transform: "translateY(-50%)",
-								background: "rgba(57,62,50,0.32)",
-								borderRadius: 21,
-								width: 42,
-								height: 42,
-								display: "flex",
-								alignItems: "center",
-								justifyContent: "center",
-								cursor: "pointer",
-							}}
-						>
-							<IconChevronRight size={18} style={{ color: "white" }} />
-						</Box>
-					)}
+					{/* Pagination dots */}
+					<Box
+						style={{
+							position: "absolute",
+							bottom: 12,
+							left: "50%",
+							transform: "translateX(-50%)",
+							display: "flex",
+							gap: 6,
+						}}
+					>
+						{[0, 1, 2].map((i) => (
+							<Box
+								key={i}
+								style={{
+									width: i === 0 ? 20 : 6,
+									height: 6,
+									borderRadius: 3,
+									background: i === 0 ? "white" : "rgba(255,255,255,0.35)",
+									transition: "width 0.2s ease",
+								}}
+							/>
+						))}
+					</Box>
 				</Box>
 
 				<PanelDivider />
