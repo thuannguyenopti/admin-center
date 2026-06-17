@@ -1,321 +1,1158 @@
 "use client";
 
-import { Badge, Box, Button, Tooltip } from "@optiaxiom/react";
-import { Text } from "@/app/components/Text";
-import {
-	IconBook,
-	IconArrowRight,
-	IconArrowLeft,
-	IconPen,
-	IconPlus,
-	IconFileLines,
-	IconFilePdf,
-	IconFileWord,
-	IconGear,
-} from "@optiaxiom/icons";
-import Image from "next/image";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useMemo } from "react";
-import { DEFAULT_VAU_EXAMPLES, VAUS, type VAU, type VAUExample } from "@/app/opal/data/vaus";
+import { useMemo, useState } from "react";
+import { Badge, Box, Button, Field, Input, Text, Tooltip } from "@optiaxiom/react";
+import { IconArrowLeft, IconArrowRight, IconArrowRightArrowLeft, IconCheckCircleSolid, IconChevronRight, IconCircleInfo, IconComments, IconPen, IconXmark } from "@optiaxiom/icons";
+import Image from "next/image";
+import { DEFAULT_VAU_EXAMPLES, VAUS, type VAU, type VAUCandidate, type VAUExample } from "@/app/opal/data/vaus";
 import { TOOL_ICONS } from "../tool-icons";
+import { AMADrawer } from "./AMADrawer";
 
-type MockFile = { name: string; size: string; icon: React.ReactNode };
+const CAPTION: React.CSSProperties = {
+	fontFamily: "Roboto Mono, monospace",
+	fontSize: 12,
+	fontWeight: 400,
+	lineHeight: "1.25",
+	letterSpacing: "0.36px",
+	textTransform: "uppercase",
+};
 
-const MOCK_FILES: MockFile[] = [
-	{ name: "brand-guidelines.pdf", size: "2.1 MB", icon: <Box display="inline-flex" style={{ color: "#d44b3e" }}><IconFilePdf size={16} /></Box> },
-	{ name: "messaging-framework.docx", size: "184 KB", icon: <Box display="inline-flex" style={{ color: "#1e57c2" }}><IconFileWord size={16} /></Box> },
-	{ name: "personas-q3.md", size: "12 KB", icon: <Box display="inline-flex" color="fg.tertiary"><IconFileLines size={16} /></Box> },
-];
+function SectionHeader({ title }: { title: string }) {
+	return (
+		<Box display="flex" alignItems="center" gap="12">
+			<Text
+				style={{
+					fontFamily: "var(--ax-font-family-headings)",
+					fontSize: 20,
+					fontWeight: 600,
+					lineHeight: "1.1",
+					letterSpacing: "0.4px",
+					whiteSpace: "nowrap",
+					color: "#202320",
+				}}
+			>
+				{title}
+			</Text>
+			<Box style={{ flex: 1, height: 1, background: "var(--ax-colors-border-secondary)" }} />
+		</Box>
+	);
+}
 
-export default function VAUDetailPage() {
-	const params = useParams<{ id: string }>();
-	const router = useRouter();
-	const vau = useMemo(() => VAUS.find((v) => v.id === params?.id), [params?.id]);
-
-	if (!vau) {
-		return (
-			<Box px="32" py="24" display="flex" flexDirection="column" gap="16">
-				<Link href="/opal/virtual-teammates" style={{ textDecoration: "none" }}>
-					<Button appearance="subtle" size="md" icon={<IconArrowLeft size={16} />}>Back to Virtual Teammates</Button>
-				</Link>
-				<Text color="fg.tertiary">No teammate found for &ldquo;{params?.id}&rdquo;.</Text>
+function ToolCircle({ toolKey, index, total }: { toolKey: string; index: number; total: number }) {
+	const tool = TOOL_ICONS[toolKey];
+	if (!tool) return null;
+	return (
+		<Tooltip content={tool.name} delayDuration={200}>
+			<Box
+				style={{
+					width: 22,
+					height: 22,
+					borderRadius: "50%",
+					border: "1.5px solid var(--ax-colors-bg-default)",
+					background: "#f3f7ee",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+					marginLeft: index > 0 ? -6 : 0,
+					position: "relative",
+					zIndex: total - index,
+					flexShrink: 0,
+					color: tool.color,
+					overflow: "hidden",
+				}}
+			>
+				{tool.icon ?? (
+					<span style={{ fontSize: 6, fontWeight: 700, fontFamily: "Roboto Mono, monospace", lineHeight: 1 }}>
+						{(tool.textLabel ?? tool.name).slice(0, 2).toUpperCase()}
+					</span>
+				)}
 			</Box>
-		);
-	}
+		</Tooltip>
+	);
+}
 
-	const examples: VAUExample[] = vau.examples ?? DEFAULT_VAU_EXAMPLES;
-	const description = vau.longDescription ?? vau.description;
+function KpiCard({
+	label,
+	value,
+	sub,
+	subGreen,
+	toolKeys,
+}: {
+	label: string;
+	value: string;
+	sub: string;
+	subGreen?: boolean;
+	toolKeys?: string[];
+}) {
+	const allTools = toolKeys ?? [];
+	// Show tools with actual icons first, then text-label tools
+	const sorted = [
+		...allTools.filter((k) => TOOL_ICONS[k]?.icon),
+		...allTools.filter((k) => !TOOL_ICONS[k]?.icon),
+	];
+	const visible = sorted.slice(0, 2);
+	const overflow = allTools.length - visible.length;
 
 	return (
-		<Box px="32" py="24" display="flex" flexDirection="column" gap="24" overflow="auto" h="full">
-			{/* Top row: back link (left) + actions (right) */}
-			<Box display="flex" alignItems="center" justifyContent="space-between">
-				<Button
-					appearance="subtle"
-					size="md"
-					icon={<IconArrowLeft size={16} />}
-					onClick={() => router.push("/opal/virtual-teammates")}
-				>
-					Back
-				</Button>
-				<Box display="flex" gap="8" alignItems="center">
-					<Button appearance="primary" size="lg">Save</Button>
-				</Box>
-			</Box>
-
-			{/* 2-col body — left main + right rail */}
-			<Box display="flex" gap="32" alignItems="start">
-				{/* Left main */}
-				<Box display="flex" flexDirection="column" gap="24" style={{ flex: 1, minWidth: 0 }}>
-					{/* Avatar + role badge + name */}
-					<Box display="flex" gap="16" alignItems="center">
-						<Box
-							rounded="xl"
-							style={{ width: "80px", height: "80px", minWidth: "80px", overflow: "hidden", backgroundColor: vau.avatarBg }}
-						>
-							<Image src={vau.avatar} alt={vau.name} width={80} height={80} unoptimized />
-						</Box>
-						<Box display="flex" flexDirection="column" gap="8" style={{ flex: 1, minWidth: 0 }}>
-							<Text
-								color="fg.default"
-								fontSize="3xl"
-								fontWeight="700"
-								style={{
-									lineHeight: 1.1,
-									letterSpacing: "-0.4px",
-									textDecoration: "none",
-								}}
+		<Box
+			bg="bg.default"
+			style={{
+				flex: 1,
+				border: "1px solid var(--ax-colors-border-default)",
+				borderRadius: 8,
+				padding: 16,
+				display: "flex",
+				flexDirection: "column",
+				gap: 8,
+				height: 108,
+				overflow: "hidden",
+				minWidth: 0,
+			}}
+		>
+			{/* Label row — always one line */}
+			<Box display="flex" alignItems="center" gap="6" style={{ overflow: "hidden" }}>
+				<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", whiteSpace: "nowrap", flexShrink: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+					{label}
+				</span>
+				{visible.length > 0 && (
+					<Box style={{ display: "flex", alignItems: "center", flexShrink: 0, marginLeft: "auto" }}>
+						{visible.map((key, i) => (
+							<ToolCircle key={key} toolKey={key} index={i} total={visible.length} />
+						))}
+						{overflow > 0 && (
+							<Tooltip
+								content={sorted.slice(2).map((k) => TOOL_ICONS[k]?.name ?? k).join(", ")}
+								delayDuration={200}
 							>
-								{vau.name}
-							</Text>
-							<Box>
-								<Badge intent="information">{vau.templateName}</Badge>
-							</Box>
-						</Box>
+								<Box
+									style={{
+										width: 22,
+										height: 22,
+										borderRadius: "50%",
+										border: "1.5px solid var(--ax-colors-bg-default)",
+										background: "var(--ax-colors-bg-secondary)",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+										marginLeft: -6,
+										position: "relative",
+										zIndex: 0,
+										flexShrink: 0,
+									}}
+								>
+									<span style={{ fontSize: 6, fontFamily: "Roboto Mono, monospace", color: "var(--ax-colors-fg-tertiary)", fontWeight: 500 }}>
+										+{overflow}
+									</span>
+								</Box>
+							</Tooltip>
+						)}
 					</Box>
+				)}
+			</Box>
+			{/* Value */}
+			<Text
+				style={{
+					fontFamily: "var(--ax-font-family-headings)",
+					fontSize: 28,
+					fontWeight: 800,
+					lineHeight: "1.04",
+					letterSpacing: "0.56px",
+					color: "#226b1e",
+				}}
+			>
+				{value}
+			</Text>
+			{/* Subtitle */}
+			<span
+				style={{
+					fontSize: 12,
+					lineHeight: "1.33",
+					color: subGreen ? "#226b1e" : "var(--ax-colors-fg-secondary)",
+					whiteSpace: "nowrap",
+				}}
+			>
+				{sub}
+			</span>
+		</Box>
+	);
+}
 
-					{/* Description + advanced settings */}
-					<Box display="flex" flexDirection="column" gap="12">
-						<Text maxW="full" fontSize="md" color="fg.default" style={{ lineHeight: 1.5 }}>
-							{description}
-						</Text>
-						<Box>
-							<Button appearance="subtle" size="sm" icon={<IconGear size={14} />}>
-								Advanced Settings
-							</Button>
-						</Box>
-					</Box>
-
-					{/* Examples grid — 2 cols */}
-					<Box
+function ActionCard({ example, onClick }: { example: VAUExample; onClick?: () => void }) {
+	const [hovered, setHovered] = useState(false);
+	const description =
+		example.description ??
+		`I can help you stay on top of ${example.title.toLowerCase()} — making sure the right things get done by the right people at the right time. In addition to that I can do much more!`;
+	return (
+		<Box
+			bg="bg.default"
+			onClick={onClick}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+			style={{
+				border: hovered ? "1px solid #A1AC8D" : "1px solid var(--ax-colors-border-default)",
+				borderRadius: 12,
+				padding: 24,
+				display: "flex",
+				flexDirection: "column",
+				gap: 16,
+				cursor: onClick ? "pointer" : "default",
+				boxShadow: hovered
+					? "0 1px 3px 0 rgb(0 0 0 / 0.08), 0 2px 8px 0 rgb(0 0 0 / 0.06)"
+					: "none",
+				transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+			}}
+		>
+			<Box display="flex" gap="12" alignItems="start">
+				<Box
+					style={{
+						width: 48,
+						height: 48,
+						minWidth: 48,
+						background: "#0d3a29",
+						borderRadius: 8,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						fontSize: 22,
+						flexShrink: 0,
+					}}
+				>
+					{example.emoji}
+				</Box>
+				<Box display="flex" flexDirection="column" gap="8" style={{ flex: 1 }}>
+					<Text
 						style={{
-							display: "grid",
-							gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-							gap: "16px",
+							fontFamily: "var(--ax-font-family-headings)",
+							fontSize: 20,
+							fontWeight: 600,
+							lineHeight: "1.1",
+							letterSpacing: "0.4px",
+							color: "#202320",
 						}}
 					>
-						{examples.map((ex) => (
-							<ExampleCard key={ex.title} example={ex} />
+						{example.title}
+					</Text>
+					<span style={{ ...CAPTION, color: "var(--ax-colors-fg-secondary)" }}>
+						{example.frequency}
+					</span>
+				</Box>
+			</Box>
+			<Box style={{ background: "#f6faf3", borderRadius: 8, padding: 16 }}>
+				<Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.43" }}>
+					{description}
+				</Text>
+			</Box>
+		</Box>
+	);
+}
+
+function CandidateThumbnail({ candidate, onClick }: { candidate: VAUCandidate; onClick: () => void }) {
+	const [hovered, setHovered] = useState(false);
+	return (
+		<Tooltip content={candidate.characterName ?? candidate.name} delayDuration={200}>
+			<Box
+				onClick={onClick}
+				onMouseEnter={() => setHovered(true)}
+				onMouseLeave={() => setHovered(false)}
+				style={{
+					position: "relative",
+					width: 92,
+					height: 92,
+					borderRadius: 12,
+					border: "1px solid var(--ax-colors-border-default)",
+					overflow: "hidden",
+					cursor: "pointer",
+					backgroundColor: candidate.avatarBg,
+					flexShrink: 0,
+				}}
+			>
+				<Image
+					src={candidate.avatar}
+					alt={candidate.name}
+					width={92}
+					height={92}
+					unoptimized
+					style={{ width: "100%", height: "100%", objectFit: "cover" }}
+				/>
+				<Box
+					style={{
+						position: "absolute",
+						inset: 0,
+						background: "rgba(57, 62, 50, 0.32)",
+						opacity: hovered ? 0 : 1,
+						transition: "opacity 0.15s ease",
+					}}
+				/>
+			</Box>
+		</Tooltip>
+	);
+}
+
+const DAILY_BRIEFING_SKILLS = [
+	"Calendar wrangling",
+	"Meeting prep",
+	"Inbox Triage",
+	"Cross-team updates",
+	"Weekly Reporting",
+];
+
+const PANEL_CONNECTORS = ["notion", "google", "teams"] as const;
+
+function PanelConnector({ toolKey }: { toolKey: string }) {
+	const tool = TOOL_ICONS[toolKey];
+	if (!tool) return null;
+	return (
+		<Box display="flex" alignItems="center" gap="4">
+			<Box
+				style={{
+					width: 24,
+					height: 24,
+					borderRadius: 12,
+					border: "1px solid var(--ax-colors-border-secondary)",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+					color: tool.color,
+					flexShrink: 0,
+				}}
+			>
+				{tool.icon}
+			</Box>
+			<Text fontSize="sm" color="fg.default">{tool.name}</Text>
+		</Box>
+	);
+}
+
+function PanelSectionHeader({ label, count }: { label: string; count: number }) {
+	return (
+		<Box display="flex" alignItems="center" gap="8">
+			<span style={{ ...CAPTION, color: "var(--ax-colors-fg-default)" }}>{label}</span>
+			<Badge intent="primary" variant="strong">{count}</Badge>
+		</Box>
+	);
+}
+
+function PanelDivider() {
+	return (
+		<Box
+			style={{
+				height: 1,
+				width: "100%",
+				background: "var(--ax-colors-border-secondary)",
+				flexShrink: 0,
+			}}
+		/>
+	);
+}
+
+function DailyBriefingPanel({ onClose }: { onClose: () => void }) {
+	return (
+		<>
+			{/* Backdrop */}
+			<Box
+				onClick={onClose}
+				style={{
+					position: "fixed",
+					inset: 0,
+					background: "rgba(57,62,50,0.32)",
+					zIndex: 40,
+				}}
+			/>
+			{/* Panel */}
+			<Box
+				style={{
+					position: "fixed",
+					top: 0,
+					right: 0,
+					height: "100vh",
+					width: 513,
+					background: "white",
+					borderLeft: "1px solid var(--ax-colors-border-default)",
+					zIndex: 50,
+					overflowY: "auto",
+					display: "flex",
+					flexDirection: "column",
+					gap: 12,
+					padding: "24px 24px 37px",
+				}}
+			>
+				{/* Header: PREVIEW badge + close */}
+				<Box display="flex" alignItems="center" justifyContent="space-between">
+					<Badge intent="primary">PREVIEW</Badge>
+					<Button
+						appearance="subtle"
+						size="sm"
+						icon={<IconXmark size={16} />}
+						aria-label="Close panel"
+						onClick={onClose}
+					/>
+				</Box>
+
+				{/* Title */}
+				<Text
+					style={{
+						fontFamily: "var(--ax-font-family-headings)",
+						fontSize: 28,
+						fontWeight: 800,
+						lineHeight: "1.04",
+						letterSpacing: "0.56px",
+						color: "#202320",
+					}}
+				>
+					Daily briefing
+				</Text>
+
+				{/* Description */}
+				<Text
+					fontSize="md"
+					color="fg.secondary"
+					style={{ lineHeight: "1.5", letterSpacing: "0.32px" }}
+				>
+					No more opening six tabs to figure out what happened overnight. Randy reads your inbox,
+					calendar, and Slack while you slept — and tells you the three things that actually need
+					you today.
+				</Text>
+
+				{/* Preview image */}
+				<Box
+					style={{
+						position: "relative",
+						height: 407,
+						borderRadius: 8,
+						border: "1px solid var(--ax-colors-border-default)",
+						overflow: "hidden",
+						flexShrink: 0,
+					}}
+				>
+					<img
+						src="https://www.figma.com/api/mcp/asset/1945ccb0-b55f-4ab9-a0ae-cd8c7efaa09e"
+						alt="Daily briefing preview"
+						style={{ width: "100%", height: "100%", objectFit: "cover" }}
+					/>
+					{/* Next arrow */}
+					<Box
+						style={{
+							position: "absolute",
+							top: "50%",
+							right: 8,
+							transform: "translateY(-50%)",
+							background: "rgba(57,62,50,0.32)",
+							borderRadius: 21,
+							width: 42,
+							height: 42,
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							cursor: "pointer",
+						}}
+					>
+						<IconChevronRight size={18} style={{ color: "white" }} />
+					</Box>
+				</Box>
+
+				<PanelDivider />
+
+				{/* Connectors */}
+				<Box display="flex" flexDirection="column" gap="8">
+					<PanelSectionHeader label="CONNECTORS" count={3} />
+					<Box display="flex" flexDirection="column" gap="8">
+						{PANEL_CONNECTORS.map((key) => (
+							<PanelConnector key={key} toolKey={key} />
 						))}
 					</Box>
 				</Box>
 
-				{/* Right rail — right-aligned with Save button */}
-				<Box display="flex" flexDirection="column" gap="16" style={{ width: "320px", flexShrink: 0, marginLeft: "auto" }}>
-					<ConnectorsBox vau={vau} />
-					<SkillsBox vau={vau} />
-					<FilesBox />
-				</Box>
-			</Box>
-		</Box>
-	);
-}
+				<PanelDivider />
 
-function SideBox({
-	titleIcon,
-	title,
-	count,
-	actionIcon,
-	actionLabel,
-	children,
-}: {
-	titleIcon: React.ReactNode;
-	title: string;
-	count: number;
-	actionIcon: React.ReactNode;
-	actionLabel: string;
-	children: React.ReactNode;
-}) {
-	return (
-		<Box bg="bg.default" border="1" borderColor="border.tertiary" rounded="md" style={{ overflow: "hidden" }}>
-			<Box display="flex" alignItems="center" justifyContent="space-between" px="16" py="12">
-				<Box display="flex" alignItems="center" gap="8">
-					<Box display="flex" alignItems="center" color="fg.default">
-						{titleIcon}
-					</Box>
-					<Text fontWeight="600" color="fg.default" fontSize="md">{title}</Text>
-					<Badge>{count}</Badge>
-				</Box>
-				<Tooltip content={actionLabel}>
-					<Button appearance="subtle" size="sm" icon={actionIcon} aria-label={actionLabel} />
-				</Tooltip>
-			</Box>
-			<Box display="flex" flexDirection="column">
-				{children}
-			</Box>
-		</Box>
-	);
-}
-
-function ConnectorsBox({ vau }: { vau: VAU }) {
-	return (
-		<SideBox
-			titleIcon={<img src="/nav_icons/grid-2-plus.svg" alt="" width={16} height={16} />}
-			title="Connectors"
-			count={vau.tools.length}
-			actionIcon={<IconPlus size={14} />}
-			actionLabel="Link connector"
-		>
-			{vau.tools.map((toolKey) => {
-				const tool = TOOL_ICONS[toolKey];
-				if (!tool) return null;
-				return (
-					<Box key={toolKey} display="flex" alignItems="center" gap="12" px="16" py="10">
-						<Box
-							rounded="sm"
-							border="1"
-							borderColor="border.tertiary"
-							display="flex"
-							alignItems="center"
-							justifyContent="center"
-							style={{ width: 28, height: 28, color: tool.color, fontSize: 10, fontWeight: 600, flexShrink: 0 }}
+				{/* Skills */}
+				<Box display="flex" flexDirection="column" gap="8">
+					<PanelSectionHeader label="SKILLS" count={9} />
+					<Box display="flex" style={{ flexWrap: "wrap", gap: 6 }}>
+						{DAILY_BRIEFING_SKILLS.map((skill) => (
+							<span
+								key={skill}
+								style={{
+									display: "inline-flex",
+									alignItems: "center",
+									height: 24,
+									padding: "0 10px",
+									borderRadius: 32,
+									background: "#D8E4CB",
+									border: "1px solid #D8E4CB",
+									fontFamily: "Roboto Mono, monospace",
+									fontSize: 11,
+									fontWeight: 500,
+									letterSpacing: "0.36px",
+									textTransform: "uppercase",
+									color: "var(--ax-colors-fg-default)",
+								}}
+							>
+								{skill}
+							</span>
+						))}
+						<span
+							style={{
+								display: "inline-flex",
+								alignItems: "center",
+								height: 24,
+								padding: "0 10px",
+								borderRadius: 32,
+								background: "#D8E4CB",
+								border: "1px solid #D8E4CB",
+								fontFamily: "Roboto Mono, monospace",
+								fontSize: 11,
+								fontWeight: 500,
+								letterSpacing: "0.36px",
+								textTransform: "uppercase",
+								color: "var(--ax-colors-fg-default)",
+							}}
 						>
-							{tool.textLabel ? tool.textLabel : tool.icon}
-						</Box>
-						<Text fontSize="sm" color="fg.default" style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-							{tool.name}
-						</Text>
-					</Box>
-				);
-			})}
-		</SideBox>
-	);
-}
-
-function SkillsBox({ vau }: { vau: VAU }) {
-	return (
-		<SideBox
-			titleIcon={<IconBook size={16} />}
-			title="Skills"
-			count={vau.tags.length}
-			actionIcon={<IconPen size={14} />}
-			actionLabel="Edit skills"
-		>
-			<Box display="flex" gap="6" px="16" py="12" style={{ flexWrap: "wrap" }}>
-				{vau.tags.map((tag) => (
-					<Badge key={tag.label}>{tag.label}</Badge>
-				))}
-			</Box>
-		</SideBox>
-	);
-}
-
-function FilesBox() {
-	return (
-		<SideBox
-			titleIcon={<IconFileLines size={16} />}
-			title="Files"
-			count={MOCK_FILES.length}
-			actionIcon={<IconPlus size={14} />}
-			actionLabel="Upload file"
-		>
-			{MOCK_FILES.map((file) => (
-				<Box key={file.name} display="flex" alignItems="center" gap="12" px="16" py="10">
-					<Box display="flex" alignItems="center" justifyContent="center" style={{ width: 20, flexShrink: 0 }}>
-						{file.icon}
-					</Box>
-					<Box style={{ flex: 1, minWidth: 0 }}>
-						<Text fontSize="sm" color="fg.default" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-							{file.name}
-						</Text>
-						<Text fontSize="xs" color="fg.tertiary">{file.size}</Text>
+							+4
+						</span>
 					</Box>
 				</Box>
-			))}
-		</SideBox>
+
+				<PanelDivider />
+
+				{/* Files */}
+				<Box display="flex" flexDirection="column" gap="8">
+					<PanelSectionHeader label="FILES" count={1} />
+					<Text fontSize="sm" color="fg.default">Brand_Guidelines.doc</Text>
+				</Box>
+			</Box>
+		</>
 	);
 }
 
-function ExampleCard({ example }: { example: VAUExample }) {
-	return (
-		<Box
-			bg="bg.default"
-			border="1"
-			borderColor="border.tertiary"
-			rounded="md"
-			p="16"
-			display="flex"
-			flexDirection="column"
-			gap="8"
-		>
-			{/* Icon + title + frequency */}
-			<Box display="flex" gap="12" alignItems="start">
+export default function VAUDetailPage() {
+	const params = useParams<{ id: string }>();
+	const router = useRouter();
+
+	const [activeCapability, setActiveCapability] = useState<string | null>(null);
+	const [amaOpen, setAmaOpen] = useState(false);
+	const [showOnboarding, setShowOnboarding] = useState(false);
+	const [showKeyHandoff, setShowKeyHandoff] = useState(false);
+	const [showToolConnect, setShowToolConnect] = useState(false);
+	const [vauName, setVauName] = useState("");
+	const [connectedTools, setConnectedTools] = useState<Set<string>>(new Set());
+
+	const vau = useMemo(() => VAUS.find((v) => v.id === params?.id), [params?.id]);
+	const candidates = useMemo<VAUCandidate[]>(() => {
+		if (!vau) return [];
+		if (vau.candidates && vau.candidates.length > 0) return vau.candidates;
+		return VAUS.filter((v) => v.id !== vau.id).slice(0, 3).map((v) => ({
+			avatar: v.avatar,
+			avatarBg: v.avatarBg,
+			name: v.name,
+			characterName: v.characterName,
+		}));
+	}, [vau]);
+
+	if (!vau) {
+		return (
+			<Box style={{ padding: "24px 40px" }} display="flex" flexDirection="column" gap="16">
+				<Button
+					appearance="subtle"
+					size="md"
+					onClick={() => router.push("/opal/virtual-teammates")}
+				>
+					← Back to Virtual Teammates
+				</Button>
+				<Text color="fg.tertiary">No teammate found.</Text>
+			</Box>
+		);
+	}
+
+	// ─── Tool connect (Stage 3) ───────────────────────────────────────────────────
+	if (showToolConnect) {
+		const displayName = vauName.trim() || vau.characterName || vau.name;
+		const thirdPartyKeys = vau.tools.filter((k) => !k.startsWith("opti-")).slice(0, 3);
+		const allConnected = thirdPartyKeys.every((k) => connectedTools.has(k));
+
+		const TOOL_DESC: Record<string, string> = {
+			google:  "For calendar, docs, and email",
+			notion:  "For pulling context from your docs and wikis",
+			slack:   "For surfacing messages and notifications",
+			asana:   "For tracking tasks and workstreams",
+			figma:   "For design files and visual references",
+			jira:    "For tracking active tickets",
+			teams:   "For surfacing messages and meetings",
+			github:  "For code and pull request tracking",
+			airtable: "For managing structured data and bases",
+		};
+
+		return (
+			<Box
+				style={{
+					position: "fixed",
+					inset: 0,
+					zIndex: 100,
+					background: "#F9FCF8",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+					padding: "40px 24px",
+				}}
+			>
+				<Box display="flex" flexDirection="column" alignItems="center" style={{ width: 610, gap: 32 }}>
+					{/* Headline */}
+					<Box display="flex" flexDirection="column" alignItems="center" gap="12" style={{ textAlign: "center" }}>
+						<Text
+							style={{
+								fontFamily: "var(--ax-font-family-headings)",
+								fontSize: 28,
+								fontWeight: 800,
+								lineHeight: "1.04",
+								letterSpacing: "0.56px",
+								color: "#202320",
+								WebkitTextStroke: "1px #202320",
+							}}
+						>
+							Day one essentials
+						</Text>
+						<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", letterSpacing: "0.32px" }}>
+							Give {displayName} access to the tools they&apos;ll use every day. You can always connect more later.
+						</Text>
+					</Box>
+
+					{/* Connectors card */}
+					<Box style={{ width: 539 }}>
+						<Box display="flex" alignItems="center" gap="6" style={{ marginBottom: 10 }}>
+							<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>
+								Required connectors
+							</span>
+							<Tooltip content="These tools are required for your teammate to function on day one" delayDuration={200}>
+								<span style={{ display: "inline-flex" }}>
+									<IconCircleInfo size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+								</span>
+							</Tooltip>
+						</Box>
+						<Box
+							style={{
+								background: "white",
+								border: "1px solid var(--ax-colors-border-default)",
+								borderRadius: 12,
+								padding: 20,
+							}}
+						>
+							<Box display="flex" flexDirection="column" style={{ gap: 12 }}>
+								{thirdPartyKeys.map((key) => {
+									const tool = TOOL_ICONS[key];
+									if (!tool) return null;
+									const isConnected = connectedTools.has(key);
+									return (
+										<Box
+											key={key}
+											style={{
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "space-between",
+												padding: 8,
+												border: "1px solid var(--ax-colors-border-secondary)",
+												borderRadius: 8,
+												background: "white",
+											}}
+										>
+											<Box display="flex" alignItems="center" gap="8" style={{ flex: 1, minWidth: 0 }}>
+												{/* Icon box */}
+												<Box
+													style={{
+														width: 40,
+														height: 40,
+														borderRadius: 12,
+														border: "1px solid var(--ax-colors-border-secondary)",
+														display: "flex",
+														alignItems: "center",
+														justifyContent: "center",
+														flexShrink: 0,
+														color: tool.color,
+													}}
+												>
+													{tool.iconLg ?? tool.icon ?? (
+														<span style={{ fontSize: 10, fontWeight: 700, color: tool.color }}>{tool.textLabel}</span>
+													)}
+												</Box>
+												{/* Name + description */}
+												<Box display="flex" flexDirection="column" style={{ gap: 2 }}>
+													<Text style={{ fontSize: 14, fontWeight: 600, color: "#202320", lineHeight: "1.43", letterSpacing: "0.28px" }}>
+														{tool.name}
+													</Text>
+													<Text style={{ fontSize: 12, color: "var(--ax-colors-fg-tertiary)", lineHeight: "1.33", letterSpacing: "0.24px" }}>
+														{TOOL_DESC[key] ?? "For day-to-day work"}
+													</Text>
+												</Box>
+											</Box>
+											{/* Connect / Connected button */}
+											{isConnected ? (
+												<Button
+													size="md"
+													icon={<IconCheckCircleSolid size={14} />}
+													disabled
+												>
+													Connected
+												</Button>
+											) : (
+												<Button
+													size="md"
+													onClick={() => setConnectedTools((prev) => new Set([...prev, key]))}
+												>
+													Connect
+												</Button>
+											)}
+										</Box>
+									);
+								})}
+							</Box>
+						</Box>
+					</Box>
+
+					{/* Buttons */}
+					<Box display="flex" gap="8" alignItems="center">
+						<Button
+							appearance="subtle"
+							size="lg"
+							onClick={() => { setShowToolConnect(false); setShowOnboarding(true); setShowKeyHandoff(true); }}
+						>
+							Back
+						</Button>
+						<Button
+							appearance="primary"
+							size="lg"
+							addonAfter={<IconArrowRight size={16} />}
+							disabled={!allConnected}
+							onClick={() => {
+								try {
+									sessionStorage.setItem("im-initial-chat", "conv-demo-frank-dm");
+									sessionStorage.setItem("im-vau-welcome", JSON.stringify({ name: vauName, avatar: vau.avatar }));
+								} catch {}
+								router.push("/opal/im");
+							}}
+						>
+							Start working together
+						</Button>
+					</Box>
+				</Box>
+			</Box>
+		);
+	}
+
+	// ─── Onboarding flow ─────────────────────────────────────────────────────────
+	if (showOnboarding) {
+		const displayName = vauName.trim() || vau.characterName || vau.name;
+		const suggestions = candidates.map((c) => c.characterName ?? c.name).filter(Boolean);
+
+		const KeyHandoffOverlay = showKeyHandoff ? (
+			<Box
+				style={{
+					position: "fixed", inset: 0, zIndex: 50,
+					display: "flex", alignItems: "center", justifyContent: "center",
+					backgroundColor: "rgba(57,62,50,0.32)",
+				}}
+			>
 				<Box
-					rounded="md"
-					bg="bg.secondary"
 					style={{
-						width: "42px",
-						height: "42px",
-						minWidth: "42px",
+						display: "flex", overflow: "hidden",
+						width: 960, maxWidth: "calc(100vw - 64px)", height: 480,
+						background: "white", borderRadius: 31,
+						border: "1px solid var(--ax-colors-border-default)",
+					}}
+				>
+					{/* Left — copy + actions */}
+					<Box style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+						{/* Main content */}
+						<Box style={{ flex: 1, display: "flex", flexDirection: "column", gap: 43, alignItems: "center", justifyContent: "center", padding: 32 }}>
+							<Box display="flex" flexDirection="column" gap="24" style={{ width: 416 }}>
+								<Text
+									style={{
+										fontFamily: "var(--ax-font-family-headings)",
+										fontSize: 50,
+										fontWeight: 800,
+										lineHeight: "1.04",
+										letterSpacing: "0.5px",
+										color: "#202320",
+										WebkitTextStroke: "1px #202320",
+									}}
+								>
+									Time to hand {displayName} the keys
+								</Text>
+								<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", letterSpacing: "0.32px" }}>
+									Every new teammate gets their own account — {displayName}&apos;s no different. Sign in as {displayName} to connect the tools they&apos;ll use every day.
+								</Text>
+							</Box>
+							<Box style={{ width: 416 }}>
+								<Button
+									appearance="primary"
+									size="lg"
+									icon={<IconArrowRightArrowLeft size={20} />}
+									style={{ width: "100%", justifyContent: "center" }}
+									onClick={() => { setShowKeyHandoff(false); setShowOnboarding(false); setShowToolConnect(true); }}
+								>
+									Sign in as {displayName}
+								</Button>
+							</Box>
+						</Box>
+						{/* Back footer */}
+						<Box style={{ display: "flex", justifyContent: "center", padding: 24, borderTop: "1px solid var(--ax-colors-border-default)" }}>
+							<Button
+								size="lg"
+								icon={<IconArrowLeft size={16} />}
+								onClick={() => setShowKeyHandoff(false)}
+							>
+								Back
+							</Button>
+						</Box>
+					</Box>
+					{/* Right — illustration */}
+					<Box style={{ width: 480, flexShrink: 0, backgroundColor: "#abf542", overflow: "hidden" }}>
+						<Image src="/avatars/keys.png" alt="" width={480} height={480} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+					</Box>
+				</Box>
+			</Box>
+		) : null;
+
+		return (
+			<>
+				{KeyHandoffOverlay}
+				<Box
+					style={{
+						background: "#F9FCF8",
+						height: "100%",
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
-						fontSize: "22px",
-						lineHeight: 1,
+						padding: "40px 24px",
 					}}
 				>
-					<span>{example.emoji}</span>
-				</Box>
-				<Box display="flex" flexDirection="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
-					<Text fontWeight="700" color="fg.default" fontSize="lg" style={{ lineHeight: 1.3 }}>
-						{example.title}
-					</Text>
-					<Text fontSize="sm" color="fg.secondary" style={{ fontFamily: "var(--ax-fonts-mono, 'Roboto Mono', monospace)", letterSpacing: "0.4px", textTransform: "uppercase" }}>
-						{example.frequency}
-					</Text>
-				</Box>
-			</Box>
-
-			{/* Faux content bars */}
-			<Box
-				rounded="sm"
-				bg="bg.secondary"
-				display="flex"
-				flexDirection="column"
-				gap="4"
-				py="10"
-				px="12"
-			>
-				{[100, 60, 70, 40, 100].map((w, i) => (
 					<Box
-						key={i}
-						style={{
-							height: "6px",
-							width: `${w}%`,
-							borderRadius: "8px",
-							backgroundColor: "var(--ax-colors-border-tertiary)",
-						}}
-					/>
-				))}
+						display="flex"
+						flexDirection="column"
+						alignItems="center"
+						style={{ width: 493, gap: 32 }}
+					>
+						{/* Avatar + headline block — 38px gap between image and text */}
+						<Box display="flex" flexDirection="column" alignItems="center" style={{ gap: 38, width: "100%" }}>
+							{/* Avatar with pencil button */}
+							<Box style={{ position: "relative", display: "inline-block" }}>
+								<Box
+									style={{
+										width: 139,
+										height: 153,
+										borderRadius: 12,
+										overflow: "hidden",
+										border: "1px solid var(--ax-colors-border-default)",
+										backgroundColor: vau.avatarBg,
+									}}
+								>
+									<Image
+										src={vau.avatar}
+										alt={vau.name}
+										width={139}
+										height={153}
+										unoptimized
+										style={{ width: "100%", height: "100%", objectFit: "cover" }}
+									/>
+								</Box>
+								<Box
+									style={{
+										position: "absolute", top: -8, right: -16,
+										width: 40, height: 40, borderRadius: "50%",
+										background: "white",
+										border: "1px solid var(--ax-colors-border-default)",
+										display: "flex", alignItems: "center", justifyContent: "center",
+									}}
+								>
+									<IconPen size={14} style={{ color: "var(--ax-colors-fg-secondary)" }} />
+								</Box>
+							</Box>
+
+							{/* Headline + subtext */}
+							<Box display="flex" flexDirection="column" alignItems="center" gap="12" style={{ textAlign: "center" }}>
+								<Text
+									style={{
+										fontFamily: "var(--ax-font-family-headings)",
+										fontSize: 28,
+										fontWeight: 800,
+										lineHeight: "1.04",
+										letterSpacing: "0.56px",
+										color: "#202320",
+									}}
+								>
+									First day on the job
+								</Text>
+								<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", letterSpacing: "0.32px" }}>
+									Choose a name for your {vau.name.toLowerCase()}. Go with whatever feels right — you can update it anytime down the road.
+								</Text>
+							</Box>
+						</Box>
+
+						{/* Name input */}
+						<Field description={`Suggestions: ${suggestions.join(", ")}`} style={{ width: "100%" }}>
+							<Input
+								size="lg"
+								placeholder={`E.g. ${vau.characterName ?? vau.name}`}
+								value={vauName}
+								onChange={(e: React.ChangeEvent<HTMLInputElement>) => setVauName(e.target.value)}
+								style={{ width: "100%" }}
+							/>
+						</Field>
+
+						{/* Buttons */}
+						<Box display="flex" gap="8" alignItems="center">
+							<Button
+								type="button"
+								appearance="subtle"
+								size="lg"
+								onClick={() => setShowOnboarding(false)}
+							>
+								Work with a different teammate
+							</Button>
+							<Button
+								appearance="primary"
+								size="lg"
+								addonAfter={<IconArrowRight size={16} />}
+								disabled={!vauName.trim()}
+								onClick={() => { if (vauName.trim()) setShowKeyHandoff(true); }}
+							>
+								Next
+							</Button>
+						</Box>
+					</Box>
+				</Box>
+			</>
+		);
+	}
+
+	const examples = (vau.examples ?? DEFAULT_VAU_EXAMPLES).slice(0, 6);
+	const heading = vau.characterName ? `${vau.name}, ${vau.characterName}` : vau.name;
+	const thirdPartyTools = vau.tools.filter((k) => !k.startsWith("opti-"));
+
+	return (
+		<>
+		<Box style={{ background: "#F9FCF8", height: "100%", overflowY: "auto" }}>
+			{/* Breadcrumb */}
+			<Box display="flex" alignItems="center" gap="4" style={{ padding: "16px 40px 0" }}>
+				<Text
+					fontSize="sm"
+					color="fg.secondary"
+					style={{ cursor: "pointer" }}
+					onClick={() => router.push("/opal/virtual-teammates")}
+				>
+					Directory
+				</Text>
+				<Text fontSize="sm" color="fg.tertiary">/</Text>
+				<Text fontSize="sm" color="fg.default">{vau.name}</Text>
 			</Box>
 
-			{/* See example link */}
-			<Box>
-				<Button appearance="subtle" size="sm" icon={<IconArrowRight size={14} />} iconPosition="end">
-					View details
-				</Button>
+			{/* Two-column grid: row1 = image | heading, row2 = candidates | pitch+whatido */}
+			<Box
+				style={{
+					display: "grid",
+					gridTemplateColumns: "auto 1fr",
+					gridTemplateRows: "auto auto",
+					columnGap: 40,
+					rowGap: 12,
+					padding: "24px 40px 0",
+				}}
+			>
+				{/* Row 1, Col 1 — Avatar */}
+				<Box style={{ gridRow: 1, gridColumn: 1 }}>
+					<Box
+						style={{
+							border: "3px solid #197a94",
+							borderRadius: 14,
+							padding: 2,
+							display: "inline-block",
+						}}
+					>
+						<Box
+							style={{
+								width: 296,
+								height: 284,
+								border: "1px solid var(--ax-colors-border-default)",
+								borderRadius: 10,
+								overflow: "hidden",
+								backgroundColor: vau.avatarBg,
+							}}
+						>
+							<Image
+								src={vau.avatar}
+								alt={vau.name}
+								width={296}
+								height={284}
+								unoptimized
+								style={{ width: "100%", height: "100%", objectFit: "cover" }}
+							/>
+						</Box>
+					</Box>
+				</Box>
+
+				{/* Row 1, Col 2 — Heading + traits + description + CTAs */}
+				<Box style={{ gridRow: 1, gridColumn: 2, minWidth: 0 }}>
+					<Box display="flex" flexDirection="column" gap="24">
+						<Box display="flex" flexDirection="column" gap="12">
+							<Text
+								style={{
+									fontFamily: "var(--ax-font-family-headings)",
+									fontSize: 50,
+									fontWeight: 800,
+									lineHeight: "1.04",
+									letterSpacing: "0.5px",
+									color: "#202320",
+									WebkitTextStroke: "1px #202320",
+								}}
+							>
+								{heading}
+							</Text>
+							{vau.traits && vau.traits.length > 0 && (
+								<Box display="flex" gap="8" style={{ flexWrap: "wrap" }}>
+									{vau.traits.map((trait) => (
+										<span
+											key={trait}
+											style={{
+												display: "inline-flex",
+												alignItems: "center",
+												height: 24,
+												padding: "0 10px",
+												borderRadius: 32,
+												background: "#D8E4CB",
+												border: "1px solid #D8E4CB",
+												fontFamily: "Roboto Mono, monospace",
+												fontSize: 11,
+												fontWeight: 500,
+												letterSpacing: "0.36px",
+												textTransform: "uppercase",
+												color: "var(--ax-colors-fg-default)",
+											}}
+										>
+											{trait}
+										</span>
+									))}
+								</Box>
+							)}
+						</Box>
+
+						<Text
+							fontSize="md"
+							color="fg.secondary"
+							style={{ lineHeight: "1.5", letterSpacing: "0.32px", maxWidth: 580 }}
+						>
+							{vau.longDescription ?? vau.description}
+						</Text>
+
+						<Box display="flex" gap="16" alignItems="center">
+							<Button
+								appearance="primary"
+								size="lg"
+								addonAfter={<IconArrowRight />}
+								style={{ paddingLeft: 32, paddingRight: 32 }}
+								onClick={() => setShowOnboarding(true)}
+							>
+								Work together
+							</Button>
+							<Button
+								size="lg"
+								addonAfter={<IconComments />}
+								style={{ paddingLeft: 32, paddingRight: 32 }}
+								onClick={() => setAmaOpen(true)}
+							>
+								Chat before hiring
+							</Button>
+						</Box>
+					</Box>
+				</Box>
+
+				{/* Row 2, Col 1 — Explore other candidates */}
+				<Box style={{ gridRow: 2, gridColumn: 1 }}>
+					<Box display="flex" flexDirection="column" gap="8">
+						<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>
+							Explore other candidates
+						</span>
+						<Box display="flex" gap="12">
+							{candidates.map((c) => (
+								<CandidateThumbnail
+									key={c.characterName ?? c.name}
+									candidate={c}
+									onClick={() => {}}
+								/>
+							))}
+						</Box>
+					</Box>
+				</Box>
+
+				{/* Row 2, Col 2 — My pitch + What I do */}
+				<Box
+					display="flex"
+					flexDirection="column"
+					gap="32"
+					style={{ gridRow: 2, gridColumn: 2, minWidth: 0, paddingBottom: 64 }}
+				>
+					{/* My pitch — KPI cards */}
+					<Box display="flex" flexDirection="column" gap="16">
+						<Box display="flex" flexDirection="column" gap="4">
+							<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 20, fontWeight: 600, lineHeight: "1.1", letterSpacing: "0.4px", color: "#202320" }}>
+								My pitch
+							</Text>
+							<Text fontSize="sm" color="fg.tertiary">
+								{"Here's how Randy's will make your week easier."}
+							</Text>
+						</Box>
+						<Box display="flex" gap="16">
+							<KpiCard
+								label="Never drops the ball"
+								value="Zero"
+								sub="Missed follow-ups since forever"
+							/>
+							<KpiCard label="Runs" value="24/7" sub="No days off, no OOO" />
+							<KpiCard
+								label="Tools connected"
+								value={String(vau.tools.length)}
+								sub="On day one"
+								toolKeys={vau.tools}
+							/>
+							<KpiCard label="Time back" value="6 more hrs" sub="To cuddle your cat" />
+						</Box>
+					</Box>
+
+					{/* Divider between KPI cards and What I do */}
+					<Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "0 0" }} />
+
+					{/* What I do — action cards */}
+					<Box display="flex" flexDirection="column" gap="16">
+						<Box display="flex" flexDirection="column" gap="4">
+							<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 20, fontWeight: 600, lineHeight: "1.1", letterSpacing: "0.4px", color: "#202320" }}>
+								What I do
+							</Text>
+							<Text fontSize="sm" color="fg.tertiary">
+								Things Randy handles on your behalf
+							</Text>
+						</Box>
+						<Box
+							style={{
+								display: "grid",
+								gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+								gap: 16,
+							}}
+						>
+							{examples.map((ex) => (
+								<ActionCard
+									key={ex.title}
+									example={ex}
+									onClick={() => setActiveCapability(ex.title)}
+								/>
+							))}
+						</Box>
+					</Box>
+				</Box>
 			</Box>
 		</Box>
+
+		{activeCapability === "Daily briefing" && (
+			<DailyBriefingPanel onClose={() => setActiveCapability(null)} />
+		)}
+		{amaOpen && (
+			<AMADrawer vau={vau} onClose={() => setAmaOpen(false)} />
+		)}
+	</>
 	);
 }

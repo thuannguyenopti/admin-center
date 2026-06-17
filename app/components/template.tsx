@@ -373,6 +373,7 @@ function TemplateContent({
 						<Box display="flex" z="10" style={{minHeight: 0, height: "100%"}}>
 							<Sidebar
 								className="h-full z-10 relative"
+								style={{ borderRight: "1px solid var(--ax-colors-border-default)" }}
 								expanded={isExpanded}
 								onExpandedChange={setIsExpanded}
 								defaultExpanded={isExpanded}

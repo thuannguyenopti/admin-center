@@ -3,12 +3,15 @@
 
 export type VAUTag = { label: string; bg: string; color: string };
 export type VAUAgent = { emoji: string; handle: string };
-export type VAUExample = { emoji: string; title: string; frequency: string };
+export type VAUExample = { emoji: string; title: string; frequency: string; description?: string };
+export type VAUCandidate = { avatar: string; avatarBg: string; name: string; characterName?: string };
 
 export type VAU = {
 	id: string;
 	name: string;
+	characterName?: string;
 	templateName: string;
+	traits?: string[];
 	email: string;
 	avatar: string;
 	avatarBg: string;
@@ -18,8 +21,9 @@ export type VAU = {
 	longDescription?: string;
 	tags: VAUTag[];
 	agents: VAUAgent[];
-	tools: string[]; // keys into VAU_TOOL_ICONS
+	tools: string[];
 	examples?: VAUExample[];
+	candidates?: VAUCandidate[];
 };
 
 export const DEFAULT_VAU_EXAMPLES: VAUExample[] = [
@@ -34,8 +38,10 @@ export const DEFAULT_VAU_EXAMPLES: VAUExample[] = [
 export const VAUS: VAU[] = [
 	{
 		id: "henry",
-		name: "Henry",
+		name: "Campaign Strategist",
+		characterName: "Marcus",
 		templateName: "Product Marketer",
+		traits: ["Data-driven", "Creative", "Persistent"],
 		email: "henry@vau.opal-localdev.inte.opal.optimizely.com",
 		avatar: "/avatars/vau-henry.png",
 		avatarBg: "#FAF6E8",
@@ -64,8 +70,10 @@ export const VAUS: VAU[] = [
 	},
 	{
 		id: "poppy",
-		name: "Poppy",
+		name: "Content Producer",
+		characterName: "Stella",
 		templateName: "Product Launch Quarterback",
+		traits: ["Storyteller", "Detail-oriented", "Fast-moving"],
 		email: "poppy@vau.opal-localdev.inte.opal.optimizely.com",
 		avatar: "/avatars/vau-poppy.png",
 		avatarBg: "#FAF6E8",
@@ -74,6 +82,7 @@ export const VAUS: VAU[] = [
 		tags: [
 			{ label: "Launch ops", bg: "#fdf4ff", color: "#701a75" },
 			{ label: "Project mgmt", bg: "#fffaea", color: "#7a2e0d" },
+			{ label: "Alignment", bg: "#e9f7f1", color: "#17492b" },
 		],
 		agents: [
 			{ emoji: "🗓️", handle: "@content_calendar_agent" },
@@ -92,8 +101,10 @@ export const VAUS: VAU[] = [
 	},
 	{
 		id: "jonas",
-		name: "Jonas",
+		name: "Demand Gen Specialist",
+		characterName: "Theo",
 		templateName: "Journey Optimization Marketer",
+		traits: ["Analytical", "Proactive", "Pipeline-obsessed"],
 		email: "jonas@vau.opal-localdev.inte.opal.optimizely.com",
 		avatar: "/avatars/vau-jonas.png",
 		avatarBg: "#D8DAE1",
@@ -117,13 +128,14 @@ export const VAUS: VAU[] = [
 			{ emoji: "📈", title: "Variant performance review", frequency: "After each test" },
 			{ emoji: "👥", title: "Cohort behavior brief", frequency: "Weekly" },
 			{ emoji: "📋", title: "Test backlog grooming", frequency: "Bi-weekly" },
-			{ emoji: "🧮", title: "Holdout segment review", frequency: "Monthly" },
 		],
 	},
 	{
 		id: "kerby",
-		name: "Kerby",
+		name: "Account Strategist",
+		characterName: "Nora",
 		templateName: "Account Based Marketer",
+		traits: ["Relationship-builder", "Precise", "Tenacious"],
 		email: "kerby@vau.opal-localdev.inte.opal.optimizely.com",
 		avatar: "/avatars/vau-kerby.png",
 		avatarBg: "#E7FCFC",
@@ -132,6 +144,9 @@ export const VAUS: VAU[] = [
 		tags: [
 			{ label: "ABM", bg: "#c6dbfa", color: "#0d46a0" },
 			{ label: "B2B", bg: "#e9f7f1", color: "#17492b" },
+			{ label: "Outreach", bg: "#fdf4ff", color: "#701a75" },
+			{ label: "Intent Data", bg: "#fffaea", color: "#7a2e0d" },
+			{ label: "Pipeline", bg: "#e0f2fe", color: "#0369a1" },
 		],
 		agents: [
 			{ emoji: "🎯", handle: "@audience_agent" },
@@ -143,47 +158,54 @@ export const VAUS: VAU[] = [
 			{ emoji: "🎯", title: "Target account list refresh", frequency: "Monthly" },
 			{ emoji: "📋", title: "Account brief", frequency: "Per account" },
 			{ emoji: "✉️", title: "Outreach sequence draft", frequency: "Per campaign" },
-			{ emoji: "🧑‍🤝‍🧑", title: "Buying group map", frequency: "Per opportunity" },
 			{ emoji: "🔥", title: "Account heat map", frequency: "Weekly" },
 			{ emoji: "📡", title: "Intent signal digest", frequency: "Daily" },
-			{ emoji: "🔬", title: "Account research deep-dive", frequency: "Per opportunity" },
 			{ emoji: "🤝", title: "Sales handoff brief", frequency: "Per account" },
 		],
 	},
 	{
 		id: "frank",
-		name: "Frank",
+		name: "Chief of Staff",
+		characterName: "Randy",
 		templateName: "GEO Content Strategist",
+		traits: ["Wry", "Plain-spoken", "Bias to action"],
 		email: "frank@vau.opal-localdev.inte.opal.optimizely.com",
 		avatar: "/avatars/vau-frank.png",
 		avatarBg: "#FAF6E8",
 		status: "active",
-		description: "Owns GEO and SEO content strategy — discoverability, structure, and AI-driven content optimization across markets. Stays ahead of search engine and generative AI shifts so content keeps showing up where buyers actually look.",
+		description: "Less herding cats, more getting stuff done. Your Chief of Staff agent runs point on priorities so you can stop running on fumes. It drafts updates, preps meetings, and keeps every workstream moving — no nudging required.",
 		tags: [
 			{ label: "SEO/GEO", bg: "#f5f3ff", color: "#4c1d95" },
 			{ label: "Content", bg: "#c6dbfa", color: "#0d46a0" },
+			{ label: "AI Search", bg: "#e0f2fe", color: "#0369a1" },
+			{ label: "Strategy", bg: "#e9f7f1", color: "#17492b" },
 		],
 		agents: [
 			{ emoji: "🌐", handle: "@campaign_agent" },
 			{ emoji: "🔍", handle: "@seo_genie" },
 			{ emoji: "⚡", handle: "@ad_variations_agent" },
 		],
-		tools: ["opti-cms", "google", "notion"],
+		tools: ["opti-cms", "google", "notion", "slack", "asana", "figma"],
+		candidates: [
+			{ avatar: "/avatars/tat.png",     avatarBg: "#F0EBF8", name: "Chief of Staff", characterName: "Iris" },
+			{ avatar: "/avatars/bike.png",    avatarBg: "#F5EDE0", name: "Chief of Staff", characterName: "Pip" },
+			{ avatar: "/avatars/bub.png",     avatarBg: "#E0F0F8", name: "Chief of Staff", characterName: "Fin" },
+		],
 		examples: [
-			{ emoji: "📝", title: "Content brief", frequency: "Per topic" },
-			{ emoji: "🔍", title: "Keyword cluster analysis", frequency: "Weekly" },
-			{ emoji: "📊", title: "SERP shift digest", frequency: "Daily" },
-			{ emoji: "🏷️", title: "Schema audit", frequency: "Monthly" },
-			{ emoji: "🤖", title: "AI overview tracker", frequency: "Weekly" },
-			{ emoji: "🔗", title: "Internal linking suggestions", frequency: "Per page" },
-			{ emoji: "🕳️", title: "Topic gap analysis", frequency: "Weekly" },
-			{ emoji: "📰", title: "Citation tracker", frequency: "Monthly" },
+			{ emoji: "📅", title: "Daily briefing", frequency: "First thing in the morning", description: "I'll round up overnight changes, your day's calendar, and what needs you first — so you start the day knowing where to focus. In addition to that I can do much more!" },
+			{ emoji: "👋", title: "Status nudges", frequency: "Sent when things stall", description: "I'll quietly nudge when a thread goes quiet or a commitment slips — to the right person, with the right context, at exactly the right moment. In addition to that I can do much more!" },
+			{ emoji: "✅", title: "Action item tracking", frequency: "Updated in real time", description: "I'll catch commitments from meetings, emails, and chats — and keep a running list of what's owed, who owes it, and when it's due. In addition to that I can do much more!" },
+			{ emoji: "📊", title: "Weekly recap", frequency: "Fridays at 4pm", description: "Every Friday, I'll recap what got done, what didn't, and what's worth sharing up in your team update — so nothing gets lost between meetings. In addition to that I can do much more!" },
+			{ emoji: "🗺️", title: "Stakeholder map", frequency: "Per initiative", description: "I'll map who owns what and flag who needs to be in the loop — so nothing stalls because the wrong person wasn't in the room. In addition to that I can do much more!" },
+			{ emoji: "⚡", title: "Meeting prep brief", frequency: "1 hour before", description: "I'll pull together the context, relevant docs, and open items before any important meeting — so you walk in prepared, not scrambling. In addition to that I can do much more!" },
 		],
 	},
 	{
 		id: "mayling",
-		name: "Mayling",
+		name: "Social Strategist",
+		characterName: "Zoe",
 		templateName: "Social Media Marketer",
+		traits: ["Culturally-aware", "Trendy", "Expressive"],
 		email: "mayling@vau.opal-localdev.inte.opal.optimizely.com",
 		avatar: "/avatars/vau-mayling.png",
 		avatarBg: "#DFD4FF",
@@ -206,13 +228,14 @@ export const VAUS: VAU[] = [
 			{ emoji: "📊", title: "Channel performance digest", frequency: "Weekly" },
 			{ emoji: "🤝", title: "Influencer outreach list", frequency: "Monthly" },
 			{ emoji: "🔥", title: "Trending topics brief", frequency: "Daily" },
-			{ emoji: "#️⃣", title: "Hashtag performance", frequency: "Weekly" },
 		],
 	},
 	{
 		id: "tony",
-		name: "Tony",
+		name: "Performance Marketer",
+		characterName: "Kai",
 		templateName: "Traffic & Growth Marketer",
+		traits: ["ROI-obsessed", "Experimental", "Sharp"],
 		email: "tony@vau.opal-localdev.inte.opal.optimizely.com",
 		avatar: "/avatars/vau-tony.png",
 		avatarBg: "#FAF6E8",
@@ -235,9 +258,11 @@ export const VAUS: VAU[] = [
 			{ emoji: "💰", title: "Paid creative brief", frequency: "Per campaign" },
 			{ emoji: "📉", title: "Funnel teardown", frequency: "Monthly" },
 			{ emoji: "🧪", title: "Landing page audit", frequency: "Weekly" },
-			{ emoji: "💸", title: "Bid optimization brief", frequency: "Weekly" },
 			{ emoji: "📐", title: "Attribution model check", frequency: "Monthly" },
-			{ emoji: "🔁", title: "Cohort retention", frequency: "Monthly" },
 		],
 	},
-].sort((a, b) => a.name.localeCompare(b.name)) as VAU[];
+].sort((a, b) => {
+	if (a.name === "Chief of Staff") return -1;
+	if (b.name === "Chief of Staff") return 1;
+	return a.name.localeCompare(b.name);
+}) as VAU[];

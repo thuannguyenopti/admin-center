@@ -12,7 +12,7 @@ import type {
 } from "@/app/opal/im/lib/types";
 
 const DATA_FILE = path.join(process.cwd(), ".messaging-data.json");
-// seed v12 — rename geo-qa conv to "Stride GEO — Q&A review" (matches v2)
+// seed v14 — frank DM: single welcome message only
 
 type StoreShape = {
   conversations: Conversation[];
@@ -311,9 +311,7 @@ const SEED: StoreShape = {
       message("msg-gtm1", "conv-gtm", "jamie", "Reminder: GTM sync next Tuesday 10am — competitive section is on the agenda."),
     ],
     "conv-demo-frank-dm": [
-      message("msg-fd1", "conv-demo-frank-dm", "vau-frank", "Hey — I'm starting research on the GEO opportunity for Stride. Do you want me to focus on AI overview queries or broader discovery content?"),
-      message("msg-fd2", "conv-demo-frank-dm", "jamie", "AI overview queries for now. Let's keep scope tight."),
-      message("msg-fd3", "conv-demo-frank-dm", "vau-frank", "Got it. I'll start with Discover the Unknown — it's the strongest match. I'll loop in the group chat once I have a draft."),
+      message("msg-fd1", "conv-demo-frank-dm", "vau-frank", "👋 Hey, I'm so excited to start working together! Here is your first daily brief. I will send this out every morning at 8 AM, if you ever want to change that time let me know."),
     ],
     "conv-demo-geo-qa": [
       message("msg-dg1", "conv-demo-geo-qa", "vau-frank", "I've started drafting the GEO Q&A article for Stride's Discover the Unknown. First pass is ready — 7 Q&A pairs covering the core product questions. Sharing for review."),
@@ -384,7 +382,7 @@ function message(id: string, convId: string, sender: string, content: string): I
 }
 
 // Bump this when SEED participants change so old persisted cache is discarded.
-const SEED_VERSION = "v13-human-frank-rename";
+const SEED_VERSION = "v14-frank-dm-welcome-only";
 
 async function load(): Promise<StoreShape> {
   if (cache) return cache;

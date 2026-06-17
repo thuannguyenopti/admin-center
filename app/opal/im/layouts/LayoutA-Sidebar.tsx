@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Box, Button, Text, Tooltip } from "@optiaxiom/react";
-import { IconXmark, IconCode, IconArrowsMaximize, IconArrowUpRightFromSquare } from "@optiaxiom/icons";
+import { IconXmark, IconCode, IconArrowsMaximize, IconArrowUpRightFromSquare, IconEye, IconArrowRotateLeft, IconArrowRotateRight, IconCopy } from "@optiaxiom/icons";
 import {
   groupConversationsByType,
   imToChatMessage,
@@ -246,6 +246,141 @@ function IMPreviewPanel({
 
 
 
+const BRIEF_SECTIONS = [
+  {
+    label: "TODAY'S PRIORITIES",
+    heading: "What needs your attention",
+    bullets: [
+      "Q3 campaign brief review - feedback to EOD",
+      "Sync with content team on calendar finalization",
+      "Approve 2 pending blog posts in the review queue",
+    ],
+  },
+  {
+    label: "CONTENT PIPELINE",
+    heading: "Coming due this week",
+    bullets: [
+      "Q3 campaign brief due",
+      "Finalize event merchandise for Glossier Foundation release",
+      "Approve 2 pending blog posts in the review queue",
+    ],
+  },
+  {
+    label: "UPCOMING MEETINGS",
+    heading: "On your calendar",
+    bullets: [
+      "10:00 AM — Q3 planning sync with content team",
+      "2:30 PM — Stakeholder review: Glossier campaign assets",
+      "4:00 PM — Weekly 1:1 with Jessica",
+    ],
+  },
+];
+
+function DailyBriefCanvas({ onClose }: { onClose: () => void }) {
+  return (
+    <Box
+      display="flex"
+      flexDirection="column"
+      style={{
+        flex: 1,
+        minWidth: 0,
+        height: "100%",
+        background: "var(--ax-colors-bg-default)",
+        boxShadow: "0 1px 3px rgba(16,24,40,0.1), 0 1px 2px rgba(16,24,40,0.06)",
+        borderRadius: 12,
+        overflow: "hidden",
+      }}
+    >
+      {/* Toolbar */}
+      <Box
+        display="flex"
+        alignItems="center"
+        gap="8"
+        px="24"
+        style={{
+          height: 48,
+          flexShrink: 0,
+          background: "var(--ax-colors-bg-secondary)",
+          borderBottom: "1px solid var(--ax-colors-border-default)",
+        }}
+      >
+        {/* Code / Preview toggles */}
+        <Box display="flex" alignItems="center" gap="4">
+          <Button appearance="subtle" size="sm" icon={<IconCode size={15} />} aria-label="Code" />
+          <Button appearance="subtle" size="sm" icon={<IconEye size={15} />} aria-label="Preview" />
+        </Box>
+        {/* Spacer */}
+        <Box style={{ flex: 1 }} />
+        {/* Status + actions */}
+        <Text color="fg.tertiary" style={{ fontSize: 12, whiteSpace: "nowrap" }}>Change saved.</Text>
+        <Button appearance="subtle" size="sm" icon={<IconArrowRotateLeft size={14} />} aria-label="Undo" />
+        <Button appearance="subtle" size="sm" icon={<IconArrowRotateRight size={14} />} aria-label="Redo" />
+        <Button appearance="subtle" size="sm" icon={<IconCopy size={14} />} aria-label="Copy" />
+        <Button appearance="subtle" size="sm" icon={<IconArrowsMaximize size={14} />} aria-label="Fullscreen" />
+        <Button appearance="subtle" size="sm" icon={<IconXmark size={14} />} aria-label="Close" onClick={onClose} />
+      </Box>
+
+      {/* Canvas body */}
+      <Box
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          background: "#f9fcf8",
+          borderBottomLeftRadius: 12,
+          borderBottomRightRadius: 12,
+        }}
+      >
+        {/* Hero image — clipped to center strip showing the date */}
+        <div style={{ width: "100%", height: 220, overflow: "hidden" }}>
+          <img
+            src="/avatars/june.png"
+            alt="Daily brief"
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 45%" }}
+          />
+        </div>
+
+        {/* Content */}
+        <Box style={{ padding: "32px 32px 48px" }}>
+          {/* Tagline */}
+          <Text style={{ fontSize: 16, color: "var(--ax-colors-fg-secondary)", lineHeight: "1.5", display: "block" }}>
+            Happy Wednesday, here's what's on your plate today.
+          </Text>
+
+          {BRIEF_SECTIONS.map((section, i) => (
+            <Box key={i}>
+              <Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "24px 0" }} />
+              <Text style={{ fontFamily: "Roboto Mono, monospace", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.36px", color: "var(--ax-colors-fg-secondary)", lineHeight: "1.25" }}>
+                {section.label}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "var(--ax-font-family-headings)",
+                  fontSize: 20,
+                  fontWeight: 600,
+                  lineHeight: "1.1",
+                  letterSpacing: "0.4px",
+                  color: "#202320",
+                  marginTop: 12,
+                  display: "block",
+                }}
+              >
+                {section.heading}
+              </Text>
+              <ul style={{ marginTop: 16, paddingLeft: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+                {section.bullets.map((b, j) => (
+                  <li key={j} style={{ fontSize: 16, color: "var(--ax-colors-fg-default)", lineHeight: "1.5", listStyleType: "disc" }}>
+                    {b}
+                  </li>
+                ))}
+              </ul>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
 export function LayoutASidebar() {
   const {
     conversations,
@@ -272,6 +407,17 @@ export function LayoutASidebar() {
   const [newChatMode, setNewChatMode] = useState<"dm" | "group" | "channel">("dm");
   const [quotedMsgId, setQuotedMsgId] = useState<string | null>(null);
   const [tonyCardAnswered, setTonyCardAnswered] = useState(false);
+
+  const [briefOpen, setBriefOpen] = useState(false);
+
+  // Welcome message injected when landing from the VAU hire flow
+  const [frankWelcome, setFrankWelcome] = useState<{ name: string; avatar: string } | null>(() => {
+    try {
+      const raw = sessionStorage.getItem("im-vau-welcome");
+      if (raw) { sessionStorage.removeItem("im-vau-welcome"); return JSON.parse(raw); }
+    } catch {}
+    return null;
+  });
 
   // The Tony killswitch confirmation flow is "still pending" whenever Tony's
   // DM is in the conversation list AND the last message there is still Tony's
@@ -355,14 +501,30 @@ export function LayoutASidebar() {
     return grouped;
   }, [conversations, profiles, tonyFlowPending, henryFlowPending, geoQaFlowPending]);
 
+  const showFrankWelcome = selectedId === FRANK_DM_CONV_ID;
+
   const chatMessages = useMemo(() => {
     const msgs = messages.map((m) => imToChatMessage(m, profiles));
     if (showGeoQaCard) {
       const idx = msgs.findIndex((m) => m.id === GEO_QA_ARTIFACT_MSG_ID);
       if (idx !== -1) msgs[idx] = { ...msgs[idx], cardAfterKey: "geo-qa-approval" };
     }
+    if (showFrankWelcome) {
+      const idx = msgs.findIndex((m) => m.id === "msg-fd1");
+      if (idx !== -1) {
+        const override = frankWelcome;
+        msgs[idx] = {
+          ...msgs[idx],
+          cardAfterKey: "frank-welcome-brief",
+          metadata: {
+            ...msgs[idx].metadata,
+            ...(override ? { authorName: override.name, authorAvatar: override.avatar } : {}),
+          },
+        };
+      }
+    }
     return msgs;
-  }, [messages, profiles, showGeoQaCard]);
+  }, [messages, profiles, showGeoQaCard, showFrankWelcome, frankWelcome]);
 
   // Derive IM header props from the selected conversation.
   const selectedConv = conversations.find((c) => c.conversation_id === selectedId);
@@ -548,6 +710,47 @@ export function LayoutASidebar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showGeoQaCard, previewOpen, taskOpen, geoQaApprovalState]);
 
+  const frankWelcomeCards = useMemo(() => {
+    if (selectedId !== FRANK_DM_CONV_ID) return undefined;
+    return {
+      "frank-welcome-brief": (
+        <Box
+          style={{
+            background: "var(--ax-colors-bg-default)",
+            border: "1px solid var(--ax-colors-border-default)",
+            borderRadius: 12,
+            padding: 20,
+            maxWidth: 560,
+          }}
+        >
+          <Box
+            style={{
+              width: "100%",
+              borderRadius: 6,
+              overflow: "hidden",
+              marginBottom: 16,
+            }}
+          >
+            <img
+              src="/avatars/daily-brief.png"
+              alt="Daily brief"
+              style={{ width: "100%", height: "auto", display: "block" }}
+            />
+          </Box>
+          <Box display="flex" justifyContent="flex-end" gap="8">
+            <Button size="md" addonAfter={<span style={{ fontSize: 12 }}>▾</span>}>
+              Download
+            </Button>
+            <Button appearance="primary" size="md" onClick={() => setBriefOpen(true)}>
+              Open brief
+            </Button>
+          </Box>
+        </Box>
+      ),
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, setBriefOpen]);
+
   const mentionableAgents = useMemo(
     () =>
       Object.entries(profiles).map(([id, name]) => ({
@@ -609,6 +812,72 @@ export function LayoutASidebar() {
     </Box>
   ) : null;
 
+  if (briefOpen) {
+    return (
+      <>
+        <Box display="flex" h="full" style={{ minHeight: 0, gap: 0 }}>
+          {/* Daily Brief canvas — main area */}
+          <Box style={{ flex: 1, minWidth: 0, height: "100%", padding: "8px 0 8px 8px", overflow: "hidden" }}>
+            <DailyBriefCanvas onClose={() => setBriefOpen(false)} />
+          </Box>
+
+          {/* Randy IM chat — right drawer */}
+          <Box style={{ width: 360, flexShrink: 0, height: "100%", borderLeft: "1px solid var(--ax-colors-border-secondary)", overflow: "hidden" }}>
+            <OpalChatView
+              variant="home"
+              streamingMode="expanded"
+              messages={chatMessages}
+              inputValue={inputValue}
+              isLoading={false}
+              setInputValue={setInputValue}
+              onSend={handleSend}
+              onSuggestionClick={() => {}}
+              onToggleHistory={() => {}}
+              onNewChat={() => {}}
+              onCreateInSection={() => {}}
+              isHistoryVisible={false}
+              groupedHistory={{}}
+              activeChat={selectedId}
+              searchQuery=""
+              onSearchChange={() => {}}
+              onSelectChat={setSelectedId}
+              onDeleteChat={() => {}}
+              mentionableAgents={mentionableAgents}
+              onMentionSelect={(agent) => insertMention(agent.handle)}
+              canvasMode={true}
+              leftCanvas={undefined}
+              currentUserId={currentUserId}
+              messageReactions={messageReactions}
+              onToggleReaction={toggleReaction}
+              onQuoteReply={(msgId) => setQuotedMsgId(msgId)}
+              aboveInputContent={null}
+              messageCards={{ ...geoQaMessageCards, ...frankWelcomeCards }}
+              onAttachFile={attachFile}
+              headerTitle="Threads"
+              newChatLabel="New Thread"
+              imThreadName={imThreadName}
+              imIsVAU={imIsVAU}
+              imIsChannel={imIsChannel}
+              imThreadAvatar={imThreadAvatar}
+              imTemplateName={imTemplateName}
+              imSimplified={true}
+              onCloseChat={() => setBriefOpen(false)}
+            />
+          </Box>
+        </Box>
+        <NewChatDialog
+          open={newChatOpen}
+          onOpenChange={setNewChatOpen}
+          onCreated={(id) => {
+            setSelectedId(id);
+            broadcastIMEvent({ type: "conversation-created", conversationId: id });
+          }}
+          initialMode={newChatMode}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <Box display="flex" h="full" style={{ minHeight: 0 }}>
@@ -647,7 +916,7 @@ export function LayoutASidebar() {
             aboveInputContent={quoteChip}
             inputOverride={tonyActionCard}
             disabled={tonyCardBlocking}
-            messageCards={geoQaMessageCards}
+            messageCards={{ ...geoQaMessageCards, ...frankWelcomeCards }}
             onAttachFile={attachFile}
             headerTitle="Threads"
             newChatLabel="New Thread"
