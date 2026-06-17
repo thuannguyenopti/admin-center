@@ -5,13 +5,9 @@ import {
   Box,
   Button,
   Text,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   Tooltip,
 } from "@optiaxiom/react";
-import { IconEllipsisSolid, IconArrowRight } from "@optiaxiom/icons";
+import { IconArrowRight } from "@optiaxiom/icons";
 import Image from "next/image";
 import { type VAU } from "@/app/opal/data/vaus";
 import { TOOL_ICONS } from "./tool-icons";
@@ -171,30 +167,6 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
           </Box>
         </Box>
 
-        {/* 3-dot menu */}
-        <Box onClick={(e) => e.stopPropagation()} style={{ flexShrink: 0 }}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                appearance="subtle"
-                size="sm"
-                icon={<IconEllipsisSolid style={{ width: 16, height: 16 }} />}
-                aria-label="Teammate actions"
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                Manage
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                style={{ color: "var(--ax-colors-fg-error)" }}
-              >
-                Remove
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </Box>
       </Box>
 
       {/* Description — 3-line clamp */}
