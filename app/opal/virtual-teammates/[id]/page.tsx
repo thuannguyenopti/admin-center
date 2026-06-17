@@ -1101,7 +1101,7 @@ export default function VAUDetailPage() {
 							<KpiCard
 								label={vau.kpi1?.label ?? "Never drops the ball"}
 								value={vau.kpi1?.value ?? "Zero"}
-								sub={vau.kpi1?.sub ?? "Missed follow-ups since forever"}
+								sub={vau.kpi1?.sub ?? "Missed follow-ups. Ever."}
 							/>
 							<KpiCard label="Runs" value="24/7" sub="No days off, no OOO" />
 							<KpiCard

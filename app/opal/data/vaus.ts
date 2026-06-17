@@ -181,7 +181,6 @@ export const VAUS: VAU[] = [
 			{ label: "SEO/GEO", bg: "#f5f3ff", color: "#4c1d95" },
 			{ label: "Content", bg: "#c6dbfa", color: "#0d46a0" },
 			{ label: "AI Search", bg: "#e0f2fe", color: "#0369a1" },
-			{ label: "Strategy", bg: "#e9f7f1", color: "#17492b" },
 		],
 		agents: [
 			{ emoji: "🌐", handle: "@campaign_agent" },
