@@ -1056,7 +1056,7 @@ export default function VAUDetailPage() {
 								style={{ paddingLeft: 32, paddingRight: 32 }}
 								onClick={() => setAmaOpen(true)}
 							>
-								Chat before hiring
+								Ask me anything
 							</Button>
 						</Box>
 					</Box>

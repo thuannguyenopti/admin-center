@@ -99,6 +99,14 @@ export function AMADrawer({ vau, onClose }: { vau: VAU; onClose: () => void }) {
 		setMessages(updated);
 		setInput("");
 
+		if (surprise) {
+			setTimeout(() => {
+				setMessages([...updated, { role: "assistant", content: "I believe I would be very good at curling. The sport. I think about this often." }]);
+				setLoading(false);
+			}, 800);
+			return;
+		}
+
 		try {
 			const res = await fetch("/api/opal/vau-chat", {
 				method: "POST",
@@ -297,7 +305,7 @@ export function AMADrawer({ vau, onClose }: { vau: VAU; onClose: () => void }) {
 						{/* Button row */}
 						<Box display="flex" alignItems="center" justifyContent="flex-end" gap="8" style={{ marginTop: 10 }}>
 							<Button
-								size="sm"
+								size="md"
 								onClick={() => send("", true)}
 								disabled={loading}
 							>
@@ -305,7 +313,7 @@ export function AMADrawer({ vau, onClose }: { vau: VAU; onClose: () => void }) {
 							</Button>
 							<Button
 								appearance="primary"
-								size="sm"
+								size="md"
 								icon={<IconPaperPlaneTop size={14} />}
 								aria-label="Send"
 								onClick={() => send(input)}

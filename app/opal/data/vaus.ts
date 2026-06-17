@@ -82,7 +82,6 @@ export const VAUS: VAU[] = [
 		tags: [
 			{ label: "Launch ops", bg: "#fdf4ff", color: "#701a75" },
 			{ label: "Project mgmt", bg: "#fffaea", color: "#7a2e0d" },
-			{ label: "Alignment", bg: "#e9f7f1", color: "#17492b" },
 		],
 		agents: [
 			{ emoji: "🗓️", handle: "@content_calendar_agent" },

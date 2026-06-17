@@ -251,7 +251,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
               onSelect(vau);
             }}
           >
-            Bring on
+            Hire
           </Button>
         </div>
       </div>
