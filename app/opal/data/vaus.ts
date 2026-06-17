@@ -105,7 +105,7 @@ export const VAUS: VAU[] = [
 	},
 	{
 		id: "jonas",
-		name: "Demand Gen Specialist",
+		name: "Social Strategist",
 		characterName: "Theo",
 		templateName: "Journey Optimization Marketer",
 		traits: ["Analytical", "Proactive", "Pipeline-obsessed"],
@@ -136,7 +136,7 @@ export const VAUS: VAU[] = [
 	},
 	{
 		id: "kerby",
-		name: "Account Strategist",
+		name: "Content Producer",
 		characterName: "Nora",
 		templateName: "Account Based Marketer",
 		traits: ["Relationship-builder", "Precise", "Tenacious"],
@@ -247,6 +247,7 @@ export const VAUS: VAU[] = [
 		id: "mayling",
 		name: "Social Strategist",
 		characterName: "Zoe",
+		isCandidate: true,
 		templateName: "Social Media Marketer",
 		traits: ["Culturally-aware", "Trendy", "Expressive"],
 		email: "mayling@vau.opal-localdev.inte.opal.optimizely.com",
