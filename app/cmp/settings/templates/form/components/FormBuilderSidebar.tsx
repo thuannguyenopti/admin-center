@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Box, SearchInput, Tooltip, Disclosure, DisclosureTrigger, DisclosureContent } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
@@ -18,7 +18,10 @@ const SECTION_ITEM = LAYOUT_COMPONENTS[0];
 
 function SidebarItem({
 	item,
+	selected,
+	onToggleSelect,
 	onDragStart,
+	onDragEnd,
 }: {
 	item: {
 		id: string;
@@ -27,10 +30,24 @@ function SidebarItem({
 		typeLabel?: string;
 		icon: React.ReactNode;
 	};
+	selected: boolean;
+	onToggleSelect: (id: string) => void;
 	onDragStart: (e: React.DragEvent, item: any) => void;
+	onDragEnd: () => void;
 }) {
 	return (
-		<div draggable onDragStart={(e) => onDragStart(e, item)} style={{ cursor: "grab" }}>
+		<div
+			draggable
+			onDragStart={(e) => onDragStart(e, item)}
+			onDragEnd={onDragEnd}
+			onClick={(e) => {
+				if (e.metaKey || e.ctrlKey) {
+					e.preventDefault();
+					onToggleSelect(item.id);
+				}
+			}}
+			style={{ cursor: "grab" }}
+		>
 			<Box
 				p="8"
 				display="flex"
@@ -38,6 +55,7 @@ function SidebarItem({
 				gap="8"
 				className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md"
 				mx="8"
+				style={{ background: selected ? "var(--ax-colors-bg-accent-subtle)" : undefined }}
 			>
 				<Box
 					p="6"
@@ -100,7 +118,7 @@ function LayoutItem({
 }
 
 export function FormBuilderSidebar({
-	onDragStart,
+	onDragStart: onDragStartBase,
 	customFields = [],
 	onCreateField,
 	onOpenOpal,
@@ -112,8 +130,34 @@ export function FormBuilderSidebar({
 }) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isCreateFieldOpen, setIsCreateFieldOpen] = useState(false);
+	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
 	const [customFieldsHovered, setCustomFieldsHovered] = useState(false);
+
+	const toggleSelect = useCallback((id: string) => {
+		setSelectedIds((prev) => {
+			const next = new Set(prev);
+			next.has(id) ? next.delete(id) : next.add(id);
+			return next;
+		});
+	}, []);
+
+	const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+	// Clear selection on Escape
+	useEffect(() => {
+		const handler = (e: KeyboardEvent) => { if (e.key === "Escape") clearSelection(); };
+		window.addEventListener("keydown", handler);
+		return () => window.removeEventListener("keydown", handler);
+	}, [clearSelection]);
+
+	// Wrap onDragStart to inject multi-field payload when multiple items are selected
+	const onDragStart = useCallback((e: React.DragEvent, item: any) => {
+		if (selectedIds.size > 1 && selectedIds.has(item.id)) {
+			e.dataTransfer.setData("application/formbuilder/multiFields", JSON.stringify(Array.from(selectedIds)));
+		}
+		onDragStartBase(e, item);
+	}, [selectedIds, onDragStartBase]);
 
 	const filteredStandard = searchQuery
 		? STANDARD_FIELDS.filter(
@@ -221,7 +265,7 @@ export function FormBuilderSidebar({
 									<Text fontSize="xs" color="fg.tertiary">No fields found.</Text>
 								</Box>
 							) : filteredStandard.map((item: any) => (
-								<SidebarItem key={item.id} item={{ ...item, typeLabel: "System Field" }} onDragStart={onDragStart} />
+								<SidebarItem key={item.id} item={{ ...item, typeLabel: "System Field" }} selected={selectedIds.has(item.id)} onToggleSelect={toggleSelect} onDragStart={onDragStart} onDragEnd={clearSelection} />
 							))}
 						</Box>
 					</DisclosureContent>
@@ -264,7 +308,7 @@ export function FormBuilderSidebar({
 									<Text fontSize="xs" color="fg.tertiary">No custom fields yet.</Text>
 								</Box>
 							) : filteredCustom.map((item: any) => (
-								<SidebarItem key={item.id} item={{ ...item, typeLabel: "" }} onDragStart={onDragStart} />
+								<SidebarItem key={item.id} item={{ ...item, typeLabel: "" }} selected={selectedIds.has(item.id)} onToggleSelect={toggleSelect} onDragStart={onDragStart} onDragEnd={clearSelection} />
 							))}
 						</Box>
 					</DisclosureContent>

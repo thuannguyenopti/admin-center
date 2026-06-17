@@ -263,6 +263,7 @@ export function FormBuilder() {
 		onNodesChange,
 		onEdgesChange,
 		addNode,
+		addNodes,
 		addNodeWithEdge,
 		onConnect: onConnectBase,
 		updateNodeData,
@@ -316,6 +317,29 @@ export function FormBuilder() {
 		(e: React.DragEvent) => {
 			e.preventDefault();
 			if (!reactFlowInstance) return;
+
+			// ── Multi-field drop (Cmd/Ctrl+drag) ──────────────────────────────────────
+			const multiFieldsRaw = e.dataTransfer.getData("application/formbuilder/multiFields");
+			if (multiFieldsRaw) {
+				const ids: string[] = JSON.parse(multiFieldsRaw);
+				const defs = ids
+					.map((id) => WORK_REQUEST_FIELDS.find((f) => f.id === id))
+					.filter(Boolean) as typeof WORK_REQUEST_FIELDS;
+				if (defs.length > 0) {
+					const raw = reactFlowInstance.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+					const snap = (v: number) => Math.round(v / 20) * 20;
+					const dropX = snap(raw.x);
+					const dropY = snap(raw.y);
+					const newNodes = defs.map((f, i) => ({
+						id: getNodeId(), type: "formField",
+						position: { x: dropX, y: dropY + i * 100 },
+						data: { label: "", typeLabel: f.typeLabel, icon: f.icon, required: f.required ?? false, fieldDefId: f.id, ...(f.isSystemField ? { isSystemField: true } : {}) },
+					}));
+					addNodes(newNodes as any);
+					selectNode(newNodes[newNodes.length - 1].id);
+				}
+				return;
+			}
 
 			const nodeType = e.dataTransfer.getData("application/formbuilder/nodeType");
 			const name = e.dataTransfer.getData("application/formbuilder/name");
@@ -393,7 +417,7 @@ export function FormBuilder() {
 			addNode(newNode);
 			if (nodeType === "formField" || nodeType === "formContent") selectNode(newNode.id);
 		},
-		[reactFlowInstance, addNode, setNodes, nodes],
+		[reactFlowInstance, addNode, addNodes, setNodes, nodes],
 	);
 
 	const selectedNode = nodes.find((n) => n.id === selectedNodeId) ?? null;
