@@ -883,7 +883,7 @@ export default function VAUDetailPage() {
 							onClick={() => {
 								try {
 									sessionStorage.setItem("im-initial-chat", "conv-demo-frank-dm");
-									sessionStorage.setItem("im-vau-welcome", JSON.stringify({ name: vauName, avatar: vau.avatar }));
+									sessionStorage.setItem("im-vau-welcome", JSON.stringify({ name: vauName, avatar: customAvatar?.src ?? vau.avatar }));
 								} catch {}
 								router.push("/opal/im");
 							}}
