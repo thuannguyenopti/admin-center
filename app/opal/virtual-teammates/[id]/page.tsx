@@ -626,7 +626,7 @@ const PICKER_AVATARS = [
 	{ src: "/avatars/bub.png",       bg: "#E0F0F8" },
 	{ src: "/avatars/bike.png",      bg: "#F5EDE0" },
 	{ src: "/avatars/tat.png",       bg: "#F0EBF8" },
-	{ src: "/avatars/rat.png",       bg: "#FDF4F0" },
+	{ src: "/avatars/chicken.png",   bg: "#FFF8E8" },
 	{ src: "/avatars/vau-henry.png", bg: "#F5F0E8" },
 	{ src: "/avatars/vau-tony.png",  bg: "#E4F3EC" },
 	{ src: "/avatars/vau-kerby.png", bg: "#F5EBF8" },
@@ -916,7 +916,7 @@ export default function VAUDetailPage() {
 						style={{
 							fontFamily: "var(--ax-font-family-headings)",
 							fontSize: 36,
-							fontWeight: 800,
+							fontWeight: 900,
 							lineHeight: "1.1",
 							letterSpacing: "0.5px",
 							color: "#202320",
