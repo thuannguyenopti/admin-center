@@ -406,7 +406,7 @@ function BriefingActionCards({ animKey }: { animKey: number }) {
 	);
 }
 
-const BRIEFING_SLIDES = [
+const BRIEFING_SLIDES: { component?: boolean; src?: string; alt?: string }[] = [
 	{ component: true },
 ];
 
@@ -999,7 +999,7 @@ export default function VAUDetailPage() {
 								type="button"
 								appearance="subtle"
 								size="lg"
-								onClick={() => setShowOnboarding(false)}
+								onClick={() => router.push("/opal/virtual-teammates")}
 							>
 								Work with a different teammate
 							</Button>
