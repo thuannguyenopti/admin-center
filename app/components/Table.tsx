@@ -96,7 +96,7 @@ export const Th = ({
 	const interactive = !!(onSort || onClick);
 	return (
 		<th
-			className={`text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)] ${interactive ? "cursor-pointer select-none hover:text-[var(--ax-colors-fg-secondary)]" : ""} ${className || ""}`}
+			className={`text-left px-4 text-xs font-normal py-2 align-middle text-[var(--ax-colors-fg-tertiary)] ${interactive ? "cursor-pointer select-none hover:text-[var(--ax-colors-fg-secondary)]" : ""} ${className || ""}`}
 			style={{
 				textAlign: align,
 				...style,
@@ -144,7 +144,7 @@ export const Td = ({
 }) => {
 	return (
 		<td
-			className={`p-4 border-t align-top ${className || ""}`}
+			className={`py-2 px-4 border-t align-middle ${className || ""}`}
 			style={{
 				width: type === "button" ? "56px" : width,
 				borderColor: "var(--ax-colors-border-tertiary)",

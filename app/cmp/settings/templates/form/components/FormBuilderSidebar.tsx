@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Box, SearchInput, Tooltip, Disclosure, DisclosureTrigger, DisclosureContent } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconGripVertical, IconPlus, IconChevronRight } from "@tabler/icons-react";
+import { IconGripVertical, IconPlus, IconChevronRight, IconX } from "@tabler/icons-react";
 import {
 	STANDARD_FIELDS,
 	LAYOUT_COMPONENTS,
@@ -12,6 +12,7 @@ import {
 } from "../data";
 import { CreateFieldModal } from "./CreateFieldModal";
 import type { FormFieldDef } from "../types";
+import usePersistentState from "@/app/usePersistentState";
 
 const TEXT_ITEM = { ...CONTENT_COMPONENTS.find((c) => c.id === "paragraph")!, name: "Paragraph" };
 const SECTION_ITEM = LAYOUT_COMPONENTS[0];
@@ -131,6 +132,10 @@ export function FormBuilderSidebar({
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isCreateFieldOpen, setIsCreateFieldOpen] = useState(false);
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+	const [multiSelectHintDismissed, setMultiSelectHintDismissed] = usePersistentState(
+		"formBuilder.multiSelectHintDismissed",
+		false,
+	);
 
 	const [customFieldsHovered, setCustomFieldsHovered] = useState(false);
 
@@ -240,6 +245,32 @@ export function FormBuilderSidebar({
 						style={{ width: "100%" }}
 					/>
 				</Box>
+
+				{/* Multi-select hint — shown once until dismissed */}
+				{!multiSelectHintDismissed && (
+					<Box
+						mx="12"
+						mb="8"
+						px="10"
+						py="8"
+						rounded="md"
+						bg="bg.accent.subtle"
+						display="flex"
+						alignItems="start"
+						gap="8"
+					>
+						<Text fontSize="xs" color="fg.secondary" style={{ flex: 1, lineHeight: 1.4 }}>
+							Hold <strong>⌘</strong> to select multiple fields, then drag any to drop them all.
+						</Text>
+						<button
+							onClick={() => setMultiSelectHintDismissed(true)}
+							aria-label="Dismiss hint"
+							style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--ax-colors-fg-tertiary)", display: "flex", flexShrink: 0, marginTop: 1 }}
+						>
+							<IconX size={12} />
+						</button>
+					</Box>
+				)}
 
 				{/* Standard fields */}
 				<Disclosure defaultOpen>
