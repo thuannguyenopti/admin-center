@@ -108,6 +108,7 @@ function PillMenuSelect({
 		<Field label={label}>
 			<PillMenu
 				options={options}
+				value={availableItems.filter((item) => selectedItems.includes(item.slug)).map((item) => ({ label: item.name, execute: () => onToggle(item.slug), multi: true, selected: true }))}
 				placeholder={placeholder}
 				inputValue={inputValue}
 				onInputValueChange={setInputValue}
