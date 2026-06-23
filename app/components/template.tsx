@@ -264,6 +264,9 @@ function TemplateContent({
 	// Check if we're on the Workflow Builder page
 	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
 
+	// Form Builder: full-viewport canvas, no app shell
+	const isFormBuilder = path.startsWith("/cmp/settings/templates/form");
+
 	// Full-screen canvas mode — ?artifacts=1 on /opal hides all shell chrome
 	const isArtifactsCanvas = path === "/opal" && typeof window !== "undefined"
 		? new URLSearchParams(window.location.search).get("artifacts") === "1"
@@ -285,9 +288,9 @@ function TemplateContent({
 		return <Box style={{height: "100vh"}} bg="bg.page" />;
 	}
 
-	if (isWorkflowBuilder) {
+	if (isWorkflowBuilder || isFormBuilder) {
 		return (
-			<Box style={{ height: "100vh", width: "100vw" }} bg="bg.default">
+			<Box style={{ height: "100vh", width: "100vw", overflow: "hidden", display: "flex", flexDirection: "column" }} bg="bg.default">
 				{children}
 			</Box>
 		);

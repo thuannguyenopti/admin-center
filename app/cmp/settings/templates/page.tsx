@@ -64,7 +64,7 @@ export default function ContentModelsPage() {
 	const [search, setSearch] = useState("");
 	const [sortBy, setSortBy] = useState<string>("title");
 	const [showInactive, setShowInactive] = useState(false);
-	const [primaryTab, setPrimaryTab] = useState("content-model");
+	const [primaryTab, setPrimaryTab] = useState("form");
 	const [secondaryTab, setSecondaryTab] = useState("all");
 
 	// Form tab filters

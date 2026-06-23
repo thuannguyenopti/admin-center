@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box } from "@optiaxiom/react";
 import { Layout } from "@optiaxiom/react/unstable";
 import {
@@ -998,8 +998,13 @@ export function FormBuilder() {
 	// ─── Details panel ────────────────────────────────────────────────────────────
 
 	const detailsPanel = useMemo(() => {
+		const withBorder = (content: React.ReactNode) => (
+			<Box borderL="1" borderColor="border.tertiary" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+				{content}
+			</Box>
+		);
 		if (isPreviewOpen) {
-			return (
+			return withBorder(
 				<FormPreviewPanel
 					formTitle={formTitle}
 					nodes={nodes}
@@ -1010,7 +1015,7 @@ export function FormBuilder() {
 			);
 		}
 		if (selectedNode && (selectedNode.data as any).isStartingNode) {
-			return (
+			return withBorder(
 				<FormContentPanel
 					key={selectedNode.id}
 					node={selectedNode}
@@ -1021,7 +1026,7 @@ export function FormBuilder() {
 		}
 		if (selectedNode && selectedNode.type !== "formSection") {
 			const allCanvasNodes = nodes.filter((n) => n.id !== selectedNode.id);
-			return (
+			return withBorder(
 				<FieldDetailsPanel
 					key={selectedNode.id}
 					node={selectedNode}
@@ -1036,7 +1041,7 @@ export function FormBuilder() {
 			);
 		}
 		if (isConflictsPanelOpen && conflicts.length > 0) {
-			return (
+			return withBorder(
 				<ConflictsPanel
 					conflicts={conflicts}
 					activeConflictId={activeConflictId}
@@ -1068,11 +1073,11 @@ export function FormBuilder() {
 	// ─── Render ───────────────────────────────────────────────────────────────────
 
 	return (
-		<Box h="full" bg="bg.default">
+		<Box style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }} bg="bg.default">
 				<Layout
 					resizable
 					size="full"
-					style={{ height: "100%" }}
+					style={{ height: "100%", flex: 1, minHeight: 0 }}
 					header={
 						<FormBuilderTopNav
 							formTitle={formTitle}

@@ -8,8 +8,10 @@ import { IconPlus } from "@tabler/icons-react";
 import { NodeAddMenu } from "../NodeAddMenu";
 import { FieldPickerInline } from "../FieldPickerModal";
 
+const SUCCESS = "var(--ax-colors-fg-accent)";
+
 const handleStyle = {
-	background: "var(--ax-colors-border-accent)",
+	background: SUCCESS,
 	width: 10,
 	height: 10,
 	border: "2px solid var(--ax-colors-bg-default)",
@@ -46,7 +48,7 @@ export function FormFieldNode({ data, selected }: NodeProps) {
 							padding: 0,
 						}}
 					>
-						<IconPlus size={14} color={isMenuOpen || plusHovered ? "#fff" : "var(--ax-colors-fg-secondary)"} />
+						<IconPlus size={14} color={isMenuOpen || plusHovered ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)"} />
 					</button>
 					{isMenuOpen && (showFields ? (
 						<FieldPickerInline
@@ -80,9 +82,9 @@ export function FormFieldNode({ data, selected }: NodeProps) {
 					border: d.isHighlighted
 						? d.isConflictHighlighted
 							? "2px solid #ca8a04"
-							: "2px solid var(--ax-colors-border-accent)"
+							: `2px solid ${SUCCESS}`
 						: selected
-						? "1.5px solid var(--ax-colors-border-accent)"
+						? `1.5px solid ${SUCCESS}`
 						: "1px solid var(--ax-colors-border-default)",
 					boxShadow: d.isHighlighted
 						? d.isConflictHighlighted
@@ -149,7 +151,7 @@ export function FormFieldNode({ data, selected }: NodeProps) {
 							position: "absolute",
 							top: -9,
 							right: -9,
-							background: "var(--ax-colors-bg-accent)",
+							background: SUCCESS,
 							color: "#fff",
 							borderRadius: 999,
 							fontSize: "10px",
