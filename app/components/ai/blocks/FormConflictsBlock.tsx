@@ -47,7 +47,7 @@ export const FormConflictsBlock: React.FC<AdaptiveBlockComponentProps> = ({ meta
 
 	if (visible.length === 0) {
 		return (
-			<AdaptiveBlock title="All issues resolved" style={{ boxShadow: "none" }} borderColor="border.tertiary">
+			<AdaptiveBlock title="All issues resolved" >
 				<Box style={{ fontSize: "13px", color: "var(--ax-colors-fg-secondary)" }}>
 					Your form looks good — no issues remaining.
 				</Box>
@@ -56,7 +56,7 @@ export const FormConflictsBlock: React.FC<AdaptiveBlockComponentProps> = ({ meta
 	}
 
 	return (
-		<AdaptiveBlock title={`${visible.length} issue${visible.length === 1 ? "" : "s"} found`} style={{ boxShadow: "none" }} borderColor="border.tertiary">
+		<AdaptiveBlock title={`${visible.length} issue${visible.length === 1 ? "" : "s"} found`} >
 			<Box display="flex" flexDirection="column" gap="8">
 
 				{/* Issue cards */}

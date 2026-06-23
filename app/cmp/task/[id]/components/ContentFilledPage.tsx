@@ -79,7 +79,7 @@ export function ContentFilledPage({
 	pages: Page[];
 	onSelectPage: (id: string | null) => void;
 	setPages: (pages: Page[] | ((prev: Page[]) => Page[])) => void;
-	onAddToApplication: (instance: ContentInstance) => void;
+	onAddToApplication: (instance: ContentInstance, applicationName?: string) => void;
 	previewOutlines: Outline[];
 	previewCurrentEle: string;
 	previewHoverEle: string;
@@ -118,6 +118,21 @@ export function ContentFilledPage({
 	useEffect(() => {
 		setIsEditingContentInstance(false);
 	}, [selectedContentInstanceId]);
+
+	const getStatusBadge = () => {
+		let status: string | undefined;
+		if (selectedPage) {
+			status = selectedPage.status;
+		} else if (selectedContentInstance) {
+			status = selectedContentInstance.publishStatus;
+		}
+
+		if (!status) return null;
+
+		const intent = status === "Published" ? "success" : status === "Changed" ? "warning" : "neutral";
+
+		return <Badge intent={intent} style={{ marginRight: 4 }}>{status}</Badge>;
+	};
 
 	return (
 		<Box pb="32" style={{ position: "relative" }}>
@@ -344,14 +359,17 @@ export function ContentFilledPage({
 					style={{ overflow: "hidden" }}
 				>
 					<Box alignItems="center" display="flex" justifyContent="space-between" style={{ padding: "18px 18px 14px" }}>
-						<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>
-							{selectedContentInstance
-								? (selectedContentInstance.fields.headline || selectedContentInstance.fields.title || selectedContentInstance.modelDisplayName)
-								: selectedPage
-								? selectedPage.name
-								: selectedTaskAsset?.title
-								?? `Couldn't load content with id: ${selectedContentInstanceId ?? selectedPageId ?? selectedTaskAssetId ?? 'unknown'}`}
-						</Text>
+						<Box alignItems="center" display="flex" gap="8">
+							<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>
+								{selectedContentInstance
+									? (selectedContentInstance.fields.headline || selectedContentInstance.fields.title || selectedContentInstance.modelDisplayName)
+									: selectedPage
+									? selectedPage.name
+									: selectedTaskAsset?.title
+									?? `Couldn't load content with id: ${selectedContentInstanceId ?? selectedPageId ?? selectedTaskAssetId ?? 'unknown'}`}
+							</Text>
+							{getStatusBadge()}
+						</Box>
 						<Box alignItems="center" display="flex" style={{ gap: 12 }}>
 							<IconTag size={16} color="var(--ax-colors-fg-secondary)" />
 							<button
@@ -372,12 +390,31 @@ export function ContentFilledPage({
 							</button>
 							<IconLink size={16} color="var(--ax-colors-fg-secondary)" />
 							{selectedContentInstance && (
-								<IconPencil
-									size={16}
-									color={isEditingContentInstance ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-secondary)"}
-									style={{ cursor: "pointer" }}
-									onClick={() => setIsEditingContentInstance(!isEditingContentInstance)}
-								/>
+								<>
+									<IconPencil
+										size={16}
+										color={isEditingContentInstance ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-secondary)"}
+										style={{ cursor: "pointer" }}
+										onClick={() => setIsEditingContentInstance(!isEditingContentInstance)}
+									/>
+									<Menu
+										options={applications.map((app: Application) => ({
+											label: app.name,
+											description: "Website",
+											execute: () => onAddToApplication(selectedContentInstance, app.name),
+										}))}
+									>
+										<MenuTrigger asChild>
+											<Button appearance="default" size="sm" style={{ borderRadius: 6, height: 32 }}>
+												<Box alignItems="center" display="flex" style={{ gap: 4 }}>
+													<span>Add to CMS</span>
+													<IconChevronDown size={14} />
+												</Box>
+											</Button>
+										</MenuTrigger>
+										<MenuContent />
+									</Menu>
+								</>
 							)}
 							<Menu
 								options={
@@ -425,23 +462,6 @@ export function ContentFilledPage({
 										: selectedContentInstance
 										? [
 												// Menu options for CMP content instances
-												applications.length === 1
-													? {
-															label: "Add to CMS",
-															addon: <IconPlus size={16} />,
-															description: "Create CMS page from this content",
-															execute: () => onAddToApplication(selectedContentInstance),
-													  }
-													: {
-															label: "Add to CMS",
-															addon: <IconPlus size={16} />,
-															description: "Create CMS page from this content",
-															subOptions: applications.map((app: Application) => ({
-																label: app.name,
-																description: `Add to ${app.name}`,
-																execute: () => onAddToApplication(selectedContentInstance),
-															})),
-													  },
 												{
 													label: "Remove from task",
 													addon: <IconTrash size={16} />,

@@ -10,8 +10,18 @@
 - **Docs**: https://optimizely-axiom.github.io/optiaxiom/
 - **Framework**: Next.js (App Router), TypeScript, React
 - **Font**: Inter (all weights, loaded via design system)
-- **Icons**: `@tabler/icons-react` (primary), `@fortawesome` (secondary)
-- **MCP**: An Axiom MCP server (`@optiaxiom/mcp`) is available in Claude Code and Cursor. Use it to look up component APIs, props, and live examples when unsure.
+- **Icons**: `@optimizely/axiom-icons` (primary — always use this), `@fortawesome` (secondary)
+- **MCP**: Two Axiom MCP servers are configured — use the right one for the target area:
+  - `mcp__axiom__*` — Axiom V2, for all non-Opal product areas
+  - `mcp__axiom_v3__*` — Axiom V3, for `app/opal/` and new V3 screens
+- **Opal design layer**: `app/opal/` uses both Axiom V3 AND Opal-specific additions — see `OPAL_DESIGN_SYSTEM.md`
+
+### Package versions by product area
+
+| Product area | `@optiaxiom/react` | Extra packages |
+|---|---|---|
+| CMS, CMP, Connect, FE Hosting | V2 (`^1.9.1`) | — |
+| Opal (`app/opal/`) | V3 (`3.0.0-next.0`) | `@optiaxiom/proteus` |
 
 ---
 
@@ -54,6 +64,21 @@ Files in `app/components/vb/blocks/` represent a customer's website, not Optimiz
 
 ---
 
+## Prop Token Values
+
+Valid values for key props — anything outside this list throws a `SprinklesError`.
+
+| Prop | Valid values |
+|------|-------------|
+| `w`, `h` | `"0"` `"10"` `"12"` `"16"` `"20"` `"24"` `"32"` `"40"` `"48"` `"56"` `"64"` `"80"` `"224"` `"384"` · `"2xs"` `"xs"` `"sm"` `"md"` `"lg"` `"xl"` `"3xl"` · `"1/2"` `"1/3"` `"2/3"` `"1/4"` `"3/4"` · `"auto"` `"fit"` `"full"` `"max"` `"min"` |
+| `p`, `m`, `gap` | `"0"` `"2"` `"4"` `"6"` `"8"` `"10"` `"12"` `"16"` `"20"` `"24"` `"32"` `"40"` `"48"` `"64"` `"80"` · `"auto"` (margin only) |
+| `border` / `borderT/B/L/R` | `"0"` `"1"` `"2"` |
+| `maxH` | `"xs"` `"sm"` `"md"` `"lg"` `"full"` |
+
+**Custom values** outside the token scale → use `style={{ width: '200px', maxHeight: '400px' }}`.
+
+---
+
 ## Component Quick Reference
 
 All imports from `@optiaxiom/react`.
@@ -93,8 +118,35 @@ import { Input, Field, SearchInput, Select, Switch, Checkbox, Textarea, DateInpu
 
 <SearchInput placeholder="Search..." w="224" value={q} onChange={e => setQ(e.target.value)} />
 
+{/* Select — single-value dropdown. Use when user must pick exactly one option. */}
+{/* Use Menu instead for multi-select, actions, links, or filtering. */}
+<Field label="Status">
+  <Select
+    value={status}
+    onValueChange={setStatus}
+    options={[
+      { label: "Reuse existing", value: "reuse" },
+      { label: "Create new copy", value: "copy" },
+    ]}
+  />
+</Field>
+
+{/* Grouping options */}
+<Select
+  options={[
+    { label: "Draft",     value: "draft",     group: { label: "Unpublished" } },
+    { label: "Scheduled", value: "scheduled", group: { label: "Unpublished" } },
+    { label: "Live",      value: "live",      group: { label: "Published" } },
+  ]}
+/>
+
 <Switch checked={on} onCheckedChange={setOn}>Label</Switch>
 ```
+
+> **Select gotcha:** `value` must match an entry in `options` — otherwise downshift throws `"getItemProps"`. Validate with useMemo:
+> ```tsx
+> const safeValue = useMemo(() => OPTIONS.some(o => o.value === raw) ? raw : OPTIONS[0].value, [raw]);
+> ```
 
 ### Tabs
 ```tsx
@@ -142,6 +194,9 @@ import { Avatar, Card, Table, DataTable } from "@optiaxiom/react";
 
 <Avatar name="John Doe" src="/avatar.jpg" />
 <Card><Box p="24">Content</Box></Card>
+
+// Card does NOT support onClick — wrap in a Box
+<Box onClick={handleClick} cursor="pointer"><Card>...</Card></Box>
 ```
 
 ### Full component list
@@ -176,16 +231,24 @@ import { Avatar, Card, Table, DataTable } from "@optiaxiom/react";
 | Token | Usage |
 |-------|-------|
 | `bg.default` | Default surface (white/dark) |
+| `bg.default.hovered` | Default surface hover state |
+| `bg.default.pressed` | Default surface pressed/active state — use for selected quick-filter pills, active toggle buttons |
 | `bg.page` | Page background |
-| `bg.secondary` | Secondary surface |
+| `bg.secondary` | Secondary surface — neutral gray |
 | `bg.tertiary` | Tertiary surface |
+| `bg.pill.default` | Pill background — **only valid on `<Pill>` from `@optiaxiom/react/unstable`**, not on `<Box>` |
+| `bg.pill.hovered` | Pill hover state — same scope restriction |
 | `bg.accent` | Primary action fill |
+| `bg.accent.hovered` | Primary action hover |
+| `bg.accent.pressed` | Primary action pressed |
 | `bg.accent.light` | Light accent |
 | `bg.overlay` | Modal/overlay backdrop |
 | `bg.error` / `.subtle` / `.light` | Error states |
 | `bg.success` / `.subtle` / `.light` | Success states |
 | `bg.warning` / `.subtle` / `.light` | Warning states |
 | `bg.information` / `.subtle` / `.light` | Info states |
+
+> **Never guess token names or apply tokens to the wrong component.** `bg.pill.default` exists but is scoped to `<Pill>` — using it on `<Box>` causes a TypeScript build failure. Verify tokens with `mcp__axiom_v3__get_tokens` or use `style={{ background: "var(--ax-colors-*)" }}` as a type-safe fallback.
 
 ### Border (border.*)
 | Token | Usage |
@@ -275,10 +338,47 @@ When translating a design into code, use this mapping:
 | White card with shadow | `<Card>` or `<Box bg="bg.default" shadow="md" rounded="lg">` |
 | Gray background area | `<Box bg="bg.secondary">` |
 | Bordered section | `<Box border="1" borderColor="border.default" rounded="md">` |
+| Filter chip / dismissible tag | Use `<Pill>` from `@optiaxiom/react/unstable` (experimental). Supports dismiss, size, and `bg.pill.default` / `bg.pill.hovered` tokens natively. |
+| Filter chip selected state | Toggle button row (quick filters): `style={{ background: "var(--ax-colors-bg-default-pressed)" }}` — never `bg.accent` or `bg.pill.default` on a `Box` |
 
 ---
 
 ## Project-Specific Patterns
+
+### Opal product page layout
+
+All Opal product pages (Agents, Context, etc.) follow this shell:
+
+```tsx
+// Outer container — full height, standard padding, vertical flex stack
+<Box px="32" py="24" display="flex" flexDirection="column" gap="24" overflow="auto" h="full">
+
+  {/* Page header — heading + description grouped with tight gap */}
+  <Box display="flex" flexDirection="column" gap="8">
+    <Heading level="1" fontSize="2xl">Page Title</Heading>
+    <Text color="fg.secondary">One-sentence description of what this page does.</Text>
+  </Box>
+
+  {/* Tabs (if tabbed) */}
+  <Tabs value={activeTab} onValueChange={setActiveTab}>
+    <TabsList>
+      <TabsTrigger value="tab1">Tab 1</TabsTrigger>
+    </TabsList>
+  </Tabs>
+
+  {/* Content — fills remaining height */}
+  <Box display="flex" flexDirection="column" gap="16" style={{ flex: 1, minHeight: 0 }}>
+    {/* page content */}
+  </Box>
+
+</Box>
+```
+
+Key rules:
+- Outer gap is `"24"` between all top-level sections (header, tabs, content)
+- Header inner gap is `"8"` (heading ↔ description)
+- Heading always uses `fontSize="2xl"` on Opal product pages
+- Pages with `customLayout: true` in the nav must manage their own height (`h="full"` or `height: "100%"`) — do **not** use `100vh`
 
 ### Local component wrappers
 `app/components/` contains wrappers like `Button.tsx`, `Input.tsx`, `Text.tsx` that override Axiom defaults for this prototype. Prefer raw `@optiaxiom/react` imports, but use local wrappers when their specific defaults are needed (e.g., `Input` for `size="lg"`).
@@ -339,6 +439,89 @@ app/cmp/dashboard/
 
 ---
 
+## Agents Area Patterns (`app/opal/agents/`)
+
+These patterns are established in the agents section and should be reused when extending it.
+
+### Badge intent (V3 API)
+In V3 Opal areas, `<Badge>` uses `intent` instead of V2's `colorScheme`:
+```tsx
+<Badge intent="success" variant="subtle">New</Badge>
+<Badge intent="information" variant="subtle">SEO/GEO</Badge>
+<Badge intent="primary" variant="subtle">Copywriting</Badge>
+// Valid intents: "success" | "information" | "primary" | "danger" | "warning"
+```
+Never use `colorScheme` in `app/opal/` — that is the V2 API.
+
+### Resizable detail tray
+Use `ResizableDetailsTray` from `app/opal/agents/setup/components/ResizableDetailsTray.tsx` for any right-side panel that should be user-resizable. It wraps Axiom's `DetailsPanel` / `DetailsPanelHeader` / `DetailsPanelBody` / `DetailsPanelFooter` (all from `@optiaxiom/react/unstable`) with a pointer-event drag handle.
+
+```tsx
+<ResizableDetailsTray
+  isOpen={isOpen}
+  onClose={() => setOpen(false)}
+  title="My Panel"
+  defaultWidth={400}
+  minWidth={320}
+  maxWidth={640}
+  footer={<Box>...</Box>}
+  headerAfter={<Button ... />}
+>
+  {/* body content */}
+</ResizableDetailsTray>
+```
+
+The drag handle renders as a pill-shaped `<Box role="separator">` on the left edge. Resize is handled via `onPointerDown` + `window.pointermove/pointerup` — no library needed. Transition is suppressed during active drag (`transition: "none"`) to avoid lag.
+
+### SelectionTooltip ("Ask Opal" chip)
+A fixed-position tooltip rendered as raw `<div>` (not an Axiom Tooltip) because it must anchor to mouse coordinates from a text selection.
+
+```tsx
+// Get position from selection
+const rect = window.getSelection()?.getRangeAt(0).getBoundingClientRect();
+// Render
+<SelectionTooltip
+  x={rect.left + rect.width / 2}
+  y={rect.top}
+  onAskOpal={() => opalPanelControls?.launchWithContext("Selected text", selectedText)}
+  onClose={() => setTooltipVisible(false)}
+/>
+```
+
+Styled with `--ax-colors-bg-default-inverse` / `--ax-colors-fg-default-inverse` so it appears as a dark chip in light mode and a light chip in dark mode without manual overrides. Closes on `pointerdown` outside via a `document` listener.
+
+### BuildWithOpal empty state
+When an agent has no saved configuration, render `<BuildWithOpalPage />` instead of the normal form. It provides a full `OpalChatView` where the user describes the agent in chat. Opal responds with an `AgentInteractiveCardBlock` containing pre-filled form fields. Never render `BuildWithOpalPage` inside the normal form layout — it is a full-page replacement.
+
+### Version history + comparison
+Version data uses the `Version` type exported from `VersionHistory.tsx`:
+```ts
+interface Version {
+  id: string;
+  version: string;   // e.g. "v3"
+  mode: string;      // e.g. "Edited"
+  timestamp: string;
+  author: string;
+  authorInitials: string;
+  isCurrent?: boolean;
+}
+```
+`VersionHistory` is rendered inside a `ResizableDetailsTray`. When the user selects "Compare", set `isComparing: true` and `comparisonVersionId` — `ComparisonBanner` and `ComparisonModal` handle the diff display. `VersionPreviewBanner` is shown when `viewingVersionId` is set (non-current version preview mode).
+
+### Workflow builder
+`app/opal/agents/workflow/` uses `@xyflow/react` for the node canvas and `elkjs` for automatic layout. This area is intentionally outside the Axiom layout system — ReactFlow manages its own DOM. Axiom components appear only in sidebars and toolbars, not on the canvas itself. Custom node types are defined in `WorkflowNodes.tsx`; custom icons (`BroomIcon`, `WebhookIcon`) are inline SVG components in `workflow/icon/`.
+
+### Lazy-loading heavy panels
+All heavy panels in `setup/page.tsx` are loaded with `next/dynamic` to keep the initial bundle small. Follow this pattern for any new tray or modal:
+```tsx
+const MyPanel = dynamic(
+  () => import("./components/MyPanel").then((mod) => mod.MyPanel),
+  { ssr: false }
+);
+```
+
+---
+
 ## Common Mistakes
 
 1. **Arbitrary spacing** — `padding: 17px` -> use `p="16"` token
@@ -348,6 +531,18 @@ app/cmp/dashboard/
 5. **Custom fonts** — Inter is provided by the design system
 6. **`prefers-color-scheme` media queries** — use `[data-theme="dark"]` selectors instead
 7. **Raw HTML for CMS UI** — use Axiom components (raw HTML is only for VB website blocks)
+8. **`maxHeight="400px"`** — not a valid prop; use `style={{ maxHeight: '400px' }}`
+9. **`<Select><option>…</option></Select>`** — use `options={[...]}` prop with `<SelectTrigger /><SelectContent />`
+
+---
+
+## Debugging: SprinklesError
+
+When you see `"width" has no value "200". Possible values are...`:
+
+1. Identify the prop in the error (`width` → `w` prop)
+2. Pick the closest valid token from the **Prop Token Values** table above (`200` → `w="224"`)
+3. Or escape with `style` for exact values: `style={{ width: '200px' }}`
 
 ---
 

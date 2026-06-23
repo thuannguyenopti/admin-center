@@ -5,8 +5,9 @@ import type { ContentInstance } from "@/app/db/cmpInitialData";
 import type { ContentType } from "@/app/db/initialData";
 import { createPageFromInstance } from "@/app/lib/contentConnection";
 import { useCallback, useEffect } from "react";
-import { initialCmpTasks } from "@/app/db/initialData";
+import { initialCmpTasks } from "@/app/db/cmpInitialData";
 import { workflowTemplates } from "./mockData";
+import { createTaskWorkflowFromTemplate } from "./utils/workflowState";
 import type { AssetItem, Scene } from "./types";
 import { useCmpTaskBaseState } from "./useCmpTaskBaseState";
 import { useCmpTaskComputedData } from "./useCmpTaskComputedData";
@@ -27,7 +28,7 @@ export function useCmpOpalAssetRecommendationState(taskId: string) {
 		scene: state.scene,
 		selectedPanelAssetIds: state.selectedPanelAssetIds,
 		selectedSearchAssetIds: state.selectedSearchAssetIds,
-		selectedWorkflowId: state.selectedWorkflowId,
+		taskWorkflows: state.taskWorkflows,
 		taskArticles: state.taskArticles,
 		taskAssets: state.taskAssets,
 		workflowSearch: state.workflowSearch,
@@ -178,7 +179,10 @@ export function useCmpOpalAssetRecommendationState(taskId: string) {
 	};
 	const applyWorkflowChange = () => {
 		if (state.pendingWorkflowId) {
-			state.setSelectedWorkflowId(state.pendingWorkflowId);
+			const template = workflowTemplates.find((t) => t.id === state.pendingWorkflowId);
+			if (template) {
+				state.setTaskWorkflows((prev: Record<string, any>) => ({ ...prev, [taskId]: createTaskWorkflowFromTemplate(template) }));
+			}
 		}
 
 		state.setWorkflowDialogOpen(false);

@@ -1,4 +1,4 @@
-import { Field, Input, Text } from "@optiaxiom/react";
+import { Field, Input } from "@optiaxiom/react";
 import { PropertyRendererProps } from "../types";
 
 export const DateTimeRenderer: React.FC<PropertyRendererProps> = ({
@@ -31,7 +31,7 @@ export const DateTimeRenderer: React.FC<PropertyRendererProps> = ({
 	if (mode === "readonly") {
 		return (
 			<Field label={property.displayName || property.name}>
-				<Text>{value ? new Date(value).toLocaleString() : "—"}</Text>
+				<Input type="datetime-local" value={toDateTimeLocal(value)} disabled />
 			</Field>
 		);
 	}

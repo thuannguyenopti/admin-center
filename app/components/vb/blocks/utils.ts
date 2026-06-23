@@ -2,7 +2,8 @@ export function getProperty(properties: any, key: string, label: string) {
     if (Array.isArray(properties)) {
         return properties.find((p: any) => p.label === label)?.value;
     }
-    return properties?.[key]?.value;
+    // Direct value format (after display template migration)
+    return properties?.[key];
 }
 
 export const VB_INTERNAL_MIME = "application/x-vb-internal";

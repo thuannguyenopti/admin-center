@@ -171,8 +171,9 @@ export default function ElementEditor({
               )}
 
               {visibleProps.map((prop) => {
-                const propData = properties ? properties[prop.id] : null;
-                const value = propData ? propData.value : (prop.defaultValue ?? "");
+                const propData = properties ? properties[prop.id] : undefined;
+                // After migration, properties are stored directly (not { value: ... })
+                const value = propData !== undefined ? propData : (prop.defaultValue ?? "");
 
                 return (
                   <PropertyRenderer

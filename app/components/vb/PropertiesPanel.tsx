@@ -21,6 +21,7 @@ import { initialContentTypes, type Property, type ContentType } from "@/app/db/i
 import usePersistentState from "@/app/usePersistentState";
 import { groupPropertiesByGroup, shouldShowGroupHeaders } from "./utils/propertyGroups";
 import { PropertyRenderer } from "@/app/components/property-renderers";
+import BoundPropertyIndicator from "./BoundPropertyIndicator";
 
 // Import to register all property renderers
 import "@/app/components/property-renderers";
@@ -47,6 +48,8 @@ type Props = {
 	pageName?: string;
 	pageId?: string;
 	contentTypeId?: string;
+	/** Set of property IDs that are data-bound from a connected content instance */
+	boundPropertyIds?: Set<string>;
 	/** Register with parent so header sparkles can trigger generate. Call with null on unmount. */
 	onRegisterGenerateTrigger?: (trigger: (() => void) | null) => void;
 	/** Notify parent when generate is loading (for header button spinner). */
@@ -104,11 +107,24 @@ function PillMenuSelect({
 		return menuOptions;
 	}, [availableItems, selectedItems, inputValue, onToggle, onCreateNew]);
 
+	const value = useMemo<MenuOption[]>(
+		() =>
+			availableItems
+				.filter((item) => selectedItems.includes(item.slug))
+				.map((item) => ({
+					execute: () => onToggle(item.slug),
+					label: item.name,
+					multi: true,
+					selected: () => true,
+				})),
+		[availableItems, selectedItems, onToggle],
+	);
+
 	return (
 		<Field label={label}>
 			<PillMenu
 				options={options}
-				value={availableItems.filter((item) => selectedItems.includes(item.slug)).map((item) => ({ label: item.name, execute: () => onToggle(item.slug), multi: true, selected: true }))}
+				value={value}
 				placeholder={placeholder}
 				inputValue={inputValue}
 				onInputValueChange={setInputValue}
@@ -136,6 +152,7 @@ export default function PropertiesPanel({
 	pageName,
 	pageId,
 	contentTypeId,
+	boundPropertyIds,
 	onRegisterGenerateTrigger,
 	onGenerateLoadingChange,
 }: Props) {
@@ -395,6 +412,7 @@ export default function PropertiesPanel({
 	// Render a single property field based on its definition
 	const renderPropertyField = (prop: Property) => {
 		const propValue = (value as any)[prop.id];
+		const isBound = boundPropertyIds?.has(prop.id) ?? false;
 
 		// Handle categories and tags specially with PillMenu (PropertiesPanel specific)
 		if (prop.type === "SelectMany") {
@@ -433,14 +451,21 @@ export default function PropertiesPanel({
 
 		// Use shared PropertyRenderer for all other property types
 		return (
-			<PropertyRenderer
-				key={prop.id}
-				property={prop}
-				value={propValue}
-				onChange={(newVal: any) => onChange({ [prop.id]: newVal })}
-				enableAI={false}
-				context={{ runtimeContentTypes }}
-			/>
+			<Box key={prop.id} style={{ position: "relative" }}>
+				{isBound && (
+					<Box style={{ position: "absolute", top: 0, right: 0, zIndex: 1 }}>
+						<BoundPropertyIndicator />
+					</Box>
+				)}
+				<PropertyRenderer
+					property={prop}
+					value={propValue}
+					onChange={(newVal: any) => onChange({ [prop.id]: newVal })}
+					enableAI={false}
+					mode={isBound ? "readonly" : "edit"}
+					context={{ runtimeContentTypes }}
+				/>
+			</Box>
 		);
 	};
 

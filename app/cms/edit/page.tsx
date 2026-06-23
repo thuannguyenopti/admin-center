@@ -504,7 +504,8 @@ const PageRow = ({
 };
 
 export default function EditPage() {
-	const [pages, setPages, isHydrated] = usePersistentState("pages_v5", initialPages) as [
+	const router = useRouter();
+	const [pages, setPages, isHydrated] = usePersistentState("pages_v6", initialPages) as [
 		Page[],
 		(pages: Page[]) => void,
 		boolean,
@@ -539,8 +540,17 @@ export default function EditPage() {
 	const [clipboard, setClipboard] = useState<{pageIds: string[]; operation: 'cut' | 'copy'} | null>(null);
 	const [draggedPageId, setDraggedPageId] = useState<string | null>(null);
 
-	const handleCreatePage = (newPage: Page) => {
-		setPages([...pages, newPage]);
+	const handleCreatePage = (newPage: Page, navigate?: boolean) => {
+		const updatedPages = [...pages, newPage];
+		setPages(updatedPages);
+
+		// Navigate to the new page after state update if requested
+		if (navigate) {
+			// Use setTimeout to ensure state is persisted to localStorage before navigation
+			setTimeout(() => {
+				router.push(`/cms/edit/${newPage.id}`);
+			}, 100);
+		}
 	};
 
 	// Handle page selection

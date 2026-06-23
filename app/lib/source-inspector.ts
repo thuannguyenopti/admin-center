@@ -68,16 +68,16 @@ const routeManifests: Record<string, SourceInspectorManifest> = {
 			{
 				id: "task-orchestrator",
 				label: "Task Orchestrator",
-				path: "app/cmp/task/[id]/CmpOpalAssetRecommendation.tsx",
+				path: "app/cmp/task/[id]/TaskDetailView.tsx",
 				description: "Scene switching and the top-level composition of the task experience.",
-				selector: { type: "symbol", symbol: "CmpOpalAssetRecommendation" },
+				selector: { type: "symbol", symbol: "TaskDetailView" },
 			},
 			{
 				id: "task-state",
 				label: "Task State",
-				path: "app/cmp/task/[id]/useCmpOpalAssetRecommendationState.ts",
+				path: "app/cmp/task/[id]/useTaskDetailState.ts",
 				description: "The central state machine that coordinates scenes, selections, and task actions.",
-				selector: { type: "symbol", symbol: "useCmpOpalAssetRecommendationState" },
+				selector: { type: "symbol", symbol: "useTaskDetailState" },
 			},
 			{
 				id: "content-filled",

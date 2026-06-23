@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback, useEffect } from "react";
 import { Box } from "@optiaxiom/react";
 import { OpalHeader } from "./Opal/OpalHeader";
 import { OpalChat } from "./Opal/OpalChat";
@@ -8,7 +9,8 @@ import { OpalHistorySidebar } from "./Opal/OpalHistorySidebar";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ChatHistoryItem, OpalMode } from "@/app/hooks/useOpalHistory";
 import { useLayout } from "@/app/context/LayoutContext";
-import { useEffect, useState, useCallback } from "react";
+import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
+import { usePathname } from "next/navigation";
 
 type OpalPanelProps = {
   isOpen: boolean;
@@ -21,8 +23,6 @@ type OpalPanelProps = {
   setInputValue: (value: string) => void;
   sendMessage: (content: string) => void;
   regenerate?: (id: string) => void;
-  topOffset?: number;
-  inline?: boolean;
 
   groupedHistory: { [key: string]: ChatHistoryItem[] };
   activeChat: string | null;
@@ -35,6 +35,9 @@ type OpalPanelProps = {
   createNewChat: () => void;
   deleteChat: (id: string) => void;
   selectChat: (id: string) => void;
+  contextChip?: string | null;
+  contextContent?: string | null;
+  onContextChipRemove?: () => void;
 };
 
 export function OpalPanel({
@@ -48,8 +51,6 @@ export function OpalPanel({
   setInputValue,
   sendMessage,
   regenerate,
-  topOffset = 57,
-  inline = false,
   groupedHistory,
   activeChat,
   searchQuery,
@@ -61,10 +62,16 @@ export function OpalPanel({
   createNewChat,
   deleteChat,
   selectChat,
+  contextChip,
+  contextContent,
+  onContextChipRemove,
 }: OpalPanelProps) {
   const { setOpalPanelWidth } = useLayout();
+  const pathname = usePathname();
   const [customWidth, setCustomWidth] = useState<number | null>(null);
   const [isResizing, setIsResizing] = useState(false);
+  const { actionCard: atlassianActionCard, modalElement } = useAtlassianConnectorSuggestion(inputValue);
+  const streamingMode = pathname?.startsWith("/web-experimentation") ? "expanded" : "collapsed";
 
   const handleSend = (content?: string) => {
     const msg = content ?? inputValue;
@@ -127,45 +134,26 @@ export function OpalPanel({
 
   if (!isOpen) return null;
 
-  // In inline mode the panel is a flex sibling (no fixed positioning) so
-  // it naturally pushes the adjacent form-builder content left without any
-  // z-index / containing-block tricks.
-  const panelStyle: React.CSSProperties = inline
-    ? {
-        width: `${totalWidth}px`,
-        height: '100%',
-        flexShrink: 0,
-        backgroundColor: 'var(--opal-bg-primary)',
-        borderLeft: '1px solid var(--opal-border-primary)',
-        boxShadow: '-6px 6px 25px -4px rgba(12, 16, 29, 0.08)',
-        display: 'flex',
-        flexDirection: 'row',
-        overflowX: 'visible',
-        overflowY: 'hidden',
-        transition: 'width 0.3s cubic-bezier(0, 1, 0, 1)',
-      }
-    : {
+  return (
+    <Box
+      className="opal-panel"
+      style={{
         position: 'fixed',
-        top: `${topOffset}px`,
+        top: '57px',
         right: 0,
         bottom: 0,
         width: `${totalWidth}px`,
         backgroundColor: 'var(--opal-bg-primary)',
         borderLeft: '1px solid var(--opal-border-primary)',
-        boxShadow: '-6px 6px 25px -4px rgba(12, 16, 29, 0.08)',
         zIndex: 50,
         display: 'flex',
         flexDirection: 'row',
         overflowX: 'visible',
         overflowY: 'hidden',
         transition: 'width 0.3s cubic-bezier(0, 1, 0, 1)',
-      };
-
-  return (
-    <Box
-      className="opal-panel"
-      style={panelStyle}
+      }}
     >
+      {modalElement}
       {/* Grab Handle - only in docked mode */}
       {mode === 'docked' && (
         <Box
@@ -178,9 +166,9 @@ export function OpalPanel({
             width: '10px',
             height: '52px',
             backgroundColor: 'var(--opal-bg-primary)',
-            border: '1px solid #e9edf5',
+            border: '1px solid var(--opal-border-secondary)',
             borderRadius: '4px',
-            cursor: isResizing ? 'ew-resize' : 'ew-resize',
+            cursor: 'ew-resize',
             zIndex: 100,
           }}
         />
@@ -217,7 +205,12 @@ export function OpalPanel({
         <OpalChat
           messages={messages}
           onSuggestionClick={handleSuggestionClick}
+          onSubmitPrompt={sendMessage}
+          streamingMode={streamingMode}
+          threadKey={activeChat}
           onRegenerate={regenerate}
+          contextChip={contextChip}
+          contextualActionCard={atlassianActionCard}
         />
         <div style={{ flexShrink: 0 }}>
           <OpalInput
@@ -227,6 +220,9 @@ export function OpalPanel({
             disabled={isLoading || isInputDisabled}
             isLoading={isLoading}
             error={error}
+            contextChip={contextChip}
+            contextContent={contextContent}
+            onContextChipRemove={onContextChipRemove}
           />
         </div>
       </Box>

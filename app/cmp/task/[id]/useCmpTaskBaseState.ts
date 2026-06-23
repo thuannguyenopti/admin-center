@@ -9,7 +9,8 @@ import usePersistentState from "@/app/usePersistentState";
 import { useEffect, useState } from "react";
 import { initialTaskAssets, searchAssets, suggestedAssets } from "./mockData";
 import { initialBriefContent, perspectiveSeeds, taskBriefContents } from "./constants";
-import type { AssetItem, Scene, TaskArticle } from "./types";
+import type { AssetItem, PublishingChannel, Scene, TaskArticle } from "./types";
+import type { TaskWorkflowState } from "./workflowTypes";
 import { formatInitialBriefHtml } from "./utils";
 
 export function useCmpTaskBaseState(taskId: string) {
@@ -47,7 +48,7 @@ export function useCmpTaskBaseState(taskId: string) {
 	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
 	const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
 	const [suggestedPanelOpen, setSuggestedPanelOpen] = useState(false);
-	const [pages, setPages] = usePersistentState("pages_v5", initialPages) as [
+	const [pages, setPages] = usePersistentState("pages_v6", initialPages) as [
 		Page[],
 		React.Dispatch<React.SetStateAction<Page[]>>,
 	];
@@ -64,11 +65,30 @@ export function useCmpTaskBaseState(taskId: string) {
 	const [briefContent, setBriefContent] = useState(taskBriefHtml);
 	const [draftBriefContent, setDraftBriefContent] = useState(taskBriefHtml);
 	const [searchReturnScene, setSearchReturnScene] = useState<Scene>("brief-edit");
-	const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
+	const [taskWorkflows, setTaskWorkflows] = usePersistentState("cmpTaskWorkflows", {} as Record<string, TaskWorkflowState>) as [
+		Record<string, TaskWorkflowState>,
+		React.Dispatch<React.SetStateAction<Record<string, TaskWorkflowState>>>,
+	];
 	const [workflowMenuOpen, setWorkflowMenuOpen] = useState(false);
 	const [workflowSearch, setWorkflowSearch] = useState("");
 	const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
 	const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
+	const [publishingChannels, setPublishingChannels] = usePersistentState("cmpPublishingChannels", {} as Record<string, PublishingChannel[]>) as [
+		Record<string, PublishingChannel[]>,
+		React.Dispatch<React.SetStateAction<Record<string, PublishingChannel[]>>>,
+	];
+	const [publishedTasks, setPublishedTasks] = usePersistentState("cmpPublishedTasks", [] as string[]) as [
+		string[],
+		React.Dispatch<React.SetStateAction<string[]>>,
+	];
+	const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+
+	// Migrate old array format to new record format
+	useEffect(() => {
+		if (Array.isArray(publishingChannels)) {
+			setPublishingChannels({});
+		}
+	}, [publishingChannels, setPublishingChannels]);
 
 	return {
 		applications,
@@ -79,9 +99,12 @@ export function useCmpTaskBaseState(taskId: string) {
 		exclude,
 		instanceToAdd,
 		isTargetSelectionOpen,
+		isTaskPublished: publishedTasks.includes(taskId),
 		pages,
 		pendingWorkflowId,
 		perspectives,
+		publishConfirmOpen,
+		publishingChannels: publishingChannels[taskId] ?? [],
 		previewCurrentEle,
 		previewHoverEle,
 		previewOutlines,
@@ -94,7 +117,8 @@ export function useCmpTaskBaseState(taskId: string) {
 		selectedPanelAssetIds,
 		selectedSearchAssetIds,
 		selectedTaskAssetId,
-		selectedWorkflowId,
+		taskId,
+		taskWorkflows,
 		setBriefContent,
 		setContentInstances,
 		setDraftBriefContent,
@@ -104,6 +128,9 @@ export function useCmpTaskBaseState(taskId: string) {
 		setPages,
 		setPendingWorkflowId,
 		setPerspectives,
+		setPublishConfirmOpen,
+		setPublishingChannels,
+		setPublishedTasks,
 		setPreviewCurrentEle,
 		setPreviewHoverEle,
 		setPreviewOutlines,
@@ -116,7 +143,7 @@ export function useCmpTaskBaseState(taskId: string) {
 		setSelectedPanelAssetIds,
 		setSelectedSearchAssetIds,
 		setSelectedTaskAssetId,
-		setSelectedWorkflowId,
+		setTaskWorkflows,
 		setSuggestedPanelOpen,
 		setTaskArticles,
 		setTaskAssets,

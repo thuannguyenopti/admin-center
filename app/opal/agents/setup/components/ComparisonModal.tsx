@@ -8,7 +8,7 @@ import {
     Button,
     Heading,
 } from "@optiaxiom/react";
-import { IconX } from "@tabler/icons-react";
+import { IconXmark } from "@optimizely/axiom-icons";
 
 interface ComparisonModalProps {
     isOpen: boolean;
@@ -75,7 +75,7 @@ export function ComparisonModal({
                         <Button
                             appearance="subtle"
                             size="sm"
-                            icon={<IconX size={16} />}
+                            icon={<IconXmark size={16} />}
                             aria-label="Close"
                             onClick={onClose}
                         />

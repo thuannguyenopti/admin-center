@@ -3,22 +3,63 @@
 import { Avatar, Badge, Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconCalendar, IconChevronDown, IconDots, IconPlus, IconX } from "@tabler/icons-react";
-import type { WorkflowStep } from "../../types";
+import { IconCalendar, IconCheck, IconChevronDown, IconDots, IconPlus, IconX } from "@tabler/icons-react";
+import { initialUsers } from "@/app/db/initialData";
+import type { TaskWorkflowStep } from "../../workflowTypes";
 import { DashedCircle } from "../shared/DashedCircle";
 import { ChecklistItem } from "./ChecklistItem";
 
-export function WorkflowExpandedStep({ step }: { step: WorkflowStep }) {
+type WorkflowExpandedStepProps = {
+	onSetAssignee: (stepId: string, userId: string | undefined) => void;
+	onToggleChecklistItem: (stepId: string, checklistItemId: string) => void;
+	onToggleDone: (stepId: string) => void;
+	onToggleExpanded: (stepId: string) => void;
+	step: TaskWorkflowStep;
+};
+
+export function WorkflowExpandedStep({ onSetAssignee, onToggleChecklistItem, onToggleDone, onToggleExpanded, step }: WorkflowExpandedStepProps) {
+	const assignee = step.assigneeUserId
+		? initialUsers.find((u) => u.id === step.assigneeUserId)
+		: undefined;
+	const assigneeName = assignee?.name ?? step.assigneeUserId ?? "Unassigned";
+
 	return (
 		<Box
 			display="flex"
 			flexDirection="column"
 			style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", gap: 16, padding: "14px 0" }}
 		>
-			<Box alignItems="center" display="flex" justifyContent="space-between">
+			<Box
+				alignItems="center"
+				aria-expanded={true}
+				display="flex"
+				justifyContent="space-between"
+				onClick={() => onToggleExpanded(step.id)}
+				onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggleExpanded(step.id); } }}
+				role="button"
+				style={{ cursor: "pointer" }}
+				tabIndex={0}
+			>
 				<Box alignItems="center" display="flex" gap="12">
 					<IconChevronDown color="var(--ax-colors-fg-secondary)" size={16} />
-					<DashedCircle />
+					{step.done ? (
+						<Box
+							alignItems="center"
+							bg="bg.success.light"
+							display="flex"
+							justifyContent="center"
+							onClick={(e) => { e.stopPropagation(); onToggleDone(step.id); }}
+							onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onToggleDone(step.id); } }}
+							role="button"
+							rounded="full"
+							style={{ cursor: "pointer", height: 24, width: 24 }}
+							tabIndex={0}
+						>
+							<IconCheck color="var(--ax-colors-fg-success-strong)" size={14} />
+						</Box>
+					) : (
+						<DashedCircle onClick={() => onToggleDone(step.id)} />
+					)}
 					<Text color="fg.default" style={{ fontSize: 15, fontWeight: 500, lineHeight: "22px", maxWidth: "none" }}>
 						{step.title}
 					</Text>
@@ -29,19 +70,9 @@ export function WorkflowExpandedStep({ step }: { step: WorkflowStep }) {
 							<IconCalendar size={12} />
 						</DashedCircle>
 					)}
-					<Avatar size="xs" src="/avatars/aamr-fakhry.png" style={{ height: 20, width: 20 }} />
-					<Box
-						alignItems="center"
-						bg="bg.secondary"
-						display="flex"
-						justifyContent="center"
-						rounded="full"
-						style={{ height: 20, width: 20 }}
-					>
-						<Text fontSize="xs" style={{ fontSize: 10, lineHeight: "14px" }}>
-							WM
-						</Text>
-					</Box>
+					{assignee && (
+						<Avatar name={assignee.name} size="xs" src={assignee.avatar} style={{ height: 20, width: 20 }} />
+					)}
 				</Box>
 			</Box>
 
@@ -51,16 +82,21 @@ export function WorkflowExpandedStep({ step }: { step: WorkflowStep }) {
 						Assigned to
 					</Text>
 					<Text color="fg.default" style={{ fontSize: 14, lineHeight: "20px", maxWidth: "none" }}>
-						{step.assignee ?? "Mary Anne"}
+						{assigneeName}
 					</Text>
 				</Box>
 				<Text color="fg.tertiary" style={{ fontSize: 14, lineHeight: "20px", maxWidth: "none" }}>
 					{step.description ?? "Write description"}
 				</Text>
-				{step.checklist?.map((item) => (
-					<ChecklistItem key={item} label={item} />
+				{step.checklist.map((item) => (
+					<ChecklistItem
+						key={item.id}
+						checked={item.checked}
+						label={item.label}
+						onToggle={() => onToggleChecklistItem(step.id, item.id)}
+					/>
 				))}
-				<Badge intent="neutral" style={{ fontSize: 12, height: 22, width: "fit-content" }}>
+				<Badge intent="neutral" w="fit">
 					{step.badgeLabel ?? "Not Started"}
 				</Badge>
 				<Box alignItems="center" display="flex" gap="8" pt="4">

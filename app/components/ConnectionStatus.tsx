@@ -3,13 +3,12 @@
 import { Box, Badge } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
-import { IconLink, IconRefresh, IconX } from "@tabler/icons-react";
+import { IconLink, IconXmark as IconX } from "@optimizely/axiom-icons";
 
 interface ConnectionStatusProps {
 	instanceId?: string;
 	syncStatus?: "synced" | "out-of-sync" | "manual-override";
 	lastSyncedAt?: string;
-	onSync?: () => void;
 	onDisconnect?: () => void;
 }
 
@@ -17,7 +16,6 @@ export default function ConnectionStatus({
 	instanceId,
 	syncStatus,
 	lastSyncedAt,
-	onSync,
 	onDisconnect,
 }: ConnectionStatusProps) {
 	if (!instanceId) return null;
@@ -70,18 +68,11 @@ export default function ConnectionStatus({
 				)}
 			</Text>
 
-			<Box display="flex" gap="8">
-				{onSync && (
-					<Button size="sm" appearance="subtle" icon={<IconRefresh size={14} />} onClick={onSync}>
-						Sync Now
-					</Button>
-				)}
-				{onDisconnect && (
-					<Button size="sm" appearance="subtle" icon={<IconX size={14} />} onClick={onDisconnect}>
-						Disconnect
-					</Button>
-				)}
-			</Box>
+			{onDisconnect && (
+				<Button size="sm" appearance="subtle" icon={<IconX size={14} />} onClick={onDisconnect}>
+					Disconnect
+				</Button>
+			)}
 		</Box>
 	);
 }

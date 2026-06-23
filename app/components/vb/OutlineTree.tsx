@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useMemo, useState} from "react";
+import React, {useMemo, useState, useEffect, useRef} from "react";
 import {Box, Button, Text} from "@optiaxiom/react";
 import {IconPlus} from "@tabler/icons-react";
 
@@ -9,6 +9,7 @@ import Row from "./Row";
 import Col from "./Col";
 import Ele, {EleMap} from "./Ele";
 import {getProperty, isImageDrag, isInternalDrag, VB_INTERNAL_MIME} from "./blocks/utils";
+import {getPreviewLabel} from "./blocks/previewLabel";
 import {BLOCK_SCHEMAS} from "./blocks/schemas";
 import {initialPages} from "@/app/db/initialData";
 
@@ -36,7 +37,16 @@ function getImageNameFromUrl(url: string): string {
 	try {
 		const urlObj = new URL(url);
 		const pathname = urlObj.pathname;
-		const parts = pathname.split('/');
+		const parts = pathname.split('/').filter(Boolean);
+
+		// Handle picsum.photos URLs with /seed/{name}/{width}/{height} pattern
+		if (urlObj.hostname.includes("picsum.photos") && parts.includes("seed")) {
+			const seedIndex = parts.indexOf("seed");
+			if (seedIndex >= 0 && seedIndex + 1 < parts.length) {
+				return parts[seedIndex + 1];
+			}
+		}
+
 		return parts[parts.length - 1] || "Image";
 	} catch {
 		return "Image";
@@ -56,6 +66,19 @@ interface OutlineProps {
 	setTheEles: React.Dispatch<React.SetStateAction<EleMap>>;
 	onEditProperties?: (id: string) => void;
 	onOpenStyleEditor?: (elementId: string) => void;
+	onSectionAdded?: (sectionId: string) => void;
+	scrollToSectionId?: string | null;
+	onScrollComplete?: () => void;
+	currentSection?: string | null;
+	setCurrentHoverSection?: (sectionId: string | null) => void;
+	currentRow?: string | null;
+	setCurrentHoverRow?: (rowId: string | null) => void;
+	currentColumn?: string | null;
+	setCurrentHoverColumn?: (colId: string | null) => void;
+	onScrollToSection?: (sectionId: string, outlineId: string) => void;
+	onScrollToRow?: (rowId: string) => void;
+	onScrollToColumn?: (colId: string) => void;
+	outlineId?: string;
 
 	data: any[];
 }
@@ -121,8 +144,32 @@ export default function OutlineTree({
 	dragging,
 	onEditProperties,
 	onOpenStyleEditor,
+	onSectionAdded,
+	scrollToSectionId,
+	onScrollComplete,
+	currentSection,
+	setCurrentHoverSection,
+	currentRow,
+	setCurrentHoverRow,
+	currentColumn,
+	setCurrentHoverColumn,
+	onScrollToSection,
+	onScrollToRow,
+	onScrollToColumn,
+	outlineId,
 }: OutlineProps) {
 	const ASSET_DRAG_ID = "__asset:image__";
+
+	// Wrapper for setCurrentHoverEle that also clears lower-priority hovers
+	const setCurrentHoverEleWithClear = (value: React.SetStateAction<string>) => {
+		setCurrentHoverEle(value);
+		// When hovering an element, clear section/row/column hovers
+		if (value !== "none") {
+			setCurrentHoverSection?.(null);
+			setCurrentHoverRow?.(null);
+			setCurrentHoverColumn?.(null);
+		}
+	};
 
 	// Support both old seeded ids (sec-*) and new ids (section-*)
 	const isSectionId = (id: string) => id.startsWith("section-") || id.startsWith("sec-");
@@ -170,6 +217,12 @@ export default function OutlineTree({
 	type InternalDropPosition = {colId: string; position: number} | null;
 	const [internalDrop, setInternalDrop] = useState<InternalDropPosition>(null);
 
+	// Track section IDs for auto-scroll
+	const prevSectionIdsRef = useRef<string[]>(
+		data.map((section: any) => section?.id).filter(Boolean)
+	);
+	const outlineContainerRef = useRef<HTMLDivElement>(null);
+
 	const isInternalEleDrag = (id: string | null) => {
 		if (!id) return false;
 		if (id === ASSET_DRAG_ID) return false;
@@ -212,11 +265,13 @@ export default function OutlineTree({
 
 	// addSection: if 'at' is null/undefined, append; otherwise insert at index 'at'
 	const addSection = (at: number | null | undefined = null) => {
+		const t = Date.now();
+		const newId = "section-" + t;
+
 		setData((prev) => {
 			const mk = () => {
-				const t = Date.now();
 				return {
-					id: "section-" + t,
+					id: newId,
 					open: true,
 					children: [
 						{
@@ -236,6 +291,9 @@ export default function OutlineTree({
 			if (at === null || at === undefined) return [...prev, mk()];
 			return [...prev.slice(0, at), mk(), ...prev.slice(at)];
 		});
+
+		// Notify parent that a section was added
+		onSectionAdded?.(newId);
 	};
 
 	const addCol = (e: any, section: number, row: number, at: any) => {
@@ -319,16 +377,16 @@ export default function OutlineTree({
 				properties: (() => {
 					const schema = BLOCK_SCHEMAS[type];
 					if (schema) {
-						const props: Record<string, {value: any}> = {};
+						const props: Record<string, any> = {};
 						Object.entries(schema.properties).forEach(([key, def]) => {
-							props[key] = {value: def.default ?? ""};
+							props[key] = def.default ?? "";
 						});
 
 						// Special case for image if we have pending data
 						if (type === "ct-image" && imageUrl) {
-							if (props["title"]) props["title"].value = imageAlt || "Untitled Image";
-							if (props["altText"]) props["altText"].value = imageAlt;
-							if (props["imageUrl"]) props["imageUrl"].value = imageUrl;
+							if (props["title"]) props["title"] = imageAlt || "Untitled Image";
+							if (props["altText"]) props["altText"] = imageAlt;
+							if (props["imageUrl"]) props["imageUrl"] = imageUrl;
 						}
 
 						return props;
@@ -482,6 +540,72 @@ export default function OutlineTree({
 		});
 	};
 
+	// Auto-scroll the specific newly added section into view
+	useEffect(() => {
+		const currentSectionIds = data.map((section: any) => section?.id).filter(Boolean);
+		const previousSectionIds = prevSectionIdsRef.current;
+		const addedSectionIds = currentSectionIds.filter((id: string) => !previousSectionIds.includes(id));
+
+		// Only scroll if exactly one section was added (not removed, not switched outlines)
+		if (
+			outlineContainerRef.current &&
+			addedSectionIds.length === 1 &&
+			currentSectionIds.length === previousSectionIds.length + 1
+		) {
+			const addedSectionId = addedSectionIds[0];
+			requestAnimationFrame(() => {
+				if (!outlineContainerRef.current) return;
+
+				// Find the newly added section element
+				const addedSectionEl = Array.from(
+					outlineContainerRef.current.querySelectorAll("[data-section-id]")
+				).find(
+					(el) => el.getAttribute("data-section-id") === addedSectionId
+				) as HTMLElement | undefined;
+
+				if (addedSectionEl) {
+					addedSectionEl.scrollIntoView({
+						behavior: "smooth",
+						block: "nearest",
+					});
+				}
+			});
+		}
+
+		prevSectionIdsRef.current = currentSectionIds;
+	}, [data]);
+
+	// Scroll to section when clicked in preview
+	useEffect(() => {
+		if (!scrollToSectionId) {
+			return;
+		}
+		if (!outlineContainerRef.current) {
+			onScrollComplete?.();
+			return;
+		}
+
+		requestAnimationFrame(() => {
+			if (!outlineContainerRef.current) {
+				onScrollComplete?.();
+				return;
+			}
+
+			const sectionElement = outlineContainerRef.current.querySelector(
+				`[data-section-id="${scrollToSectionId}"]`
+			) as HTMLElement | null;
+
+			if (sectionElement) {
+				sectionElement.scrollIntoView({
+					behavior: "smooth",
+					block: "nearest",
+				});
+			}
+
+			onScrollComplete?.();
+		});
+	}, [scrollToSectionId, onScrollComplete]);
+
 	const insertImageIntoTree = (
 		colId: string,
 		position: number,
@@ -495,10 +619,10 @@ export default function OutlineTree({
 			[uKey]: {
 				type: "ct-image",
 				properties: {
-					imageUrl: {value: imageUrl},
-					altText: {value: imageAlt || "Untitled Image"},
-					width: {value: "auto"},
-					height: {value: "auto"},
+					imageUrl: imageUrl,
+					altText: imageAlt || "Untitled Image",
+					width: "auto",
+					height: "auto",
 				},
 			},
 		}));
@@ -523,6 +647,7 @@ export default function OutlineTree({
 
 	return (
 		<div
+			ref={outlineContainerRef}
 			className="relative min-h-[300px] pr-3"
 			onDragLeave={(e) => {
 				if (e.currentTarget === e.target) clearAssetDnD();
@@ -539,6 +664,7 @@ export default function OutlineTree({
 					return (
 						<div
 							key={sindex}
+							data-section-id={section.id}
 							onDragOver={(e) => {
 								// allow dropping section BEFORE this section
 								if (dragging && isSectionId(dragging)) onDragHover(e, section.id);
@@ -563,6 +689,9 @@ export default function OutlineTree({
 								// Add Section After
 								addSectionAfter={() => addSection(sindex + 1)}
 								addRow={(e: any) => addRow(e, sindex, null)}
+								isSelected={currentSection === section.id}
+								onHoverChange={setCurrentHoverSection}
+								onScrollToPreview={(sectionId) => onScrollToSection?.(sectionId, outlineId!)}
 							>
 								{(section.children ?? []).map((row: any, rIndex: number) => {
 									const showRowBarAbove =
@@ -591,6 +720,9 @@ export default function OutlineTree({
 												onDragStart={(e: any) => onDragStart(e, row.id)}
 												removeRow={() => removeRow(row.id)}
 												addCol={(e: any) => addCol(e, sindex, rIndex, null)}
+												isSelected={currentRow === row.id}
+												onHoverChange={setCurrentHoverRow}
+												onScrollToPreview={onScrollToRow}
 											>
 												{(row.children ?? []).map(
 													(col: any, cIndex: number) => {
@@ -633,6 +765,9 @@ export default function OutlineTree({
 																		)
 																	}
 																	elementOptions={elementOptions}
+																	isSelected={currentColumn === col.id}
+																	onHoverChange={setCurrentHoverColumn}
+																	onScrollToPreview={onScrollToColumn}
 																>
 																	<div
 																		className={
@@ -979,71 +1114,17 @@ export default function OutlineTree({
 																									element
 																								}
 																								label={
-																									getProperty(
-																										theEles[
-																											element
-																												.id
-																										]
-																											?.properties,
-																										"text",
-																										"Text"
-																									) ||
-																									getProperty(
-																										theEles[
-																											element
-																												.id
-																										]
-																											?.properties,
-																										"label",
-																										"Label"
-																									) ||
-																									getProperty(
-																										theEles[
-																											element
-																												.id
-																										]
-																											?.properties,
-																										"name",
-																										"Name"
-																									) ||
-																									getProperty(
-																										theEles[
-																											element
-																												.id
-																										]
-																											?.properties,
-																										"alt",
-																										"Alt Text"
-																									) ||
-																									getImageNameFromUrl(
-																										getProperty(
-																											theEles[
-																												element
-																													.id
-																											]
-																												?.properties,
-																											"image",
-																											"Image"
-																										)
-																									) ||
-																									extractPlainText(
-																										getProperty(
-																											theEles[
-																												element
-																													.id
-																											]
-																												?.properties,
-																											"richtext",
-																											"Rich Text"
-																										)
-																									) ||
-																									undefined
+																									getPreviewLabel(theEles[element.id]?.properties) ||
+																									getImageNameFromUrl(getProperty(theEles[element.id]?.properties, "appImage", "App Image")) ||
+																									getImageNameFromUrl(getProperty(theEles[element.id]?.properties, "image", "Image")) ||
+																									extractPlainText(getProperty(theEles[element.id]?.properties, "richtext", "Rich Text")) ||
+																									""
 																								}
 																								setCurrentEle={
 																									setCurrentEle
 																								}
 																								setCurrentHoverEle={
-																									setCurrentHoverEle
+																									setCurrentHoverEleWithClear
 																								}
 																								onOpenStyleEditor={
 																									onOpenStyleEditor

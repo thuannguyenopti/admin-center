@@ -17,15 +17,28 @@ import { useCmpOpalAssetRecommendationState } from "./useCmpOpalAssetRecommendat
 export function CmpOpalAssetRecommendation({ taskId }: { taskId: string }) {
 	const state = useCmpOpalAssetRecommendationState(taskId);
 
+	const noop = () => {};
 	const workflowSidebar = (
 		<WorkflowSidebar
 			filteredTemplates={state.filteredWorkflowTemplates}
+			hasTaskContent={state.hasTaskContent}
+			isAllDone={state.isAllWorkflowDone}
 			isMenuOpen={state.workflowMenuOpen}
+			onMarkComplete={noop}
 			onRequestWorkflowChange={state.handleWorkflowSelect}
+			onSetStepAssignee={noop}
+			onToggleChecklistItem={noop}
+			onToggleStepDone={noop}
+			onToggleStepExpanded={noop}
 			onToggleWorkflowMenu={state.toggleWorkflowMenu}
+			onUndoComplete={noop}
 			onWorkflowSearchChange={state.setWorkflowSearch}
+			progressPercent={state.workflowProgressPercent}
 			searchValue={state.workflowSearch}
-			workflow={state.activeWorkflow}
+			statusIntent={state.workflowStatusIntent}
+			statusLabel={state.workflowStatusLabel}
+			workflowState={state.taskWorkflowState}
+			workflowTemplateName={state.activeWorkflowTemplate.name}
 		/>
 	);
 

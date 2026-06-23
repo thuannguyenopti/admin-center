@@ -19,36 +19,37 @@ interface ChecklistItem {
 
 interface PreflightProgressIndicatorProps {
 	checklist: ChecklistItem[];
+	title?: string;
 }
 
 /**
  * Component that renders a checklist showing audit progress
  * Displays status icons for each audit: pending, running, completed, failed
  */
-export function PreflightProgressIndicator({checklist}: PreflightProgressIndicatorProps) {
+export function PreflightProgressIndicator({checklist, title = "Running Preflight Audit..."}: PreflightProgressIndicatorProps) {
 	return (
 		<Box p="12" bg="bg.secondary" style={{borderRadius: "8px"}}>
 			<Flex gap="8" alignItems="center" mb="8" style={{flexDirection: "row"}}>
-				<IconChecklist size={20} style={{color: "#6B7280"}} />
+				<IconChecklist size={20} style={{color: "var(--ax-colors-fg-tertiary)"}} />
 				<Heading level="4" fontSize="md" fontWeight="600" m="0">
-					Running Preflight Audit...
+					{title}
 				</Heading>
 			</Flex>
 			<ul style={{padding: 0, margin: 0, listStyle: "none"}}>
 				{checklist.map((item, idx) => (
 					<Flex key={idx} gap="8" alignItems="center" py="4" style={{flexDirection: "row"}}>
 						{item.status === "pending" && (
-							<IconCircle size={16} style={{color: "#9CA3AF"}} />
+							<IconCircle size={16} style={{color: "var(--ax-colors-fg-tertiary)"}} />
 						)}
 						{item.status === "running" && <Spinner size="sm" />}
 						{item.status === "completed" && (
-							<IconCheck size={16} style={{color: "#22c55e"}} />
+							<IconCheck size={16} style={{color: "var(--ax-colors-fg-success)"}} />
 						)}
-						{item.status === "failed" && <IconX size={16} style={{color: "#ef4444"}} />}
+						{item.status === "failed" && <IconX size={16} style={{color: "var(--ax-colors-fg-error)"}} />}
 						<Text
 							fontSize="sm"
 							style={{
-								color: item.status === "completed" ? "#1F2937" : "#6B7280",
+								color: item.status === "completed" ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
 							}}
 						>
 							{item.label}

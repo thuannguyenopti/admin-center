@@ -2,17 +2,15 @@
 
 import { toaster } from "@optiaxiom/react";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
-import type { Application, Page } from "@/app/db/initialData";
-import { IconEye, IconPencil, IconTag, IconTrash } from "@tabler/icons-react";
+import type { Page } from "@/app/db/initialData";
+import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
 
 import type { AssetItem, TaskArticle } from "../../types";
 import { selectFirstRemainingTaskItem } from "./selectFirstRemainingTaskItem";
 
 type GetContentItemMenuOptionsArgs = {
-	applications: Application[];
 	contentInstances: ContentInstance[];
 	currentTaskId: string;
-	onAddToApplication: (instance: ContentInstance) => void;
 	onSelectArticle: (id: string | null) => void;
 	onSelectContentInstance: (id: string | null) => void;
 	onSelectPage: (id: string | null) => void;
@@ -35,10 +33,8 @@ type GetContentItemMenuOptionsArgs = {
 };
 
 export function getContentItemMenuOptions({
-	applications,
 	contentInstances,
 	currentTaskId,
-	onAddToApplication,
 	onSelectArticle,
 	onSelectContentInstance,
 	onSelectPage,
@@ -60,6 +56,7 @@ export function getContentItemMenuOptions({
 	taskPages,
 }: GetContentItemMenuOptionsArgs) {
 	if (selectedPage) {
+		const isPublished = selectedPage.status === "Published";
 		return [
 			{
 				label: "Edit in CMS",
@@ -68,9 +65,10 @@ export function getContentItemMenuOptions({
 				execute: () => openPageEditor(selectedPage.id),
 			},
 			{
-				label: "Review",
+				label: "View on Website",
 				addon: <IconEye size={16} />,
-				description: "View page on website",
+				description: isPublished ? "Open page in new tab" : "Page must be published first",
+				disabled: !isPublished,
 				execute: () => reviewPage(selectedPage),
 			},
 			{
@@ -100,23 +98,6 @@ export function getContentItemMenuOptions({
 
 	if (selectedContentInstance) {
 		return [
-			applications.length === 1
-				? {
-						label: "Add to CMS",
-						addon: <IconTag size={16} />,
-						description: "Create CMS page from this content",
-						execute: () => onAddToApplication(selectedContentInstance),
-					}
-				: {
-						label: "Add to CMS",
-						addon: <IconTag size={16} />,
-						description: "Create CMS page from this content",
-						subOptions: applications.map((application) => ({
-							label: application.name,
-							description: `Add to ${application.name}`,
-							execute: () => onAddToApplication(selectedContentInstance),
-						})),
-					},
 			{
 				label: "Remove from task",
 				addon: <IconTrash size={16} />,

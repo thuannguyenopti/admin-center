@@ -1,3 +1,174 @@
+export type CmpTaskOwner = {
+	name: string;
+	src: string;
+};
+
+export type CmpTask = {
+	id: string;
+	title: string;
+	reference: string;
+	status: string;
+	owner: CmpTaskOwner;
+	creationDate: string;
+	startDate: string;
+	endDate: string;
+	lastModified: string;
+	parentCampaignId?: string;
+};
+
+export type CmpCampaign = {
+	id: string;
+	title: string;
+	reference: string;
+	status: string;
+	owner: CmpTaskOwner;
+	creationDate: string;
+	startDate: string;
+	endDate: string;
+	lastModified: string;
+	badge?: number;
+};
+
+export const avatarImages = [
+	"https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face",
+	"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face",
+	"https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop&crop=face",
+	"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face",
+	"https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face",
+	"https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=face",
+];
+
+export const initialCmpTasks: CmpTask[] = [
+	{
+		id: "1",
+		title: "Ironman Miami triathlon 2026 Sponsor Package task",
+		reference: "TSK-2702",
+		status: "Not Started",
+		owner: { name: "David Steinberg", src: avatarImages[0] },
+		creationDate: "Sep 15, 2025",
+		startDate: "No start date",
+		endDate: "No end date",
+		lastModified: "Nov 25, 2025",
+	},
+	{
+		id: "2",
+		title: "Content Rec",
+		reference: "TSK-2695",
+		status: "In Progress",
+		owner: { name: "Hsiao-Pei Chien", src: avatarImages[1] },
+		creationDate: "Mar 20, 2025",
+		startDate: "No start date",
+		endDate: "No end date",
+		lastModified: "Sep 15, 2025",
+	},
+	{
+		id: "3",
+		title: "Hotel Brochure",
+		reference: "TSK-2691",
+		status: "At Risk",
+		owner: { name: "David Steinberg", src: avatarImages[0] },
+		creationDate: "Feb 27, 2025",
+		startDate: "No start date",
+		endDate: "No end date",
+		lastModified: "May 5, 2025",
+	},
+	{
+		id: "4",
+		title: "SC content testing",
+		reference: "TSK-2689",
+		status: "Overdue",
+		owner: { name: "Kamrul Hasan", src: avatarImages[3] },
+		creationDate: "Feb 18, 2025",
+		startDate: "No start date",
+		endDate: "No end date",
+		lastModified: "Feb 19, 2025",
+	},
+	{
+		id: "5",
+		title: "STRIDE Blog Launch",
+		reference: "TSK-2710",
+		status: "In Progress",
+		owner: { name: "Hsiao-Pei Chien", src: avatarImages[1] },
+		creationDate: "Mar 10, 2025",
+		startDate: "Mar 15, 2025",
+		endDate: "Apr 30, 2025",
+		lastModified: "Apr 2, 2025",
+	},
+	{
+		id: "6",
+		title: "STRIDE Blog — Recovery & Nutrition Guide",
+		reference: "TSK-2715",
+		status: "Not Started",
+		owner: { name: "David Steinberg", src: avatarImages[0] },
+		creationDate: "Apr 1, 2025",
+		startDate: "Apr 14, 2025",
+		endDate: "Apr 28, 2025",
+		lastModified: "Apr 1, 2025",
+	},
+];
+
+export const initialCmpCampaigns: CmpCampaign[] = [
+	{
+		id: "social",
+		title: "Social",
+		reference: "CPN-39",
+		status: "On Track",
+		owner: { name: "Hsiao-Pei Chien", src: avatarImages[1] },
+		creationDate: "Mar 20, 2025",
+		startDate: "Mar 20, 2025",
+		endDate: "No end date",
+		lastModified: "Mar 20, 2025",
+		badge: 1,
+	},
+	{
+		id: "m",
+		title: "m",
+		reference: "CPN-38",
+		status: "Not Started",
+		owner: { name: "Md Nadim Sakib", src: avatarImages[2] },
+		creationDate: "Feb 19, 2025",
+		startDate: "Feb 19, 2025",
+		endDate: "No end date",
+		lastModified: "Feb 19, 2025",
+		badge: 1,
+	},
+	{
+		id: "test-camp",
+		title: "Test camp",
+		reference: "CPN-37",
+		status: "Not Started",
+		owner: { name: "Md Nadim Sakib", src: avatarImages[2] },
+		creationDate: "Feb 19, 2025",
+		startDate: "Feb 19, 2025",
+		endDate: "No end date",
+		lastModified: "Feb 19, 2025",
+	},
+	{
+		id: "axiom",
+		title: "Axiom",
+		reference: "CPN-36",
+		status: "On Track",
+		owner: { name: "Abu Jafar Safi", src: avatarImages[4] },
+		creationDate: "Feb 17, 2025",
+		startDate: "Feb 17, 2025",
+		endDate: "No end date",
+		lastModified: "Feb 17, 2025",
+		badge: 1,
+	},
+	{
+		id: "test",
+		title: "Test",
+		reference: "CPN-35",
+		status: "On Track",
+		owner: { name: "Abu Jafar Safi", src: avatarImages[4] },
+		creationDate: "Feb 13, 2025",
+		startDate: "Feb 13, 2025",
+		endDate: "No end date",
+		lastModified: "Feb 18, 2025",
+		badge: 4,
+	},
+];
+
 export type CmpContentModel = {
 	id: string;
 	name: string;
@@ -22,6 +193,7 @@ export type ContentInstance = {
 	createdAt: string;
 	modifiedAt?: string;
 	taskId?: string; // Which CMP task this instance belongs to
+	publishStatus?: "Published" | "Draft" | "Changed"; // Publishing state
 	fields: Record<string, any>; // Field values conforming to model properties
 };
 
@@ -536,6 +708,7 @@ export const initialContentInstances: ContentInstance[] = [
 		modelDisplayName: "Blog Post",
 		createdAt: "2024-03-20T10:00:00Z",
 		taskId: "5",
+		publishStatus: "Draft",
 		fields: {
 			headline: "Getting Started with Running",
 			byline: "Alice Johnson",
@@ -554,6 +727,7 @@ export const initialContentInstances: ContentInstance[] = [
 		modelDisplayName: "Blog Post",
 		createdAt: "2024-03-21T14:30:00Z",
 		taskId: "5",
+		publishStatus: "Changed",
 		fields: {
 			headline: "Marathon Training Tips",
 			byline: "Bob Smith",
@@ -564,22 +738,6 @@ export const initialContentInstances: ContentInstance[] = [
 			hero_image: "https://picsum.photos/seed/marathon-training/800/600",
 			tags: ["marathon", "training", "advanced"],
 			seo_keywords: ["marathon training", "running tips", "endurance"]
-		}
-	},
-	{
-		id: "ci-article-1",
-		modelId: "cm-article",
-		modelDisplayName: "Article",
-		createdAt: "2024-03-22T09:00:00Z",
-		taskId: "1",
-		fields: {
-			headline: "The Science of Running Form",
-			subheadline: "How biomechanics can improve your performance",
-			byline: "Dr. Carol Williams, Sports Scientist",
-			body: "<p>Understanding proper running form is crucial for injury prevention...</p>",
-			hero_image: "https://picsum.photos/seed/running-form-science/800/600",
-			tags: ["Running", "Biomechanics", "Fitness", "Science", "Training"],
-			related_articles: ["ci-blog-1", "ci-blog-2"]
 		}
 	},
 	{
@@ -628,6 +786,79 @@ export const initialContentInstances: ContentInstance[] = [
 			primary_cta_link: "https://stride.com/products/elite-runner",
 			secondary_cta_text: "Learn More",
 			secondary_cta_link: "https://stride.com/technology"
+		}
+	},
+	{
+		id: "ci-blog-recovery",
+		modelId: "cm-blog-post",
+		modelDisplayName: "Blog Post",
+		createdAt: "2025-04-10T09:00:00Z",
+		taskId: "6",
+		fields: {
+			headline: "The Runner's Guide to Recovery — What to Eat, When to Rest",
+			byline: "STRIDE Wellness Team",
+			publish_date: "2025-04-28",
+			excerpt: "A practical guide to post-run nutrition, active recovery, and rest-day planning for runners who want to perform at their best every time they lace up.",
+			category: "Guides",
+			body: `<h2>Why Recovery Matters as Much as the Run</h2>
+<p>Every stride you take breaks your body down a little — micro-tears in muscle fibers, depleted glycogen stores, elevated cortisol. That's by design. The magic happens <em>after</em> you stop running, when your body rebuilds stronger than before. But only if you give it the right fuel and enough rest.</p>
+
+<h2>The 30-Minute Window: What to Eat Right After a Run</h2>
+<p>Your muscles are most receptive to nutrient uptake in the first 30 minutes post-exercise. Aim for a 3:1 ratio of carbohydrates to protein to kick-start glycogen replenishment and muscle repair.</p>
+<ul>
+<li><strong>Chocolate milk</strong> — a surprisingly effective recovery drink with the ideal carb-to-protein ratio.</li>
+<li><strong>Greek yogurt with banana and honey</strong> — fast-digesting carbs plus 15–20 g of protein.</li>
+<li><strong>Rice cakes with almond butter</strong> — portable and easy on the stomach after intense sessions.</li>
+</ul>
+
+<h3>Hydration First</h3>
+<p>Before you eat, drink. For every pound lost during a run, aim for 16–24 oz of fluid. Add a pinch of sea salt or an electrolyte tablet if you ran longer than 60 minutes or sweated heavily.</p>
+
+<h2>Anti-Inflammatory Foods for Faster Recovery</h2>
+<p>Chronic inflammation slows healing and increases injury risk. Build these foods into your weekly rotation:</p>
+<ul>
+<li><strong>Tart cherry juice</strong> — studies show it reduces muscle soreness and speeds recovery.</li>
+<li><strong>Fatty fish (salmon, mackerel)</strong> — rich in omega-3s that calm systemic inflammation.</li>
+<li><strong>Turmeric and ginger</strong> — natural anti-inflammatories you can add to smoothies, soups, or tea.</li>
+<li><strong>Leafy greens and berries</strong> — packed with antioxidants that neutralize exercise-induced oxidative stress.</li>
+</ul>
+
+<h2>Active Recovery: Move to Heal</h2>
+<p>Rest doesn't mean doing nothing. Active recovery — low-intensity movement on your off days — increases blood flow to sore muscles without adding training stress.</p>
+<ul>
+<li><strong>Easy walking or cycling</strong> (20–30 min at conversational pace)</li>
+<li><strong>Yoga or gentle stretching</strong> — focus on hips, hamstrings, and calves</li>
+<li><strong>Foam rolling</strong> — spend 1–2 minutes on each major muscle group</li>
+<li><strong>Swimming</strong> — zero-impact and great for flushing out lactic acid</li>
+</ul>
+
+<h2>Sample Weekly Recovery Schedule</h2>
+<p>Here's how a balanced week might look for an intermediate runner logging 25–35 miles per week:</p>
+<ul>
+<li><strong>Monday:</strong> Rest or easy 20-min walk</li>
+<li><strong>Tuesday:</strong> Speed/tempo run + post-run smoothie</li>
+<li><strong>Wednesday:</strong> Active recovery — yoga or swim</li>
+<li><strong>Thursday:</strong> Mid-distance run + foam rolling</li>
+<li><strong>Friday:</strong> Rest day — focus on sleep and nutrition</li>
+<li><strong>Saturday:</strong> Long run + recovery meal within 30 min</li>
+<li><strong>Sunday:</strong> Active recovery — easy bike ride or walk</li>
+</ul>
+
+<h2>Sleep: The Ultimate Recovery Tool</h2>
+<p>No amount of tart cherry juice can replace quality sleep. During deep sleep your body releases human growth hormone (HGH), which drives tissue repair and muscle growth. Aim for 7–9 hours per night, and consider these habits:</p>
+<ul>
+<li>Keep your bedroom cool (65–68 °F / 18–20 °C).</li>
+<li>Avoid screens for 30 minutes before bed.</li>
+<li>Finish hard training sessions at least 3 hours before bedtime.</li>
+</ul>
+
+<h2>Listen to Your Body</h2>
+<p>Recovery isn't one-size-fits-all. Some days you'll feel ready to tackle hills; other days your legs will tell you to take it easy. Track metrics like resting heart rate, sleep quality, and perceived soreness. Over time you'll learn your own recovery patterns — and that self-awareness will make you a stronger, more resilient runner.</p>
+
+<p><em>Run smart. Recover smarter. That's the Stride way.</em></p>`,
+			hero_image: "https://picsum.photos/seed/runner-recovery-nutrition/800/600",
+			tags: ["recovery", "nutrition", "running", "wellness", "training"],
+			seo_keywords: ["running recovery", "post-run nutrition", "runner's diet", "active recovery for runners", "rest day for runners"]
 		}
 	}
 ];

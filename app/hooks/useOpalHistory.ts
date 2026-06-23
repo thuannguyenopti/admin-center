@@ -9,6 +9,22 @@ export type ChatHistoryItem = {
   hasSmile?: boolean;
   hasRedDot?: boolean;
   isPinned?: boolean;
+  /** Optional avatar URL. When set, renders left of the title. */
+  avatarUrl?: string;
+  /** Stacked avatars for group rows. Each entry has a name (for initials fallback) and optional URL. */
+  avatarStack?: { name: string; url?: string }[];
+  /** Optional preview of the last message in this chat (subtle line under title). */
+  preview?: string;
+  /** When true, surface a "Needs input" indicator — chat has a pending action card. */
+  needsInput?: boolean;
+  /** Presence status dot for DM avatars. */
+  presenceStatus?: 'online' | 'away' | 'offline';
+  /** When true, render a rounded-square avatar tile (channels). */
+  isChannel?: boolean;
+  /** When true, render the AI/VAU bolt badge instead of a presence dot. */
+  isVAU?: boolean;
+  /** Template name for VAU DMs (e.g. "Experiment Monitor"). */
+  vauTemplateName?: string;
 };
 
 export type OpalMode = 'docked' | 'popped-out';
@@ -210,6 +226,7 @@ export function useOpalHistory() {
     };
     setChatHistory(prev => [newChat, ...prev]);
     setActiveChat(newChat.id);
+    return newChat.id;
   }, []);
 
   const deleteChat = useCallback((id: string) => {

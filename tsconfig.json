@@ -27,7 +27,7 @@
         "./*"
       ],
       "@optimizely/axiom-icons": [
-        "./app/lib/axiom-icons"
+        "./node_modules/@optimizely/axiom-icons"
       ]
     }
   },
@@ -39,6 +39,25 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "app/components/Opal/editor/bindings",
+    "app/components/Opal/editor/toolbar",
+    "app/components/Opal/editor/handlers",
+    "app/components/Opal/editor/interfaces",
+    "app/components/Opal/editor/multi-editor.ts",
+    "app/components/Opal/editor/registry.ts",
+    "app/components/Opal/editor/collab-provider.ts",
+    "app/components/Opal/editor/socketio-provider.ts",
+    "app/components/Opal/editor/doc-replicator.ts",
+    "app/components/Opal/editor/text-binding.ts",
+    "app/components/Opal/editor/suggest-engine.ts",
+    "app/components/Opal/editor/comment-engine.ts",
+    "app/components/Opal/editor/comment-coordinator.ts",
+    "app/components/Opal/editor/comment-tiptap-plugin.ts",
+    "app/components/Opal/editor/comment-cm-extension.ts",
+    "app/components/Opal/editor/blame-coordinator.ts",
+    "app/components/Opal/editor/version-coordinator.ts",
+    "app/components/Opal/editor/version-manager.ts",
+    "app/components/Opal/editor/debug-log.ts"
   ]
 }

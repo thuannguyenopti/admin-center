@@ -1,4 +1,4 @@
-import { Field, Textarea, Text } from "@optiaxiom/react";
+import { Field, Textarea } from "@optiaxiom/react";
 import { PropertyRendererProps } from "../types";
 
 export const LongStringRenderer: React.FC<PropertyRendererProps> = ({
@@ -11,7 +11,11 @@ export const LongStringRenderer: React.FC<PropertyRendererProps> = ({
 	if (mode === "readonly") {
 		return (
 			<Field label={property.displayName || property.name}>
-				<Text>{value || "—"}</Text>
+				<Textarea
+					value={value ?? ""}
+					disabled
+					rows={3}
+				/>
 			</Field>
 		);
 	}

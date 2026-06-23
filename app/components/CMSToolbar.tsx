@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import {
 	Box,
 	Text,
@@ -19,7 +19,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuLabel,
 	toaster,
-	Input,
 } from "@optiaxiom/react";
 import {Button} from "./Button";
 import {
@@ -54,8 +53,7 @@ import {
 	IconHistory,
 	IconRestore,
 	IconSparkles,
-	IconChecklist,
-	IconCheck,
+	IconExternalLink,
 } from "@tabler/icons-react";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import {group} from "console";
@@ -71,7 +69,8 @@ import {useLayout} from "@/app/context/LayoutContext";
 import {usePreflightContext} from "@/app/components/ai/PreflightContext";
 import type {PageField} from "@/app/components/ai/PreflightAuditTypes";
 import ContentConnectionMenuItems from "./ContentConnectionMenuItems";
-import { initialCmpTasks, type CmpTask } from "@/app/db/initialData";
+import TaskAssignmentMenu from "./TaskAssignmentMenu";
+import { initialCmpTasks, type CmpTask } from "@/app/db/cmpInitialData";
 
 interface CMSToolbarProps {
 	pageName?: string;
@@ -110,7 +109,6 @@ interface CMSToolbarProps {
 
 	// Content Connection (CMP Integration)
 	onConnectContent?: () => void;
-	onSyncContent?: () => void;
 	onDisconnectContent?: () => void;
 	hasConnection?: boolean;
 	compatibleInstancesCount?: number;
@@ -185,7 +183,6 @@ export default function CMSToolbar({
 	onUpdateElement,
 
 	onConnectContent,
-	onSyncContent,
 	onDisconnectContent,
 	hasConnection = false,
 	compatibleInstancesCount = 0,
@@ -223,10 +220,6 @@ export default function CMSToolbar({
 
 	// CMP Tasks for "Add to task" submenu
 	const [cmpTasks] = usePersistentState("cmpTasks", initialCmpTasks) as [CmpTask[], any];
-	const [taskSearchQuery, setTaskSearchQuery] = useState("");
-	const filteredTasks = cmpTasks.filter((task) =>
-		task.title.toLowerCase().includes(taskSearchQuery.toLowerCase())
-	);
 
 	// Get enabled Opal Actions for Improve button and context menu
 	const [opalConfig] = usePersistentState("opal-config", defaultOpalConfiguration) as [
@@ -665,17 +658,17 @@ export default function CMSToolbar({
 														{group.name}
 													</DropdownMenuSubTrigger>
 													<DropdownMenuSubContent>
-														{group.agents.map((agentId) => {
+														{group.agents.map((groupAgent) => {
 															const agent = availableAgents.find(
-																(a) => a.id === agentId
+																(a) => a.id === groupAgent.id
 															);
 															return (
 																<DropdownMenuItem
-																	key={agentId}
+																	key={groupAgent.id}
 																	onSelect={() => {
-																		if (agentId === "preflight-audit") {
+																		if (groupAgent.id === "preflight-audit") {
 																			handlePreflightAudit();
-																		} else if (agentId === "brand-tone-audit") {
+																		} else if (groupAgent.id === "brand-tone-audit") {
 																			handleBrandToneAnalysis();
 																		} else {
 																			console.log(
@@ -687,7 +680,7 @@ export default function CMSToolbar({
 																		}
 																	}}
 																>
-																	{agent?.name || agentId}
+																	{agent?.name || groupAgent.id}
 																</DropdownMenuItem>
 															);
 														})}
@@ -696,14 +689,14 @@ export default function CMSToolbar({
 											);
 										}
 										// Single agent, just show the group name
-										const agentId = group.agents[0];
+										const singleAgent = group.agents[0];
 										return (
 											<DropdownMenuItem
 												key={group.id}
 												onSelect={() => {
-													if (agentId === "preflight-audit") {
+													if (singleAgent.id === "preflight-audit") {
 														handlePreflightAudit();
-													} else if (agentId === "brand-tone-audit") {
+													} else if (singleAgent.id === "brand-tone-audit") {
 														handleBrandToneAnalysis();
 													} else {
 														console.log("Execute Opal Action:", group.name);
@@ -725,15 +718,15 @@ export default function CMSToolbar({
 							options={improveGroups.flatMap((group) => {
 								// If group has multiple agents, create submenu items
 								if (group.agents.length > 1) {
-									return group.agents.map((agentId, index) => {
-										const agent = availableAgents.find((a) => a.id === agentId);
+									return group.agents.map((groupAgent, index) => {
+										const agent = availableAgents.find((a) => a.id === groupAgent.id);
 										return {
-											label: agent?.name || agentId,
+											label: agent?.name || groupAgent.id,
 											group: {label: group.name, hidden: index > 0},
 											execute: () => {
-												if (agentId === "preflight-audit") {
+												if (groupAgent.id === "preflight-audit") {
 													handlePreflightAudit();
-												} else if (agentId === "brand-tone-audit") {
+												} else if (groupAgent.id === "brand-tone-audit") {
 													handleBrandToneAnalysis();
 												} else {
 													console.log(
@@ -748,14 +741,14 @@ export default function CMSToolbar({
 									});
 								}
 								// Single agent, just show the group name
-								const agentId = group.agents[0];
+								const singleAgent = group.agents[0];
 								return [
 									{
 										label: group.name,
 										execute: () => {
-											if (agentId === "preflight-audit") {
+											if (singleAgent.id === "preflight-audit") {
 												handlePreflightAudit();
-											} else if (agentId === "brand-tone-audit") {
+											} else if (singleAgent.id === "brand-tone-audit") {
 												handleBrandToneAnalysis();
 											} else {
 												console.log("Execute Opal Action:", group.name);
@@ -785,28 +778,22 @@ export default function CMSToolbar({
 				{/* Publish Button with Menu */}
 				<Menu
 					options={[
-						...(onViewOnWebsite
+						...(pageStatus === "Changed" || pageStatus === "Draft"
 							? [
 									{
-										label: "View on website",
-										addon: <IconWorld size={16} />,
-										execute: onViewOnWebsite,
-										group: {label: "view", hidden: true, separator: true},
+										label: "Publish now",
+										addon: <IconWorldCheck size={16} />,
+										execute: onPublish,
+										group: {label: "publish", hidden: true, separator: true},
+									},
+									{
+										label: "Schedule publish",
+										addon: <IconCalendarCheck size={16} />,
+										execute: () => {},
+										group: {label: "publish", hidden: true, separator: true},
 									},
 								]
 							: []),
-						{
-							label: "Publish now",
-							addon: <IconWorldCheck size={16} />,
-							execute: onPublish,
-							group: {label: "publish", hidden: true, separator: true},
-						},
-						{
-							label: "Schedule publish",
-							addon: <IconCalendarCheck size={16} />,
-							execute: () => {},
-							group: {label: "publish", hidden: true, separator: true},
-						},
 						{
 							label: "Unpublish",
 							addon: <IconWorldX size={16} />,
@@ -815,11 +802,6 @@ export default function CMSToolbar({
 						{
 							label: "Schedule Unpublish",
 							addon: <IconCalendarX size={16} />,
-							execute: () => {},
-						},
-						{
-							label: "Publish settings",
-							addon: <IconSettings size={16} />,
 							execute: () => {},
 						},
 					]}
@@ -864,15 +846,15 @@ export default function CMSToolbar({
 															{group.name}
 														</DropdownMenuSubTrigger>
 														<DropdownMenuSubContent>
-															{group.agents.map((agentId) => {
+															{group.agents.map((groupAgent) => {
 																const agent = availableAgents.find(
-																	(a) => a.id === agentId
+																	(a) => a.id === groupAgent.id
 																);
 																return (
 																	<DropdownMenuItem
-																		key={agentId}
+																		key={groupAgent.id}
 																		onSelect={() => {
-																			if (agentId === "brand-tone-audit") {
+																			if (groupAgent.id === "brand-tone-audit") {
 																				handleBrandToneAnalysis();
 																			} else {
 																				console.log(
@@ -884,7 +866,7 @@ export default function CMSToolbar({
 																			}
 																		}}
 																	>
-																		{agent?.name || agentId}
+																		{agent?.name || groupAgent.id}
 																	</DropdownMenuItem>
 																);
 															})}
@@ -893,12 +875,12 @@ export default function CMSToolbar({
 												);
 											}
 											// Single agent, just show the group name
-											const agentId = group.agents[0];
+											const singleAgent = group.agents[0];
 											return (
 												<DropdownMenuItem
 													key={group.id}
 													onSelect={() => {
-														if (agentId === "brand-tone-audit") {
+														if (singleAgent.id === "brand-tone-audit") {
 															handleBrandToneAnalysis();
 														} else {
 															console.log("Execute Opal Action:", group.name);
@@ -918,7 +900,6 @@ export default function CMSToolbar({
 						{/* Content Connection (CMP Integration) */}
 						<ContentConnectionMenuItems
 							onConnectContent={onConnectContent}
-							onSyncContent={onSyncContent}
 							onDisconnectContent={onDisconnectContent}
 							hasConnection={hasConnection}
 							compatibleInstancesCount={compatibleInstancesCount}
@@ -926,6 +907,17 @@ export default function CMSToolbar({
 
 						{/* Page Actions */}
 						<DropdownMenuLabel>Page</DropdownMenuLabel>
+						{onViewOnWebsite && (
+							<DropdownMenuItem onSelect={onViewOnWebsite}>
+								<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+									<Box display="flex" alignItems="center" gap="8">
+										<IconWorld size={16} />
+										<Text>View on website</Text>
+									</Box>
+									<IconExternalLink size={16} />
+								</Box>
+							</DropdownMenuItem>
+						)}
 						<DropdownMenuItem onSelect={onRenamePage}>
 							<Box display="flex" alignItems="center" gap="8">
 								<IconPencil size={16} />
@@ -933,100 +925,14 @@ export default function CMSToolbar({
 							</Box>
 						</DropdownMenuItem>
 
-						{/* Add to Task submenu */}
+						{/* Add to Task / Remove from Task */}
 						{onAddToTask && (
-							<DropdownMenuSub onOpenChange={(open) => {
-								if (!open) setTaskSearchQuery("");
-							}}>
-								<DropdownMenuSubTrigger>
-									<Box display="flex" alignItems="center" gap="8">
-										<IconChecklist size={16} />
-										{currentTaskId ? "Change task" : "Add to task"}
-									</Box>
-								</DropdownMenuSubTrigger>
-								<DropdownMenuSubContent
-									style={{ minWidth: 280, maxHeight: 340, overflow: "auto" }}
-								>
-									{/* Search input */}
-									<Box px="8" py="4">
-										<Input
-											placeholder="Search tasks..."
-											value={taskSearchQuery}
-											onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-												setTaskSearchQuery(e.target.value)
-											}
-											onKeyDown={(e: React.KeyboardEvent) => e.stopPropagation()}
-											size="md"
-										/>
-									</Box>
-									<DropdownMenuSeparator />
-
-									{/* Current task indicator */}
-									{currentTaskId && (() => {
-										const currentTask = cmpTasks.find((t) => t.id === currentTaskId);
-										return currentTask ? (
-											<>
-												<DropdownMenuLabel>Current task</DropdownMenuLabel>
-												<DropdownMenuItem disabled>
-													<Box display="flex" alignItems="center" gap="8" w="full">
-														<IconCheck size={16} />
-														<Box>
-															<Text style={{ fontSize: 13, fontWeight: 500 }}>
-																{currentTask.title}
-															</Text>
-															<Text style={{ fontSize: 12 }} color="fg.tertiary">
-																{currentTask.reference}
-															</Text>
-														</Box>
-													</Box>
-												</DropdownMenuItem>
-												{onRemoveFromTask && (
-													<DropdownMenuItem
-														intent="danger"
-														onSelect={onRemoveFromTask}
-													>
-														<Box display="flex" alignItems="center" gap="8">
-															<IconTrash size={16} />
-															Remove from task
-														</Box>
-													</DropdownMenuItem>
-												)}
-												<DropdownMenuSeparator />
-											</>
-										) : null;
-									})()}
-
-									{/* Task list */}
-									<DropdownMenuLabel>
-										{currentTaskId ? "Switch to" : "Tasks"}
-									</DropdownMenuLabel>
-									{filteredTasks.filter((task) => task.id !== currentTaskId).length === 0 ? (
-										<Box px="12" py="8">
-											<Text style={{ fontSize: 13 }} color="fg.tertiary">
-												No tasks found
-											</Text>
-										</Box>
-									) : (
-										filteredTasks
-											.filter((task) => task.id !== currentTaskId)
-											.map((task) => (
-												<DropdownMenuItem
-													key={task.id}
-													onSelect={() => onAddToTask(task.id, task.title)}
-												>
-													<Box>
-														<Text style={{ fontSize: 13, fontWeight: 500 }}>
-															{task.title}
-														</Text>
-														<Text style={{ fontSize: 12 }} color="fg.tertiary">
-															{task.reference}
-														</Text>
-													</Box>
-												</DropdownMenuItem>
-											))
-									)}
-								</DropdownMenuSubContent>
-							</DropdownMenuSub>
+							<TaskAssignmentMenu
+								currentTaskId={currentTaskId}
+								tasks={cmpTasks}
+								onAddToTask={onAddToTask}
+								onRemoveFromTask={onRemoveFromTask}
+							/>
 						)}
 
 						<DropdownMenuItem intent="danger" onSelect={onTrash}>

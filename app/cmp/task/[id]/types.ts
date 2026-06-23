@@ -5,7 +5,8 @@ export type Scene =
 	| "preview"
 	| "content-empty"
 	| "content"
-	| "content-panel";
+	| "content-panel"
+	| "publishing";
 
 export type TaskTab = "brief" | "content" | "fields" | "publishing" | "related" | "financial" | "history";
 
@@ -60,4 +61,10 @@ export type WorkflowTemplate = {
 	name: string;
 	subtitle?: string;
 	steps: WorkflowStep[];
+};
+
+export type PublishingChannel = {
+	id: string;
+	channelTypeId: string;
+	selectedContentIds: string[];
 };

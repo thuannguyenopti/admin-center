@@ -1,4 +1,14 @@
 @import "./styles/opalStyles.css";
+@import "./stride.css";
+@import "lenis/dist/lenis.css";
+
+/* Lenis parallax effect - only on desktop */
+@media screen and (min-width: 768px) {
+	[data-lenis-parallax] {
+		transform: translate3d(0, calc(var(--lenis-parallax, 0) * 1px), 0);
+		will-change: transform;
+	}
+}
 
 @layer optiaxiom.base {
 	@tailwind base;
@@ -311,6 +321,15 @@ body[data-modal-open] .main-scroll-area {
 	background: #cacfdc;
 }
 
+/* Hide scrollbar while keeping scroll (e.g. Opportunities carousel) */
+.scrollbar-hide {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}
+
 [data-theme="dark"] ::-webkit-scrollbar-track,
 html.dark ::-webkit-scrollbar-track,
 body.dark ::-webkit-scrollbar-track {
@@ -407,4 +426,58 @@ body.dark .newly-imported {
 @keyframes shimmer {
 	0% { background-position: 200% 0; }
 	100% { background-position: -200% 0; }
+}
+
+/* GlobalBar — VAU switching overlay pulse dots */
+@keyframes vau-pulse {
+	0%, 100% { opacity: 0.3; transform: scale(0.8); }
+	50% { opacity: 1; transform: scale(1); }
+}
+
+/* Pinned artifact cards — hover reveals actions + extras footer */
+.pinned-card .pinned-actions {
+	opacity: 0;
+	transition: opacity 150ms ease;
+	pointer-events: none;
+}
+.pinned-card .pinned-extras {
+	max-height: 0;
+	opacity: 0;
+	overflow: hidden;
+	transition: max-height 220ms ease, opacity 150ms ease, margin-top 220ms ease;
+	margin-top: 0;
+}
+.pinned-card:hover .pinned-actions,
+.pinned-card:focus-within .pinned-actions {
+	opacity: 1;
+	pointer-events: auto;
+}
+.pinned-card:hover .pinned-extras,
+.pinned-card:focus-within .pinned-extras {
+	max-height: 56px;
+	opacity: 1;
+	margin-top: 8px;
+	pointer-events: auto;
+}
+.pinned-card .pinned-pin-inactive {
+	opacity: 0;
+	transition: opacity 150ms ease;
+	pointer-events: none;
+}
+.pinned-card:hover .pinned-pin-inactive,
+.pinned-card:focus-within .pinned-pin-inactive {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* File card hover — pin button reveal */
+.file-card .file-hover-pin {
+	opacity: 0;
+	transition: opacity 150ms ease;
+	pointer-events: none;
+}
+.file-card:hover .file-hover-pin,
+.file-card:focus-within .file-hover-pin {
+	opacity: 1;
+	pointer-events: auto;
 }

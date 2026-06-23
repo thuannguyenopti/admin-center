@@ -23,12 +23,12 @@ export const ImageBlock = React.memo(function ImageBlock({ properties, hasBgImag
                     style={{
                         width: widthOverride === "auto" ? "100%" : widthOverride,
                         height: heightOverride === "auto" ? "auto" : heightOverride,
-                        borderRadius: "10px",
+                        borderRadius: "12px",
                         objectFit: "cover",
                     }}
                 />
             ) : (
-                <div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-[10px] p-6 text-sm">
+                <div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-stride-lg p-6 text-sm font-stride-sans">
                     No image selected
                 </div>
             )}

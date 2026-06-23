@@ -5,13 +5,17 @@ import { Text } from "../Text";
 import { OpalMessage } from "./OpalMessage";
 import { OpalSuggestions } from "./OpalSuggestions";
 import { ChatMessage } from "@/app/hooks/useOpalState";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { opalTypography } from "@/app/styles/opalTypography";
 import { useOpalContext } from "@/app/context/OpalContext";
 
 type OpalChatProps = {
   messages: ChatMessage[];
   onSuggestionClick: (suggestion: string) => void;
+  onSubmitPrompt?: (message: string) => void;
+  streamingMode?: "collapsed" | "expanded";
+  threadKey?: string | null;
+  isLoading?: boolean;
   onRegenerate?: (id: string) => void;
   onVersionChange?: (id: string, versionIndex: number, content: string) => void;
   hideSuggestions?: boolean;
@@ -24,11 +28,17 @@ type OpalChatProps = {
   highlightedOpalEndId?: string | null;
   onOpenOpalRange?: (agentEndId: string) => void;
   onCloseOpalRange?: (agentEndId: string) => void;
-  activeAgentCtx?: { emoji: string; name: string } | null;
+  activeAgentCtx?: { emoji: string; name: string; avatar?: string; templateName?: string } | null;
+  contextChip?: string | null;
+  contextualActionCard?: React.ReactNode;
+  onReaction?: (messageId: string, emoji: string) => void;
+  onQuote?: (messageId: string) => void;
+  messageCards?: Record<string, React.ReactNode>;
 };
 
-export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx }: OpalChatProps) {
+export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamingMode = "collapsed", threadKey, isLoading, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip, contextualActionCard, onReaction, onQuote, messageCards }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [streamingExpandedByThreadKey, setStreamingExpandedByThreadKey] = useState<Record<string, boolean>>({});
   let opalContext;
   try {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -41,12 +51,21 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
     opalContext?.currentPage?.productArea?.includes('CMS');
   const isImageGen = opalContext?.currentPage?.path?.startsWith('/cmp/opal-studio');
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when messages or the contextual action card change
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'auto' });
     }
-  }, [messages]);
+  }, [messages, contextualActionCard]);
+
+  const resolvedThreadKey = threadKey ?? "default";
+  const isThreadStreamingExpanded = streamingExpandedByThreadKey[resolvedThreadKey] ?? false;
+
+  // When a contextualActionCard is present, suppress the action bar on the last
+  // assistant message so there's only one consolidated row (in the card itself).
+  const lastAssistantId = contextualActionCard
+    ? [...messages].reverse().find(m => m.role === 'assistant' && !m.isLoading)?.id
+    : undefined;
 
   // Compute per-message rendering context (agent header, opal header, collapsed)
   const augmented = useMemo(() => {
@@ -192,6 +211,9 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
         overflowY: 'auto',
         minHeight: '300px',
         width: '100%',
+        paddingLeft: variant !== 'assistant' ? '16px' : undefined,
+        paddingRight: variant !== 'assistant' ? '16px' : undefined,
+        paddingBottom: contextualActionCard && hasMessages ? '24px' : undefined,
       }}
     >
       {!hasMessages ? (
@@ -204,7 +226,11 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
                 color: 'var(--opal-text-body)',
               }}
             >
-              {isImageGen ? (
+              {contextChip ? (
+                <>
+                  I can help you refine your agent&apos;s prompt template. Share the section you want to improve and tell me what you&apos;re going for. I&apos;ll suggest specific changes.
+                </>
+              ) : isImageGen ? (
                 <>
                   Hi, I&apos;m Opal, Optimizely&apos;s AI. I can help create brand-safe visuals for campaigns, social, and event content.
                   <br /><br />
@@ -218,7 +244,18 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
                 </>
               )}
             </Text>
-            <OpalSuggestions onSuggestionClick={onSuggestionClick} type={isImageGen ? 'image-gen' : isCMS ? 'cms' : 'default'} />
+            <OpalSuggestions onSuggestionClick={onSuggestionClick} type={contextChip ? 'agent-prompt-builder' : isImageGen ? 'image-gen' : isCMS ? 'cms' : 'default'} />
+            {contextualActionCard && (
+              <Box
+                w="full"
+                style={{
+                  animation: "opal-card-fade-in 180ms ease-out",
+                  transformOrigin: "bottom center",
+                }}
+              >
+                {contextualActionCard}
+              </Box>
+            )}
           </>
         )
       ) : (
@@ -298,7 +335,23 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
                   showOpalHeader={showOpalHeader}
                   onRegenerate={onRegenerate}
                   onVersionChange={onVersionChange}
+                  onSuggestionClick={onSuggestionClick}
+                  onSubmitPrompt={onSubmitPrompt}
+                  streamingMode={streamingMode}
+                  isStreamingExpanded={isThreadStreamingExpanded}
+                  onStreamingExpandedChange={(open) =>
+                    setStreamingExpandedByThreadKey((prev) => ({ ...prev, [resolvedThreadKey]: open }))
+                  }
+                  isOpalLoading={isLoading}
+                  hideActionBar={!!lastAssistantId && message.id === lastAssistantId}
+                  onReaction={onReaction}
+                  onQuote={onQuote}
                 />
+                {message.metadata?.cardKey && messageCards?.[message.metadata.cardKey] && (
+                  <div style={{ paddingLeft: 48, paddingBottom: 8, paddingRight: 16 }}>
+                    {messageCards[message.metadata.cardKey]}
+                  </div>
+                )}
                 {collapsedOpal && (
                   <Disclosure
                     my="16"
@@ -330,6 +383,11 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
                             showOpalHeader={m.role === 'assistant'}
                             onRegenerate={onRegenerate}
                             onVersionChange={onVersionChange}
+                            streamingMode={streamingMode}
+                            isStreamingExpanded={isThreadStreamingExpanded}
+                            onStreamingExpandedChange={(open) =>
+                              setStreamingExpandedByThreadKey((prev) => ({ ...prev, [resolvedThreadKey]: open }))
+                            }
                           />
                         ))}
                       </Box>
@@ -339,9 +397,32 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
               </Box>
             );
           })}
+          {contextualActionCard && (
+            <Box
+              w="full"
+              style={{
+                animation: "opal-card-fade-in 180ms ease-out",
+                transformOrigin: "bottom center",
+              }}
+            >
+              {contextualActionCard}
+            </Box>
+          )}
         </Box>
       )}
       <div ref={chatEndRef} />
+      <style jsx>{`
+        @keyframes opal-card-fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </Box>
   );
 }

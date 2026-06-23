@@ -1,4 +1,4 @@
-import { Field, Input, Text } from "@optiaxiom/react";
+import { Field, Input } from "@optiaxiom/react";
 import { PropertyRendererProps } from "../types";
 
 export const IntRenderer: React.FC<PropertyRendererProps> = ({
@@ -11,7 +11,7 @@ export const IntRenderer: React.FC<PropertyRendererProps> = ({
 	if (mode === "readonly") {
 		return (
 			<Field label={property.displayName || property.name}>
-				<Text>{value ?? "—"}</Text>
+				<Input type="number" value={value ?? ""} disabled />
 			</Field>
 		);
 	}

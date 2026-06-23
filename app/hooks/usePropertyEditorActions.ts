@@ -54,13 +54,13 @@ export function usePropertyEditorActions(
 	return groups.flatMap((group) => {
 		if (group.agents.length > 1) {
 			// Multiple agents - create group with header
-			return group.agents.map((agentId, index) => {
-				const agent = availableAgents.find((a) => a.id === agentId);
+			return group.agents.map((groupAgent, index) => {
+				const agent = availableAgents.find((a) => a.id === groupAgent.id);
 				return {
-					label: agent?.name || agentId,
+					label: agent?.name || groupAgent.id,
 					group: {label: group.name, hidden: index > 0},
 					onClick: () => {
-						if (agentId === "brand-tone-audit" && currentText) {
+						if (groupAgent.id === "brand-tone-audit" && currentText) {
 							analyzeText(currentText, "property", currentOnApply);
 						} else {
 							console.log("Execute Opal Action:", group.name, "- Agent:", agent?.name);
@@ -70,12 +70,12 @@ export function usePropertyEditorActions(
 			});
 		}
 		// Single agent - just show group name without additional nesting
-		const agentId = group.agents[0];
+		const singleAgent = group.agents[0];
 		return [
 			{
 				label: group.name,
 				onClick: () => {
-					if (agentId === "brand-tone-audit" && currentText) {
+					if (singleAgent.id === "brand-tone-audit" && currentText) {
 						analyzeText(currentText, "property", currentOnApply);
 					} else {
 						console.log("Execute Opal Action:", group.name);

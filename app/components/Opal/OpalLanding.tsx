@@ -25,9 +25,11 @@ export const QUICK_ACTIONS = [
     label: "Create",
     suggestions: [
       "Write an email campaign for our new feature with @email_gen_agent",
-      "Draft a landing page for our spring sale",
+      "__landing_page__",
+      "Update hero headline to be more engaging with @content_creation",
       "Create social media posts for this week with @social_media_pro",
       "Generate ad copy variations for Google Ads with @ad_variations_agent",
+      "Change product image to show 5 people instead of 3 with @content_creation",
       "Write a product description for our homepage",
     ],
   },
@@ -117,6 +119,7 @@ export function renderWithMentions(text: string) {
 type OpalLandingProps = {
   /** The OpalInput element, configured and owned by the parent page. */
   inputSlot: React.ReactNode;
+  contextualActionCard?: React.ReactNode;
   /** Optional slot rendered between the heading and the input (e.g. View Agents pills). */
   topSlot?: React.ReactNode;
   /**
@@ -127,7 +130,7 @@ type OpalLandingProps = {
   onSuggestionClick: (suggestion: string) => void;
 };
 
-export function OpalLanding({ inputSlot, topSlot, onSuggestionClick }: OpalLandingProps) {
+export function OpalLanding({ inputSlot, contextualActionCard, topSlot, onSuggestionClick }: OpalLandingProps) {
   const [activePill, setActivePill] = useState<string | null>(null);
   const [hoveredPill, setHoveredPill] = useState<string | null>(null);
   const [focusedChipIndex, setFocusedChipIndex] = useState(-1);
@@ -200,10 +203,11 @@ export function OpalLanding({ inputSlot, topSlot, onSuggestionClick }: OpalLandi
 
   return (
     <Box
+      className="opal-landing-shell"
       display="flex"
       flexDirection="column"
       alignItems="center"
-      style={{ paddingTop: "120px", position: "relative" }}
+      style={{ paddingTop: "120px", position: "relative", width: "100%", boxSizing: "border-box" }}
     >
       {/* Radial gradient glow behind input */}
       <Box
@@ -255,6 +259,20 @@ export function OpalLanding({ inputSlot, topSlot, onSuggestionClick }: OpalLandi
       >
         {inputSlot}
       </Box>
+
+      {contextualActionCard && (
+        <Box
+          style={{
+            position: "relative",
+            zIndex: 1,
+            width: "100%",
+            maxWidth: "800px",
+            marginBottom: "20px",
+          }}
+        >
+          {contextualActionCard}
+        </Box>
+      )}
 
       {/* Quick action chips */}
       <Box
@@ -361,32 +379,54 @@ export function OpalLanding({ inputSlot, topSlot, onSuggestionClick }: OpalLandi
           </Box>
 
           {/* Suggestion rows */}
-          {activeAction.suggestions.map((suggestion, i) => (
-            <Box
-              key={i}
-              ref={(el) => {
-                suggestionRefs.current[i] = el as HTMLDivElement | null;
-              }}
-              onClick={() => handleSuggestionSelect(suggestion)}
-              onMouseEnter={() => setFocusedSuggestionIndex(i)}
-              px="16"
-              py="12"
-              borderB={i < activeAction.suggestions.length - 1 ? "1" : "0"}
-              borderColor="border.tertiary"
-              style={{
-                cursor: "pointer",
-                transition: "background 0.1s ease",
-                background:
-                  i === focusedSuggestionIndex
-                    ? "var(--ax-colors-bg-secondary)"
-                    : "var(--ax-colors-bg-default)",
-              }}
-            >
-              <Text color="fg.default" fontSize="md">
-                {renderWithMentions(suggestion)}
-              </Text>
-            </Box>
-          ))}
+          {activeAction.suggestions.map((suggestion, i) => {
+            const isLandingPage = suggestion === "__landing_page__";
+            return (
+              <Box
+                key={i}
+                ref={(el) => {
+                  suggestionRefs.current[i] = el as HTMLDivElement | null;
+                }}
+                onClick={() => handleSuggestionSelect(suggestion)}
+                onMouseEnter={() => setFocusedSuggestionIndex(i)}
+                px="16"
+                py="12"
+                borderB={i < activeAction.suggestions.length - 1 ? "1" : "0"}
+                borderColor="border.tertiary"
+                style={{
+                  cursor: "pointer",
+                  transition: "background 0.1s ease",
+                  background:
+                    i === focusedSuggestionIndex
+                      ? "var(--ax-colors-bg-secondary)"
+                      : "var(--ax-colors-bg-default)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+
+                <Text color="fg.default" fontSize="md">
+                  {isLandingPage ? "Create a landing page" : renderWithMentions(suggestion)}
+                </Text>
+                {isLandingPage && (
+                  <span style={{
+                    marginLeft: "auto",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: "var(--ax-colors-fg-secondary)",
+                    background: "var(--ax-colors-bg-secondary)",
+                    border: "1px solid var(--ax-colors-border-default)",
+                    borderRadius: 4,
+                    padding: "2px 6px",
+                    flexShrink: 0,
+                  }}>
+                    Opens canvas
+                  </span>
+                )}
+              </Box>
+            );
+          })}
         </Box>
       )}
     </Box>

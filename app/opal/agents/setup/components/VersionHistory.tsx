@@ -12,17 +12,15 @@ import {
     DropdownMenuItem,
 } from "@optiaxiom/react";
 import {
-    IconDots,
-    IconX,
-} from "@tabler/icons-react";
-import {
     IconPen,
     IconEye,
     IconClockRotateLeft,
     IconCopy,
     IconEyeSlash,
     IconArrowsLeftRight,
+    IconEllipsisSolid,
 } from "@optimizely/axiom-icons";
+import { ResizableDetailsTray } from "./ResizableDetailsTray";
 
 export interface Version {
     id: string;
@@ -48,6 +46,8 @@ interface VersionHistoryProps {
     isComparing?: boolean;
     comparisonVersionId?: string | null;
     versions: Version[];
+    height?: string;
+    insetPadding?: string;
 }
 
 
@@ -66,58 +66,25 @@ export function VersionHistory({
     isComparing = false,
     comparisonVersionId,
     versions,
+    height,
+    insetPadding,
 }: VersionHistoryProps) {
     const currentVersion = versions.find(v => v.isCurrent);
     const previousVersions = versions.filter(v => !v.isCurrent);
 
     return (
-        <Box
-            style={{
-                width: isOpen ? "360px" : "0px",
-                transition: "width 0.3s ease-in-out",
-                overflow: "hidden",
-                borderLeft: isOpen ? "1px solid var(--ax-colors-border-secondary)" : "none",
-                backgroundColor: "var(--ax-colors-bg-default)",
-                display: "flex",
-                flexDirection: "column",
-                flexShrink: 0,
-            }}
+        <ResizableDetailsTray
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Version History"
+            defaultWidth={360}
+            minWidth={340}
+            maxWidth={620}
+            bodyPadding="16"
+            {...(height ? { height } : {})}
+            {...(insetPadding !== undefined ? { insetPadding } : {})}
         >
-            {isOpen && (
-                <>
-                    {/* Header */}
-                    <Box
-                        px="16"
-                        py="12"
-                        display="flex"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        style={{
-                            borderBottom: "1px solid var(--ax-colors-border-secondary)",
-                        }}
-                    >
-                        <Text fontWeight="600" fontSize="md">
-                            Version History
-                        </Text>
-                        <Button
-                            appearance="subtle"
-                            size="sm"
-                            icon={<IconX size={16} />}
-                            aria-label="Close"
-                            onClick={onClose}
-                        />
-                    </Box>
-
-                    {/* Content */}
-                    <Box
-                        flex="1"
-                        overflowY="auto"
-                        px="16"
-                        py="16"
-                        display="flex"
-                        flexDirection="column"
-                        gap="24"
-                    >
+                    <Box display="flex" flexDirection="column" gap="24">
                         {/* Current Version Section */}
                         {currentVersion && (
                             <Box display="flex" flexDirection="column" gap="8">
@@ -167,9 +134,7 @@ export function VersionHistory({
                             </Box>
                         )}
                     </Box>
-                </>
-            )}
-        </Box>
+        </ResizableDetailsTray>
     );
 }
 
@@ -235,16 +200,13 @@ function VersionCard({
                     <Text fontWeight="500" fontSize="sm">
                         {version.version}
                     </Text>
-                    <Badge variant="subtle">{version.mode}</Badge>
+                    {version.mode === "agent" && (
+                        <Badge variant="subtle">{version.mode}</Badge>
+                    )}
                 </Box>
-                <Box display="flex" flexDirection="column">
-                    <Text fontSize="xs" color="fg.secondary">
-                        {version.timestamp}
-                    </Text>
-                    <Text fontSize="xs" color="fg.secondary">
-                        By {version.author}
-                    </Text>
-                </Box>
+                <Text fontSize="sm" color="fg.secondary">
+                    {version.timestamp} · By {version.author}
+                </Text>
             </Box>
 
             {/* Actions Menu */}
@@ -253,7 +215,7 @@ function VersionCard({
                     <Button
                         appearance="subtle"
                         size="sm"
-                        icon={<IconDots size={16} />}
+                        icon={<IconEllipsisSolid size={16} />}
                         aria-label="More options"
                         onClick={(e) => e.stopPropagation()}
                     />
