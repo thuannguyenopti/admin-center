@@ -23,35 +23,7 @@ Before starting the installation, ensure you have the following accounts set up 
 
 ---
 
-## Quick Install (Recommended)
-
-### macOS / Linux / Windows
-
-1. Run the installer from the project folder:
-
-    ```bash
-    ./axiomplay install
-    ```
-
-    (Windows PowerShell/CMD: `axiomplay install` or `./axiomplay install`)
-
-2. Download and open [VS Code](https://code.visualstudio.com/download) or [Cursor](https://cursor.sh) (or see [VS Code/Cursor setup](#vs-code-or-cursor-ide) below), then open this folder to develop. The installer has already set up Node/Yarn/deps.
-
-#### What this does
-
-- Auto-detects your OS and forwards to `install.sh` or `install.bat`.
-- Handles Node: installs LTS via nvm on macOS/Linux if missing; on Windows, prompts you to install Node LTS (e.g., `winget install OpenJS.NodeJS.LTS`) if it isn't present.
-- Enables Corepack (Yarn 4) and installs dependencies.
-- Prompts for `.env` secrets if missing, exports them for install, and can start the dev server.
-
-### Requirements
-
-- A GitHub account with access to the repo (if you haven't cloned yet).
-- Your secrets for `.env`: `OPENAI_API_KEY`, `OPTIMIZELY_AUTH_IDENT`, `OPTIMIZELY_USERNAME`, `OPTIMIZELY_PASSWORD`.
-
----
-
-## Manual Installation Steps
+## Installation Steps
 
 ### 1. Prerequisites (All Required)
 
