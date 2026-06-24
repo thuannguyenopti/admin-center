@@ -57,17 +57,19 @@ export default function VirtualTeammatesPage() {
 		<Box
 			display="flex"
 			flexDirection="column"
-			style={{ minHeight: "100vh", background: "var(--ax-colors-bg-default)" }}
+			style={{ position: "absolute", inset: 0, overflowY: "auto", background: "var(--ax-colors-bg-default)" }}
 		>
 			{/* Hero banner */}
-			<Box style={{ width: "100%", height: 160, overflow: "hidden", flexShrink: 0 }}>
-				{/* eslint-disable-next-line @next/next/no-img-element */}
-				<img
-					src="/background-opal-new.png"
-					alt=""
-					style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
-				/>
-			</Box>
+			<Box
+				style={{
+					width: "100%",
+					height: 160,
+					flexShrink: 0,
+					backgroundImage: "url('/background-opal-new.png')",
+					backgroundSize: "cover",
+					backgroundPosition: "center center",
+				}}
+			/>
 
 			{/* Content */}
 			<Box style={{ padding: "32px 40px" }}>
@@ -75,7 +77,7 @@ export default function VirtualTeammatesPage() {
 					Virtual Teammates
 				</Heading>
 				<Text color="fg.secondary" fontSize="md" mb="24">
-					Meet your new favorite coworkers. They do the boring stuff. You get the glory.
+					Your virtual teammates are hard at work. See what they're doing and step in when they need you.
 				</Text>
 
 				{/* Filters row */}

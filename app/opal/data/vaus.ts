@@ -51,7 +51,7 @@ export const VAUS: VAU[] = [
 		avatarBg: "#FAF6E8",
 		status: "active",
 		isNew: true,
-		description: "Crafts product positioning, launch narratives, and messaging frameworks that connect product value to buyer needs. Translates feature roadmaps into stories that sales, marketing, and customers actually understand.",
+		description: "Crafts product positioning and messaging that connects value to buyer needs. Turns roadmaps into stories that sales and customers understand.",
 		tags: [
 			{ label: "Positioning", bg: "#f5f3ff", color: "#4c1d95" },
 			{ label: "Launch", bg: "#c6dbfa", color: "#0d46a0" },
@@ -114,7 +114,7 @@ export const VAUS: VAU[] = [
 		avatarBg: "#D8DAE1",
 		status: "active",
 		isNew: true,
-		description: "Optimizes customer journeys across channels — surfaces personalization opportunities and removes friction at every touchpoint. Reads behavioral data to recommend the next experiment, not just report on the last one.",
+		description: "Surfaces personalization opportunities and removes friction at every touchpoint. Uses behavioral data to recommend the next experiment.",
 		tags: [
 			{ label: "Optimization", bg: "#e0f2fe", color: "#0369a1" },
 			{ label: "Personalization", bg: "#fdf4ff", color: "#701a75" },
@@ -144,7 +144,7 @@ export const VAUS: VAU[] = [
 		avatar: "/avatars/vau-kerby.png",
 		avatarBg: "#E7FCFC",
 		status: "active",
-		description: "Designs and runs ABM programs — targets the right accounts with tailored content and orchestrated outreach across channels. Combines firmographic, intent, and engagement signals to prioritize where the team should invest next.",
+		description: "Targets the right accounts with tailored content and coordinated outreach. Combines intent and engagement signals to focus where the team invests.",
 		tags: [
 			{ label: "ABM", bg: "#c6dbfa", color: "#0d46a0" },
 			{ label: "B2B", bg: "#e9f7f1", color: "#17492b" },
@@ -177,7 +177,7 @@ export const VAUS: VAU[] = [
 		avatar: "/avatars/vau-frank.png",
 		avatarBg: "#FAF6E8",
 		status: "active",
-		description: "Less herding cats, more getting stuff done. Your Chief of Staff agent runs point on priorities so you can stop running on fumes. It drafts updates, preps meetings, and keeps every workstream moving — no nudging required.",
+		description: "Less herding cats, more getting stuff done. Runs point on priorities, preps meetings, and keeps every workstream moving forward.",
 		tags: [
 			{ label: "SEO/GEO", bg: "#f5f3ff", color: "#4c1d95" },
 			{ label: "Content", bg: "#c6dbfa", color: "#0d46a0" },

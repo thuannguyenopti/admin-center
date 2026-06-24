@@ -13,15 +13,11 @@ import {
 	MenuTrigger,
 	Text,
 } from "@optiaxiom/react";
-import { IconPlus, IconSearch } from "@optiaxiom/icons";
-import {
-	IconBrandFigma,
-	IconBrandSlack,
-	IconBrandNotion,
-	IconBrandTeams,
-} from "@tabler/icons-react";
+import { IconGear, IconSearch } from "@optiaxiom/icons";
+import Image from "next/image";
 import { Input } from "@/app/components/Input";
 import { VAUS } from "@/app/opal/data/vaus";
+import { SplitDialog } from "../SplitDialog";
 
 const CAPTION: React.CSSProperties = {
 	fontFamily: "Roboto Mono, monospace",
@@ -38,38 +34,47 @@ type Connector = {
 	id: string;
 	name: string;
 	description: string;
-	icon: React.ReactNode;
+	logo: string | null;
+	logoBg?: string;
+	logoLabel?: string;
 	status: ConnectorStatus;
 };
 
-function ConnectorIcon({ color, children }: { color: string; children: React.ReactNode }) {
+function ConnectorLogo({ connector }: { connector: Connector }) {
+	if (connector.logo) {
+		return (
+			<Box
+				style={{
+					width: 32,
+					height: 32,
+					borderRadius: 8,
+					overflow: "hidden",
+					flexShrink: 0,
+					background: "#fff",
+					border: "1px solid var(--ax-colors-border-secondary)",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+				}}
+			>
+				<Image
+					src={connector.logo}
+					alt={connector.name}
+					width={24}
+					height={24}
+					unoptimized
+					style={{ width: 24, height: 24, objectFit: "contain" }}
+				/>
+			</Box>
+		);
+	}
 	return (
 		<Box
 			style={{
 				width: 32,
 				height: 32,
 				borderRadius: 8,
-				background: color,
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				flexShrink: 0,
-				color: "#fff",
-			}}
-		>
-			{children}
-		</Box>
-	);
-}
-
-function TextIcon({ label, color }: { label: string; color: string }) {
-	return (
-		<Box
-			style={{
-				width: 32,
-				height: 32,
-				borderRadius: 8,
-				background: color,
+				background: connector.logoBg ?? "#333",
 				display: "flex",
 				alignItems: "center",
 				justifyContent: "center",
@@ -85,7 +90,7 @@ function TextIcon({ label, color }: { label: string; color: string }) {
 					letterSpacing: "0.04em",
 				}}
 			>
-				{label}
+				{connector.logoLabel ?? connector.name.slice(0, 2)}
 			</span>
 		</Box>
 	);
@@ -96,70 +101,70 @@ const CONNECTORS: Connector[] = [
 		id: "figma",
 		name: "Figma",
 		description: "Drafts compelling copy for emails, ads, landing pages, and social.",
-		icon: <ConnectorIcon color="#9b59b6"><IconBrandFigma size={18} /></ConnectorIcon>,
+		logo: "/connectors/figma.svg",
 		status: "connected",
 	},
 	{
 		id: "notion",
 		name: "Notion",
 		description: "Drafts compelling copy for emails, ads, landing pages, and social.",
-		icon: <ConnectorIcon color="#2d2d2d"><IconBrandNotion size={18} /></ConnectorIcon>,
+		logo: "/connectors/notion.png",
 		status: "auth_expired",
 	},
 	{
 		id: "descript",
 		name: "Descript",
 		description: "Drafts compelling copy for emails, ads, landing pages, and social.",
-		icon: <TextIcon label="De" color="#1a1a2e" />,
+		logo: "/connectors/descript.png",
 		status: "connected",
 	},
 	{
 		id: "gcal",
 		name: "Google Calendar",
 		description: "Drafts compelling copy for emails, ads, landing pages, and social.",
-		icon: <TextIcon label="GC" color="#4285F4" />,
+		logo: "/connectors/gcal.png",
 		status: "connected",
 	},
 	{
 		id: "teams",
 		name: "Microsoft Teams",
 		description: "Drafts compelling copy for emails, ads, landing pages, and social.",
-		icon: <ConnectorIcon color="#6264A7"><IconBrandTeams size={18} /></ConnectorIcon>,
+		logo: "/connectors/teams.png",
 		status: "connected",
 	},
 	{
 		id: "m365",
 		name: "Microsoft 365",
 		description: "Drafts compelling copy for emails, ads, landing pages, and social.",
-		icon: <TextIcon label="M3" color="#D83B01" />,
+		logo: "/connectors/m365.png",
 		status: "connected",
 	},
 	{
 		id: "slack",
 		name: "Slack",
 		description: "Drafts compelling copy for emails, ads, landing pages, and social.",
-		icon: <ConnectorIcon color="#4A154B"><IconBrandSlack size={18} /></ConnectorIcon>,
+		logo: null,
+		logoBg: "#4A154B",
+		logoLabel: "Sl",
 		status: "connected",
 	},
 	{
 		id: "netsuite",
 		name: "Netsuite",
 		description: "Drafts compelling copy for emails, ads, landing pages, and social.",
-		icon: <TextIcon label="NS" color="#009EDB" />,
+		logo: "/connectors/netsuite.svg",
 		status: "connected",
 	},
 	{
 		id: "postman",
 		name: "Postman",
 		description: "Drafts compelling copy for emails, ads, landing pages, and social.",
-		icon: <TextIcon label="Po" color="#FF6C37" />,
+		logo: "/connectors/postman.webp",
 		status: "connected",
 	},
 ];
 
 const ELLIPSIS_OPTIONS = [
-	{ label: "Edit" },
-	{ label: "Reconnect" },
 	{ label: "Remove", intent: "danger" as const },
 ];
 
@@ -211,13 +216,13 @@ export default function VATConnectorsPage() {
 							width: 18,
 							height: 18,
 							borderRadius: "50%",
-							background: "var(--ax-colors-bg-secondary)",
+							background: "#000",
 							display: "flex",
 							alignItems: "center",
 							justifyContent: "center",
 						}}
 					>
-						<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-secondary)" }}>
+						<span style={{ ...CAPTION, fontSize: 9, color: "#fff" }}>
 							{filtered.length}
 						</span>
 					</Box>
@@ -247,8 +252,16 @@ export default function VATConnectorsPage() {
 					<MenuContent />
 				</Menu>
 				<Box style={{ flex: 1 }} />
-				<Button appearance="primary" size="md" addonBefore={<IconPlus />}>
-					Add connector
+				<Button
+					appearance="primary"
+					size="md"
+					addonBefore={
+						<Box style={{ width: 18, height: 18, borderRadius: 4, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+							<IconGear style={{ color: "#BBFF00", width: 12, height: 12 }} />
+						</Box>
+					}
+				>
+					Manage connectors
 				</Button>
 			</Box>
 
@@ -276,7 +289,7 @@ export default function VATConnectorsPage() {
 						{/* Header */}
 						<Box display="flex" alignItems="center" justifyContent="space-between">
 							<Box display="flex" alignItems="center" gap="10">
-								{connector.icon}
+								<ConnectorLogo connector={connector} />
 								<Text fontSize="md" color="fg.default" style={{ fontWeight: 600 }}>
 									{connector.name}
 								</Text>
@@ -306,11 +319,13 @@ export default function VATConnectorsPage() {
 						{/* Footer */}
 						<Box display="flex" alignItems="center" justifyContent="flex-end" gap="8">
 							{connector.status === "auth_expired" && (
-								<Button appearance="default" size="sm">Reconnect</Button>
+								<SplitDialog type="reconnect" name={name}>
+									<Button appearance="default" size="sm">Reconnect</Button>
+								</SplitDialog>
 							)}
 							<Menu options={ELLIPSIS_OPTIONS}>
 								<MenuTrigger asChild>
-									<EllipsisMenuButton size="sm" aria-label="More options" />
+									<EllipsisMenuButton appearance="subtle" size="sm" aria-label="More options" />
 								</MenuTrigger>
 								<MenuContent />
 							</Menu>

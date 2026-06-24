@@ -11,6 +11,7 @@ import {
 	IconPuzzlePiece,
 	IconGear,
 	IconUserGroup,
+	IconImagePortrait,
 } from "@optiaxiom/icons";
 
 export function useOpalNav() {
@@ -109,8 +110,14 @@ export function useOpalNav() {
 			label: "Virtual Teammates",
 			url: "/opal/virtual-teammates",
 			highlight: "/opal/virtual-teammates",
-			icon: <IconStore filled={active("/opal/virtual-teammates")} />,
+			icon: <IconImagePortrait filled={active("/opal/virtual-teammates")} />,
 			customLayout: true,
+		},
+		{
+			label: "Directory",
+			url: "/opal/marketplace",
+			highlight: "/opal/marketplace",
+			icon: <IconStore filled={active("/opal/marketplace")} />,
 		},
 		{
 			label: "Agents",

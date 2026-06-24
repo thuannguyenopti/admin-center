@@ -55,6 +55,31 @@
 	pointer-events: auto;
 }
 
+/* VAT detail secondary sidebar nav items */
+.vat-nav-item {
+	transition: background 0.1s;
+}
+.vat-nav-item:not([data-active]):hover {
+	background: var(--ax-colors-bg-secondary);
+}
+
+/* VAT approvals — fade-in for newly expanded items */
+@keyframes vat-approval-in {
+	from { opacity: 0; transform: translateY(6px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+.vat-approval-appear {
+	animation: vat-approval-in 0.2s ease forwards;
+}
+
+/* Personality preset pills — hover + selected states */
+.personality-pill {
+	transition: background 0.1s ease;
+}
+.personality-pill:not(.personality-pill--selected):hover {
+	background: var(--ax-colors-bg-secondary) !important;
+}
+
 /* File card hover — pin button reveal */
 .file-card .file-hover-pin {
 	opacity: 0;

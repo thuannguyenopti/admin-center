@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { Box, Button, Text } from "@optiaxiom/react";
+import { Badge, Box, Button, Text } from "@optiaxiom/react";
 import { IconArrowLeft } from "@optiaxiom/icons";
 import Image from "next/image";
 import { VAUS } from "@/app/opal/data/vaus";
@@ -46,14 +46,15 @@ function NavItem({
 			display="flex"
 			alignItems="center"
 			justifyContent="space-between"
+			className="vat-nav-item"
+			data-active={active || undefined}
 			style={{
 				height: 36,
 				padding: "0 12px",
 				borderRadius: 8,
 				margin: "1px 4px",
 				cursor: "pointer",
-				background: active ? "var(--ax-colors-bg-secondary)" : "transparent",
-				transition: "background 0.1s",
+				background: active ? "var(--ax-colors-bg-secondary)" : undefined,
 			}}
 			onClick={onClick}
 		>
@@ -83,7 +84,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 	const isOverview = !isActivity && !isPermissions && !isConnectors && !isSettings;
 
 	return (
-		<Box display="flex" style={{ height: "100vh", overflow: "hidden" }}>
+		<Box display="flex" style={{ height: "100%", overflow: "hidden" }}>
 			{/* Secondary sidebar */}
 			<Box
 				style={{
@@ -118,33 +119,45 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 						gap="12"
 						style={{ padding: "12px 16px 16px" }}
 					>
-						<Box
-							style={{
-								width: 40,
-								height: 40,
-								minWidth: 40,
-								borderRadius: 8,
-								overflow: "hidden",
-								backgroundColor: vau.avatarBg,
-								flexShrink: 0,
-							}}
-						>
-							<Image
-								src={vau.avatar}
-								alt={vau.characterName ?? vau.name}
-								width={40}
-								height={40}
-								unoptimized
-								style={{ width: "100%", height: "100%", objectFit: "cover" }}
+						{/* Circle avatar with online dot */}
+						<Box style={{ position: "relative", width: 36, height: 36, flexShrink: 0 }}>
+							<Box
+								style={{
+									width: 36,
+									height: 36,
+									borderRadius: "50%",
+									overflow: "hidden",
+									backgroundColor: vau.avatarBg,
+								}}
+							>
+								<Image
+									src={vau.avatar}
+									alt={vau.characterName ?? vau.name}
+									width={36}
+									height={36}
+									unoptimized
+									style={{ width: "100%", height: "100%", objectFit: "cover" }}
+								/>
+							</Box>
+							<Box
+								style={{
+									position: "absolute",
+									bottom: 0,
+									right: 0,
+									width: 10,
+									height: 10,
+									borderRadius: "50%",
+									background: "#3DAA6A",
+									border: "2px solid var(--ax-colors-bg-default)",
+								}}
 							/>
 						</Box>
-						<Box display="flex" flexDirection="column" gap="2">
-							<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, lineHeight: "1.3" }}>
+						{/* Name + badge */}
+						<Box display="flex" flexDirection="column" gap="4">
+							<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, lineHeight: "1.2" }}>
 								{vau.characterName ?? vau.name}
 							</Text>
-							<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>
-								{vau.name}
-							</span>
+							<Badge intent="neutral" variant="subtle">{vau.name}</Badge>
 						</Box>
 					</Box>
 				)}
@@ -157,21 +170,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 					label="Overview"
 					active={isOverview}
 					onClick={() => router.push(`/opal/virtual-teammates/${id}`)}
-					badge={
-						<span
-							style={{
-								...CAPTION,
-								fontSize: 9,
-								background: "#FAD9E7",
-								color: "#8B1A3A",
-								padding: "2px 6px",
-								borderRadius: 32,
-								whiteSpace: "nowrap",
-							}}
-						>
-							Needs review
-						</span>
-					}
+					badge={<Badge intent="danger" variant="subtle" style={{ color: "#A95A77" }}>Needs review</Badge>}
 				/>
 				<NavItem
 					label="Activity"
@@ -198,7 +197,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 								width: 18,
 								height: 18,
 								borderRadius: "50%",
-								background: "#E84949",
+								background: "#A95A77",
 								display: "flex",
 								alignItems: "center",
 								justifyContent: "center",
@@ -225,15 +224,10 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 					onClick={() => router.push(`/opal/virtual-teammates/${id}/settings`)}
 				/>
 
-				<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "6px 0" }} />
-
-				{/* PINNED */}
-				<SectionLabel>Pinned</SectionLabel>
-				<NavItem label="Pinned items" />
 			</Box>
 
 			{/* Main content */}
-			<Box style={{ flex: 1, overflowY: "auto" }}>
+			<Box style={{ flex: 1, overflowY: "auto", background: "#F9FCF8" }}>
 				{children}
 			</Box>
 		</Box>

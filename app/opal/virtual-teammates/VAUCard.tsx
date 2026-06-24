@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, EllipsisMenuButton, Menu, MenuContent, MenuTrigger, Text } from "@optiaxiom/react";
-import { IconCircleInfo, IconComments } from "@optiaxiom/icons";
+import { useRouter } from "next/navigation";
+import { Badge, Box, Button, EllipsisMenuButton, Menu, MenuContent, MenuTrigger, Text } from "@optiaxiom/react";
+import { IconCircleExclamation, IconComments } from "@optiaxiom/icons";
 import Image from "next/image";
 import { type VAU } from "@/app/opal/data/vaus";
 
-const CAPTION: React.CSSProperties = {
+const CAPTION = {
 	fontFamily: "Roboto Mono, monospace",
 	fontSize: 10,
 	fontWeight: 400,
@@ -15,61 +16,15 @@ const CAPTION: React.CSSProperties = {
 	textTransform: "uppercase" as const,
 };
 
-const TAG_STYLE: React.CSSProperties = {
-	...CAPTION,
-	height: 22,
-	padding: "0 8px",
-	borderRadius: 32,
-	whiteSpace: "nowrap" as const,
-	display: "inline-flex",
-	alignItems: "center",
-};
-
 const NEEDS_REVIEW_IDS = new Set(["frank"]);
 
-function StatusBadge({ outOfOffice }: { outOfOffice?: boolean }) {
-	if (outOfOffice) {
-		return (
-			<span
-				style={{
-					...CAPTION,
-					background: "#FAD9E7",
-					color: "#8B1A3A",
-					padding: "2px 8px",
-					borderRadius: 32,
-					whiteSpace: "nowrap",
-					flexShrink: 0,
-				}}
-			>
-				Out of office
-			</span>
-		);
-	}
-	return (
-		<span
-			style={{
-				...CAPTION,
-				background: "#D8EDD4",
-				color: "#1A5C16",
-				padding: "2px 8px",
-				borderRadius: 32,
-				whiteSpace: "nowrap",
-				flexShrink: 0,
-			}}
-		>
-			Active
-		</span>
-	);
-}
-
 const ELLIPSIS_OPTIONS = [
-	{ label: "View details" },
-	{ label: "Edit" },
-	{ label: "Give a break" },
-	{ label: "Remove", intent: "danger" as const },
+	{ label: "Pause" },
+	{ label: "Delete", intent: "danger" as const },
 ];
 
 export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => void }) {
+	const router = useRouter();
 	const [hovered, setHovered] = useState(false);
 	const needsReview = NEEDS_REVIEW_IDS.has(vau.id);
 	const maxTags = 3;
@@ -92,7 +47,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 					: "none",
 				transition: "box-shadow 0.15s ease",
 			}}
-			onClick={() => onSelect(vau)}
+			onClick={() => router.push(`/opal/virtual-teammates/${vau.id}`)}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 		>
@@ -133,7 +88,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 							{vau.name}
 						</Text>
 						<Box style={{ flexShrink: 0 }}>
-							<StatusBadge />
+							<Badge intent="success" variant="subtle">Active</Badge>
 						</Box>
 					</Box>
 					{vau.characterName && (
@@ -160,22 +115,14 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 			</Text>
 
 			{/* Tags */}
-			<Box display="flex" alignItems="center" gap="4" style={{ overflow: "hidden" }}>
+			<Box display="flex" alignItems="center" gap="4" style={{ flexWrap: "nowrap", overflow: "hidden" }}>
 				{visibleTags.map((tag) => (
-					<span key={tag.label} style={{ ...TAG_STYLE, background: tag.bg, color: tag.color }}>
+					<Badge key={tag.label} intent="neutral" variant="subtle">
 						{tag.label}
-					</span>
+					</Badge>
 				))}
 				{extraTagCount > 0 && (
-					<span
-						style={{
-							...TAG_STYLE,
-							background: "var(--ax-colors-bg-secondary)",
-							color: "var(--ax-colors-fg-secondary)",
-						}}
-					>
-						+{extraTagCount}
-					</span>
+					<Badge intent="neutral" variant="subtle">+{extraTagCount}</Badge>
 				)}
 			</Box>
 
@@ -183,36 +130,40 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 			<Box
 				display="flex"
 				alignItems="center"
-				justifyContent="space-between"
+				justifyContent="flex-end"
 				gap="8"
 				onClick={(e) => e.stopPropagation()}
 			>
-				<Box>
-					{needsReview && (
-						<Button
-							size="sm"
-							addonBefore={<IconCircleInfo />}
-							style={{
-								background: "#FAD9E7",
-								color: "#8B1A3A",
-								border: "none",
-							}}
-						>
-							Needs review
-						</Button>
-					)}
-				</Box>
-				<Box display="flex" alignItems="center" gap="8">
-					<Button appearance="default" size="sm" addonBefore={<IconComments />}>
-						Chat
+				{needsReview && (
+					<Button
+						appearance="danger"
+						size="md"
+						addonAfter={<IconCircleExclamation />}
+						onClick={(e) => {
+							e.stopPropagation();
+							router.push(`/opal/virtual-teammates/${vau.id}`);
+						}}
+					>
+						Needs review
 					</Button>
-					<Menu options={ELLIPSIS_OPTIONS}>
-						<MenuTrigger asChild>
-							<EllipsisMenuButton size="sm" aria-label="More options" />
-						</MenuTrigger>
-						<MenuContent />
-					</Menu>
-				</Box>
+				)}
+				<Button
+					appearance="default"
+					size="md"
+					addonAfter={<IconComments />}
+					onClick={(e) => {
+						e.stopPropagation();
+						router.push("/opal/im");
+					}}
+				>
+					Chat
+				</Button>
+				<Menu options={ELLIPSIS_OPTIONS}>
+					<MenuTrigger asChild>
+						<EllipsisMenuButton appearance="subtle" size="md" aria-label="More options" />
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
 			</Box>
 		</Box>
 	);
