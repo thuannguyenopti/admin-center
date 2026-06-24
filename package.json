@@ -35,7 +35,7 @@
     "@optiaxiom/icons": "^1.1.2",
     "@optiaxiom/proteus": "^0.2.11",
     "@optiaxiom/react": "^3",
-    "@optimizely/axiom-icons": "portal:./vendor/axiom-icons",
+    "@optimizely/axiom-icons": "file:./vendor/axiom-icons",
     "@tabler/icons-react": "^3.35.0",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/core": "^3.22.4",
