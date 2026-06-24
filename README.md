@@ -4,7 +4,6 @@ This guide provides step-by-step instructions for installing the axiom-play proj
 
 ## Design System References
 
-- Main Axiom Play design-system guide: [app/OPTIAXIOM_DESIGN_SYSTEM.md](./app/OPTIAXIOM_DESIGN_SYSTEM.md)
 - Shared data-viz palette guidance: [app/DATA_VISUALIZATION_COLORS.md](./app/DATA_VISUALIZATION_COLORS.md)
 - Live data-viz reference page: `/data-viz-colors`
 
@@ -24,34 +23,29 @@ Before starting the installation, ensure you have the following accounts set up 
 
 ---
 
-**Kombai Account (Optional)**
-
-- Only needed if you want to use the Kombai extension
-- Sign up at [kombai.com](https://kombai.com) or through the Kombai extension after installation
-- You'll be prompted to sign in when you first use the Kombai extension
-
----
-
 ## Quick Install (Recommended)
 
 ### macOS / Linux / Windows
 
 1. Run the installer from the project folder:
 
-   ```bash
-   ./axiomplay install
-   ```
-   (Windows PowerShell/CMD: `axiomplay install` or `./axiomplay install`)
+    ```bash
+    ./axiomplay install
+    ```
+
+    (Windows PowerShell/CMD: `axiomplay install` or `./axiomplay install`)
 
 2. Download and open [VS Code](https://code.visualstudio.com/download) or [Cursor](https://cursor.sh) (or see [VS Code/Cursor setup](#vs-code-or-cursor-ide) below), then open this folder to develop. The installer has already set up Node/Yarn/deps.
 
 #### What this does
+
 - Auto-detects your OS and forwards to `install.sh` or `install.bat`.
 - Handles Node: installs LTS via nvm on macOS/Linux if missing; on Windows, prompts you to install Node LTS (e.g., `winget install OpenJS.NodeJS.LTS`) if it isn't present.
 - Enables Corepack (Yarn 4) and installs dependencies.
 - Prompts for `.env` secrets if missing, exports them for install, and can start the dev server.
 
 ### Requirements
+
 - A GitHub account with access to the repo (if you haven't cloned yet).
 - Your secrets for `.env`: `OPENAI_API_KEY`, `OPTIMIZELY_AUTH_IDENT`, `OPTIMIZELY_USERNAME`, `OPTIMIZELY_PASSWORD`.
 
@@ -142,7 +136,7 @@ Before starting the installation, ensure you have the following accounts set up 
 **Method 2: Via IDE Agent**
 
 - Ask the AI assistant to install extensions by name
-- Example: "Install the Kombai extension"
+- Example: "Install the Claude Code extension"
 
 ---
 
@@ -157,14 +151,12 @@ Before starting the installation, ensure you have the following accounts set up 
 
 ---
 
-**Kombai - AI Agent for Frontend Devs**
+**Claude Code** (VS Code / Cursor)
 
-- Search for: "Kombai" or "Kombai - AI Agent for Frontend Devs" in the Extensions marketplace
-- AI-powered extension that generates high-quality code from Figma designs, text, images, and existing code
-- Supports over 400 frontend frameworks and libraries
-- Features include UX interpretation, contextual codebase understanding, and Kombai Browser for previewing generated code
-- After installation, sign in to Kombai through the extension to access all features
-- Can be installed via IDE agent/Command Palette
+- Search for: "Claude Code" in the Extensions marketplace, or use the [Claude Code](https://claude.ai/code) CLI
+- AI coding assistant used for all development work on this project
+- Includes MCP server auto-configuration — see the [Claude Code & MCP Servers](#claude-code--mcp-servers) section below
+- After installation, sign in with your Anthropic account
 
 ---
 
@@ -230,7 +222,7 @@ Once the development server is running, you can view your application and see ch
 - **Command Palette**: Use `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux) for quick access to commands
 - **File Explorer**: Use `Cmd+B` (Mac) or `Ctrl+B` (Windows/Linux) to toggle the sidebar
 - **TypeScript Errors**: Errors will show inline with red squiggles. Check the Problems panel (`View > Problems`) for all issues
-- **Format on Save**: Configure VS Code/Cursor to format on save for consistent code style
+- **Code Formatting**: Prettier runs automatically on staged files via a pre-commit hook — no manual setup needed. Run `yarn format` to format everything at once
 - **Git Integration**: Use the Source Control panel (`Ctrl+Shift+G`) to manage Git operations visually
 
 ## Claude Code & MCP Servers
@@ -239,21 +231,21 @@ This project ships a `.mcp.json` that auto-configures MCP servers for [Claude Co
 
 ### Axiom MCP servers (key for UI work)
 
-| Server | Package | What it provides |
-|--------|---------|-----------------|
-| `axiom` | `@optiaxiom/mcp` | Live Axiom **V2** component docs — valid props, token values, and usage patterns for all `app/` routes outside `app/opal/` |
-| `axiom-v3` | `@optiaxiom/mcp@next` | Live Axiom **V3** component docs — same, but for `app/opal/` which uses the V3 design system |
+| Server     | Package               | What it provides                                                                                                           |
+| ---------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `axiom`    | `@optiaxiom/mcp`      | Live Axiom **V2** component docs — valid props, token values, and usage patterns for all `app/` routes outside `app/opal/` |
+| `axiom-v3` | `@optiaxiom/mcp@next` | Live Axiom **V3** component docs — same, but for `app/opal/` which uses the V3 design system                               |
 
 Claude (and any skill that touches UI) calls these servers to validate color tokens, enum prop values, and component APIs against the live spec before writing code. Always prefer these over guessing prop values from memory.
 
 ### Other MCP servers
 
-| Server | What it provides |
-|--------|-----------------|
-| `figma` | Read Figma design files and component context |
-| `coda` | Access Coda docs |
-| `optimizely` | Optimizely project data |
-| `granola` | Meeting transcripts |
+| Server       | What it provides                              |
+| ------------ | --------------------------------------------- |
+| `figma`      | Read Figma design files and component context |
+| `coda`       | Access Coda docs                              |
+| `optimizely` | Optimizely project data                       |
+| `granola`    | Meeting transcripts                           |
 
 ---
 
@@ -272,14 +264,14 @@ Claude (and any skill that touches UI) calls these servers to validate color tok
 **Required Accounts**:
 
 - GitHub account (for cloning the repository)
-- Kombai account (for using the Kombai extension)
+- Anthropic account (for Claude Code)
 
 ---
 
 **Can Be Installed via IDE Agent/Terminal**:
 
 - Yarn - can install via `npm install -g yarn` if Node.js is installed
-- Kombai extension - can install via Command Palette or IDE agent
+- Claude Code extension - can install via Command Palette or IDE agent
 - Live Preview extension (VS Code only) - can install via Command Palette or IDE agent (not needed for Cursor)
 
 ---
@@ -293,52 +285,40 @@ Claude (and any skill that touches UI) calls these servers to validate color tok
 
 ## Advanced: Deployment and Production Build
 
-**⚠️ Important Warning**: Before attempting any deployment or production build steps, **contact Ben, Aamr, or Stefan**. These steps require specific configuration and access that must be set up with guidance from the team.
-
----
-
 **Vercel Account Setup**
 
 - Required for deployment and hosting the Next.js application
 - Sign up at [vercel.com](https://vercel.com)
-- **Important**: You must be invited to the enterprise Vercel workspace before you can deploy
-- Contact the team to request access to the Vercel workspace
+- You must be invited to the enterprise Vercel workspace — contact the team to request access
 - Once invited, accept the invitation through your Vercel account
-- Next.js projects can be easily deployed to Vercel
 
 ---
 
-**Deployment to Vercel** (Requires Team Guidance)
-
-**⚠️ Caution**: Do not proceed with these steps without contacting the team first. They will need to walk you through the deployment process.
+**Deployment to Vercel**
 
 General steps for deploying to Vercel:
 
 1. **Create a branch**
-
-   - In the integrated terminal, run: `git checkout -b your-branch-name`
-   - Or use VS Code/Cursor's Source Control panel to create a new branch
-   - **Can be executed via IDE agent**: Ask the AI assistant to create a new branch
+    - In the integrated terminal, run: `git checkout -b your-branch-name`
+    - Or use VS Code/Cursor's Source Control panel to create a new branch
+    - **Can be executed via IDE agent**: Ask the AI assistant to create a new branch
 
 2. **Add and commit your changes**
-
-   - Stage your changes: `git add .` (or use the Source Control panel in VS Code/Cursor)
-   - Commit with a descriptive message: `git commit -m "Your commit message describing the changes"`
-   - **Can be executed via IDE agent**: Ask the AI assistant to commit your changes
+    - Stage your changes: `git add .` (or use the Source Control panel in VS Code/Cursor)
+    - Commit with a descriptive message: `git commit -m "Your commit message describing the changes"`
+    - **Can be executed via IDE agent**: Ask the AI assistant to commit your changes
 
 3. **Add notes and push your branch**
-
-   - Ensure you've added a descriptive commit message in step 2
-   - Push the branch to GitHub: `git push origin your-branch-name`
-   - **Can be executed via IDE agent**: Ask the AI assistant to push your branch with notes
+    - Ensure you've added a descriptive commit message in step 2
+    - Push the branch to GitHub: `git push origin your-branch-name`
+    - **Can be executed via IDE agent**: Ask the AI assistant to push your branch with notes
 
 4. **Vercel Deployment**
+    - Once your branch is pushed, Vercel will automatically detect the changes (if configured)
+    - Or contact the team for manual deployment instructions
+    - They will guide you through the Vercel deployment process
 
-   - Once your branch is pushed, Vercel will automatically detect the changes (if configured)
-   - Or contact the team for manual deployment instructions
-   - They will guide you through the Vercel deployment process
-
-**Note**: For local production build testing, you can run `yarn build` followed by `yarn start` in the integrated terminal, but actual deployment should be coordinated with the team.
+**Note**: Vercel auto-deploys every pushed branch as a preview URL — just push your branch and grab the preview link from the Vercel dashboard or the GitHub PR.
 
 ---
 
@@ -352,7 +332,7 @@ General steps for deploying to Vercel:
 ### Account Sign-up Links
 
 - **GitHub**: [github.com](https://github.com) - Sign up for a GitHub account
-- **Kombai**: [kombai.com](https://kombai.com) - Sign up for a Kombai account
+- **Anthropic**: [anthropic.com](https://anthropic.com) - Sign up for a Claude / Anthropic account
 - **Vercel**: [vercel.com](https://vercel.com) - Sign up for a Vercel account
 
 ### Project Repository
@@ -366,7 +346,7 @@ General steps for deploying to Vercel:
 ### Extensions (for VS Code and Cursor)
 
 - **Live Preview by Microsoft**: [marketplace.visualstudio.com/items?itemName=ms-vscode.live-server](https://marketplace.visualstudio.com/items?itemName=ms-vscode.live-server) - VS Code extension for live preview (not needed for Cursor)
-- **Kombai - AI Agent for Frontend Devs**: [marketplace.visualstudio.com/search?term=kombai](https://marketplace.visualstudio.com/search?term=kombai) - Search for "Kombai" or "Kombai - AI Agent for Frontend Devs" in the Extensions marketplace
+- **Claude Code**: [claude.ai/code](https://claude.ai/code) - AI coding assistant (VS Code extension or CLI)
 
 ### Framework and Technology Documentation
 
