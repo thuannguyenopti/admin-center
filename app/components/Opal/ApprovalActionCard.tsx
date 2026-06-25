@@ -31,6 +31,16 @@ type ApprovalActionCardProps = {
   persistKey?: string;
   /** Controlled approval state — overrides internal state when provided */
   approvalState?: ApprovalState;
+  /** Override the file-row icon (default: code icon) */
+  icon?: React.ReactNode;
+  /** Primary button label (default: "Approve") */
+  approveLabel?: string;
+  /** Primary button icon. Pass null to hide; defaults to a check. */
+  approveIcon?: React.ReactNode;
+  /** Secondary button label (default: "Ask Changes") */
+  rejectLabel?: string;
+  /** CTA mode: buttons invoke their handlers without flipping to an approved/changes state */
+  cta?: boolean;
 };
 
 export function ApprovalActionCard({
@@ -49,6 +59,11 @@ export function ApprovalActionCard({
   selected = false,
   persistKey,
   approvalState: controlledState,
+  icon,
+  approveLabel = "Approve",
+  approveIcon,
+  rejectLabel = "Ask Changes",
+  cta = false,
 }: ApprovalActionCardProps) {
   const [state, setState] = useState<ApprovalState>(() => {
     if (controlledState) return controlledState;
@@ -77,12 +92,12 @@ export function ApprovalActionCard({
     // Call onApprove before persisting so the handler's localStorage guard
     // hasn't been set yet and can run its send logic first.
     onApprove?.();
-    setPersistedState("approved");
+    if (!cta) setPersistedState("approved");
   };
 
   const handleRequestChanges = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setPersistedState("changes-requested");
+    if (!cta) setPersistedState("changes-requested");
     onRequestChanges?.();
   };
 
@@ -179,7 +194,7 @@ export function ApprovalActionCard({
               flexShrink: 0,
             }}
           >
-            <IconCode style={{ width: 16, height: 16, color: "var(--ax-colors-fg-secondary)" }} />
+            {icon ?? <IconCode style={{ width: 16, height: 16, color: "var(--ax-colors-fg-secondary)" }} />}
           </span>
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Box display="flex" alignItems="center" gap="4">
@@ -227,7 +242,6 @@ export function ApprovalActionCard({
         display="flex"
         flexDirection="column"
         gap="12"
-        onClick={(e) => e.stopPropagation()}
       >
         <Box>
           <Text
@@ -259,15 +273,15 @@ export function ApprovalActionCard({
         {state === "pending" ? (
           <Box display="flex" alignItems="center" gap="8" justifyContent="flex-end">
             <Button appearance="subtle" size="sm" onClick={handleRequestChanges}>
-              Ask Changes
+              {rejectLabel}
             </Button>
             <Button
               appearance="primary"
               size="sm"
-              icon={<IconCheck />}
+              icon={approveIcon !== undefined ? approveIcon : <IconCheck />}
               onClick={handleApprove}
             >
-              Approve
+              {approveLabel}
             </Button>
           </Box>
         ) : (

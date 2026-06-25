@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import {useMemo, useState, useCallback, useEffect} from "react";
 import {
+	Alert,
 	Box,
 	Heading,
 	Field,
@@ -17,9 +18,9 @@ import {
 	AlertDialogAction,
 	AlertDialogCancel,
 } from "@optiaxiom/react";
-import { Flex } from "@/app/components/Flex";
-import { Text } from "@/app/components/Text";
-import { Button } from "@/app/components/Button";
+import {Flex} from "@/app/components/Flex";
+import {Text} from "@/app/components/Text";
+import {Button} from "@/app/components/Button";
 import {
 	initialContentTypes,
 	initialPages,
@@ -27,10 +28,12 @@ import {
 	CompositionDisplayAs,
 	Page,
 } from "@/app/db/initialData";
-import { useParams, useRouter } from "next/navigation";
-import { use } from "react";
+import {useParams, useRouter} from "next/navigation";
+import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
-import { Footer } from "@/app/context/LayoutContext";
+import {Footer} from "@/app/context/LayoutContext";
+import Flow from "@/app/components/Flow";
+import {LinkStyle} from "@/app/components/LinkStyle";
 
 export default function ContentTypeSettingsPage() {
 	const params = useParams();
@@ -69,9 +72,74 @@ export default function ContentTypeSettingsPage() {
 	const [compositionDisplayAs, setCompositionDisplayAs] = useState<CompositionDisplayAs[]>(
 		contentType?.compositionDisplayAs ?? []
 	);
+	const [componentDocsUrl, setComponentDocsUrl] = useState(contentType?.componentDocsUrl ?? "");
+
+	// Registry artifact mapping
+	const [generatedArtifacts] = usePersistentState("opal:artifacts:generated", []) as [
+		Array<{id: string; previewText?: string}>,
+		unknown,
+		boolean,
+	];
+
+	const registryMapping = useMemo(() => {
+		const artifact = generatedArtifacts.find((a) => a.id === "stride-cms-registry-artifact");
+		if (!artifact?.previewText) return null;
+		try {
+			const parsed = JSON.parse(artifact.previewText) as {
+				registry?: Record<string, {"cms element type"?: string; "storybook url"?: string}>;
+			};
+			if (!parsed.registry) return null;
+			for (const [name, entry] of Object.entries(parsed.registry)) {
+				if (entry["cms element type"] === id) {
+					return {name, storybookUrl: entry["storybook url"] ?? null};
+				}
+			}
+		} catch {}
+		return null;
+	}, [generatedArtifacts, id]);
 
 	// Delete dialog
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+	// Sync form with contentType on mount and when contentType changes
+	useEffect(() => {
+		if (contentType) {
+			setName(contentType.name || "");
+			setDisplayName(contentType.displayName || "");
+			setDescription(contentType.description || "");
+			setSortOrder(contentType.sortOrder ?? 0);
+			setIsAvailable(contentType.isAvailable ?? true);
+			setAvailableForComposition(contentType.availableForComposition ?? false);
+			setCompositionDisplayAs(contentType.compositionDisplayAs ?? []);
+			setComponentDocsUrl(contentType.componentDocsUrl ?? "");
+		}
+	}, [contentType]);
+
+	// Check if form has unsaved changes
+	const hasChanges = useMemo(() => {
+		if (!contentType) return false;
+		return (
+			name !== (contentType.name || "") ||
+			displayName !== (contentType.displayName || "") ||
+			description !== (contentType.description || "") ||
+			sortOrder !== (contentType.sortOrder ?? 0) ||
+			isAvailable !== (contentType.isAvailable ?? true) ||
+			availableForComposition !== (contentType.availableForComposition ?? false) ||
+			JSON.stringify(compositionDisplayAs) !==
+				JSON.stringify(contentType.compositionDisplayAs ?? []) ||
+			componentDocsUrl !== (contentType.componentDocsUrl ?? "")
+		);
+	}, [
+		contentType,
+		name,
+		displayName,
+		description,
+		sortOrder,
+		isAvailable,
+		availableForComposition,
+		compositionDisplayAs,
+		componentDocsUrl,
+	]);
 
 	// Content items using this content type
 	const contentItemsUsingType = useMemo(() => {
@@ -79,16 +147,11 @@ export default function ContentTypeSettingsPage() {
 	}, [id]);
 
 	// Toggle composition display option
-	const toggleDisplayAs = useCallback(
-		(option: CompositionDisplayAs) => {
-			setCompositionDisplayAs((prev) =>
-				prev.includes(option)
-					? prev.filter((o) => o !== option)
-					: [...prev, option]
-			);
-		},
-		[]
-	);
+	const toggleDisplayAs = useCallback((option: CompositionDisplayAs) => {
+		setCompositionDisplayAs((prev) =>
+			prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option]
+		);
+	}, []);
 
 	// Save handler
 	const handleSave = useCallback(() => {
@@ -105,8 +168,11 @@ export default function ContentTypeSettingsPage() {
 						isAvailable,
 						availableForComposition,
 						compositionDisplayAs: availableForComposition ? compositionDisplayAs : [],
+						componentDocsUrl: availableForComposition
+							? componentDocsUrl.trim() || undefined
+							: undefined,
 						modifiedAt: new Date().toISOString(),
-				  }
+					}
 				: ct
 		);
 
@@ -122,6 +188,7 @@ export default function ContentTypeSettingsPage() {
 		isAvailable,
 		availableForComposition,
 		compositionDisplayAs,
+		componentDocsUrl,
 		setContentTypes,
 	]);
 
@@ -143,133 +210,124 @@ export default function ContentTypeSettingsPage() {
 		);
 	}
 
-	const ctDisplayLabel = contentType.displayName || contentType.name;
+	const ctDisplayLabel = contentType.displayName;
 
 	return (
 		<>
-			<Box style={{ maxWidth: "640px" }}>
+			<Flow maxW="lg">
+				{registryMapping && (
+					<Alert intent="information">
+						<Flow>
+							{registryMapping.name} is mapped to this type in the{" "}
+							<LinkStyle href="/opal/artifacts?openArtifactId=stride-cms-registry-artifact">
+								Component Registry
+							</LinkStyle>
+							{registryMapping.storybookUrl && (
+								<>
+									{" · "}
+									<LinkStyle href={registryMapping.storybookUrl} external>
+										View in Storybook
+									</LinkStyle>
+								</>
+							)}
+						</Flow>
+					</Alert>
+				)}
+
 				{/* Content Type Details */}
-				<Heading level="4" mb="24">
-					Content Type Details
-				</Heading>
-
-				<Flex flexDirection="column" gap="16">
-					<Field label="Name" required>
-						<Input
-							value={name}
-							onChange={(e) => setName(e.target.value)}
-							disabled
-						/>
-					</Field>
-
-					<Field label="Display name">
-						<Input
-							value={displayName}
-							onChange={(e) => setDisplayName(e.target.value)}
-						/>
-					</Field>
-
-					<Field label="Description">
-						<Textarea
-							value={description}
-							onChange={(e) => setDescription(e.target.value)}
-							rows={3}
-						/>
-					</Field>
-
-					<Field label="Sort index">
-						<Input
-							type="number"
-							value={String(sortOrder)}
-							onChange={(e) => setSortOrder(Number(e.target.value) || 0)}
-						/>
-					</Field>
-				</Flex>
-
-				<Box mt="24">
+				<Heading level="4">Content Type Details</Heading>
+				<Field label="Name" required>
+					<Input value={name} onChange={(e) => setName(e.target.value)} disabled />
+				</Field>
+				<Field label="Display name">
+					<Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+				</Field>
+				<Field label="Description">
+					<Textarea
+						value={description}
+						onChange={(e) => setDescription(e.target.value)}
+						rows={3}
+					/>
+				</Field>
+				<Field label="Sort index">
+					<Input
+						type="number"
+						value={String(sortOrder)}
+						onChange={(e) => setSortOrder(Number(e.target.value) || 0)}
+					/>
+				</Field>
+				<Field>
 					<Checkbox
 						checked={isAvailable}
 						onCheckedChange={(checked) => setIsAvailable(checked === true)}
 					>
 						Available in edit view
 					</Checkbox>
-				</Box>
-
-				<Box mt="16">
+				</Field>
+				<Field>
 					<Checkbox
 						checked={availableForComposition}
 						onCheckedChange={(checked) => setAvailableForComposition(checked === true)}
 					>
 						Available for composition in Visual Builder
 					</Checkbox>
+				</Field>
 
-					{/* Display as sub-options */}
-					<Box ml="24" mt="12">
-						<Text fontWeight="500" fontSize="sm" color={availableForComposition ? "fg.default" : "fg.tertiary"} mb="8">
-							Display as
-							<Box display="inline" color="fg.error"> *</Box>
-						</Text>
+				{/* Display as sub-options */}
+				<Field label="Display as" required ml="32">
+					<Flex flexDirection="column" gap="8">
+						<Box>
+							<Checkbox
+								checked={compositionDisplayAs.includes("Section")}
+								onCheckedChange={() => toggleDisplayAs("Section")}
+								disabled={!availableForComposition}
+								description="The block will be displayed as a section."
+								aria-describedby="section-description"
+							>
+								Section
+							</Checkbox>
+						</Box>
+						<Box>
+							<Checkbox
+								checked={compositionDisplayAs.includes("Element")}
+								onCheckedChange={() => toggleDisplayAs("Element")}
+								disabled={!availableForComposition}
+								description="The block will be displayed as an element."
+								aria-describedby="element-description"
+							>
+								Element
+							</Checkbox>
+						</Box>
+						<Box>
+							<Checkbox
+								checked={compositionDisplayAs.includes("FormElement")}
+								onCheckedChange={() => toggleDisplayAs("FormElement")}
+								disabled={!availableForComposition}
+								description="The block will be displayed as a form element."
+								aria-describedby="form-element-description"
+							>
+								Form element
+							</Checkbox>
+						</Box>
+					</Flex>
+				</Field>
 
-						<Flex flexDirection="column" gap="8">
-							<Box>
-								<Checkbox
-									checked={compositionDisplayAs.includes("Section")}
-									onCheckedChange={() => toggleDisplayAs("Section")}
-									disabled={!availableForComposition}
-								>
-									Section
-								</Checkbox>
-								<Text fontSize="sm" color="fg.tertiary" ml="24">
-									The block will be displayed as a section.
-								</Text>
-							</Box>
-
-							<Box>
-								<Checkbox
-									checked={compositionDisplayAs.includes("Element")}
-									onCheckedChange={() => toggleDisplayAs("Element")}
-									disabled={!availableForComposition}
-								>
-									Element
-								</Checkbox>
-								<Text fontSize="sm" color="fg.tertiary" ml="24">
-									The block will be displayed as an element.
-								</Text>
-							</Box>
-
-							<Box>
-								<Checkbox
-									checked={compositionDisplayAs.includes("FormElement")}
-									onCheckedChange={() => toggleDisplayAs("FormElement")}
-									disabled={!availableForComposition}
-								>
-									Form element
-								</Checkbox>
-								<Text fontSize="sm" color="fg.tertiary" ml="24">
-									The block will be displayed as a form element.
-								</Text>
-							</Box>
-						</Flex>
-					</Box>
-				</Box>
-
-				<Separator my="32" />
+				<Separator />
 
 				{/* Delete Content Type */}
-				<Heading level="4" mb="8">
-					Delete Content Type
-				</Heading>
-				<Text color="fg.secondary" mb="16">
-					This will permanently remove &apos;{ctDisplayLabel}&apos; content type and cannot be undone.
+				<Heading level="4">Delete Content Type</Heading>
+				<Text color="fg.secondary">
+					This will permanently remove &apos;{ctDisplayLabel}&apos; content type and
+					cannot be undone.
 				</Text>
 				<Button appearance="danger" onClick={() => setDeleteDialogOpen(true)}>
 					Delete Content Type
 				</Button>
-			</Box>
+			</Flow>
 
 			{/* Fixed Save Footer */}
 			<Footer>
-				<Button appearance="primary" onClick={handleSave}>
+				<Button appearance="primary" onClick={handleSave} disabled={!hasChanges}>
 					Save
 				</Button>
 			</Footer>
@@ -282,7 +340,8 @@ export default function ContentTypeSettingsPage() {
 						{contentItemsUsingType.length > 0 ? (
 							<Box>
 								<Text mb="12">
-									Are you sure you want to delete <strong>{ctDisplayLabel}</strong>? This content type is used by{" "}
+									Are you sure you want to delete{" "}
+									<strong>{ctDisplayLabel}</strong>? This content type is used by{" "}
 									{contentItemsUsingType.length} content{" "}
 									{contentItemsUsingType.length === 1 ? "item" : "items"}:
 								</Text>
@@ -290,7 +349,7 @@ export default function ContentTypeSettingsPage() {
 									p="12"
 									rounded="md"
 									bg="bg.secondary"
-									style={{ maxHeight: "200px", overflowY: "auto" }}
+									style={{maxHeight: "200px", overflowY: "auto"}}
 								>
 									{contentItemsUsingType.map((item) => (
 										<Text key={item.id} fontSize="sm" py="4">
@@ -301,7 +360,8 @@ export default function ContentTypeSettingsPage() {
 							</Box>
 						) : (
 							<Text>
-								Are you sure you want to permanently delete <strong>{ctDisplayLabel}</strong>? This action cannot be undone.
+								Are you sure you want to permanently delete{" "}
+								<strong>{ctDisplayLabel}</strong>? This action cannot be undone.
 							</Text>
 						)}
 					</AlertDialogBody>

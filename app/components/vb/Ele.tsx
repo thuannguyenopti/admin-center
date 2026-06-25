@@ -54,11 +54,9 @@ const Ele: React.FC<{
 				onClick={() => {
 					if (!menuOpen) setCurrentEle(element.id);
 				}}
-				className={`group p-2 py-0 text-sm h-[40px] pl-3 cursor-pointer border rounded-[4px] gap-1 items-center w-full flex justify-between ${styles.sectionWithBorder}`}
+				className={`group p-2 py-0 text-sm h-[40px] overflow-hidden pl-3 cursor-pointer border rounded-[4px] gap-1 items-center w-full flex justify-between ${styles.sectionWithBorder}`}
 				style={
-					menuOpen
-						? {backgroundColor: "var(--ax-colors-bg-default-hovered)"}
-						: undefined
+					menuOpen ? {backgroundColor: "var(--ax-colors-bg-default-hovered)"} : undefined
 				}
 			>
 				<Box

@@ -86,3 +86,30 @@ body.dark .newly-imported {
 	width: 16px;
 	height: 16px;
 }
+
+@keyframes vb-slide-in-up {
+	from { transform: translateY(50%); opacity: 0; }
+	to   { transform: translateY(0); opacity: 1; }
+}
+@keyframes vb-slide-in-down {
+	from { transform: translateY(-50%); opacity: 0; }
+	to   { transform: translateY(0); opacity: 1; }
+}
+@keyframes vb-slide-out-up {
+	from { transform: translateY(0); opacity: 1; }
+	to   { transform: translateY(-50%); opacity: 0; }
+}
+@keyframes vb-slide-out-down {
+	from { transform: translateY(0); opacity: 1; }
+	to   { transform: translateY(50%); opacity: 0; }
+}
+.vb-slide-in-up    { animation: vb-slide-in-up    0.15s ease-out; }
+.vb-slide-in-down  { animation: vb-slide-in-down  0.15s ease-out; }
+.vb-slide-out-up   { animation: vb-slide-out-up   0.15s ease-in forwards; }
+.vb-slide-out-down { animation: vb-slide-out-down 0.15s ease-in forwards; }
+
+/* VB element picker — keep content mounted when closed so iframes stay alive */
+.vb-picker-content[data-state="closed"] {
+	visibility: hidden;
+	pointer-events: none;
+}

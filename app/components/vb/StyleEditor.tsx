@@ -17,6 +17,11 @@ import {
 	getTemplateByKey,
 } from "./blocks/displayTemplateUtils";
 import {IconArrowLeft} from "@optiaxiom/icons";
+import {useMemo} from "react";
+import usePersistentState from "@/app/usePersistentState";
+import {PreviewCard, toIsolatedStoryUrl, deriveVariantStoryUrl, iframeStyleForTileSize} from "@/app/components/PreviewCard";
+import {STORY_SIZES} from "./storySizes";
+import {initialContentTypes} from "@/app/db/initialData";
 
 type Props = {
 	currentEle: string;
@@ -31,7 +36,6 @@ type Props = {
 };
 
 export default function StyleEditor({
-	currentEle,
 	elementType,
 	properties,
 	onBack,
@@ -39,18 +43,62 @@ export default function StyleEditor({
 	onSettingChange,
 	outlineTitle,
 	isSectionMode = false,
-	sectionType,
 }: Props) {
 	// Get available display templates for this element type or section
 	const templates = isSectionMode
 		? getTemplatesByBaseType("section")
 		: getTemplatesByContentType(elementType || "");
 
+	const [generatedArtifacts] = usePersistentState("opal:artifacts:generated", []) as [any[]];
+	const registryStorybookUrl = useMemo(() => {
+		if (isSectionMode || !elementType) return null;
+		const artifact = Array.isArray(generatedArtifacts)
+			? generatedArtifacts.find((a: any) => a?.id === "stride-cms-registry-artifact")
+			: null;
+		if (!artifact?.previewText) return null;
+		try {
+			const parsed = JSON.parse(artifact.previewText) as {
+				registry?: Record<string, {"cms element type"?: string; "storybook url"?: string}>;
+			};
+			if (!parsed.registry) return null;
+			const normalize = (v: string) => v.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+			const byName = new Map(
+				Object.entries(parsed.registry)
+					.filter(([, e]) => typeof e?.["storybook url"] === "string")
+					.map(([name, e]) => [normalize(name), e["storybook url"] as string])
+			);
+			const ct = initialContentTypes.find((c) => c.id === elementType);
+			const candidates = [
+				ct?.displayName,
+				ct?.name,
+				ct?.displayName?.replace(/\s+Block$/i, ""),
+			].filter(Boolean);
+			for (const c of candidates) {
+				const key = normalize(c!);
+				const exact = byName.get(key);
+				if (exact) return exact;
+				// Prefix match (e.g. "heading" → "headingh1")
+				const prefixMatches = [...byName.entries()].filter(([k]) => k.startsWith(key));
+				if (prefixMatches.length > 0) {
+					prefixMatches.sort(([a], [b]) =>
+						a.endsWith("default") ? -1 : b.endsWith("default") ? 1 : a.localeCompare(b),
+					);
+					return prefixMatches[0][1];
+				}
+			}
+			// Fallback: match by "cms element type" field
+			for (const entry of Object.values(parsed.registry)) {
+				if (entry["cms element type"] === elementType) return entry["storybook url"] ?? null;
+			}
+		} catch {}
+		return null;
+	}, [generatedArtifacts, elementType, isSectionMode]);
+
 	// Get current template key
 	const currentTemplate =
 		properties?.displayTemplateKey ||
 		templates.find((t) => t.isDefault)?.key ||
-		"defaultHeading";
+		"h1Heading";
 
 	// Get current template definition
 	const currentTemplateObj = getTemplateByKey(currentTemplate);
@@ -183,31 +231,32 @@ export default function StyleEditor({
 							})}
 					</Box>
 				)}
-			{/* Template Details */}
-			<Box mt="16" pt="16" borderT="1" borderColor="border.tertiary">
-				<Text fontSize="sm" fontWeight="600" mb="8">
-					Template Details
-				</Text>
+			{/* Template picker */}
+			<Box
+				mt="16"
+				pt="16"
+				borderT="1"
+				borderColor="border.tertiary"
+				style={{display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8}}
+			>
 				{templates.map((template) => (
-					<Box
+					<PreviewCard
 						key={template.key}
-						p="8"
-						mb="4"
-						rounded="md"
-						bg={currentTemplate === template.key ? "bg.accent.subtle" : "transparent"}
-						className="cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)] transition-colors"
+						label={template.displayName}
+						storybookUrl={
+							registryStorybookUrl
+								? toIsolatedStoryUrl(
+										template.templateValue
+											? deriveVariantStoryUrl(registryStorybookUrl, template.templateValue)
+											: registryStorybookUrl
+									)
+								: null
+						}
+						isSelected={currentTemplate === template.key}
 						onClick={() => onStyleChange(template.key)}
-						style={{
-							marginLeft: -8,
-						}}
-					>
-						<Text fontWeight="600" fontSize="sm" mb="4">
-							{template.displayName}
-						</Text>
-						<Text fontSize="xs" color="fg.secondary">
-							{template.description || "No description"}
-						</Text>
-					</Box>
+						previewHeight={100}
+						iframeStyle={iframeStyleForTileSize(130, 100, STORY_SIZES[elementType ?? ""])}
+					/>
 				))}
 			</Box>
 		</div>

@@ -19,10 +19,16 @@ import { NewsItemBlock } from "./StrideNewsItemBlock";
 
 export const BlockRegistry: Record<string, React.FC<any>> = {
     "ct-heading": HeadingBlock,
+    "ct-heading-h1": HeadingBlock,
+    "ct-heading-h2": HeadingBlock,
+    "ct-heading-h3": HeadingBlock,
+    "ct-heading-h4": HeadingBlock,
     "ct-text": TextBlock,
     "ct-rich-text": RichTextBlock,
     "ct-product": ProductBlock,
     "ct-button": ButtonBlock,
+    "ct-button-outline": ButtonBlock,
+    "ct-button-subtle": ButtonBlock,
     "ct-input": InputBlock,
     "ct-image": ImageBlock,
     "ct-image-block": ImageBlock,

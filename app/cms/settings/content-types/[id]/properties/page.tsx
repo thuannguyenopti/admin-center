@@ -1,26 +1,69 @@
 "use client";
 
-import { Box, Card, SearchInput, Menu, MenuTrigger, LabelMenuButton, MenuContent, AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@optiaxiom/react";
-import { Flex } from "@/app/components/Flex";
-import { Text } from "@/app/components/Text";
-import { Button } from "@/app/components/Button";
-import { IconGripVertical, IconChevronDown, IconDots } from "@tabler/icons-react";
-import { initialContentTypes, initialPages, Property, PropertyType, ContentType, Page } from "@/app/db/initialData";
-import { useParams } from "next/navigation";
-import { use, useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { Aside } from "@/app/context/LayoutContext";
+import {
+	Box,
+	Card,
+	SearchInput,
+	Menu,
+	MenuTrigger,
+	LabelMenuButton,
+	MenuContent,
+	AlertDialog,
+	AlertDialogContent,
+	AlertDialogHeader,
+	AlertDialogBody,
+	AlertDialogFooter,
+	AlertDialogAction,
+	AlertDialogCancel,
+} from "@optiaxiom/react";
+import {Flex} from "@/app/components/Flex";
+import {Text} from "@/app/components/Text";
+import {Button} from "@/app/components/Button";
+import {IconGripVertical, IconChevronDown, IconDots, IconPlus} from "@tabler/icons-react";
+import {
+	initialContentTypes,
+	initialPages,
+	Property,
+	PropertyType,
+	ContentType,
+	Page,
+} from "@/app/db/initialData";
+import {useParams} from "next/navigation";
+import {use, useState, useCallback, useMemo, useRef, useEffect} from "react";
+import {Aside} from "@/app/context/LayoutContext";
 import ConfigurePropertyPane from "../../ConfigurePropertyPane";
 import usePersistentState from "@/app/usePersistentState";
 
 // Type category grouping - Text, Number, etc.
-type TypeCategory = "Text" | "Number" | "Boolean" | "Date/Time" | "Reference" | "Selection" | "Content" | "Outline" | "Link" | "Block" | "Other";
+type TypeCategory =
+	| "Text"
+	| "Number"
+	| "Boolean"
+	| "Date/Time"
+	| "Reference"
+	| "Selection"
+	| "Content"
+	| "Outline"
+	| "Link"
+	| "Block"
+	| "Other";
 
-const getTypeCategory = (type: PropertyType, allowedTypes?: string[], allContentTypes?: ContentType[]): TypeCategory => {
+const getTypeCategory = (
+	type: PropertyType,
+	allowedTypes?: string[],
+	allContentTypes?: ContentType[]
+): TypeCategory => {
 	const textTypes = ["String", "LongString", "XhtmlString", "text", "textarea", "richtext"];
 	const numberTypes = ["Int", "Double"];
 	const booleanTypes = ["Boolean", "checkbox"];
 	const dateTypes = ["DateTime"];
-	const referenceTypes = ["ContentReference", "PageReference", "ImageReference", "VideoReference", "reference"];
+	const referenceTypes = [
+		"ContentReference",
+		"PageReference",
+		"ImageReference",
+		"VideoReference",
+		"reference",
+	];
 	const selectionTypes = ["SelectOne", "SelectMany"];
 	const contentTypes = ["ContentArea"];
 	const outlineTypes = ["outline"];
@@ -29,7 +72,7 @@ const getTypeCategory = (type: PropertyType, allowedTypes?: string[], allContent
 
 	// Check if ContentReference with allowedTypes pointing to Block content types
 	if (type === "ContentReference" && allowedTypes && allowedTypes.length > 0 && allContentTypes) {
-		const referencedType = allContentTypes.find(ct => ct.id === allowedTypes[0]);
+		const referencedType = allContentTypes.find((ct) => ct.id === allowedTypes[0]);
 		if (referencedType && referencedType.baseType === "Block") {
 			return "Block";
 		}
@@ -54,12 +97,16 @@ const getTypeCategory = (type: PropertyType, allowedTypes?: string[], allContent
 };
 
 // Get specific type label within a category
-const getSpecificTypeLabel = (type: PropertyType, allowedTypes?: string[], allContentTypes?: ContentType[]): string => {
+const getSpecificTypeLabel = (
+	type: PropertyType,
+	allowedTypes?: string[],
+	allContentTypes?: ContentType[]
+): string => {
 	// If it's a block (ContentReference with block allowedTypes), show the block type name
 	if (type === "ContentReference" && allowedTypes && allowedTypes.length > 0 && allContentTypes) {
-		const referencedType = allContentTypes.find(ct => ct.id === allowedTypes[0]);
+		const referencedType = allContentTypes.find((ct) => ct.id === allowedTypes[0]);
 		if (referencedType && referencedType.baseType === "Block") {
-			return referencedType.displayName || referencedType.name;
+			return referencedType.displayName;
 		}
 	}
 
@@ -96,7 +143,11 @@ const getSpecificTypeLabel = (type: PropertyType, allowedTypes?: string[], allCo
 };
 
 // Get display label showing category + specific type
-const getPropertyTypeLabel = (type: PropertyType, allowedTypes?: string[], allContentTypes?: ContentType[]): string => {
+const getPropertyTypeLabel = (
+	type: PropertyType,
+	allowedTypes?: string[],
+	allContentTypes?: ContentType[]
+): string => {
 	const category = getTypeCategory(type, allowedTypes, allContentTypes);
 	const specific = getSpecificTypeLabel(type, allowedTypes, allContentTypes);
 	return `${category} · ${specific}`;
@@ -138,7 +189,10 @@ export default function PropertiesPage() {
 	const id = (resolvedParams?.id ?? "") as string;
 
 	// Use persistent state for content types
-	const [savedContentTypes, setContentTypes] = usePersistentState("contentTypes", initialContentTypes) as [ContentType[], (value: ContentType[]) => void];
+	const [savedContentTypes, setContentTypes] = usePersistentState(
+		"contentTypes",
+		initialContentTypes
+	) as [ContentType[], (value: ContentType[]) => void];
 
 	// Merge saved content types with initial data to include any new content types
 	const contentTypes = useMemo(() => {
@@ -163,7 +217,10 @@ export default function PropertiesPage() {
 	const [filterGroup, setFilterGroup] = useState<string>("All");
 	const [searchFilter, setSearchFilter] = useState<string>("");
 	const [draggedPropertyId, setDraggedPropertyId] = useState<string | null>(null);
-	const [dropIndicator, setDropIndicator] = useState<{ propertyId: string; position: "before" | "after" } | null>(null);
+	const [dropIndicator, setDropIndicator] = useState<{
+		propertyId: string;
+		position: "before" | "after";
+	} | null>(null);
 
 	// Ref to track newly added property for scrolling
 	const newlyAddedPropertyIdRef = useRef<string | null>(null);
@@ -181,7 +238,9 @@ export default function PropertiesPage() {
 	}, [id]);
 
 	// Use key to force re-render of Aside when property changes
-	const selectedProperty = contentType?.properties.find((p: Property) => p.id === selectedPropertyId);
+	const selectedProperty = contentType?.properties.find(
+		(p: Property) => p.id === selectedPropertyId
+	);
 
 	// Scroll to newly added property after layout stabilizes
 	useEffect(() => {
@@ -193,7 +252,7 @@ export default function PropertiesPage() {
 			const timeoutId = setTimeout(() => {
 				const element = document.querySelector(`[data-property-id="${propertyId}"]`);
 				if (element instanceof HTMLElement) {
-					element.scrollIntoView({ behavior: "smooth", block: "end" });
+					element.scrollIntoView({behavior: "smooth", block: "end"});
 					// Add a highlight effect
 					element.style.outline = "2px solid var(--ax-color-border-accent)";
 					setTimeout(() => {
@@ -212,138 +271,160 @@ export default function PropertiesPage() {
 	};
 
 	// Add new property
-	const handleAddProperty = useCallback((type: PropertyType, groupName: string = "Content") => {
-		if (!contentTypes || !contentType) return;
+	const handleAddProperty = useCallback(
+		(type: PropertyType, groupName: string = "Content") => {
+			if (!contentTypes || !contentType) return;
 
-		const displayName = `New ${getSpecificTypeLabel(type)}`;
-		const newProperty: Property = {
-			id: generatePropertyId(),
-			name: displayName.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, ""),
-			displayName,
-			type,
-			groupName,
-			order: contentType.properties.length + 1,
-		};
+			const displayName = `New ${getSpecificTypeLabel(type)}`;
+			const newProperty: Property = {
+				id: generatePropertyId(),
+				name: displayName
+					.trim()
+					.toLowerCase()
+					.replace(/[^a-z0-9\s]/g, "")
+					.replace(/\s+/g, "_")
+					.replace(/_+/g, "_")
+					.replace(/^_|_$/g, ""),
+				displayName,
+				type,
+				groupName,
+				order: contentType.properties.length + 1,
+			};
 
-		const updatedContentTypes = contentTypes.map((ct: ContentType) =>
-			ct.id === id
-				? { ...ct, properties: [...ct.properties, newProperty] }
-				: ct
-		);
+			const updatedContentTypes = contentTypes.map((ct: ContentType) =>
+				ct.id === id ? {...ct, properties: [...ct.properties, newProperty]} : ct
+			);
 
-		setContentTypes(updatedContentTypes);
-		setSelectedPropertyId(newProperty.id);
-		newlyAddedPropertyIdRef.current = newProperty.id;
-		setNewPropertyIds((prev) => new Set(prev).add(newProperty.id));
-	}, [contentTypes, contentType, id, setContentTypes]);
+			setContentTypes(updatedContentTypes);
+			setSelectedPropertyId(newProperty.id);
+			newlyAddedPropertyIdRef.current = newProperty.id;
+			setNewPropertyIds((prev) => new Set(prev).add(newProperty.id));
+		},
+		[contentTypes, contentType, id, setContentTypes]
+	);
 
 	// Update property
-	const handleSaveProperty = useCallback((updatedProperty: Property) => {
-		if (!contentTypes || !contentType) return;
+	const handleSaveProperty = useCallback(
+		(updatedProperty: Property) => {
+			if (!contentTypes || !contentType) return;
 
-		const updatedContentTypes = contentTypes.map((ct: ContentType) =>
-			ct.id === id
-				? {
-					...ct,
-					properties: ct.properties.map((p) =>
-						p.id === updatedProperty.id ? updatedProperty : p
-					),
-				}
-				: ct
-		);
+			const updatedContentTypes = contentTypes.map((ct: ContentType) =>
+				ct.id === id
+					? {
+							...ct,
+							properties: ct.properties.map((p) =>
+								p.id === updatedProperty.id ? updatedProperty : p
+							),
+						}
+					: ct
+			);
 
-		setContentTypes(updatedContentTypes);
-		setNewPropertyIds((prev) => {
-			const next = new Set(prev);
-			next.delete(updatedProperty.id);
-			return next;
-		});
-		setSelectedPropertyId(null);
-	}, [contentTypes, contentType, id, setContentTypes]);
+			setContentTypes(updatedContentTypes);
+			setNewPropertyIds((prev) => {
+				const next = new Set(prev);
+				next.delete(updatedProperty.id);
+				return next;
+			});
+			setSelectedPropertyId(null);
+		},
+		[contentTypes, contentType, id, setContentTypes]
+	);
 
 	// Remove property handler
-	const handleRemoveProperty = useCallback((property: Property) => {
-		if (contentItemsUsingType.length > 0) {
-			// Has content instances — show confirmation dialog
-			setPropertyToRemove(property);
-			setRemoveConfirmOpen(true);
-		} else {
-			// No content instances — remove directly
-			confirmRemoveProperty(property.id);
-		}
-	}, [contentItemsUsingType]);
+	const handleRemoveProperty = useCallback(
+		(property: Property) => {
+			if (contentItemsUsingType.length > 0) {
+				// Has content instances — show confirmation dialog
+				setPropertyToRemove(property);
+				setRemoveConfirmOpen(true);
+			} else {
+				// No content instances — remove directly
+				confirmRemoveProperty(property.id);
+			}
+		},
+		[contentItemsUsingType]
+	);
 
-	const confirmRemoveProperty = useCallback((propertyId: string) => {
-		if (!contentTypes || !contentType) return;
+	const confirmRemoveProperty = useCallback(
+		(propertyId: string) => {
+			if (!contentTypes || !contentType) return;
 
-		const updatedContentTypes = contentTypes.map((ct: ContentType) =>
-			ct.id === id
-				? { ...ct, properties: ct.properties.filter((p) => p.id !== propertyId) }
-				: ct
-		);
+			const updatedContentTypes = contentTypes.map((ct: ContentType) =>
+				ct.id === id
+					? {...ct, properties: ct.properties.filter((p) => p.id !== propertyId)}
+					: ct
+			);
 
-		setContentTypes(updatedContentTypes);
-		if (selectedPropertyId === propertyId) {
-			setSelectedPropertyId(null);
-		}
-		setNewPropertyIds((prev) => {
-			const next = new Set(prev);
-			next.delete(propertyId);
-			return next;
-		});
-		setRemoveConfirmOpen(false);
-		setPropertyToRemove(null);
-	}, [contentTypes, contentType, id, setContentTypes, selectedPropertyId]);
+			setContentTypes(updatedContentTypes);
+			if (selectedPropertyId === propertyId) {
+				setSelectedPropertyId(null);
+			}
+			setNewPropertyIds((prev) => {
+				const next = new Set(prev);
+				next.delete(propertyId);
+				return next;
+			});
+			setRemoveConfirmOpen(false);
+			setPropertyToRemove(null);
+		},
+		[contentTypes, contentType, id, setContentTypes, selectedPropertyId]
+	);
 
 	// Drag and drop handlers
 	const handleDragStart = useCallback((propertyId: string) => {
 		setDraggedPropertyId(propertyId);
 	}, []);
 
-	const handleDragOver = useCallback((e: React.DragEvent, propertyId: string, isFirst: boolean) => {
-		e.preventDefault();
-		if (draggedPropertyId === propertyId) return;
-		const rect = e.currentTarget.getBoundingClientRect();
-		const midY = rect.top + rect.height / 2;
-		// Only use "before" on the very first item; otherwise always use "after"
-		const position = isFirst && e.clientY < midY ? "before" : "after";
-		setDropIndicator({ propertyId, position });
-	}, [draggedPropertyId]);
+	const handleDragOver = useCallback(
+		(e: React.DragEvent, propertyId: string, isFirst: boolean) => {
+			e.preventDefault();
+			if (draggedPropertyId === propertyId) return;
+			const rect = e.currentTarget.getBoundingClientRect();
+			const midY = rect.top + rect.height / 2;
+			// Only use "before" on the very first item; otherwise always use "after"
+			const position = isFirst && e.clientY < midY ? "before" : "after";
+			setDropIndicator({propertyId, position});
+		},
+		[draggedPropertyId]
+	);
 
-	const handleDrop = useCallback((e: React.DragEvent) => {
-		e.preventDefault();
+	const handleDrop = useCallback(
+		(e: React.DragEvent) => {
+			e.preventDefault();
 
-		if (!draggedPropertyId || !dropIndicator || !contentTypes || !contentType) return;
-		if (draggedPropertyId === dropIndicator.propertyId) return;
+			if (!draggedPropertyId || !dropIndicator || !contentTypes || !contentType) return;
+			if (draggedPropertyId === dropIndicator.propertyId) return;
 
-		const properties = [...contentType.properties];
-		const draggedIndex = properties.findIndex((p) => p.id === draggedPropertyId);
-		let dropIndex = properties.findIndex((p) => p.id === dropIndicator.propertyId);
+			const properties = [...contentType.properties];
+			const draggedIndex = properties.findIndex((p) => p.id === draggedPropertyId);
+			let dropIndex = properties.findIndex((p) => p.id === dropIndicator.propertyId);
 
-		if (draggedIndex === -1 || dropIndex === -1) return;
+			if (draggedIndex === -1 || dropIndex === -1) return;
 
-		// Remove dragged item
-		const [draggedProperty] = properties.splice(draggedIndex, 1);
+			// Remove dragged item
+			const [draggedProperty] = properties.splice(draggedIndex, 1);
 
-		// Recalculate drop index after removal
-		dropIndex = properties.findIndex((p) => p.id === dropIndicator.propertyId);
-		const insertIndex = dropIndicator.position === "after" ? dropIndex + 1 : dropIndex;
-		properties.splice(insertIndex, 0, draggedProperty);
+			// Recalculate drop index after removal
+			dropIndex = properties.findIndex((p) => p.id === dropIndicator.propertyId);
+			const insertIndex = dropIndicator.position === "after" ? dropIndex + 1 : dropIndex;
+			properties.splice(insertIndex, 0, draggedProperty);
 
-		// Update order values
-		const reorderedProperties = properties.map((p, index) => ({
-			...p,
-			order: index + 1,
-		}));
+			// Update order values
+			const reorderedProperties = properties.map((p, index) => ({
+				...p,
+				order: index + 1,
+			}));
 
-		const updatedContentTypes = contentTypes.map((ct: ContentType) =>
-			ct.id === id ? { ...ct, properties: reorderedProperties } : ct
-		);
+			const updatedContentTypes = contentTypes.map((ct: ContentType) =>
+				ct.id === id ? {...ct, properties: reorderedProperties} : ct
+			);
 
-		setContentTypes(updatedContentTypes);
-		setDraggedPropertyId(null);
-		setDropIndicator(null);
-	}, [draggedPropertyId, dropIndicator, contentTypes, contentType, id, setContentTypes]);
+			setContentTypes(updatedContentTypes);
+			setDraggedPropertyId(null);
+			setDropIndicator(null);
+		},
+		[draggedPropertyId, dropIndicator, contentTypes, contentType, id, setContentTypes]
+	);
 
 	const handleDragEnd = useCallback(() => {
 		setDraggedPropertyId(null);
@@ -392,7 +473,8 @@ export default function PropertiesPage() {
 				}}
 			>
 				<Text color="fg.secondary" mb="24">
-					Manage properties for this content type. Use property groups to organise your properties.
+					Manage properties for this content type. Use property groups to organise your
+					properties.
 				</Text>
 
 				{/* Filter and Add Property */}
@@ -402,12 +484,11 @@ export default function PropertiesPage() {
 						placeholder="Filter by name"
 						value={searchFilter}
 						onChange={(e) => setSearchFilter(e.target.value)}
-						style={{ maxWidth: "280px" }}
+						style={{maxWidth: "280px"}}
 					/>
-
 					<Menu
 						options={[
-							{ label: "All", execute: () => setFilterGroup("All") },
+							{label: "All", execute: () => setFilterGroup("All")},
 							...propertyGroups.map((g) => ({
 								label: g,
 								execute: () => setFilterGroup(g),
@@ -421,7 +502,7 @@ export default function PropertiesPage() {
 						</MenuTrigger>
 						<MenuContent />
 					</Menu>
-					<Box flex="1" />					<AddPropertyMenu onAddProperty={handleAddProperty} />
+					<Box flex="1" /> <AddPropertyMenu onAddProperty={handleAddProperty} />
 				</Flex>
 
 				{/* Property Groups */}
@@ -438,8 +519,14 @@ export default function PropertiesPage() {
 									contentTypes={contentTypes}
 									isSelected={selectedPropertyId === property.id}
 									isDragging={draggedPropertyId === property.id}
-									showDropBefore={dropIndicator?.propertyId === property.id && dropIndicator.position === "before"}
-									showDropAfter={dropIndicator?.propertyId === property.id && dropIndicator.position === "after"}
+									showDropBefore={
+										dropIndicator?.propertyId === property.id &&
+										dropIndicator.position === "before"
+									}
+									showDropAfter={
+										dropIndicator?.propertyId === property.id &&
+										dropIndicator.position === "after"
+									}
 									onSelect={() => handleSelectProperty(property.id)}
 									onDragStart={() => handleDragStart(property.id)}
 									onDragOver={(e) => handleDragOver(e, property.id, index === 0)}
@@ -455,7 +542,7 @@ export default function PropertiesPage() {
 				{filteredProperties.length === 0 && (
 					<Box
 						p="24"
-						style={{ textAlign: "center" }}
+						style={{textAlign: "center"}}
 						border="1"
 						borderColor="border.secondary"
 						rounded="md"
@@ -489,13 +576,19 @@ export default function PropertiesPage() {
 					<AlertDialogBody>
 						<Box>
 							<Text mb="12">
-								Are you sure you want to remove the property <strong>{propertyToRemove?.displayName || propertyToRemove?.name}</strong>? This will affect {contentItemsUsingType.length} content {contentItemsUsingType.length === 1 ? "item" : "items"} using this content type:
+								Are you sure you want to remove the property{" "}
+								<strong>
+									{propertyToRemove?.displayName || propertyToRemove?.name}
+								</strong>
+								? This will affect {contentItemsUsingType.length} content{" "}
+								{contentItemsUsingType.length === 1 ? "item" : "items"} using this
+								content type:
 							</Text>
 							<Box
 								p="12"
 								rounded="md"
 								bg="bg.secondary"
-								style={{ maxHeight: "200px", overflowY: "auto" }}
+								style={{maxHeight: "200px", overflowY: "auto"}}
 							>
 								{contentItemsUsingType.map((item) => (
 									<Text key={item.id} fontSize="sm" py="4">
@@ -509,7 +602,9 @@ export default function PropertiesPage() {
 						<AlertDialogCancel />
 						<AlertDialogAction
 							appearance="danger"
-							onClick={() => propertyToRemove && confirmRemoveProperty(propertyToRemove.id)}
+							onClick={() =>
+								propertyToRemove && confirmRemoveProperty(propertyToRemove.id)
+							}
 						>
 							Remove
 						</AlertDialogAction>
@@ -521,28 +616,34 @@ export default function PropertiesPage() {
 }
 
 // Add Property Menu with grouped type options
-function AddPropertyMenu({ onAddProperty }: { onAddProperty: (type: PropertyType, groupName?: string) => void }) {
+function AddPropertyMenu({
+	onAddProperty,
+}: {
+	onAddProperty: (type: PropertyType, groupName?: string) => void;
+}) {
 	const addPropertyOptions = [
 		// Main type categories - sub-type can be selected in the property editor
-		{ label: "Text", execute: () => onAddProperty("String") },
-		{ label: "Block", execute: () => onAddProperty("ContentReference") },
-		{ label: "Content", execute: () => onAddProperty("ContentArea") },
-		{ label: "Outline", execute: () => onAddProperty("outline") },
-		{ label: "Date/Time", execute: () => onAddProperty("DateTime") },
-		{ label: "Link", execute: () => onAddProperty("LinkItem") },
-		{ label: "Number", execute: () => onAddProperty("Int") },
-		{ label: "Choice", execute: () => onAddProperty("SelectOne") },
-		{ label: "Guid", execute: () => onAddProperty("Guid") },
+		{label: "Text", execute: () => onAddProperty("String")},
+		{label: "Block", execute: () => onAddProperty("ContentReference")},
+		{label: "Content", execute: () => onAddProperty("ContentArea")},
+		{label: "Outline", execute: () => onAddProperty("outline")},
+		{label: "Date/Time", execute: () => onAddProperty("DateTime")},
+		{label: "Link", execute: () => onAddProperty("LinkItem")},
+		{label: "Number", execute: () => onAddProperty("Int")},
+		{label: "Choice", execute: () => onAddProperty("SelectOne")},
+		{label: "Guid", execute: () => onAddProperty("Guid")},
 	];
 
 	return (
 		<Menu options={addPropertyOptions}>
 			<MenuTrigger asChild>
-				<Button appearance="primary">
-					<Flex alignItems="center" gap="4">
-						Add Property
-						<IconChevronDown size={16} />
-					</Flex>
+				<Button
+					appearance="primary"
+					icon={<IconPlus />}
+					addonAfter={<IconChevronDown size={20} />}
+					h="40"
+				>
+					Add Property
 				</Button>
 			</MenuTrigger>
 			<MenuContent />
@@ -553,7 +654,7 @@ function AddPropertyMenu({ onAddProperty }: { onAddProperty: (type: PropertyType
 // Drop position indicator line (centered in the 8px gap between cards)
 const INSERT_BAR_BASE: React.CSSProperties = {
 	height: "2px",
-	backgroundColor: "#0037FF",
+	backgroundColor: "var(--ax-colors-border-focus)",
 	borderRadius: "2px",
 	pointerEvents: "none",
 };
@@ -604,10 +705,7 @@ function PropertyCard({
 	const specificType = getSpecificTypeLabel(property.type, property.allowedTypes, contentTypes);
 
 	return (
-		<div
-			onDragOver={onDragOver}
-			onDrop={onDrop}
-		>
+		<div onDragOver={onDragOver} onDrop={onDrop}>
 			{showDropBefore && <div style={INSERT_BAR_BEFORE} />}
 			<Card
 				data-property-id={property.id}
@@ -619,7 +717,8 @@ function PropertyCard({
 				onDragEnd={onDragEnd}
 				borderColor={isSelected ? "border.accent" : undefined}
 				style={{
-					transition: "border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease",
+					transition:
+						"border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease",
 					boxShadow: isSelected ? "0 0 0 1px var(--ax-color-border-accent)" : undefined,
 					opacity: isDragging ? 0.4 : 1,
 				}}
@@ -628,7 +727,7 @@ function PropertyCard({
 					{/* Drag Handle */}
 					<Box
 						color="fg.tertiary"
-						style={{ cursor: "grab" }}
+						style={{cursor: "grab"}}
 						onMouseDown={(e) => e.stopPropagation()}
 					>
 						<IconGripVertical size={16} />
@@ -639,16 +738,14 @@ function PropertyCard({
 						<Text fontWeight="500">{property.displayName || property.name}</Text>
 						<Text color="fg.tertiary" fontSize="sm">
 							{typeCategory} · {specificType}
-							{property.required && <span style={{ color: "var(--ax-color-fg-error)" }}> *</span>}
+							{property.required && (
+								<span style={{color: "var(--ax-color-fg-error)"}}> *</span>
+							)}
 						</Text>
 					</Box>
 
 					{/* Actions */}
-					<Menu
-						options={[
-							{ label: "Remove", execute: () => onRemove?.() },
-						]}
-					>
+					<Menu options={[{label: "Remove", execute: () => onRemove?.()}]}>
 						<MenuTrigger asChild>
 							<Button
 								appearance="subtle"

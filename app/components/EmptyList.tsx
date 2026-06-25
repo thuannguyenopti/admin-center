@@ -1,6 +1,6 @@
 "use client";
 
-import {Box, Heading} from "@optiaxiom/react";
+import {Box} from "@optiaxiom/react";
 import {Text} from "./Text";
 import {ReactNode} from "react";
 import Flow from "@/app/components/Flow";
@@ -8,10 +8,12 @@ import Flow from "@/app/components/Flow";
 export default function EmptyList({
 	heading,
 	body,
+	illustration,
 	children,
 }: {
 	heading: string;
 	body: string;
+	illustration?: ReactNode;
 	children?: ReactNode;
 }) {
 	return (
@@ -26,14 +28,7 @@ export default function EmptyList({
 			justifyContent="center"
 			style={{height: "60vh"}}
 		>
-			<Box
-				style={{
-					width: 600,
-					height: 600,
-					position: "absolute",
-					background: "radial-gradient(rgba(99,102,241,0.18) 0%, rgba(99,102,241,0) 50%)",
-				}}
-			/>
+			{illustration && <Box mb="16">{illustration}</Box>}
 			<Flow>
 				<Text fontSize="3xl" fontWeight="600">
 					{heading}
