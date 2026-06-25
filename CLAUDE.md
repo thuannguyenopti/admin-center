@@ -106,7 +106,7 @@ When converting existing `DropdownMenu` code to `Menu`, helpers that previously 
 - Action Cards → must use `@optiaxiom/proteus`, never custom HTML
 - OpalOrb → always use `/opal-orb.png`, never CSS/SVG recreation
 - Loading states → reuse existing `OpalLoader` components in `app/opal/components/`
-- See **[OPAL_DESIGN_SYSTEM.md](OPAL_DESIGN_SYSTEM.md)** for full Opal-specific rules
+- See **`.claude/skills/opal-design.md`** for full Opal-specific rules (auto-loaded as a skill)
 
 ### Icons
 
