@@ -74,23 +74,14 @@ There's also a legacy `app/styles/opalStyles.css` with older Opal rules — addi
 
 ### Design System
 
-Full reference: **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)** — read before writing any UI code.
-
 All UI must use **`@optiaxiom/react`** components. Never use raw HTML elements if an Axiom equivalent exists.
 
-For frontend/product UI work, also read **[.claude/skills/frontend-design.md](.claude/skills/frontend-design.md)** and treat it as an implementation rule. The agent must behave like a senior frontend product designer using Axiom V3, not like a prototype copier.
+For frontend/product UI work, the agent must behave like a senior frontend product designer using Axiom V3, not like a prototype copier.
 
 **Prototype handling rule**: screenshots, PM HTML, and vibe-coded demos are requirements input only. Extract the user need, then rebuild it with Axiom components, semantic tokens, existing repo patterns, and clean product hierarchy. Do not copy raw `button`, `input`, `select`, `textarea`, tiny CTAs, hardcoded colors, or inconsistent spacing from prototypes.
 
 **Exception**: `app/components/vb/blocks/` uses raw HTML + Tailwind (Visual Builder renders customer website content, not product UI).
 
-**Axiom versions by area:**
-- `app/opal/` — uses **Axiom V3** (`@optiaxiom/react@3.0.0-next.0`) + Opal design layer (see `OPAL_DESIGN_SYSTEM.md`)
-- All other product areas — uses **Axiom V2** (`@optiaxiom/react@^1.9.1`)
-
-**`data-brand="v3"` is applied to every route except `/site/*`** via the `<body>` and a wrapper `<div>` in `app/layout.tsx` (`brand = path.startsWith("/site") ? undefined : "v3"`). V3 CSS tokens (`--ax-colors-bg-accent`, `--ax-colors-fg-accent`, etc.) and the lime-green palette are therefore active on every product page — not just `/opal/*`. When working on CMS, CMP, or other non-Opal product routes, expect V3 token values; do not add a local `data-brand="v3"` wrapper. `/site/*` pages render without the v3 brand layer so they look like a real customer site.
-
-**Primary button text color** — V2 Axiom primary buttons in a `[data-brand="v3"]` context use `--v3iotm` to override the default white text with dark (`#202320`) text on the lime-green background. This is set in `app/globals.css` on the `[data-brand="v3"]` rule. Do not remove it.
 
 **Critical rules (all areas):**
 - Spacing tokens only: `"0" "2" "4" "6" "8" "10" "12" "16" "20" "24" "32" "40" "48" "56" "64" "80"` — never arbitrary px
@@ -116,16 +107,15 @@ When converting existing `DropdownMenu` code to `Menu`, helpers that previously 
 - OpalOrb → always use `/opal-orb.png`, never CSS/SVG recreation
 - Loading states → reuse existing `OpalLoader` components in `app/opal/components/`
 - See **[OPAL_DESIGN_SYSTEM.md](OPAL_DESIGN_SYSTEM.md)** for full Opal-specific rules
-- See **[.claude/AXIOM_V3_MIGRATION.md](.claude/AXIOM_V3_MIGRATION.md)** for the V2→V3 conversion checklist, audit guide, and GlobalBar V3 implementation details
 
 ### Icons
 
-**Icon packages are version-specific — use the right one for the area you're editing:**
+**Icon packages differ by area:**
 
 | Area | Package | Import example |
 |------|---------|----------------|
-| `app/opal/` (Axiom V3) | `@optiaxiom/icons` | `import { IconSearch } from "@optiaxiom/icons"` |
-| All other areas (Axiom V2) | `@optimizely/axiom-icons` | `import { IconAgent } from "@optimizely/axiom-icons"` |
+| `app/opal/` | `@optiaxiom/icons` | `import { IconSearch } from "@optiaxiom/icons"` |
+| All other areas | `@optimizely/axiom-icons` | `import { IconAgent } from "@optimizely/axiom-icons"` |
 
 **NEVER use `@tabler/icons-react` in product UI code** — only allowed in `app/lib/axiom-icons.tsx` as a fallback shim.
 
@@ -154,10 +144,11 @@ When converting existing `DropdownMenu` code to `Menu`, helpers that previously 
 ### MCP Servers
 
 Configured in `.mcp.json`:
-- **`axiom`** (`@optiaxiom/mcp`) — fetch Axiom component docs and valid prop values
-- **`figma`** — Figma design context
+- **`axiom-v3`** (`@optiaxiom/mcp@next`) — fetch Axiom component docs, valid prop values, tokens, and icon names
+- **`axiom`** (`@optiaxiom/mcp`) — legacy V2 docs, still connected but prefer `axiom-v3`
 - **`coda`** — Coda docs integration
 - **`optimizely`** — Optimizely project data
+- **`figma`** — Figma MCP (connected but no active skills use it)
 
 ### Data Visualization Colors
 
@@ -165,7 +156,7 @@ Use the shared data-viz palette (see `app/DATA_VISUALIZATION_COLORS.md`) for cha
 
 ## No Monolithic Files
 
-Before writing code, check if files you're touching are monolithic (300+ lines, multiple concerns). If so, split them first. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for the splitting guide.
+Before writing code, check if files you're touching are monolithic (300+ lines, multiple concerns). If so, split them first.
 
 ## Git & Deployment
 

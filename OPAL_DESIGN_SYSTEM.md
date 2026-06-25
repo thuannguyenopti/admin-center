@@ -161,4 +161,4 @@ When working on any file in `app/opal/`:
 | 4 | Loading states → use existing `OpalLoader` components, never new keyframes |
 | 5 | Opal UI patterns (ActivityStream, PromptInput, etc.) → follow Figma patterns above |
 | 6 | Alert banners in `app/opal/` → use `OpalAlert` component, never custom banner markup |
-| 7 | All standard Axiom V3 rules still apply — see `.claude/AXIOM_V3_MIGRATION.md` (tokens, spacing, icons, Field labels, page titles, etc.) |
+| 7 | All standard Axiom V3 rules still apply — see `.claude/skills/frontend-design.md` (tokens, spacing, icons, Field labels, page titles, etc.) |

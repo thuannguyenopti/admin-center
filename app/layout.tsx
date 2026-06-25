@@ -26,7 +26,6 @@ export default function RootLayout({
 	const path = usePathname() ?? "";
 	const cmsNav = useCmsNav();
 	const opalNav = useOpalNav();
-	const brand = path.startsWith("/site") ? undefined : "v3";
 
 	const structure = {
 		cms: cmsNav,
@@ -51,20 +50,18 @@ export default function RootLayout({
 				{/* figma-capture: remove after capture */}
 				<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
 			</head>
-			<body suppressHydrationWarning data-brand={brand}>
+			<body suppressHydrationWarning>
 				<ThemeProvider>
 					<ProofreadingProvider>
 						<OpalGenerationProvider>
 							<ExperimentResultsProvider>
 								<HydrationErrorSuppressor />
 								<MigrationRunner />
-								<div data-brand={brand} style={{display: "contents"}}>
-									{menu ? (
-										<Template structure={menu}>{children}</Template>
-									) : (
-										children
-									)}
-								</div>
+								{menu ? (
+									<Template structure={menu}>{children}</Template>
+								) : (
+									children
+								)}
 								{activeEffect === "snow" && <SnowEffect />}
 								{activeEffect === "newyear" && <NewYearEffect />}
 							</ExperimentResultsProvider>
