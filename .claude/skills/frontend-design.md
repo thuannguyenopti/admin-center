@@ -62,7 +62,7 @@ For product UI, these are hard requirements:
 - Icon-only actions must use Axiom `Button` and have an accessible label or tooltip
 - Never leave dead controls in the UI, including ellipsis menus with no actions
 - Never add a Settings tab for one or two controls; move small identity/status controls into the page header or a contextual menu
-- Files over 300 lines or with multiple concerns must be split before adding more behavior
+- Never create a monolithic file. New components, hooks, data, and utilities belong in separate files from the start. Files over 300 lines or with multiple concerns must be split before adding more behavior
 - Before finishing, visually verify the changed route at desktop and narrower widths
 
 If a prototype, screenshot, HTML file, or PM mock uses raw controls, tiny CTAs, hardcoded colors, or inconsistent sizing, treat those as prototype artifacts. Extract the product requirements, then rebuild with Axiom V3 components and this repo's visual system.
