@@ -89,11 +89,10 @@ export function FileTreeItem({
 				<ContentIcon
 					size={16}
 					color={
-						isSelected
-							? "var(--ax-colors-fg-default)"
-							: "var(--ax-colors-fg-tertiary)"
+						isSelected ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)"
 					}
 					style={{flexShrink: 0}}
+					filled={isSelected}
 				/>
 			)}
 			<Box
