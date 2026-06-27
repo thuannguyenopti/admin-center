@@ -32,6 +32,16 @@ export const DIALOG_CONFIGS: Record<string, DialogConfig> = {
 		description: "Some of {name}'s connectors have lost access. Reconnect to restore the tools and data {name} needs to do its job.",
 		cta: "Reconnect {name}",
 	},
+	manage_tools: {
+		title: "Manage {name}'s tools",
+		description: "Tool settings live inside {name}'s account. Switch in to enable, disable, or configure tools — it only takes a second and you can switch back anytime.",
+		cta: "Sign in as {name}",
+	},
+	manage_connectors: {
+		title: "Manage {name}'s connectors",
+		description: "Connector settings live inside {name}'s account. Switch in to add, remove, or reconfigure connectors — it only takes a second and you can switch back anytime.",
+		cta: "Sign in as {name}",
+	},
 };
 
 export function SplitDialog({

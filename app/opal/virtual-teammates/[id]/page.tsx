@@ -7,7 +7,8 @@ import {
 	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
 	Box, Button, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger, Text,
 } from "@optiaxiom/react";
-import { IconArrowRight, IconChevronLeft, IconChevronRight, IconComments, IconPause } from "@optiaxiom/icons";
+import { IconArrowRight, IconChevronLeft, IconChevronRight, IconComments, IconPause, IconAngleDown } from "@optiaxiom/icons";
+import { ReviewCanvas } from "./ReviewCanvas";
 import Image from "next/image";
 import { VAUS } from "@/app/opal/data/vaus";
 
@@ -219,6 +220,8 @@ export default function VATOverviewPage() {
 	const id = params?.id as string;
 	const vau = VAUS.find((v) => v.id === id);
 	const [showBreakDialog, setShowBreakDialog] = useState(false);
+	const [reviewItem, setReviewItem] = useState<typeof WORK_ITEMS[0] | null>(null);
+	const [dismissedTitles, setDismissedTitles] = useState<Set<string>>(new Set());
 
 	// Approvals pagination
 	const [visibleApprovals, setVisibleApprovals] = useState(3);
@@ -257,8 +260,8 @@ export default function VATOverviewPage() {
 	const nextBatch = Math.min(3, remainingApprovals);
 
 	// Work items computed
-	const filteredWork =
-		urgencyFilter === "All" ? WORK_ITEMS : WORK_ITEMS.filter((w) => w.priority === urgencyFilter);
+	const filteredWork = (urgencyFilter === "All" ? WORK_ITEMS : WORK_ITEMS.filter((w) => w.priority === urgencyFilter))
+		.filter((w) => !dismissedTitles.has(w.title));
 	const totalWorkPages = Math.ceil(filteredWork.length / 3);
 	const showCarouselArrows = filteredWork.length > 3;
 	const canGoBack = carouselPage > 0;
@@ -269,6 +272,7 @@ export default function VATOverviewPage() {
 	const flexBasis = cardWidth > 0 ? `${cardWidth}px` : "calc((100% - 48px) / 3.15)";
 
 	return (
+		<>
 		<Box style={{ padding: "32px 40px", maxWidth: 960 }}>
 			{/* Page header */}
 			<Box display="flex" alignItems="center" gap="16" mb="32">
@@ -559,9 +563,26 @@ export default function VATOverviewPage() {
 											<Text fontSize="sm" color="fg.tertiary">
 												{item.time}
 											</Text>
-											<Button appearance="default" size="sm">
-												Review
-											</Button>
+											<Menu
+												options={[
+													{
+														label: "Review",
+														execute: () => setReviewItem(item),
+													},
+													{
+														label: "Dismiss",
+														intent: "danger" as const,
+														execute: () => setDismissedTitles((prev) => new Set([...prev, item.title])),
+													},
+												]}
+											>
+												<MenuTrigger asChild>
+													<Button appearance="default" size="sm" addonAfter={<IconAngleDown />}>
+														Review
+													</Button>
+												</MenuTrigger>
+												<MenuContent />
+											</Menu>
 										</Box>
 									</Box>
 								))}
@@ -578,5 +599,17 @@ export default function VATOverviewPage() {
 				)}
 			</Box>
 		</Box>
+
+		{reviewItem && vau && (
+			<ReviewCanvas
+				item={reviewItem}
+				vauName={name}
+				vauAvatar={vau.avatar}
+				vauAvatarBg={vau.avatarBg}
+				onClose={() => setReviewItem(null)}
+				onApprove={() => setDismissedTitles((prev) => new Set([...prev, reviewItem.title]))}
+			/>
+		)}
+		</>
 	);
 }

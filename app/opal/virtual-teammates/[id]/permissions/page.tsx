@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import { useParams } from "next/navigation";
-import { Badge, Box, Button, Heading, Popover, PopoverContent, PopoverTrigger, Text } from "@optiaxiom/react";
-import { IconSearch } from "@optiaxiom/icons";
+import { Badge, Box, Button, Heading, Popover, PopoverContent, PopoverTrigger, Text, Textarea } from "@optiaxiom/react";
+import { IconPen, IconSearch } from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import Image from "next/image";
 import { VAUS } from "@/app/opal/data/vaus";
@@ -218,6 +218,157 @@ const WORKFLOW_TAG_STYLE: React.CSSProperties = {
 };
 
 
+// ─── Guardrails ──────────────────────────────────────────────────────────────
+
+type TierId = "principal" | "team" | "org" | "public";
+
+type TierState = { rules: string };
+
+type TierConfig = {
+	id: TierId;
+	label: string;
+	accessLabel: string;
+	bodyText?: string;
+	readOnly: boolean;
+};
+
+const TIER_CONFIGS: TierConfig[] = [
+	{
+		id: "principal",
+		label: "Principal",
+		accessLabel: "Full access — no overrides",
+		bodyText: "Randy shares everything with principals. No blocked topics.",
+		readOnly: true,
+	},
+	{ id: "team",   label: "Team member", accessLabel: "Filtered",       readOnly: false },
+	{ id: "org",    label: "Org member",  accessLabel: "Restricted",     readOnly: false },
+	{ id: "public", label: "Public",      accessLabel: "Most restricted", readOnly: false },
+];
+
+const INITIAL_TIER_STATES: Record<TierId, TierState> = {
+	principal: { rules: "" },
+	team:      { rules: "Email content & drafts\nPersonal finances & salary\nPrivate conversations & notes" },
+	org:       { rules: "All internal information\nTeam conversations\nProject details\n\nI can only share publicly available project information." },
+	public:    { rules: "All internal information\n\nI can only share publicly available information." },
+};
+
+function GuardrailsSection({ name }: { name: string }) {
+	const [savedStates, setSavedStates] = useState<Record<TierId, TierState>>(INITIAL_TIER_STATES);
+	const [editingTier, setEditingTier] = useState<TierId | null>(null);
+	const [draft, setDraft] = useState<TierState | null>(null);
+	const [showConflict, setShowConflict] = useState(false);
+
+	const isDirty =
+		editingTier !== null &&
+		draft !== null &&
+		draft.rules !== savedStates[editingTier].rules;
+
+	const startEdit = (tierId: TierId) => {
+		if (editingTier !== null && isDirty) {
+			setShowConflict(true);
+			return;
+		}
+		setEditingTier(tierId);
+		setDraft({ ...savedStates[tierId] });
+		setShowConflict(false);
+	};
+
+	const cancelEdit = () => {
+		setEditingTier(null);
+		setDraft(null);
+		setShowConflict(false);
+	};
+
+	const saveEdit = () => {
+		if (!editingTier || !draft) return;
+		setSavedStates((prev) => ({ ...prev, [editingTier]: { ...draft } }));
+		setEditingTier(null);
+		setDraft(null);
+		setShowConflict(false);
+	};
+
+	return (
+		<Box style={CARD}>
+			{/* Header */}
+			<Box mb="20">
+				<Text style={SECTION_HEADING} mb="4">Guardrails</Text>
+				<Text fontSize="sm" color="fg.secondary">
+					Lines {name}{" "}never crosses — set by who&apos;s asking. Changes kick in right away.
+				</Text>
+			</Box>
+
+			{/* Unsaved-changes conflict warning */}
+			{showConflict && (
+				<Box
+					bg="bg.secondary"
+					mb="16"
+					style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 6, padding: "8px 12px" }}
+				>
+					<Text fontSize="sm" color="fg.secondary">
+						You have unsaved changes. Save or cancel before editing another tier.
+					</Text>
+				</Box>
+			)}
+
+			{/* Tier rows */}
+			{TIER_CONFIGS.map((tier, i) => {
+				const isEditing = editingTier === tier.id;
+				const state = isEditing && draft ? draft : savedStates[tier.id];
+
+				return (
+					<Fragment key={tier.id}>
+						{i > 0 && (
+							<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "16px 0" }} />
+						)}
+						<Box>
+							{/* Row header */}
+							<Box display="flex" alignItems="center" justifyContent="space-between" mb="10">
+								<Box display="flex" flexDirection="column" gap="2">
+									<Text fontSize="md" color="fg.default" style={{ fontWeight: 500 }}>{tier.label}</Text>
+									<Text fontSize="sm" color="fg.tertiary">{tier.accessLabel}</Text>
+								</Box>
+								{!tier.readOnly && !isEditing && (
+									<Button
+										appearance="subtle"
+										size="sm"
+										icon={<IconPen />}
+										aria-label={`Edit ${tier.label} guardrails`}
+										onClick={() => startEdit(tier.id)}
+									/>
+								)}
+							</Box>
+
+							{/* Principal — body text */}
+							{tier.bodyText ? (
+								<Text fontSize="sm" color="fg.tertiary">{tier.bodyText}</Text>
+							) : isEditing ? (
+								<>
+									<Textarea
+										value={draft?.rules ?? ""}
+										onChange={(e) => setDraft((prev) => prev ? { ...prev, rules: e.target.value } : prev)}
+										rows={4}
+										style={{ width: "100%", lineHeight: 1.6 }}
+									/>
+									<Box display="flex" alignItems="center" justifyContent="flex-end" gap="8" mt="12">
+										<Button appearance="subtle" size="sm" onClick={cancelEdit}>Cancel</Button>
+										<Button appearance="primary" size="sm" onClick={saveEdit}>Save changes</Button>
+									</Box>
+								</>
+							) : (
+								state.rules && (
+									<Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "pre-line" as const }}>
+										{state.rules}
+									</Text>
+								)
+							)}
+						</Box>
+					</Fragment>
+				);
+			})}
+		</Box>
+	);
+}
+
 export default function VATPermissionsPage() {
 	const params = useParams();
 	const id = params?.id as string;
@@ -319,21 +470,7 @@ export default function VATPermissionsPage() {
 			</Box>
 
 			{/* Guardrails */}
-			<Box style={CARD}>
-				<Box display="flex" alignItems="start" justifyContent="space-between">
-					<Box>
-						<Text style={SECTION_HEADING} mb="4">Guardrails</Text>
-						<Text fontSize="sm" color="fg.secondary" style={{ maxWidth: 600 }}>
-							{name}&apos;s hard lines — set by the company handbook. Can&apos;t be overridden, but you can add your own on top.
-						</Text>
-					</Box>
-					<SplitDialog type="guardrails" name={name}>
-						<Button appearance="default" size="md" style={{ flexShrink: 0 }}>
-							Configure
-						</Button>
-					</SplitDialog>
-				</Box>
-			</Box>
+			<GuardrailsSection name={name} />
 		</Box>
 	);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import {
 	Badge,
@@ -16,15 +16,14 @@ import {
 	Text,
 	Textarea,
 } from "@optiaxiom/react";
-import { IconArrowRightArrowLeft, IconPen, IconToggleOff } from "@optiaxiom/icons";
+import { IconArrowRightArrowLeft, IconToggleOff } from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import { VAUS } from "@/app/opal/data/vaus";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Section = "identity" | "personality" | "roles";
-
-type IdentityValues = { name: string; email: string; startDate: string };
+type Section = "identity" | "personality" | "roles"; // kept for doSave signature
+type IdentityValues = { name: string; email: string; startDate: string; visibility: string };
 type PersonalityValues = { preset: string; tone: string; traits: string; style: string };
 type RolesValues = { instructions: string };
 
@@ -32,13 +31,12 @@ type RolesValues = { instructions: string };
 
 const PERSONALITY_PRESETS = [
 	"Concise and direct",
-	"Warm and thorough",
-	"Casual and quick",
-	"Formal and precise",
-	"Quirky and engaged",
 	"Chaotic good",
+	"Casual and quick",
 	"Bratty but brilliant",
 ];
+
+const VISIBILITY_OPTIONS = ["Personal", "Team", "Public"];
 
 const PRESET_DATA: Record<string, { tone: string; traits: string; style: string }> = {
 	"Concise and direct": {
@@ -128,6 +126,127 @@ function ReadonlyField({ label, value, note }: { label: string; value: string; n
 	);
 }
 
+function ReadonlySelectField({ label, value }: { label: string; value: string }) {
+	return (
+		<Box mb="16">
+			<Text fontSize="sm" color="fg.secondary" mb="4">{label}</Text>
+			<Box
+				display="flex"
+				alignItems="center"
+				justifyContent="space-between"
+				style={{
+					background: FIELD_BG,
+					border: "1px solid var(--ax-colors-border-secondary)",
+					borderRadius: 6,
+					padding: "8px 12px",
+				}}
+			>
+				<Text fontSize="md" color="fg.default">{value}</Text>
+				<svg width="12" height="8" viewBox="0 0 12 8" fill="none" style={{ flexShrink: 0 }}>
+					<path d="M1 1.5L6 6.5L11 1.5" stroke="var(--ax-colors-fg-tertiary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+				</svg>
+			</Box>
+		</Box>
+	);
+}
+
+function EditSelect({
+	label,
+	value,
+	options,
+	onChange,
+}: {
+	label: string;
+	value: string;
+	options: string[];
+	onChange: (v: string) => void;
+}) {
+	return (
+		<Box mb="16">
+			<Text fontSize="sm" color="fg.secondary" mb="4">{label}</Text>
+			<Box style={{ position: "relative" }}>
+				<select
+					value={value}
+					onChange={(e) => onChange(e.target.value)}
+					style={{
+						width: "100%",
+						appearance: "none",
+						background: "var(--ax-colors-bg-default)",
+						border: "1px solid var(--ax-colors-border-default)",
+						borderRadius: 6,
+						padding: "8px 36px 8px 12px",
+						fontFamily: "var(--ax-font-family)",
+						fontSize: 14,
+						color: "var(--ax-colors-fg-default)",
+						cursor: "pointer",
+						outline: "none",
+					}}
+				>
+					{options.map((o) => <option key={o} value={o}>{o}</option>)}
+				</select>
+				<svg width="12" height="8" viewBox="0 0 12 8" fill="none" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+					<path d="M1 1.5L6 6.5L11 1.5" stroke="var(--ax-colors-fg-tertiary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+				</svg>
+			</Box>
+		</Box>
+	);
+}
+
+const EMAIL_DOMAIN = "@vau.opal.optimizely.com";
+
+function EditEmailInput({
+	label,
+	value,
+	onChange,
+}: {
+	label: string;
+	value: string;
+	onChange: (v: string) => void;
+}) {
+	const prefix = value.replace(EMAIL_DOMAIN, "");
+	return (
+		<Box mb="16">
+			<Text fontSize="sm" color="fg.secondary" mb="4">{label}</Text>
+			<Box
+				display="flex"
+				alignItems="center"
+				style={{
+					border: "1px solid var(--ax-colors-border-default)",
+					borderRadius: 6,
+					background: "var(--ax-colors-bg-default)",
+					overflow: "hidden",
+				}}
+			>
+				<input
+					value={prefix}
+					onChange={(e) => onChange(e.target.value + EMAIL_DOMAIN)}
+					style={{
+						flex: 1,
+						minWidth: 0,
+						border: "none",
+						outline: "none",
+						background: "transparent",
+						padding: "8px 4px 8px 12px",
+						fontFamily: "var(--ax-font-family)",
+						fontSize: 14,
+						color: "var(--ax-colors-fg-default)",
+					}}
+				/>
+				<Box
+					style={{
+						padding: "8px 12px 8px 0",
+						flexShrink: 0,
+						userSelect: "none",
+					}}
+				>
+					<Text fontSize="md" color="fg.tertiary">{EMAIL_DOMAIN}</Text>
+				</Box>
+			</Box>
+			<Text fontSize="sm" color="fg.tertiary" mt="4">Only the username portion can be changed.</Text>
+		</Box>
+	);
+}
+
 function EditInput({
 	label,
 	value,
@@ -178,34 +297,11 @@ function EditTextarea({
 	);
 }
 
-function SectionEditButton({
-	isDirty,
-	isEditing,
-	onEdit,
-	onSave,
-}: {
-	isDirty: boolean;
-	isEditing: boolean;
-	onEdit: () => void;
-	onSave: () => void;
-}) {
-	if (!isEditing) {
-		return (
-			<Button appearance="default" size="lg" addonBefore={<IconPen />} onClick={onEdit}>
-				Edit
-			</Button>
-		);
-	}
-	if (isDirty) {
-		return (
-			<Button appearance="primary" size="lg" onClick={onSave}>
-				Save changes
-			</Button>
-		);
-	}
+function SectionSaveButton({ isDirty, onSave }: { isDirty: boolean; onSave: () => void }) {
+	if (!isDirty) return null;
 	return (
-		<Button appearance="default" size="lg" addonBefore={<IconPen />} onClick={onSave}>
-			Edit
+		<Button appearance="primary" size="lg" onClick={onSave}>
+			Save changes
 		</Button>
 	);
 }
@@ -222,6 +318,7 @@ export default function VATSettingsPage() {
 		name,
 		email: `${name.toLowerCase()}@vau.opal.optimizely.com`,
 		startDate: "March 12, 2026",
+		visibility: "Personal",
 	};
 	const initialPersonality: PersonalityValues = {
 		preset: "Chaotic good",
@@ -236,93 +333,25 @@ export default function VATSettingsPage() {
 	const [personalityCurrent, setPersonalityCurrent] = useState<PersonalityValues>(initialPersonality);
 	const [rolesCurrent, setRolesCurrent] = useState<RolesValues>(initialRoles);
 
-	// Last-saved values (what we revert to on cancel)
+	// Last-saved values
 	const [identitySaved, setIdentitySaved] = useState<IdentityValues>(initialIdentity);
 	const [personalitySaved, setPersonalitySaved] = useState<PersonalityValues>(initialPersonality);
 	const [rolesSaved, setRolesSaved] = useState<RolesValues>(initialRoles);
 
-	const [editingSection, setEditingSection] = useState<Section | null>(null);
 	const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
 
 	// Dirty detection
-	const identityDirty =
-		editingSection === "identity" &&
-		JSON.stringify(identityCurrent) !== JSON.stringify(identitySaved);
-	const personalityDirty =
-		editingSection === "personality" &&
-		JSON.stringify(personalityCurrent) !== JSON.stringify(personalitySaved);
-	const rolesDirty =
-		editingSection === "roles" &&
-		JSON.stringify(rolesCurrent) !== JSON.stringify(rolesSaved);
+	const identityDirty = JSON.stringify(identityCurrent) !== JSON.stringify(identitySaved);
+	const personalityDirty = JSON.stringify(personalityCurrent) !== JSON.stringify(personalitySaved);
+	const rolesDirty = JSON.stringify(rolesCurrent) !== JSON.stringify(rolesSaved);
 	const isAnyDirty = identityDirty || personalityDirty || rolesDirty;
 
-	// Refs for click-outside
-	const identityRef = useRef<HTMLDivElement>(null);
-	const personalityRef = useRef<HTMLDivElement>(null);
-	const rolesRef = useRef<HTMLDivElement>(null);
-
-	// Mutable refs so effects always read fresh values
-	const editingSectionRef = useRef(editingSection);
-	editingSectionRef.current = editingSection;
-
-	const savedRef = useRef({ identity: identitySaved, personality: personalitySaved, roles: rolesSaved });
-	savedRef.current = { identity: identitySaved, personality: personalitySaved, roles: rolesSaved };
-
-	// Cancel current section (revert to saved)
-	const doCancel = () => {
-		const sec = editingSectionRef.current;
-		if (sec === "identity") setIdentityCurrent({ ...savedRef.current.identity });
-		if (sec === "personality") setPersonalityCurrent({ ...savedRef.current.personality });
-		if (sec === "roles") setRolesCurrent({ ...savedRef.current.roles });
-		setEditingSection(null);
-	};
-
-	// Open a section (closes any other open section first, reverting it)
-	const openSection = (section: Section) => {
-		const curr = editingSectionRef.current;
-		if (curr && curr !== section) {
-			if (curr === "identity") setIdentityCurrent({ ...savedRef.current.identity });
-			if (curr === "personality") setPersonalityCurrent({ ...savedRef.current.personality });
-			if (curr === "roles") setRolesCurrent({ ...savedRef.current.roles });
-		}
-		setEditingSection(section);
-	};
-
-	// Save current section
+	// Save a section
 	const doSave = (section: Section) => {
 		if (section === "identity") setIdentitySaved({ ...identityCurrent });
 		if (section === "personality") setPersonalitySaved({ ...personalityCurrent });
 		if (section === "roles") setRolesSaved({ ...rolesCurrent });
-		setEditingSection(null);
 	};
-
-	// Escape key — cancel
-	useEffect(() => {
-		if (!editingSection) return;
-		const handler = (e: KeyboardEvent) => {
-			if (e.key === "Escape") doCancel();
-		};
-		document.addEventListener("keydown", handler);
-		return () => document.removeEventListener("keydown", handler);
-	}, [editingSection]); // eslint-disable-line react-hooks/exhaustive-deps
-
-	// Click-outside — cancel
-	useEffect(() => {
-		if (!editingSection) return;
-		const refMap: Record<Section, React.RefObject<HTMLDivElement | null>> = {
-			identity: identityRef,
-			personality: personalityRef,
-			roles: rolesRef,
-		};
-		const handler = (e: MouseEvent) => {
-			const ref = refMap[editingSectionRef.current!];
-			if (ref?.current && !ref.current.contains(e.target as Node)) {
-				doCancel();
-			}
-		};
-		document.addEventListener("mousedown", handler);
-		return () => document.removeEventListener("mousedown", handler);
-	}, [editingSection]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	// beforeunload warning when dirty
 	useEffect(() => {
@@ -335,14 +364,11 @@ export default function VATSettingsPage() {
 		return () => window.removeEventListener("beforeunload", handler);
 	}, [isAnyDirty]);
 
-	// Pill select — autofills fields and enters edit mode
+	// Pill select — autofills personality fields
 	const selectPreset = (preset: string) => {
 		const data = PRESET_DATA[preset];
 		if (!data) return;
 		setPersonalityCurrent((prev) => ({ ...prev, preset, ...data }));
-		if (editingSection !== "personality") {
-			openSection("personality");
-		}
 	};
 
 	return (
@@ -385,7 +411,7 @@ export default function VATSettingsPage() {
 			</Box>
 
 			{/* Identity & Status */}
-			<Box ref={identityRef} style={CARD}>
+			<Box style={CARD}>
 				<Box display="flex" alignItems="start" justifyContent="space-between" mb="16">
 					<Box>
 						<Text style={SECTION_HEADING} mb="4">Identity &amp; Status</Text>
@@ -393,38 +419,25 @@ export default function VATSettingsPage() {
 							The basics — who {name} is and how long they&apos;ve been on the job.
 						</Text>
 					</Box>
-					<SectionEditButton
-						isEditing={editingSection === "identity"}
-						isDirty={identityDirty}
-						onEdit={() => openSection("identity")}
-						onSave={() => doSave("identity")}
-					/>
+					<SectionSaveButton isDirty={identityDirty} onSave={() => doSave("identity")} />
 				</Box>
-				{editingSection === "identity" ? (
-					<>
-						<EditInput
-							label="Name"
-							value={identityCurrent.name}
-							onChange={(v) => setIdentityCurrent((p) => ({ ...p, name: v }))}
-						/>
-						<EditInput
-							label="Email"
-							value={identityCurrent.email}
-							onChange={(v) => setIdentityCurrent((p) => ({ ...p, email: v }))}
-						/>
-						<EditInput
-							label="Start date"
-							value={identityCurrent.startDate}
-							onChange={(v) => setIdentityCurrent((p) => ({ ...p, startDate: v }))}
-						/>
-					</>
-				) : (
-					<>
-						<ReadonlyField label="Name" value={identityCurrent.name} />
-						<ReadonlyField label="Email" value={identityCurrent.email} />
-						<ReadonlyField label="Start date" value={identityCurrent.startDate} />
-					</>
-				)}
+				<EditInput
+					label="Name"
+					value={identityCurrent.name}
+					onChange={(v) => setIdentityCurrent((p) => ({ ...p, name: v }))}
+				/>
+				<EditEmailInput
+					label="Email"
+					value={identityCurrent.email}
+					onChange={(v) => setIdentityCurrent((p) => ({ ...p, email: v }))}
+				/>
+				<ReadonlyField label="Start date" value={identityCurrent.startDate} />
+				<EditSelect
+					label="Visibility"
+					value={identityCurrent.visibility}
+					options={VISIBILITY_OPTIONS}
+					onChange={(v) => setIdentityCurrent((p) => ({ ...p, visibility: v }))}
+				/>
 				<Box>
 					<Text fontSize="sm" color="fg.secondary" mb="8">Status</Text>
 					<Badge intent="success" style={{ fontSize: 14, padding: "4px 12px" }}>Active</Badge>
@@ -432,7 +445,7 @@ export default function VATSettingsPage() {
 			</Box>
 
 			{/* Personality */}
-			<Box ref={personalityRef} style={CARD}>
+			<Box style={CARD}>
 				<Box display="flex" alignItems="start" justifyContent="space-between" mb="16">
 					<Box>
 						<Text style={SECTION_HEADING} mb="4">Personality</Text>
@@ -440,12 +453,7 @@ export default function VATSettingsPage() {
 							Start with a preset, then make it yours. Fields autofill — edit anything you want.
 						</Text>
 					</Box>
-					<SectionEditButton
-						isEditing={editingSection === "personality"}
-						isDirty={personalityDirty}
-						onEdit={() => openSection("personality")}
-						onSave={() => doSave("personality")}
-					/>
+					<SectionSaveButton isDirty={personalityDirty} onSave={() => doSave("personality")} />
 				</Box>
 
 				{/* Personality pills */}
@@ -479,75 +487,41 @@ export default function VATSettingsPage() {
 					})}
 				</Box>
 
-				{editingSection === "personality" ? (
-					<>
-						<EditTextarea
-							label="Tone"
-							value={personalityCurrent.tone}
-							onChange={(v) => setPersonalityCurrent((p) => ({ ...p, tone: v }))}
-							note={`How ${name} sounds in messages — formal or casual, brief or detailed, warm or all-business.`}
-						/>
-						<EditTextarea
-							label="Traits"
-							value={personalityCurrent.traits}
-							onChange={(v) => setPersonalityCurrent((p) => ({ ...p, traits: v }))}
-							note={`The character behind the work — is ${name} cautious or bold, chatty or minimal, serious or lighthearted`}
-						/>
-						<EditTextarea
-							label="Style"
-							value={personalityCurrent.style}
-							onChange={(v) => setPersonalityCurrent((p) => ({ ...p, style: v }))}
-							note={`How ${name} structures what it shares — bullet points or paragraphs, short summaries or deep detail.`}
-						/>
-					</>
-				) : (
-					<>
-						<ReadonlyField
-							label="Tone"
-							value={personalityCurrent.tone}
-							note={`How ${name} sounds in messages — formal or casual, brief or detailed, warm or all-business.`}
-						/>
-						<ReadonlyField
-							label="Traits"
-							value={personalityCurrent.traits}
-							note={`The character behind the work — is ${name} cautious or bold, chatty or minimal, serious or lighthearted`}
-						/>
-						<ReadonlyField
-							label="Style"
-							value={personalityCurrent.style}
-							note={`How ${name} structures what it shares — bullet points or paragraphs, short summaries or deep detail.`}
-						/>
-					</>
-				)}
+				<EditTextarea
+					label="Tone"
+					value={personalityCurrent.tone}
+					onChange={(v) => setPersonalityCurrent((p) => ({ ...p, tone: v }))}
+					note={`How ${name} sounds in messages — formal or casual, brief or detailed, warm or all-business.`}
+				/>
+				<EditTextarea
+					label="Traits"
+					value={personalityCurrent.traits}
+					onChange={(v) => setPersonalityCurrent((p) => ({ ...p, traits: v }))}
+					note={`The character behind the work — is ${name} cautious or bold, chatty or minimal, serious or lighthearted`}
+				/>
+				<EditTextarea
+					label="Style"
+					value={personalityCurrent.style}
+					onChange={(v) => setPersonalityCurrent((p) => ({ ...p, style: v }))}
+					note={`How ${name} structures what it shares — bullet points or paragraphs, short summaries or deep detail.`}
+				/>
 			</Box>
 
 			{/* Roles and Responsibilities */}
-			<Box ref={rolesRef} style={CARD}>
+			<Box style={CARD}>
 				<Box display="flex" alignItems="start" justifyContent="space-between" mb="16">
 					<Box>
 						<Text style={SECTION_HEADING} mb="4">Roles and Responsibilities</Text>
 						<Text fontSize="sm" color="fg.secondary">What {name} does and when to escalate.</Text>
 					</Box>
-					<SectionEditButton
-						isEditing={editingSection === "roles"}
-						isDirty={rolesDirty}
-						onEdit={() => openSection("roles")}
-						onSave={() => doSave("roles")}
-					/>
+					<SectionSaveButton isDirty={rolesDirty} onSave={() => doSave("roles")} />
 				</Box>
-				{editingSection === "roles" ? (
-					<EditTextarea
-						label="Instructions"
-						value={rolesCurrent.instructions}
-						onChange={(v) => setRolesCurrent((p) => ({ ...p, instructions: v }))}
-						rows={4}
-					/>
-				) : (
-					<ReadonlyField
-						label="Instructions"
-						value={rolesCurrent.instructions}
-					/>
-				)}
+				<EditTextarea
+					label="Instructions"
+					value={rolesCurrent.instructions}
+					onChange={(v) => setRolesCurrent((p) => ({ ...p, instructions: v }))}
+					rows={4}
+				/>
 			</Box>
 
 			{/* Danger zone */}

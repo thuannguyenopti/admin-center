@@ -182,7 +182,6 @@ export default function VATActivityPage() {
 				<TabsList>
 					<TabsTrigger value="upcoming">Upcoming</TabsTrigger>
 					<TabsTrigger value="completed">Completed</TabsTrigger>
-					<TabsTrigger value="needs-attention">Needs attention</TabsTrigger>
 				</TabsList>
 
 				{/* ─── Upcoming ──────────────────────────────────────────────── */}
@@ -257,7 +256,7 @@ export default function VATActivityPage() {
 								</Menu>
 							</Box>
 							<Text color="fg.secondary" fontSize="sm" mb="20">
-								Where {name}&apos;s effort goes — hover a bar for details.
+								Where {name}&apos;s effort goes — and what&apos;s trending up.
 							</Text>
 							<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "24px 24px 16px" }}>
 								{/* Chart area */}
@@ -319,7 +318,7 @@ export default function VATActivityPage() {
 																</Box>
 																<Box display="flex" justifyContent="space-between" gap="16">
 																	<Box display="flex" alignItems="center" gap="4">
-																		<Box style={{ width: 8, height: 8, borderRadius: 2, background: "#616755", flexShrink: 0 }} />
+																		<Box style={{ width: 8, height: 8, borderRadius: 2, background: "#226B1E", flexShrink: 0 }} />
 																		<Text fontSize="sm" style={{ color: "inherit", opacity: 0.7 }}>Solo</Text>
 																	</Box>
 																	<Text fontSize="sm" style={{ color: "inherit", fontWeight: 500 }}>{soloRuns} ({row.pct}%)</Text>
@@ -327,7 +326,7 @@ export default function VATActivityPage() {
 																{supportedRuns > 0 && (
 																	<Box display="flex" justifyContent="space-between" gap="16">
 																		<Box display="flex" alignItems="center" gap="4">
-																			<Box style={{ width: 8, height: 8, borderRadius: 2, background: "#A8AD9B", flexShrink: 0 }} />
+																			<Box style={{ width: 8, height: 8, borderRadius: 2, background: "#D2DEC2", flexShrink: 0 }} />
 																			<Text fontSize="sm" style={{ color: "inherit", opacity: 0.7 }}>Supported</Text>
 																		</Box>
 																		<Text fontSize="sm" style={{ color: "inherit", fontWeight: 500 }}>{supportedRuns} ({100 - row.pct}%)</Text>
@@ -350,7 +349,7 @@ export default function VATActivityPage() {
 														<Box style={{
 															width: "100%",
 															height: supportedPx,
-															background: "#A8AD9B",
+															background: "#D2DEC2",
 															borderRadius: "4px 4px 0 0",
 															transition: "opacity 0.15s",
 															opacity: hoveredBar && !isHovered ? 0.3 : 1,
@@ -359,7 +358,7 @@ export default function VATActivityPage() {
 													<Box style={{
 														width: "100%",
 														height: soloPx,
-														background: "#616755",
+														background: "#226B1E",
 														borderRadius: supportedRuns > 0 ? 0 : "4px 4px 0 0",
 														transition: "opacity 0.15s",
 														opacity: hoveredBar && !isHovered ? 0.3 : 1,
@@ -380,11 +379,11 @@ export default function VATActivityPage() {
 								{/* Legend */}
 								<Box display="flex" alignItems="center" gap="16" style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--ax-colors-border-secondary)" }}>
 									<Box display="flex" alignItems="center" gap="6">
-										<Box style={{ width: 10, height: 10, borderRadius: 2, background: "#616755" }} />
+										<Box style={{ width: 10, height: 10, borderRadius: 2, background: "#226B1E" }} />
 										<Text fontSize="sm" color="fg.secondary">Solo</Text>
 									</Box>
 									<Box display="flex" alignItems="center" gap="6">
-										<Box style={{ width: 10, height: 10, borderRadius: 2, background: "#A8AD9B" }} />
+										<Box style={{ width: 10, height: 10, borderRadius: 2, background: "#D2DEC2" }} />
 										<Text fontSize="sm" color="fg.secondary">Supported</Text>
 									</Box>
 								</Box>
@@ -478,14 +477,6 @@ export default function VATActivityPage() {
 					</Box>
 				</TabsContent>
 
-				{/* ─── Needs attention ───────────────────────────────────────── */}
-				<TabsContent value="needs-attention">
-					<Box pt="32" style={{ textAlign: "center", padding: "64px 20px" }}>
-						<Text color="fg.secondary" fontSize="md">
-							No items need attention right now.
-						</Text>
-					</Box>
-				</TabsContent>
 			</Tabs>
 		</Box>
 	);

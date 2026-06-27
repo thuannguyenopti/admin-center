@@ -109,6 +109,7 @@ export const VAUS: VAU[] = [
 		characterName: "Theo",
 		templateName: "Journey Optimization Marketer",
 		traits: ["Analytical", "Proactive", "Pipeline-obsessed"],
+		isCandidate: true,
 		email: "jonas@vau.opal-localdev.inte.opal.optimizely.com",
 		avatar: "/avatars/vau-jonas.png",
 		avatarBg: "#D8DAE1",

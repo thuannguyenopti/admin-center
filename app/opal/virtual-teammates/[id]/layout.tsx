@@ -80,8 +80,10 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 	const isActivity = pathname?.endsWith("/activity");
 	const isPermissions = pathname?.endsWith("/permissions");
 	const isConnectors = pathname?.endsWith("/connectors");
+	const isResponsibilities = pathname?.endsWith("/responsibilities");
+	const isInteractions = pathname?.endsWith("/interactions");
 	const isSettings = pathname?.endsWith("/settings");
-	const isOverview = !isActivity && !isPermissions && !isConnectors && !isSettings;
+	const isOverview = !isActivity && !isPermissions && !isConnectors && !isSettings && !isResponsibilities && !isInteractions;
 
 	return (
 		<Box display="flex" style={{ height: "100%", overflow: "hidden" }}>
@@ -188,7 +190,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 					onClick={() => router.push(`/opal/virtual-teammates/${id}/permissions`)}
 				/>
 				<NavItem
-					label="Connectors"
+					label="Tools"
 					active={isConnectors}
 					onClick={() => router.push(`/opal/virtual-teammates/${id}/connectors`)}
 					badge={
@@ -217,6 +219,16 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 							</span>
 						</Box>
 					}
+				/>
+				<NavItem
+					label="Responsibilities"
+					active={isResponsibilities}
+					onClick={() => router.push(`/opal/virtual-teammates/${id}/responsibilities`)}
+				/>
+				<NavItem
+					label="Interactions"
+					active={isInteractions}
+					onClick={() => router.push(`/opal/virtual-teammates/${id}/interactions`)}
 				/>
 				<NavItem
 					label="Settings"

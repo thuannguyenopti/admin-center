@@ -458,19 +458,13 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						</Menu>
 						<Menu
 							options={[
-								...VAUS.map(vau => ({
+								...VAUS.filter(vau => !vau.isCandidate).map(vau => ({
 									group: vauGroup,
-									label: vau.name,
-									description: vau.templateName,
+									label: vau.characterName ?? vau.name,
+									description: vau.name + " VT",
 									addon: <Image src={vau.avatar} alt="" width={20} height={20} style={{ borderRadius: 999, flexShrink: 0 }} />,
 									execute: () => handleSelectVAU(vau),
 								})),
-								{
-									group: vauFooterGroup,
-									label: "Manage Virtual Teammates",
-									addon: <IconUsers size={16} />,
-									execute: () => {},
-								},
 							]}
 						>
 							<MenuTrigger asChild>
