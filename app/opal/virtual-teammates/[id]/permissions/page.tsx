@@ -325,8 +325,7 @@ function GuardrailsSection({ name }: { name: string }) {
 							<Box display="flex" alignItems="center" justifyContent="space-between" mb="10">
 								<Box display="flex" flexDirection="column" gap="2">
 									<Text fontSize="md" color="fg.default" style={{ fontWeight: 500 }}>{tier.label}</Text>
-									<Text fontSize="sm" color="fg.tertiary">{tier.accessLabel}</Text>
-								</Box>
+									</Box>
 								{!tier.readOnly && !isEditing && (
 									<Button
 										appearance="subtle"
