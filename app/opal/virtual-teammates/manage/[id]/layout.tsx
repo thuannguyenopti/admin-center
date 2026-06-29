@@ -107,7 +107,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 						appearance="subtle"
 						size="sm"
 						addonBefore={<IconArrowLeft />}
-						onClick={() => router.push("/opal/virtual-teammates")}
+						onClick={() => router.push("/opal/virtual-teammates/manage")}
 					>
 						Virtual teammates
 					</Button>
@@ -171,13 +171,13 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 				<NavItem
 					label="Overview"
 					active={isOverview}
-					onClick={() => router.push(`/opal/virtual-teammates/${id}`)}
+					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}`)}
 					badge={<Badge intent="danger" variant="subtle" style={{ color: "#A95A77" }}>Needs review</Badge>}
 				/>
 				<NavItem
 					label="Activity"
 					active={isActivity}
-					onClick={() => router.push(`/opal/virtual-teammates/${id}/activity`)}
+					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/activity`)}
 				/>
 
 				<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "6px 0" }} />
@@ -187,12 +187,12 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 				<NavItem
 					label="Permissions"
 					active={isPermissions}
-					onClick={() => router.push(`/opal/virtual-teammates/${id}/permissions`)}
+					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/permissions`)}
 				/>
 				<NavItem
 					label="Tools"
 					active={isConnectors}
-					onClick={() => router.push(`/opal/virtual-teammates/${id}/connectors`)}
+					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/connectors`)}
 					badge={
 						<Box
 							style={{
@@ -223,17 +223,17 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 				<NavItem
 					label="Responsibilities"
 					active={isResponsibilities}
-					onClick={() => router.push(`/opal/virtual-teammates/${id}/responsibilities`)}
+					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/responsibilities`)}
 				/>
 				<NavItem
 					label="Interactions"
 					active={isInteractions}
-					onClick={() => router.push(`/opal/virtual-teammates/${id}/interactions`)}
+					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/interactions`)}
 				/>
 				<NavItem
 					label="Settings"
 					active={isSettings}
-					onClick={() => router.push(`/opal/virtual-teammates/${id}/settings`)}
+					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/settings`)}
 				/>
 
 			</Box>

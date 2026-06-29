@@ -98,6 +98,13 @@ export function useOpalNav() {
 			icon: <IconBell filled={active("/opal/notifications")} />,
 			customLayout: true,
 		},
+		{
+			label: "Directory",
+			url: "/opal/virtual-teammates",
+			highlight: "/opal/virtual-teammates",
+			icon: <IconStore filled={active("/opal/virtual-teammates", true)} />,
+			customLayout: true,
+		},
 		{ label: "Configurations" },
 		{
 			label: "Context",
@@ -108,16 +115,10 @@ export function useOpalNav() {
 		},
 		{
 			label: "Virtual Teammates",
-			url: "/opal/virtual-teammates",
-			highlight: "/opal/virtual-teammates",
-			icon: <IconImagePortrait filled={active("/opal/virtual-teammates")} />,
+			url: "/opal/virtual-teammates/manage",
+			highlight: "/opal/virtual-teammates/manage",
+			icon: <IconImagePortrait filled={active("/opal/virtual-teammates/manage")} />,
 			customLayout: true,
-		},
-		{
-			label: "Directory",
-			url: "/opal/marketplace",
-			highlight: "/opal/marketplace",
-			icon: <IconStore filled={active("/opal/marketplace")} />,
 		},
 		{
 			label: "Agents",

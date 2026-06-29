@@ -5,6 +5,7 @@ export type VAUTag = { label: string; bg: string; color: string };
 export type VAUAgent = { emoji: string; handle: string };
 export type VAUExample = { emoji: string; title: string; frequency: string; description?: string };
 export type VAUCandidate = { avatar: string; avatarBg: string; name: string; characterName?: string; id?: string };
+export type VAUPersonality = { label: string; description: string; sampleChat?: string; traits?: string[]; icon?: "gear" | "sparkle" | "people" | "search" };
 
 export type VAU = {
 	id: string;
@@ -28,6 +29,17 @@ export type VAU = {
 	tools: string[];
 	examples?: VAUExample[];
 	candidates?: VAUCandidate[];
+	cardBg?: string;
+	cardImage?: string;
+	cardImagePadding?: string;
+	cardCategory?: string;
+	cardSkills?: string[];
+	whyHireMe?: string;
+	experience?: string[];
+	passions?: string;
+	personalities?: VAUPersonality[];
+	pitchStats?: Array<{ label: string; value: string; sub: string; showTools?: boolean; showSkills?: boolean }>;
+	briefingFiles?: string[];
 };
 
 export const DEFAULT_VAU_EXAMPLES: VAUExample[] = [
@@ -51,6 +63,13 @@ export const VAUS: VAU[] = [
 		avatarBg: "#FAF6E8",
 		status: "active",
 		isNew: true,
+		cardBg: "#fef1c6",
+		cardImage: "/vau-card-campaign-strategist.png",
+		cardCategory: "Marketing & Growth",
+		cardSkills: ["Launch positioning", "Messaging", "Competitive intel", "GTM strategy"],
+		whyHireMe: "Built to turn audience data into campaigns that actually convert.",
+		experience: ["GTM briefs crafted from raw roadmap data.", "Competitive positioning updated on signal.", "Sales enablement kits shipped on launch day."],
+		passions: "Mid-century product design. Things that were beautiful and built to last.",
 		description: "Crafts product positioning and messaging that connects value to buyer needs. Turns roadmaps into stories that sales and customers understand.",
 		tags: [
 			{ label: "Positioning", bg: "#f5f3ff", color: "#4c1d95" },
@@ -145,6 +164,13 @@ export const VAUS: VAU[] = [
 		avatar: "/avatars/vau-kerby.png",
 		avatarBg: "#E7FCFC",
 		status: "active",
+		cardBg: "#eeffd9",
+		cardImage: "/vau-card-content-producer.png",
+		cardCategory: "Creative & Content",
+		cardSkills: ["ABM content", "Outreach copy", "Content calendar", "Brand voice"],
+		whyHireMe: "Your content pipeline — fully staffed and always moving.",
+		experience: ["ABM content tailored per account, per stage.", "Content calendars built and shipped on time.", "Brand voice maintained across every channel."],
+		passions: "Vintage advertising copy. The era when every word had to earn its space.",
 		description: "Targets the right accounts with tailored content and coordinated outreach. Combines intent and engagement signals to focus where the team invests.",
 		tags: [
 			{ label: "ABM", bg: "#c6dbfa", color: "#0d46a0" },
@@ -178,7 +204,16 @@ export const VAUS: VAU[] = [
 		avatar: "/avatars/vau-frank.png",
 		avatarBg: "#FAF6E8",
 		status: "active",
-		description: "Less herding cats, more getting stuff done. Runs point on priorities, preps meetings, and keeps every workstream moving forward.",
+		cardBg: "#91dbda",
+		cardImage: "/vau-card-chief-of-staff.png",
+		cardImagePadding: "8px 24px",
+		cardCategory: "Operations & Priorities",
+		cardSkills: ["Calendar wrangling", "Inbox triage", "Weekly reports", "Cross-team updates"],
+		longDescription: "Less herding cats, more getting stuff done. Your Chief of Staff agent runs point on priorities so you can stop running on fumes. It drafts updates, preps meetings, and keeps every workstream moving — no nudging required.",
+		whyHireMe: "So you can spend your day on the work only you can do.",
+		experience: ["Briefs, meeting prep, and inbox sorted.", "Every commitment tracked in real time.", "Follow-ups sent before you have to ask."],
+		passions: "Animal facts that feel made up but aren't. The platypus alone could fill a book.",
+		description: "Less herding cats, more getting stuff done. Runs point on priorities, preps meetings, and keeps every workstream moving forward, so you can do more with less.",
 		tags: [
 			{ label: "SEO/GEO", bg: "#f5f3ff", color: "#4c1d95" },
 			{ label: "Content", bg: "#c6dbfa", color: "#0d46a0" },
@@ -190,6 +225,19 @@ export const VAUS: VAU[] = [
 			{ emoji: "⚡", handle: "@ad_variations_agent" },
 		],
 		tools: ["opti-cms", "google", "notion", "slack", "asana", "figma"],
+		personalities: [
+			{ label: "The Pragmatist", icon: "gear", description: "Done is their love language. They cut through noise, skip the theory, and get the job done.", traits: ["Straight talker", "Zero fluff", "Plainspoken", "Unfazeable"], sampleChat: "Just to be clear — we're overcomplicating this. Here's what I'd do instead: [3 bullet points, no preamble, done by Thursday]." },
+			{ label: "Tastemaker", icon: "sparkle", description: "The one with opinions before opinions are cool. They set the standard, and somehow always know what's next.", traits: ["Nonchalant", "Opinionated", "Ahead of the curve", "Standards-setter"], sampleChat: "Good morning. I've taken the liberty of restructuring your week. You're welcome." },
+			{ label: "The Hype Machine", icon: "people", description: "Enthusiasm is contagious and they're patient zero. They turn 'meh' ideas into 'wait, actually...' moments.", traits: ["High energy", "Infectious", "Rally the troops", "Possibilities thinker"], sampleChat: "🎉 OH. MY. GOODNESS. You have 847 unread emails and that means 847 OPPORTUNITIES. Let's DO this!!!" },
+			{ label: "The Stress Tester", icon: "search", description: "Skeptical? Always. Wrong? Rarely. They poke holes in bad ideas before they become expensive ones.", traits: ["Devil's advocate", "Risk-aware", "Sharp-eyed", "Pre-mortems"], sampleChat: "Flagged: 3 commitments at risk, 1 meeting with no prep doc, and your inbox has 847 unread. We should talk." },
+		],
+		pitchStats: [
+			{ label: "Works for you", value: "24/7", sub: "& has never stolen your lunch" },
+			{ label: "Skills", value: "24", sub: "& just getting started", showSkills: true },
+			{ label: "Tools connected", value: "8", sub: "on day one", showTools: true },
+			{ label: "Time back", value: "6+ hrs", sub: "to snuggle your cat" },
+		],
+		briefingFiles: ["Brand Guidelines.doc"],
 		candidates: [
 			{ avatar: "/avatars/tat.png",     avatarBg: "#F0EBF8", name: "Chief of Staff", characterName: "Iris" },
 			{ avatar: "/avatars/bike.png",    avatarBg: "#F5EDE0", name: "Chief of Staff", characterName: "Pip" },

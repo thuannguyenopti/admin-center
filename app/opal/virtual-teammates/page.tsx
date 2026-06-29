@@ -2,216 +2,326 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, Box, Button, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger, Text } from "@optiaxiom/react";
 import {
-	IconMessageLines,
-	IconCirclePause,
-	IconEllipsisStroke,
-	IconList,
-	IconGrid,
-	IconSearch,
-	IconTrashCan,
-	IconUserPlus,
-} from "@optiaxiom/icons";
+  Box,
+  Heading,
+  Text,
+  Badge,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  LabelMenuButton,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@optiaxiom/react";
 import { Input } from "@/app/components/Input";
+import {
+  IconSearch,
+  IconChevronDown,
+  IconCircleCheck,
+} from "@optiaxiom/icons";
 import { VAUS } from "@/app/opal/data/vaus";
 import { VAUCard } from "./VAUCard";
-import { Table, Tr, Th, Td } from "@/app/components/Table";
-import Image from "next/image";
 
-const RESPONSIBILITY_OPTIONS = ["All", "Prioritization", "Meeting Prep", "Inbox Triage", "Reporting", "Content", "SEO", "Social Media"];
-const STATUS_OPTIONS = ["All", "Active", "Out of Office", "Deactivated"];
-const NEEDS_REVIEW_IDS = new Set(["frank"]);
+// ── Browse sidebar ─────────────────────────────────────────────────────────────
 
-type ViewMode = "grid" | "list";
+const BROWSE_ITEMS = [
+  { label: "Virtual Teammates", count: VAUS.filter((v) => !v.isCandidate).length },
+  { label: "Agents",            count: 48 },
+  { label: "Plugins",           count: 12 },
+  { label: "Skills",            count: 30 },
+  { label: "Connectors",        count: 28 },
+];
 
-function FilterDropdown({
-	label,
-	value,
-	options,
-	onChange,
+function NavRow({
+  active,
+  icon,
+  children,
+  addonAfter,
+  onClick,
 }: {
-	label: string;
-	value: string;
-	options: string[];
-	onChange: (v: string) => void;
+  active?: boolean;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  addonAfter?: React.ReactNode;
+  onClick?: () => void;
 }) {
-	return (
-		<Menu options={options.map((opt) => ({ label: opt, onClick: () => onChange(opt) }))}>
-			<MenuTrigger asChild>
-				<LabelMenuButton label={label}>{value}</LabelMenuButton>
-			</MenuTrigger>
-			<MenuContent />
-		</Menu>
-	);
+  const [hovered, setHovered] = useState(false);
+  const highlighted = active || hovered;
+  return (
+    <Box
+      display="flex"
+      alignItems="center"
+      gap="12"
+      style={{
+        height: 40,
+        borderRadius: 8,
+        padding: "8px 12px",
+        cursor: "pointer",
+        background: highlighted ? "var(--ax-colors-bg-secondary)" : "transparent",
+        transition: "background 0.1s ease",
+      }}
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {icon && (
+        <Box style={{ width: 16, height: 16, flexShrink: 0, color: active ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {icon}
+        </Box>
+      )}
+      <Text
+        fontSize="md"
+        color={active ? "fg.default" : "fg.secondary"}
+        style={{ flex: 1, fontWeight: 500 }}
+      >
+        {children}
+      </Text>
+      {addonAfter}
+    </Box>
+  );
 }
 
+const NAV_COUNT_STYLE: React.CSSProperties = {
+  background: "var(--ax-colors-bg-secondary)",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minWidth: 20,
+  minHeight: 20,
+  padding: "2px 6px",
+  borderRadius: 32,
+  fontFamily: "Roboto Mono, monospace",
+  fontSize: 12,
+  lineHeight: "1.25",
+  letterSpacing: "0.36px",
+  textTransform: "uppercase" as const,
+  color: "var(--ax-colors-fg-default)",
+  flexShrink: 0,
+};
+
+const NAV_COUNT_ACTIVE_STYLE: React.CSSProperties = {
+  ...NAV_COUNT_STYLE,
+  background: "var(--ax-colors-fg-default)",
+  color: "var(--ax-colors-bg-default)",
+};
+
+// ── Filter dropdown ───────────────────────────────────────────────────────────
+
+function FilterDropdown({ label, options }: { label: string; options: string[] }) {
+  const [selected, setSelected] = useState("All");
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <LabelMenuButton label={label}>{selected}</LabelMenuButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        {options.map((opt) => (
+          <DropdownMenuItem key={opt} onClick={() => setSelected(opt)}>
+            {opt}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default function VirtualTeammatesPage() {
-	const [query, setQuery] = useState("");
-	const [responsibility, setResponsibility] = useState("All");
-	const [statusFilter, setStatusFilter] = useState("All");
-	const [viewMode, setViewMode] = useState<ViewMode>("grid");
-	const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [activeNavItem, setActiveNavItem] = useState("Virtual Teammates");
+  const router = useRouter();
 
-	const filtered = useMemo(() => {
-		const q = query.trim().toLowerCase();
-		return VAUS.filter((v) => {
-			if (v.isCandidate) return false;
-			if (
-				q &&
-				!v.name.toLowerCase().includes(q) &&
-				!v.characterName?.toLowerCase().includes(q) &&
-				!v.description.toLowerCase().includes(q)
-			)
-				return false;
-			return true;
-		});
-	}, [query]);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const base = VAUS.filter((vau) => !vau.isCandidate);
+    if (!q) return base;
+    return base.filter(
+      (vau) =>
+        vau.name.toLowerCase().includes(q) ||
+        vau.templateName.toLowerCase().includes(q) ||
+        vau.description.toLowerCase().includes(q) ||
+        vau.tags.some((t) => t.label.toLowerCase().includes(q)),
+    );
+  }, [query]);
 
-	return (
-		<Box
-			display="flex"
-			flexDirection="column"
-			style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#F9FCF8" }}
-		>
-			<Box style={{ padding: "32px 40px" }}>
-				<Heading level="1" mb="4">
-					Virtual Teammates
-				</Heading>
-				<Text color="fg.secondary" fontSize="md" mb="24">
-					Your virtual teammates are hard at work. See what they're doing and step in when they need you.
-				</Text>
+  return (
+    <Box display="flex" style={{ height: "100%", minHeight: 0, overflow: "hidden" }}>
+      {/* ── Browse Directory panel ── */}
+      <Box
+        style={{
+          width: 272,
+          minWidth: 272,
+          flexShrink: 0,
+          minHeight: 0,
+          borderLeft: "1px solid var(--ax-colors-border-secondary)",
+          borderRight: "1px solid var(--ax-colors-border-secondary)",
+          background: "var(--ax-colors-bg-default)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 4,
+          padding: "16px 0",
+          overflowY: "auto",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* Browse Directory section header */}
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          style={{ padding: "12px 12px 4px" }}
+        >
+          <Text
+            color="fg.tertiary"
+            style={{ fontSize: 12, letterSpacing: "0.24px", lineHeight: "1.33" }}
+          >
+            Browse Directory
+          </Text>
+          <IconChevronDown style={{ color: "var(--ax-colors-fg-tertiary)", width: 14, height: 14 }} />
+        </Box>
 
-				{/* Filters row */}
-				<Box display="flex" alignItems="center" gap="8" mb="32">
-					<Box style={{ width: 264 }}>
-						<Input
-							placeholder="Enter name or description"
-							addonBefore={<IconSearch />}
-							value={query}
-							onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
-						/>
-					</Box>
-					<FilterDropdown label="Responsibility" value={responsibility} options={RESPONSIBILITY_OPTIONS} onChange={setResponsibility} />
-					<FilterDropdown label="Status" value={statusFilter} options={STATUS_OPTIONS} onChange={setStatusFilter} />
-					<Button
-						appearance="subtle"
-						size="md"
-						icon={viewMode === "grid" ? <IconList /> : <IconGrid />}
-						aria-label={viewMode === "grid" ? "Switch to list view" : "Switch to grid view"}
-						onClick={() => setViewMode((v) => (v === "grid" ? "list" : "grid"))}
-					/>
-					<Box style={{ flex: 1 }} />
-					<Button appearance="primary" size="md" addonBefore={<IconUserPlus />}>
-						Grow your team
-					</Button>
-				</Box>
+        {BROWSE_ITEMS.map((item) => {
+          const isActive = activeNavItem === item.label;
+          return (
+          <NavRow
+            key={item.label}
+            active={isActive}
+            onClick={() => setActiveNavItem(item.label)}
+            addonAfter={<span style={isActive ? NAV_COUNT_ACTIVE_STYLE : NAV_COUNT_STYLE}>{item.count}</span>}
+          >
+            {item.label}
+          </NavRow>
+          );
+        })}
 
-				{viewMode === "grid" ? (
-					<Box
-						style={{
-							display: "grid",
-							gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-							gap: 16,
-						}}
-					>
-						{filtered.map((vau) => (
-							<VAUCard
-								key={vau.id}
-								vau={vau}
-								onSelect={(v) => router.push(`/opal/virtual-teammates/${v.id}`)}
-							/>
-						))}
-					</Box>
-				) : (
-					<Table>
-						<thead>
-							<tr>
-								<Th style={{ paddingLeft: 16 }}>Teammate</Th>
-								<Th>Principle User</Th>
-								<Th>Type</Th>
-								<Th>Status</Th>
-								<Th>Attention Required</Th>
-								<Th />
-							</tr>
-						</thead>
-						<tbody>
-							{filtered.map((vau) => {
-								const needsReview = NEEDS_REVIEW_IDS.has(vau.id);
-								return (
-									<Tr key={vau.id} onClick={() => router.push(`/opal/virtual-teammates/${vau.id}`)}>
-										<Td style={{ paddingLeft: 16 }}>
-											<Box display="flex" alignItems="center" gap="12">
-												<Box style={{ width: 36, height: 36, borderRadius: 8, background: vau.avatarBg, overflow: "hidden", flexShrink: 0 }}>
-													<Image src={vau.avatar} alt={vau.name} width={36} height={36} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-												</Box>
-												<Box>
-													<Text fontSize="md" fontWeight="500" color="fg.default">{vau.characterName ?? vau.name}</Text>
-													<Text fontSize="sm" color="fg.secondary">{vau.name}</Text>
-												</Box>
-											</Box>
-										</Td>
-										<Td>
-											<Text fontSize="md" color="fg.default">Mona Chen</Text>
-										</Td>
-										<Td>
-											<Text fontSize="md" color="fg.default">Private</Text>
-											<Text fontSize="sm" color="fg.secondary">This teammate can only be used by you</Text>
-										</Td>
-										<Td>
-											{vau.status === "active" ? (
-												<Badge style={{ background: "#D4F5D4", color: "#166534", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-													Active
-												</Badge>
-											) : (
-												<Badge style={{ background: "#FCE7F3", color: "#9D174D", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-													Paused
-												</Badge>
-											)}
-										</Td>
-										<Td>
-											{needsReview && (
-												<Badge style={{ background: "#FEF3C7", color: "#92400E", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-													Needs Review
-												</Badge>
-											)}
-										</Td>
-										<Td type="button">
-											<Box onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-												<Menu
-													options={[
-														{
-															label: "Chat",
-															addon: <IconMessageLines />,
-															execute: () => router.push("/opal/im"),
-														},
-														{
-															label: "Pause",
-															addon: <IconCirclePause />,
-															execute: () => {},
-														},
-														{
-															label: "Delete",
-															addon: <IconTrashCan />,
-															intent: "danger" as const,
-															execute: () => {},
-														},
-													]}
-												>
-													<MenuTrigger asChild>
-														<Button appearance="subtle" size="sm" icon={<IconEllipsisStroke />} aria-label="Actions" />
-													</MenuTrigger>
-													<MenuContent />
-												</Menu>
-											</Box>
-										</Td>
-									</Tr>
-								);
-							})}
-						</tbody>
-					</Table>
-				)}
-			</Box>
-		</Box>
-	);
+        {/* Divider */}
+        <Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "4px 0" }} />
+
+        {/* Quick Filters section header */}
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          style={{ padding: "12px 12px 4px" }}
+        >
+          <Text
+            color="fg.tertiary"
+            style={{ fontSize: 12, letterSpacing: "0.24px", lineHeight: "1.33" }}
+          >
+            Quick Filters
+          </Text>
+          <IconChevronDown style={{ color: "var(--ax-colors-fg-tertiary)", width: 14, height: 14 }} />
+        </Box>
+
+        <NavRow icon={<IconCircleCheck style={{ width: 16, height: 16 }} />}>
+          Installed
+        </NavRow>
+      </Box>
+
+      {/* ── Main content ── */}
+      <Box
+        display="flex"
+        flexDirection="column"
+        style={{ flex: 1, minHeight: 0, overflowY: "auto", background: "#F9FCF8" }}
+      >
+        {/* Iridescent banner */}
+        <Box style={{ width: "100%", height: 161, overflow: "hidden", position: "relative", flexShrink: 0 }}>
+          <img
+            src="/background-opal-new.png"
+            alt=""
+            style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 40%", top: 0, left: 0 }}
+          />
+        </Box>
+
+        <Box display="flex" flexDirection="column" style={{ padding: "16px 40px" }}>
+        <Heading level="1" mb="4">Directory</Heading>
+        <Text color="fg.secondary" fontSize="md" mb="12">
+          Meet your new favorite coworkers. They do the boring stuff. You get the glory.
+        </Text>
+
+        <Tabs defaultValue="teammates">
+          <TabsList mb="12">
+            <TabsTrigger value="teammates">
+              <Box asChild display="inline-flex" alignItems="center" gap="8">
+                <span>
+                  Virtual Teammates
+                  <Badge
+                    style={{
+                      background: "var(--ax-colors-fg-default)",
+                      color: "var(--ax-colors-bg-default)",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      borderRadius: 20,
+                      padding: "1px 7px",
+                    }}
+                  >
+                    {filtered.length}
+                  </Badge>
+                </span>
+              </Box>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="teammates">
+            {/* Search + filters */}
+            <Box display="flex" alignItems="center" gap="8" mb="16">
+              <Box style={{ flex: 1, maxWidth: 264 }}>
+                <Input
+                  placeholder="Enter name or description"
+                  addonBefore={<IconSearch />}
+                  value={query}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
+                />
+              </Box>
+              <FilterDropdown
+                label="Responsibility"
+                options={[
+                  "All",
+                  "Analytics",
+                  "Brand & Creative",
+                  "Campaign Strategy",
+                  "Content",
+                  "Copywriting",
+                  "Demand Generation",
+                  "Email Marketing",
+                  "Paid Media",
+                  "Reporting",
+                  "SEO",
+                  "Social Media",
+                ]}
+              />
+              <FilterDropdown label="Active Status" options={["All", "Installed", "Not Installed"]} />
+            </Box>
+
+            {/* Card grid */}
+            {filtered.length === 0 ? (
+              <Text color="fg.tertiary">No teammates match your search.</Text>
+            ) : (
+              <Box
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                  gap: 16,
+                }}
+              >
+                {filtered.map((vau) => (
+                  <VAUCard
+                    key={vau.id}
+                    vau={vau}
+                    onSelect={(v) => router.push(`/opal/virtual-teammates/${v.id}?hire=true`)}
+                  />
+                ))}
+              </Box>
+            )}
+          </TabsContent>
+        </Tabs>
+        </Box>
+      </Box>
+    </Box>
+  );
 }
