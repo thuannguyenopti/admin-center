@@ -96,6 +96,13 @@ export function useOpalNav() {
 			description:
 				"Tailor Opal's output for yourself or your organization by providing specific context and guidance in the form of files, skills, memory, and RAG.",
 			icon: <IconFolderBookmark />,
+			children: [
+				{
+					label: "Stride DS Setup",
+					url: "/opal/context/stride-ds-setup",
+					customLayout: true,
+				},
+			],
 		},
 		{
 			label: "Virtual Teammates",
