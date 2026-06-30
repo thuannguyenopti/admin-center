@@ -163,7 +163,11 @@ function TemplateContent({
 		handleSelectAgent: panelHandleSelectAgent,
 		handleSendMessage: panelHandleSendMessage,
 	} = useAgentChatMode({
-		messages, inputValue, setInputValue, sendMessage, addMessage,
+		messages,
+		inputValue,
+		setInputValue,
+		sendMessage,
+		addMessage,
 	});
 
 	useEffect(() => {
@@ -367,6 +371,7 @@ function TemplateContent({
 						gridTemplateColumns: `${sidebarColWidth}px 1fr`,
 						transition: "grid-template-columns 0.2s ease-out",
 					}}
+					bg="bg.default"
 				>
 					{!isCanvasMode && <GlobalBar onOpalClick={toggleOpal} />}
 					{!isOpalStudio && !isCanvasMode ? (
@@ -776,7 +781,14 @@ function TemplateContent({
 						mentionableAgents={panelSortedAgents}
 						onMentionSelect={panelHandleSelectAgent}
 						agentBar={panelAgentBar}
-						inputAgentCtx={panelAgentSession ? { name: panelAgentSession.agent.name, handle: panelAgentSession.agent.handle } : null}
+						inputAgentCtx={
+							panelAgentSession
+								? {
+										name: panelAgentSession.agent.name,
+										handle: panelAgentSession.agent.handle,
+									}
+								: null
+						}
 					/>
 					<CodePanel
 						isOpen={isCodePanelOpen}
