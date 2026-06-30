@@ -63,6 +63,22 @@
 	background: var(--ax-colors-bg-secondary);
 }
 
+/* VAT work — hover states for cards and table rows */
+.vat-work-card {
+	transition: box-shadow 0.15s, background 0.15s;
+}
+.vat-work-card:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	background: var(--ax-colors-bg-secondary);
+}
+
+.vat-work-row {
+	transition: background 0.1s;
+}
+.vat-work-row:hover {
+	background: var(--ax-colors-bg-secondary);
+}
+
 /* VAT approvals — fade-in for newly expanded items */
 @keyframes vat-approval-in {
 	from { opacity: 0; transform: translateY(6px); }

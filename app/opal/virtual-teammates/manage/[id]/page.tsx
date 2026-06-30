@@ -5,9 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import {
 	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
 	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
-	Box, Button, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger, Text,
+	Box, Button, Heading, Menu, MenuContent, MenuTrigger, Text,
 } from "@optiaxiom/react";
-import { IconArrowRight, IconChevronLeft, IconChevronRight, IconComments, IconPause, IconAngleDown } from "@optiaxiom/icons";
+import { IconArrowRight, IconChevronLeft, IconChevronRight, IconComments, IconImage, IconLock, IconPause } from "@optiaxiom/icons";
 import { ReviewCanvas } from "./ReviewCanvas";
 import Image from "next/image";
 import { VAUS } from "@/app/opal/data/vaus";
@@ -141,7 +141,15 @@ const WORK_ITEMS = [
 	},
 ];
 
-const URGENCY_OPTIONS = ["All", "Urgent", "Medium Priority", "No Rush"];
+type PinnedItem =
+	| { type: "artifact"; title: string; image: string; visibility: string; age: string }
+	| { type: "action"; priority: string; priorityBg: string; priorityColor: string; title: string; description: string; filename: string; fileType: string; age: string };
+
+const PINNED_ITEMS: PinnedItem[] = [
+	{ type: "artifact", title: "Sunset", image: "/Sunset.jpg", visibility: "Private", age: "5 days ago" },
+	{ type: "artifact", title: "Mountain", image: "/nature-bg.png", visibility: "Private", age: "5 days ago" },
+	{ type: "action", priority: "Urgent", priorityBg: "#FAD9E7", priorityColor: "#8B1A3A", title: "Team approval needed", description: "Review the updated Q&A article. Approve to proceed to publishing, or request further changes.", filename: "Discover-the-unknown-qa.md", fileType: "GEO Q&A ARTICLE", age: "5 days ago" },
+];
 
 function KpiCard({ label, value, sub, subGreen }: { label: string; value: string; sub: string; subGreen: boolean }) {
 	return (
@@ -232,23 +240,18 @@ export default function VATOverviewPage() {
 
 	// Carousel state
 	const [carouselPage, setCarouselPage] = useState(0);
-	const [urgencyFilter, setUrgencyFilter] = useState("All");
 	const carouselRef = useRef<HTMLDivElement>(null);
 	const [cardWidth, setCardWidth] = useState(0);
 
 	useEffect(() => {
 		const el = carouselRef.current;
 		if (!el) return;
-		const measure = () => setCardWidth((el.offsetWidth - 48) / 3.15);
+		const measure = () => setCardWidth(Math.floor((el.offsetWidth - 40) / 3));
 		measure();
 		const ro = new ResizeObserver(measure);
 		ro.observe(el);
 		return () => ro.disconnect();
 	}, []);
-
-	useEffect(() => {
-		setCarouselPage(0);
-	}, [urgencyFilter]);
 
 	if (!vau) return null;
 
@@ -259,17 +262,12 @@ export default function VATOverviewPage() {
 	const remainingApprovals = APPROVALS.length - visibleApprovals;
 	const nextBatch = Math.min(3, remainingApprovals);
 
-	// Work items computed
-	const filteredWork = (urgencyFilter === "All" ? WORK_ITEMS : WORK_ITEMS.filter((w) => w.priority === urgencyFilter))
-		.filter((w) => !dismissedTitles.has(w.title));
-	const totalWorkPages = Math.ceil(filteredWork.length / 3);
-	const showCarouselArrows = filteredWork.length > 3;
+	// Pinned carousel computed
+	const totalPinnedPages = Math.ceil(PINNED_ITEMS.length / 3);
 	const canGoBack = carouselPage > 0;
-	const canGoForward = carouselPage < totalWorkPages - 1;
-	const showingFrom = carouselPage * 3 + 1;
-	const showingTo = Math.min((carouselPage + 1) * 3, filteredWork.length);
-	const translateX = cardWidth > 0 ? -(carouselPage * 3 * (cardWidth + 16)) : 0;
-	const flexBasis = cardWidth > 0 ? `${cardWidth}px` : "calc((100% - 48px) / 3.15)";
+	const canGoForward = carouselPage < totalPinnedPages - 1;
+	const translateX = cardWidth > 0 ? -(carouselPage * 3 * (cardWidth + 20)) : 0;
+	const flexBasis = cardWidth > 0 ? `${cardWidth}px` : "calc((100% - 40px) / 3)";
 
 	return (
 		<>
@@ -452,151 +450,61 @@ export default function VATOverviewPage() {
 				)}
 			</Box>
 
-			{/* Randy's work */}
+			{/* Pinned */}
 			<Box>
 				<Box display="flex" alignItems="center" justifyContent="space-between" mb="4">
+					<Text style={SECTION_HEADING}>Pinned</Text>
 					<Box display="flex" alignItems="center" gap="8">
-						<Text style={SECTION_HEADING}>{name}&apos;s work</Text>
-						<CountBadge count={filteredWork.length} />
-					</Box>
-					<Box display="flex" alignItems="center" gap="8">
-						{showCarouselArrows && (
-							<>
-								<Button
-									appearance="subtle"
-									size="sm"
-									icon={<IconChevronLeft />}
-									disabled={!canGoBack}
-									aria-label="Previous"
-									onClick={() => setCarouselPage((p) => p - 1)}
-								/>
-								<Button
-									appearance="subtle"
-									size="sm"
-									icon={<IconChevronRight />}
-									disabled={!canGoForward}
-									aria-label="Next"
-									onClick={() => setCarouselPage((p) => p + 1)}
-								/>
-							</>
-						)}
-						<Menu
-							options={URGENCY_OPTIONS.map((opt) => ({
-								label: opt,
-								onClick: () => setUrgencyFilter(opt),
-							}))}
-						>
-							<MenuTrigger asChild>
-								<LabelMenuButton label="Urgency">{urgencyFilter}</LabelMenuButton>
-							</MenuTrigger>
-							<MenuContent />
-						</Menu>
+						<Button appearance="subtle" size="sm" icon={<IconChevronLeft />} disabled={!canGoBack} aria-label="Previous" onClick={() => setCarouselPage((p) => p - 1)} />
+						<Button appearance="subtle" size="sm" icon={<IconChevronRight />} disabled={!canGoForward} aria-label="Next" onClick={() => setCarouselPage((p) => p + 1)} />
 					</Box>
 				</Box>
 				<Text color="fg.secondary" fontSize="sm" mb="16">
-					Here&apos;s what {name} got done on your behalf.
+					Work your chief of staff has completed that you have saved
 				</Text>
-
-				{filteredWork.length === 0 ? (
-					<Box
-						style={{
-							padding: "48px 20px",
-							textAlign: "center",
-							border: "1px solid var(--ax-colors-border-default)",
-							borderRadius: 8,
-							background: "var(--ax-colors-bg-default)",
-						}}
-					>
-						<Text color="fg.secondary" fontSize="md">
-							Nothing to show yet. {name}&apos;s working on it.
-						</Text>
-					</Box>
-				) : (
-					<>
-						<Box ref={carouselRef} style={{ overflow: "hidden" }}>
-							<Box
-								style={{
-									display: "flex",
-									gap: 16,
-									transform: `translateX(${translateX}px)`,
-									transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
-								}}
-							>
-								{filteredWork.map((item) => (
-									<Box
-										key={item.title}
-										bg="bg.default"
-										style={{
-											flex: `0 0 ${flexBasis}`,
-											width: flexBasis,
-											border: "1px solid var(--ax-colors-border-default)",
-											borderRadius: 8,
-											padding: 16,
-											display: "flex",
-											flexDirection: "column",
-											gap: 8,
-										}}
-									>
-										<span
-											style={{
-												...CAPTION,
-												fontSize: 9,
-												background: item.priorityBg,
-												color: item.priorityColor,
-												padding: "2px 8px",
-												borderRadius: 32,
-												alignSelf: "flex-start",
-											}}
-										>
+				<Box ref={carouselRef} style={{ overflow: "hidden" }}>
+					<Box style={{ display: "flex", gap: 20, transform: `translateX(${translateX}px)`, transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)" }}>
+						{PINNED_ITEMS.map((item) => (
+							<Box key={item.title} className="vat-work-card" bg="bg.default" style={{ flex: `0 0 ${flexBasis}`, width: flexBasis, border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer" }}>
+								{item.type === "artifact" ? (
+									<>
+										<Box style={{ width: "100%", height: 150, position: "relative", flexShrink: 0 }}>
+											<Image src={item.image} alt={item.title} fill unoptimized style={{ objectFit: "cover" }} />
+										</Box>
+										<Box display="flex" alignItems="center" justifyContent="space-between" style={{ padding: "10px 14px 12px" }}>
+											<Box>
+												<Text fontSize="md" color="fg.default" style={{ fontWeight: 600 }}>{item.title}</Text>
+												<Box display="flex" alignItems="center" gap="4" style={{ marginTop: 4, color: "var(--ax-colors-fg-tertiary)" }}>
+													<IconLock style={{ width: 12, height: 12 }} />
+													<Text fontSize="sm" color="fg.tertiary">{item.visibility}</Text>
+												</Box>
+											</Box>
+											<Box style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, color: "var(--ax-colors-fg-tertiary)" }}>
+												<IconImage style={{ width: 14, height: 14 }} />
+												<Text fontSize="sm" color="fg.tertiary">Created {item.age}</Text>
+											</Box>
+										</Box>
+									</>
+								) : (
+									<Box display="flex" flexDirection="column" gap="8" style={{ padding: 16, flex: 1 }}>
+										<span style={{ ...CAPTION, fontSize: 9, background: item.priorityBg, color: item.priorityColor, padding: "2px 8px", borderRadius: 32, alignSelf: "flex-start" }}>
 											{item.priority}
 										</span>
-										<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, lineHeight: "1.3" }}>
-											{item.title}
-										</Text>
-										<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>
-											Created by {item.source}
-										</span>
-										<Text fontSize="sm" color="fg.secondary" style={{ flex: 1, lineHeight: "1.5" }}>
-											{item.description}
-										</Text>
-										<Box display="flex" alignItems="center" justifyContent="space-between">
-											<Text fontSize="sm" color="fg.tertiary">
-												{item.time}
-											</Text>
-											<Menu
-												options={[
-													{
-														label: "Review",
-														execute: () => setReviewItem(item),
-													},
-													{
-														label: "Dismiss",
-														intent: "danger" as const,
-														execute: () => setDismissedTitles((prev) => new Set([...prev, item.title])),
-													},
-												]}
-											>
-												<MenuTrigger asChild>
-													<Button appearance="default" size="sm" addonAfter={<IconAngleDown />}>
-														Review
-													</Button>
-												</MenuTrigger>
-												<MenuContent />
-											</Menu>
+										<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, lineHeight: "1.3" }}>{item.title}</Text>
+										<Text fontSize="sm" color="fg.secondary" style={{ flex: 1, lineHeight: "1.5" }}>{item.description}</Text>
+										<Box style={{ marginTop: "auto" }}>
+											<Text fontSize="sm" color="fg.default" style={{ fontWeight: 500 }}>{item.filename}</Text>
+											<Box display="flex" alignItems="center" justifyContent="space-between" style={{ marginTop: 4 }}>
+												<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)" }}>{item.fileType}</span>
+												<Text fontSize="sm" color="fg.tertiary">Created {item.age}</Text>
+											</Box>
 										</Box>
 									</Box>
-								))}
+								)}
 							</Box>
-						</Box>
-						{showCarouselArrows && (
-							<Box display="flex" justifyContent="center" mt="12">
-								<Text fontSize="sm" color="fg.tertiary">
-									Showing {showingFrom}–{showingTo} of {filteredWork.length}
-								</Text>
-							</Box>
-						)}
-					</>
-				)}
+						))}
+					</Box>
+				</Box>
 			</Box>
 		</Box>
 
