@@ -931,7 +931,6 @@ export default function StrideDesignSystemPage() {
 				contextualActionCard={
 					isSettingUp ? <SetupProgressCard steps={setupSteps} /> : undefined
 				}
-				contextChip={storyContextChip}
 				headerTitle="Design System Setup"
 				variant="assistant"
 				emptyState={
