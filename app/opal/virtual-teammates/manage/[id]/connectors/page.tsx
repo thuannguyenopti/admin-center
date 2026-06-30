@@ -150,7 +150,7 @@ export default function VATConnectorsPage() {
 
 	return (
 		<Box style={{ padding: "32px 40px" }}>
-			<Heading level="2" mb="4">{name}&apos;s Tools</Heading>
+			<Heading level="2" mb="4">{name}&apos;s {activeTab === "connectors" ? "Connectors" : "Tools"}</Heading>
 			<Text color="fg.secondary" fontSize="md" mb="24">
 				Who {name} works with and what {name}&apos;s allowed to do.
 			</Text>
@@ -315,7 +315,7 @@ export default function VATConnectorsPage() {
 							<Box display="flex" alignItems="center" justifyContent="flex-end" gap="8">
 								{connector.status === "auth_expired" && (
 									<SplitDialog type="reconnect" name={name}>
-										<Button appearance="default" size="sm">Reconnect</Button>
+										<Button appearance="danger" size="sm">Reconnect</Button>
 									</SplitDialog>
 								)}
 								<Menu options={ELLIPSIS_OPTIONS}>

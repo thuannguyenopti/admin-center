@@ -66,7 +66,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 		codePanelControls?.openPanel(pathname);
 	};
 
-	const vauGroup = { label: "Act as", separator: false, hidden: false };
+	const vauGroup = { label: "Switch user", separator: false, hidden: false };
 	const vauFooterGroup = { label: "", separator: true, hidden: true };
 
 	const [activeVAU, setActiveVAU] = useState<VAU | null>(null);
@@ -543,7 +543,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 				<Menu
 					options={[
 						...VAUS.map(vau => ({
-							group: { label: "Act as", separator: false, hidden: false },
+							group: { label: "Switch user", separator: false, hidden: false },
 							label: vau.name,
 							description: vau.templateName,
 							addon: (
