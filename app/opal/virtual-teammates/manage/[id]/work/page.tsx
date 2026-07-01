@@ -3,12 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import {
-	Box, Button, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger,
+	Badge, Box, Button, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger,
 	SegmentedControl, SegmentedControlItem, Text,
 } from "@optiaxiom/react";
 import {
-	IconChevronLeft, IconChevronRight, IconFile, IconFileLines,
-	IconGrid, IconImage, IconList, IconLock, IconSearch,
+	IconArrowRight, IconChevronLeft, IconChevronRight, IconEllipsisSolid, IconFile, IconFileLines,
+	IconGrid, IconImage, IconList, IconLock, IconSearch, IconThumbtack, IconThumbtackSolid,
 } from "@optiaxiom/icons";
 import Image from "next/image";
 import { Input } from "@/app/components/Input";
@@ -32,12 +32,12 @@ const SECTION_HEADING: React.CSSProperties = {
 };
 
 type PinnedItem =
-	| { type: "artifact"; title: string; image: string; visibility: string; age: string }
+	| { type: "artifact"; title: string; image: string; visibility: string; age: string; tags: string[]; initials: string }
 	| { type: "action"; priority: string; priorityBg: string; priorityColor: string; title: string; description: string; filename: string; fileType: string; age: string };
 
 const PINNED_ITEMS: PinnedItem[] = [
-	{ type: "artifact", title: "Sunset", image: "/Sunset.jpg", visibility: "Private", age: "5 days ago" },
-	{ type: "artifact", title: "Mountain", image: "/nature-bg.png", visibility: "Private", age: "5 days ago" },
+	{ type: "artifact", title: "Opti sunset", image: "/Sunset.jpg", visibility: "Private", age: "5 days ago", tags: ["Image", "Campaign"], initials: "AS" },
+	{ type: "artifact", title: "Mountain image", image: "/nature-bg.png", visibility: "Private", age: "5 days ago", tags: ["Image", "Brand"], initials: "AS" },
 	{ type: "action", priority: "Urgent", priorityBg: "#FAD9E7", priorityColor: "#8B1A3A", title: "Team approval needed", description: "Review the updated Q&A article. Approve to proceed to publishing, or request further changes.", filename: "Discover-the-unknown-qa.md", fileType: "GEO Q&A ARTICLE", age: "5 days ago" },
 ];
 
@@ -51,22 +51,25 @@ type WorkItem = {
 	created: string;
 	size: string;
 	image?: string;
+	tags?: string[];
 	priority?: string;
 	priorityBg?: string;
 	priorityColor?: string;
 	description?: string;
+	filename?: string;
+	fileType?: string;
 };
 
 const ALL_WORK: WorkItem[] = [
-	{ type: "image",   name: "Daily_Brief",       source: "Yes", createdBy: "Ana Shuleva", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/Sunset.jpg" },
-	{ type: "image",   name: "Meeting_Prep",       source: "Yes", createdBy: "Ana Shuleva", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature-bg.png" },
-	{ type: "image",   name: "Weekly_Wrap",        source: "Yes", createdBy: "Ana Shuleva", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature1.png" },
-	{ type: "image",   name: "Weekly_Wrap",        source: "Yes", createdBy: "Ana Shuleva", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature2.png" },
-	{ type: "article", name: "Q3_Campaign_Brief",  source: "Yes", createdBy: "Ana Shuleva", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "Urgent",   priorityBg: "#FAD9E7", priorityColor: "#8B1A3A", description: "Team approval needed — review before publishing." },
-	{ type: "image",   name: "Weekly_Wrap",        source: "Yes", createdBy: "Ana Shuleva", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/Sunset.jpg" },
-	{ type: "article", name: "Experiment_Launch",  source: "Yes", createdBy: "Ana Shuleva", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "No Rush", priorityBg: "var(--ax-colors-bg-secondary)", priorityColor: "var(--ax-colors-fg-secondary)", description: "Testing experiment 123 has been successfully created and launched." },
-	{ type: "image",   name: "Weekly_Wrap",        source: "Yes", createdBy: "Ana Shuleva", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature-bg.png" },
-	{ type: "article", name: "Experiment_Launch",  source: "Yes", createdBy: "Ana Shuleva", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "No Rush", priorityBg: "var(--ax-colors-bg-secondary)", priorityColor: "var(--ax-colors-fg-secondary)", description: "Testing experiment 1 has been successfully created and launched." },
+	{ type: "image",   name: "Daily brief",         source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/Daily_Brief.png", tags: ["Campaign", "Q3"] },
+	{ type: "image",   name: "Mountain image",      source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature-bg.png", tags: ["Brand", "2026"] },
+	{ type: "image",   name: "Valley image",        source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature1.png",   tags: ["Weekly", "Internal"] },
+	{ type: "image",   name: "Sunset image",        source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature2.png",   tags: ["Weekly", "Brand"] },
+	{ type: "article", name: "Q3_Campaign_Brief",  source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "Urgent",   priorityBg: "#FAD9E7", priorityColor: "#8B1A3A", description: "Review the updated Q3 campaign brief. Approve to proceed to publishing, or request further changes.", filename: "Q3-campaign-brief.md", fileType: "Campaign Brief" },
+	{ type: "image",   name: "Weekly wrap",         source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/Sunset.jpg" },
+	{ type: "article", name: "Experiment_Launch",  source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "No Rush", priorityBg: "var(--ax-colors-bg-secondary)", priorityColor: "var(--ax-colors-fg-secondary)", description: "Experiment 123 has been successfully created and launched. No action needed.", filename: "Experiment-123-launch.md", fileType: "Experiment Summary" },
+	{ type: "image",   name: "Campaign focus",      source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature-bg.png" },
+	{ type: "article", name: "Onboarding_Recap",   source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "Complete", priorityBg: "#D1FAE5", priorityColor: "#065F46", description: "New hire onboarding recap has been drafted and shared with the People team for final sign-off.", filename: "Onboarding-recap-june.md", fileType: "HR Document" },
 ];
 
 const TYPE_OPTIONS = ["All", "Image", "Article", "Doc"];
@@ -89,7 +92,14 @@ function TypeIcon({ type }: { type: WorkItem["type"] }) {
 	);
 }
 
-function Avatar({ initials }: { initials: string }) {
+function Avatar({ initials, src, bg }: { initials?: string; src?: string; bg?: string }) {
+	if (src) {
+		return (
+			<Box style={{ width: 24, height: 24, borderRadius: "50%", background: bg ?? "#FAF6E8", overflow: "hidden", flexShrink: 0 }}>
+				<Image src={src} alt="" width={24} height={24} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+			</Box>
+		);
+	}
 	return (
 		<Box style={{ width: 24, height: 24, borderRadius: "50%", background: "#C4B5FD", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
 			<span style={{ fontFamily: "Roboto Mono, monospace", fontSize: 9, fontWeight: 700, color: "#4C1D95" }}>{initials}</span>
@@ -97,25 +107,116 @@ function Avatar({ initials }: { initials: string }) {
 	);
 }
 
-function PinnedCard({ item, flexBasis }: { item: PinnedItem; flexBasis: string }) {
+const BTN_STYLE: React.CSSProperties = {
+	background: "var(--ax-colors-bg-default)",
+	borderColor: "var(--ax-colors-border-secondary)",
+	height: 28, width: 28, padding: 0,
+};
+
+function PinnedCard({ item, flexBasis, avatarSrc, avatarBg }: { item: PinnedItem; flexBasis: string; avatarSrc?: string; avatarBg?: string }) {
+	const [hovered, setHovered] = useState(false);
+	const [pinned, setPinned] = useState(true);
+
 	return (
-		<Box className="vat-work-card" bg="bg.default" style={{ flex: `0 0 ${flexBasis}`, width: flexBasis, border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer" }}>
+		<Box
+			bg="bg.default"
+			style={{
+				flex: `0 0 ${flexBasis}`, width: flexBasis,
+				border: `1px solid ${hovered ? "var(--ax-colors-border-secondary)" : "var(--ax-colors-border-default)"}`,
+				borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column",
+				cursor: "pointer", transition: "border-color 0.15s", height: 240,
+			}}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+		>
 			{item.type === "artifact" ? (
 				<>
-					<Box style={{ width: "100%", height: 150, position: "relative", flexShrink: 0 }}>
+					{/* Thumbnail with overlay — flex:1 so footer growth compresses it, not card */}
+					<Box style={{ flex: 1, position: "relative", overflow: "hidden" }}>
 						<Image src={item.image} alt={item.title} fill unoptimized style={{ objectFit: "cover" }} />
-					</Box>
-					<Box display="flex" alignItems="center" justifyContent="space-between" style={{ padding: "10px 14px 12px" }}>
-						<Box>
-							<Text fontSize="md" color="fg.default" style={{ fontWeight: 600 }}>{item.title}</Text>
-							<Box display="flex" alignItems="center" gap="4" style={{ marginTop: 4, color: "var(--ax-colors-fg-tertiary)" }}>
-								<IconLock style={{ width: 12, height: 12 }} />
-								<Text fontSize="sm" color="fg.tertiary">{item.visibility}</Text>
+						{/* Persistent pin when not hovered */}
+						{pinned && !hovered && (
+							<Box style={{ position: "absolute", top: 8, left: 8 }} onClick={(e) => e.stopPropagation()}>
+								<Button appearance="default" size="sm" aria-label="Unpin" icon={<IconThumbtackSolid style={{ width: 10, height: 10 }} />} style={BTN_STYLE} onClick={() => setPinned(false)} />
+							</Box>
+						)}
+						{/* Hover overlay */}
+						<Box style={{
+							position: "absolute", inset: 0,
+							background: "rgba(0,0,0,0.45)",
+							opacity: hovered ? 1 : 0,
+							transition: "opacity 0.25s",
+							pointerEvents: hovered ? "auto" : "none",
+							display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+							padding: 8,
+						}}>
+							<Box onClick={(e) => e.stopPropagation()}>
+								<Button appearance="default" size="sm" aria-label={pinned ? "Unpin" : "Pin"} icon={pinned ? <IconThumbtackSolid style={{ width: 10, height: 10 }} /> : <IconThumbtack style={{ width: 10, height: 10 }} />} style={BTN_STYLE} onClick={() => setPinned((p) => !p)} />
+							</Box>
+							<Box onClick={(e) => e.stopPropagation()}>
+								<Button appearance="default" size="sm" aria-label="Options" icon={<IconEllipsisSolid style={{ width: 13, height: 13 }} />} style={BTN_STYLE} />
 							</Box>
 						</Box>
-						<Box style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, color: "var(--ax-colors-fg-tertiary)" }}>
-							<IconImage style={{ width: 14, height: 14 }} />
-							<Text fontSize="sm" color="fg.tertiary">Created {item.age}</Text>
+					</Box>
+					{/* Footer — fixed, grows into thumbnail space */}
+					<Box
+						display="flex"
+						flexDirection="column"
+						gap="8"
+						style={{
+							flexShrink: 0,
+							borderTop: "1px solid var(--ax-colors-border-tertiary)",
+							padding: `10px 14px ${hovered ? 12 : 10}px`,
+							transition: "padding 0.25s ease",
+						}}
+						onClick={(e) => e.stopPropagation()}
+					>
+						{/* Row 1: title + type icon */}
+						<Box display="flex" justifyContent="space-between" alignItems="start" gap="8">
+							<Text
+								fontSize={hovered ? "lg" : "md"}
+								color="fg.default"
+								style={{
+									fontWeight: 600,
+									overflow: "hidden",
+									textOverflow: hovered ? "clip" : "ellipsis",
+									whiteSpace: hovered ? "normal" : "nowrap",
+									transition: "font-size 0.2s ease",
+									lineHeight: 1.3,
+								}}
+							>
+								{item.title}
+							</Text>
+							<Box style={{ color: "var(--ax-colors-fg-tertiary)", lineHeight: 0, flexShrink: 0 }}>
+								<IconImage style={{ width: 14, height: 14 }} />
+							</Box>
+						</Box>
+						{/* Row 2: lock + visibility + date — always visible */}
+						<Box display="flex" alignItems="center" justifyContent="space-between">
+							<Box display="flex" alignItems="center" gap="4" style={{ color: "var(--ax-colors-fg-tertiary)" }}>
+								<IconLock style={{ width: 11, height: 11 }} />
+								<Text fontSize="sm" color="fg.tertiary">{item.visibility}</Text>
+							</Box>
+							<Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>Created {item.age}</Text>
+						</Box>
+						{/* Row 3: avatar + tags + View → slides in on hover */}
+						<Box style={{
+							maxHeight: hovered ? 28 : 0,
+							opacity: hovered ? 1 : 0,
+							overflow: "hidden",
+							transition: "max-height 0.25s ease, opacity 0.2s ease",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "space-between",
+							gap: 6,
+						}}>
+							<Box display="flex" alignItems="center" gap="6" style={{ overflow: "hidden" }}>
+								<Avatar src={avatarSrc} bg={avatarBg} initials={item.initials} />
+								{(item.tags ?? []).slice(0, 1).map((tag) => (
+									<Badge key={tag} intent="neutral">{tag}</Badge>
+								))}
+							</Box>
+							<Button appearance="subtle" size="sm" addonAfter={<IconArrowRight style={{ width: 12, height: 12 }} />}>View</Button>
 						</Box>
 					</Box>
 				</>
@@ -135,6 +236,102 @@ function PinnedCard({ item, flexBasis }: { item: PinnedItem; flexBasis: string }
 					</Box>
 				</Box>
 			)}
+		</Box>
+	);
+}
+
+function GridImageCard({ item, avatarSrc, avatarBg }: { item: WorkItem; avatarSrc?: string; avatarBg?: string }) {
+	const [hovered, setHovered] = useState(false);
+	const [pinned, setPinned] = useState(false);
+	return (
+		<Box
+			className="vat-work-card"
+			bg="bg.default"
+			style={{ border: `1px solid ${hovered ? "var(--ax-colors-border-secondary)" : "var(--ax-colors-border-default)"}`, borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer", transition: "border-color 0.15s", height: 240 }}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+		>
+			<Box style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+				<Image src={item.image!} alt={item.name} fill unoptimized style={{ objectFit: "cover" }} />
+				{pinned && !hovered && (
+					<Box style={{ position: "absolute", top: 8, left: 8 }} onClick={(e) => e.stopPropagation()}>
+						<Button appearance="default" size="sm" aria-label="Unpin" icon={<IconThumbtackSolid style={{ width: 10, height: 10 }} />} style={BTN_STYLE} onClick={() => setPinned(false)} />
+					</Box>
+				)}
+				<Box style={{
+					position: "absolute", inset: 0,
+					background: "rgba(0,0,0,0.45)",
+					opacity: hovered ? 1 : 0,
+					transition: "opacity 0.25s",
+					pointerEvents: hovered ? "auto" : "none",
+					display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+					padding: 8,
+				}}>
+					<Box onClick={(e) => e.stopPropagation()}>
+						<Button appearance="default" size="sm" aria-label={pinned ? "Unpin" : "Pin"} icon={pinned ? <IconThumbtackSolid style={{ width: 10, height: 10 }} /> : <IconThumbtack style={{ width: 10, height: 10 }} />} style={BTN_STYLE} onClick={() => setPinned((p) => !p)} />
+					</Box>
+					<Box onClick={(e) => e.stopPropagation()}>
+						<Button appearance="default" size="sm" aria-label="Options" icon={<IconEllipsisSolid style={{ width: 13, height: 13 }} />} style={BTN_STYLE} />
+					</Box>
+				</Box>
+			</Box>
+			<Box
+				display="flex"
+				flexDirection="column"
+				gap="8"
+				style={{
+					flexShrink: 0,
+					borderTop: "1px solid var(--ax-colors-border-tertiary)",
+					padding: `10px 14px ${hovered ? 12 : 10}px`,
+					transition: "padding 0.25s ease",
+				}}
+				onClick={(e) => e.stopPropagation()}
+			>
+				<Box display="flex" justifyContent="space-between" alignItems="start" gap="8">
+					<Text
+						fontSize={hovered ? "lg" : "md"}
+						color="fg.default"
+						style={{
+							fontWeight: 600,
+							overflow: "hidden",
+							textOverflow: hovered ? "clip" : "ellipsis",
+							whiteSpace: hovered ? "normal" : "nowrap",
+							transition: "font-size 0.2s ease",
+							lineHeight: 1.3,
+						}}
+					>
+						{item.name}
+					</Text>
+					<Box style={{ color: "var(--ax-colors-fg-tertiary)", lineHeight: 0, flexShrink: 0 }}>
+						<IconImage style={{ width: 14, height: 14 }} />
+					</Box>
+				</Box>
+				<Box display="flex" alignItems="center" justifyContent="space-between">
+					<Box display="flex" alignItems="center" gap="4" style={{ color: "var(--ax-colors-fg-tertiary)" }}>
+						<IconLock style={{ width: 11, height: 11 }} />
+						<Text fontSize="sm" color="fg.tertiary">{item.visibility}</Text>
+					</Box>
+					<Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>{item.created}</Text>
+				</Box>
+				<Box style={{
+					maxHeight: hovered ? 28 : 0,
+					opacity: hovered ? 1 : 0,
+					overflow: "hidden",
+					transition: "max-height 0.25s ease, opacity 0.2s ease",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+					gap: 6,
+				}}>
+					<Box display="flex" alignItems="center" gap="6" style={{ overflow: "hidden" }}>
+						<Avatar src={avatarSrc} bg={avatarBg} initials={item.initials} />
+						{(item.tags ?? []).slice(0, 1).map((tag) => (
+							<Badge key={tag} intent="neutral">{tag}</Badge>
+						))}
+					</Box>
+					<Button appearance="subtle" size="sm" addonAfter={<IconArrowRight style={{ width: 12, height: 12 }} />}>View</Button>
+				</Box>
+			</Box>
 		</Box>
 	);
 }
@@ -192,6 +389,7 @@ export default function VATWorkPage() {
 				<Box display="flex" alignItems="center" justifyContent="space-between" mb="4">
 					<Text style={SECTION_HEADING}>Pinned</Text>
 					<Box display="flex" alignItems="center" gap="8">
+						<Button appearance="subtle" size="sm">See all</Button>
 						<Button appearance="subtle" size="sm" icon={<IconChevronLeft />} disabled={!canGoBack} aria-label="Previous" onClick={() => setCarouselPage((p) => p - 1)} />
 						<Button appearance="subtle" size="sm" icon={<IconChevronRight />} disabled={!canGoForward} aria-label="Next" onClick={() => setCarouselPage((p) => p + 1)} />
 					</Box>
@@ -202,7 +400,7 @@ export default function VATWorkPage() {
 				<Box ref={carouselRef} style={{ overflow: "hidden" }}>
 					<Box style={{ display: "flex", gap: GAP, transform: `translateX(${translateX}px)`, transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)" }}>
 						{PINNED_ITEMS.map((item) => (
-							<PinnedCard key={item.title} item={item} flexBasis={flexBasis} />
+							<PinnedCard key={item.title} item={item} flexBasis={flexBasis} avatarSrc={vau?.avatar} avatarBg={vau?.avatarBg} />
 						))}
 					</Box>
 				</Box>
@@ -282,7 +480,7 @@ export default function VATWorkPage() {
 								<Text fontSize="md" color="fg.default" style={{ fontWeight: 500, flex: 1 }}>{item.name}</Text>
 								<Text fontSize="sm" color="fg.secondary" style={{ width: 80 }}>{item.source}</Text>
 								<Box display="flex" alignItems="center" gap="6" style={{ width: 160 }}>
-									<Avatar initials={item.initials} />
+									<Avatar src={vau?.avatar} bg={vau?.avatarBg} initials={item.initials} />
 									<Text fontSize="sm" color="fg.secondary">{item.createdBy}</Text>
 								</Box>
 								<Text fontSize="sm" color="fg.secondary" style={{ width: 90 }}>{item.visibility}</Text>
@@ -299,40 +497,30 @@ export default function VATWorkPage() {
 				{/* Grid view */}
 				{view === "grid" && (
 					<Box style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: GAP }}>
-						{filtered.map((item, i) => (
+						{filtered.map((item, i) => item.priority ? (
 							<Box
 								key={`${item.name}-${i}`}
 								className="vat-work-card"
 								bg="bg.default"
 								style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer" }}
 							>
-								{item.image ? (
-									<Box style={{ width: "100%", height: 160, position: "relative", flexShrink: 0 }}>
-										<Image src={item.image} alt={item.name} fill unoptimized style={{ objectFit: "cover" }} />
-									</Box>
-								) : (
-									<Box style={{ width: "100%", height: 160, background: "var(--ax-colors-bg-secondary)", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", padding: 16, flexShrink: 0 }}>
-										{item.priority && (
-											<span style={{ ...CAPTION, fontSize: 9, background: item.priorityBg, color: item.priorityColor, padding: "3px 10px", borderRadius: 32 }}>
-												{item.priority}
-											</span>
-										)}
-									</Box>
-								)}
-								<Box style={{ padding: "12px 14px" }}>
-									<Text fontSize="md" color="fg.default" style={{ fontWeight: 600 }}>{item.name}</Text>
-									{item.description && (
-										<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 4, lineHeight: "1.4" }}>{item.description}</Text>
-									)}
-									<Box display="flex" alignItems="center" justifyContent="space-between" style={{ marginTop: 8 }}>
-										<Box display="flex" alignItems="center" gap="4" style={{ color: "var(--ax-colors-fg-tertiary)" }}>
-											<IconLock style={{ width: 11, height: 11 }} />
-											<Text fontSize="sm" color="fg.tertiary">{item.visibility}</Text>
+								<Box display="flex" flexDirection="column" gap="8" style={{ padding: 16, flex: 1 }}>
+									<span style={{ ...CAPTION, fontSize: 9, background: item.priorityBg, color: item.priorityColor, padding: "2px 8px", borderRadius: 32, alignSelf: "flex-start" }}>
+										{item.priority}
+									</span>
+									<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, lineHeight: "1.3" }}>{item.name.replace(/_/g, " ")}</Text>
+									<Text fontSize="sm" color="fg.secondary" style={{ flex: 1, lineHeight: "1.5" }}>{item.description}</Text>
+									<Box style={{ marginTop: "auto" }}>
+										<Text fontSize="sm" color="fg.default" style={{ fontWeight: 500 }}>{item.filename}</Text>
+										<Box display="flex" alignItems="center" justifyContent="space-between" style={{ marginTop: 4 }}>
+											<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)" }}>{item.fileType}</span>
+											<Text fontSize="sm" color="fg.tertiary">{item.created}</Text>
 										</Box>
-										<Text fontSize="sm" color="fg.tertiary">{item.created}</Text>
 									</Box>
 								</Box>
 							</Box>
+						) : (
+							<GridImageCard key={`${item.name}-${i}`} item={item} avatarSrc={vau?.avatar} avatarBg={vau?.avatarBg} />
 						))}
 					</Box>
 				)}

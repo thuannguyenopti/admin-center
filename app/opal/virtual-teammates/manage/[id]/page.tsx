@@ -5,9 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import {
 	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
 	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
-	Box, Button, Heading, Menu, MenuContent, MenuTrigger, Text,
+	Badge, Box, Button, Heading, Menu, MenuContent, MenuTrigger, Text,
 } from "@optiaxiom/react";
-import { IconArrowRight, IconChevronLeft, IconChevronRight, IconComments, IconImage, IconLock, IconPause } from "@optiaxiom/icons";
+import { IconArrowRight, IconChevronLeft, IconChevronRight, IconComments, IconEllipsisSolid, IconImage, IconLock, IconPause, IconThumbtack, IconThumbtackSolid } from "@optiaxiom/icons";
 import { ReviewCanvas } from "./ReviewCanvas";
 import Image from "next/image";
 import { VAUS } from "@/app/opal/data/vaus";
@@ -142,14 +142,111 @@ const WORK_ITEMS = [
 ];
 
 type PinnedItem =
-	| { type: "artifact"; title: string; image: string; visibility: string; age: string }
+	| { type: "artifact"; title: string; image: string; visibility: string; age: string; tags: string[]; initials: string }
 	| { type: "action"; priority: string; priorityBg: string; priorityColor: string; title: string; description: string; filename: string; fileType: string; age: string };
 
 const PINNED_ITEMS: PinnedItem[] = [
-	{ type: "artifact", title: "Sunset", image: "/Sunset.jpg", visibility: "Private", age: "5 days ago" },
-	{ type: "artifact", title: "Mountain", image: "/nature-bg.png", visibility: "Private", age: "5 days ago" },
+	{ type: "artifact", title: "Opti sunset", image: "/Sunset.jpg", visibility: "Private", age: "5 days ago", tags: ["Image", "Campaign"], initials: "AS" },
+	{ type: "artifact", title: "Mountain image", image: "/nature-bg.png", visibility: "Private", age: "5 days ago", tags: ["Image", "Brand"], initials: "AS" },
 	{ type: "action", priority: "Urgent", priorityBg: "#FAD9E7", priorityColor: "#8B1A3A", title: "Team approval needed", description: "Review the updated Q&A article. Approve to proceed to publishing, or request further changes.", filename: "Discover-the-unknown-qa.md", fileType: "GEO Q&A ARTICLE", age: "5 days ago" },
 ];
+
+const BTN_STYLE: React.CSSProperties = {
+	background: "var(--ax-colors-bg-default)",
+	borderColor: "var(--ax-colors-border-secondary)",
+	height: 28, width: 28, padding: 0,
+};
+
+function PinnedArtifactCard({ item, flexBasis, avatarSrc, avatarBg }: { item: Extract<PinnedItem, { type: "artifact" }>; flexBasis: string; avatarSrc?: string; avatarBg?: string }) {
+	const [hovered, setHovered] = useState(false);
+	const [pinned, setPinned] = useState(true);
+	return (
+		<Box
+			bg="bg.default"
+			style={{
+				flex: `0 0 ${flexBasis}`, width: flexBasis, height: 240,
+				border: `1px solid ${hovered ? "var(--ax-colors-border-secondary)" : "var(--ax-colors-border-default)"}`,
+				borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column",
+				cursor: "pointer", transition: "border-color 0.15s",
+			}}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+		>
+			<Box style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+				<Image src={item.image} alt={item.title} fill unoptimized style={{ objectFit: "cover" }} />
+				{pinned && !hovered && (
+					<Box style={{ position: "absolute", top: 8, left: 8 }} onClick={(e) => e.stopPropagation()}>
+						<Button appearance="default" size="sm" aria-label="Unpin" icon={<IconThumbtackSolid style={{ width: 10, height: 10 }} />} style={BTN_STYLE} onClick={() => setPinned(false)} />
+					</Box>
+				)}
+				<Box style={{
+					position: "absolute", inset: 0,
+					background: "rgba(0,0,0,0.45)",
+					opacity: hovered ? 1 : 0,
+					transition: "opacity 0.25s",
+					pointerEvents: hovered ? "auto" : "none",
+					display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+					padding: 8,
+				}}>
+					<Box onClick={(e) => e.stopPropagation()}>
+						<Button appearance="default" size="sm" aria-label={pinned ? "Unpin" : "Pin"} icon={pinned ? <IconThumbtackSolid style={{ width: 10, height: 10 }} /> : <IconThumbtack style={{ width: 10, height: 10 }} />} style={BTN_STYLE} onClick={() => setPinned((p) => !p)} />
+					</Box>
+					<Box onClick={(e) => e.stopPropagation()}>
+						<Button appearance="default" size="sm" aria-label="Options" icon={<IconEllipsisSolid style={{ width: 13, height: 13 }} />} style={BTN_STYLE} />
+					</Box>
+				</Box>
+			</Box>
+			<Box
+				display="flex" flexDirection="column" gap="8"
+				style={{ flexShrink: 0, borderTop: "1px solid var(--ax-colors-border-tertiary)", padding: `10px 14px ${hovered ? 12 : 10}px`, transition: "padding 0.25s ease" }}
+				onClick={(e) => e.stopPropagation()}
+			>
+				<Box display="flex" justifyContent="space-between" alignItems="start" gap="8">
+					<Text
+						fontSize={hovered ? "lg" : "md"}
+						color="fg.default"
+						style={{ fontWeight: 600, overflow: "hidden", textOverflow: hovered ? "clip" : "ellipsis", whiteSpace: hovered ? "normal" : "nowrap", transition: "font-size 0.2s ease", lineHeight: 1.3 }}
+					>
+						{item.title}
+					</Text>
+					<Box style={{ color: "var(--ax-colors-fg-tertiary)", lineHeight: 0, flexShrink: 0 }}>
+						<IconImage style={{ width: 14, height: 14 }} />
+					</Box>
+				</Box>
+				{/* Row 2: lock + visibility + date — always visible */}
+				<Box display="flex" alignItems="center" justifyContent="space-between">
+					<Box display="flex" alignItems="center" gap="4" style={{ color: "var(--ax-colors-fg-tertiary)" }}>
+						<IconLock style={{ width: 11, height: 11 }} />
+						<Text fontSize="sm" color="fg.tertiary">{item.visibility}</Text>
+					</Box>
+					<Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>Created {item.age}</Text>
+				</Box>
+				{/* Row 3: avatar + tag + View → slides in on hover */}
+				<Box style={{
+					maxHeight: hovered ? 28 : 0, opacity: hovered ? 1 : 0, overflow: "hidden",
+					transition: "max-height 0.25s ease, opacity 0.2s ease",
+					display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
+				}}>
+					<Box display="flex" alignItems="center" gap="6" style={{ overflow: "hidden" }}>
+						{avatarSrc ? (
+							<Box style={{ width: 24, height: 24, borderRadius: "50%", background: avatarBg ?? "#FAF6E8", overflow: "hidden", flexShrink: 0 }}>
+								<Image src={avatarSrc} alt="" width={24} height={24} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+							</Box>
+						) : (
+							<Box style={{ width: 24, height: 24, borderRadius: "50%", background: "#C4B5FD", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+								<span style={{ fontFamily: "Roboto Mono, monospace", fontSize: 9, fontWeight: 700, color: "#4C1D95" }}>{item.initials}</span>
+							</Box>
+						)}
+						{item.tags.slice(0, 1).map((tag) => (
+							<Badge key={tag} intent="neutral">{tag}</Badge>
+						))}
+					</Box>
+					<Button appearance="subtle" size="sm" addonAfter={<IconArrowRight style={{ width: 12, height: 12 }} />}>View</Button>
+				</Box>
+			</Box>
+		</Box>
+	);
+}
 
 function KpiCard({ label, value, sub, subGreen }: { label: string; value: string; sub: string; subGreen: boolean }) {
 	return (
@@ -455,6 +552,7 @@ export default function VATOverviewPage() {
 				<Box display="flex" alignItems="center" justifyContent="space-between" mb="4">
 					<Text style={SECTION_HEADING}>Pinned</Text>
 					<Box display="flex" alignItems="center" gap="8">
+						<Button appearance="subtle" size="sm">See all</Button>
 						<Button appearance="subtle" size="sm" icon={<IconChevronLeft />} disabled={!canGoBack} aria-label="Previous" onClick={() => setCarouselPage((p) => p - 1)} />
 						<Button appearance="subtle" size="sm" icon={<IconChevronRight />} disabled={!canGoForward} aria-label="Next" onClick={() => setCarouselPage((p) => p + 1)} />
 					</Box>
@@ -464,43 +562,24 @@ export default function VATOverviewPage() {
 				</Text>
 				<Box ref={carouselRef} style={{ overflow: "hidden" }}>
 					<Box style={{ display: "flex", gap: 20, transform: `translateX(${translateX}px)`, transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)" }}>
-						{PINNED_ITEMS.map((item) => (
-							<Box key={item.title} className="vat-work-card" bg="bg.default" style={{ flex: `0 0 ${flexBasis}`, width: flexBasis, border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer" }}>
-								{item.type === "artifact" ? (
-									<>
-										<Box style={{ width: "100%", height: 150, position: "relative", flexShrink: 0 }}>
-											<Image src={item.image} alt={item.title} fill unoptimized style={{ objectFit: "cover" }} />
-										</Box>
-										<Box display="flex" alignItems="center" justifyContent="space-between" style={{ padding: "10px 14px 12px" }}>
-											<Box>
-												<Text fontSize="md" color="fg.default" style={{ fontWeight: 600 }}>{item.title}</Text>
-												<Box display="flex" alignItems="center" gap="4" style={{ marginTop: 4, color: "var(--ax-colors-fg-tertiary)" }}>
-													<IconLock style={{ width: 12, height: 12 }} />
-													<Text fontSize="sm" color="fg.tertiary">{item.visibility}</Text>
-												</Box>
-											</Box>
-											<Box style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, color: "var(--ax-colors-fg-tertiary)" }}>
-												<IconImage style={{ width: 14, height: 14 }} />
-												<Text fontSize="sm" color="fg.tertiary">Created {item.age}</Text>
-											</Box>
-										</Box>
-									</>
-								) : (
-									<Box display="flex" flexDirection="column" gap="8" style={{ padding: 16, flex: 1 }}>
-										<span style={{ ...CAPTION, fontSize: 9, background: item.priorityBg, color: item.priorityColor, padding: "2px 8px", borderRadius: 32, alignSelf: "flex-start" }}>
-											{item.priority}
-										</span>
-										<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, lineHeight: "1.3" }}>{item.title}</Text>
-										<Text fontSize="sm" color="fg.secondary" style={{ flex: 1, lineHeight: "1.5" }}>{item.description}</Text>
-										<Box style={{ marginTop: "auto" }}>
-											<Text fontSize="sm" color="fg.default" style={{ fontWeight: 500 }}>{item.filename}</Text>
-											<Box display="flex" alignItems="center" justifyContent="space-between" style={{ marginTop: 4 }}>
-												<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)" }}>{item.fileType}</span>
-												<Text fontSize="sm" color="fg.tertiary">Created {item.age}</Text>
-											</Box>
+						{PINNED_ITEMS.map((item) => item.type === "artifact" ? (
+							<PinnedArtifactCard key={item.title} item={item} flexBasis={flexBasis} avatarSrc={vau?.avatar} avatarBg={vau?.avatarBg} />
+						) : (
+							<Box key={item.title} bg="bg.default" style={{ flex: `0 0 ${flexBasis}`, width: flexBasis, border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer" }}>
+								<Box display="flex" flexDirection="column" gap="8" style={{ padding: 16, flex: 1 }}>
+									<span style={{ ...CAPTION, fontSize: 9, background: item.priorityBg, color: item.priorityColor, padding: "2px 8px", borderRadius: 32, alignSelf: "flex-start" }}>
+										{item.priority}
+									</span>
+									<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, lineHeight: "1.3" }}>{item.title}</Text>
+									<Text fontSize="sm" color="fg.secondary" style={{ flex: 1, lineHeight: "1.5" }}>{item.description}</Text>
+									<Box style={{ marginTop: "auto" }}>
+										<Text fontSize="sm" color="fg.default" style={{ fontWeight: 500 }}>{item.filename}</Text>
+										<Box display="flex" alignItems="center" justifyContent="space-between" style={{ marginTop: 4 }}>
+											<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)" }}>{item.fileType}</span>
+											<Text fontSize="sm" color="fg.tertiary">Created {item.age}</Text>
 										</Box>
 									</Box>
-								)}
+								</Box>
 							</Box>
 						))}
 					</Box>
