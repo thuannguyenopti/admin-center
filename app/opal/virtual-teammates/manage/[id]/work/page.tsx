@@ -61,7 +61,7 @@ type WorkItem = {
 };
 
 const ALL_WORK: WorkItem[] = [
-	{ type: "image",   name: "Daily brief",         source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/Daily_Brief.png", tags: ["Campaign", "Q3"] },
+	{ type: "image",   name: "Daily brief: 6-30-26",         source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/Daily_Brief.png", tags: ["Campaign", "Q3"] },
 	{ type: "image",   name: "Mountain image",      source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature-bg.png", tags: ["Brand", "2026"] },
 	{ type: "image",   name: "Valley image",        source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature1.png",   tags: ["Weekly", "Internal"] },
 	{ type: "image",   name: "Sunset image",        source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature2.png",   tags: ["Weekly", "Brand"] },
