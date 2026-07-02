@@ -285,7 +285,8 @@ function TemplateContent({
 		.filter(
 			(item: any) =>
 				item?.highlight != null &&
-				(item.exact ? path === item.highlight : path.includes(item.highlight))
+				((item.exact ? path === item.highlight : path.includes(item.highlight)) ||
+					item.additionalHighlights?.some((h: string) => path.includes(h)))
 		)
 		.sort((a: any, b: any) => b.highlight.length - a.highlight.length)[0];
 	const isCmpTaskDetail = path.startsWith("/cmp/task/");
@@ -453,53 +454,10 @@ function TemplateContent({
 														? path === menuItem.highlight
 														: path.includes(menuItem.highlight));
 
-												const icon =
-													menuItem.label === "Notifications" &&
-													!path.startsWith("/opal/notifications") ? (
-														<Box
-															style={{
-																position: "relative",
-																width: 40,
-																height: 40,
-																display: "flex",
-																alignItems: "center",
-																justifyContent: "center",
-															}}
-														>
-															{menuItem.icon}
-															<Box
-																rounded="full"
-																display="flex"
-																alignItems="center"
-																justifyContent="center"
-																style={{
-																	position: "absolute",
-																	top: 2,
-																	right: 0,
-																	backgroundColor:
-																		"var(--ax-colors-fg-error)",
-																	minWidth: 14,
-																	height: 14,
-																	padding: "0 4px",
-																	fontSize: 9,
-																	fontWeight: 700,
-																	color: "white",
-																	pointerEvents: "none",
-																}}
-															>
-																10
-															</Box>
-														</Box>
-													) : (
-														menuItem.icon
-													);
+												const icon = menuItem.icon;
 
 												const itemClick = (e: React.MouseEvent) =>
 													menuClick(menuItem.url, e);
-												const hasNotifDot =
-													menuItem.label === "Notifications" &&
-													!path.startsWith("/opal/notifications");
-
 												// Expanded: plain NavItem with label
 												return (
 													<NavItem
@@ -507,17 +465,7 @@ function TemplateContent({
 														onClick={itemClick}
 														active={isActive}
 														aria-label={menuItem.label}
-														icon={hasNotifDot ? menuItem.icon : icon}
-														addonAfter={
-															hasNotifDot ? (
-																<Badge
-																	variant="strong"
-																	intent="danger"
-																>
-																	10
-																</Badge>
-															) : undefined
-														}
+														icon={icon}
 													>
 														{menuItem.label}
 													</NavItem>

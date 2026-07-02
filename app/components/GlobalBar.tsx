@@ -41,9 +41,10 @@ import Link from "next/link";
 import {useTheme} from "@/app/hooks/useTheme";
 import {useLayout} from "@/app/context/LayoutContext";
 import NotificationDropdown from "./NotificationDropdown";
+import OpalChatButton from "./OpalChatButton";
 import { IconXmark } from "@optimizely/axiom-icons";
-import { useState, useEffect, Suspense } from "react";
-import { LayoutSwitcher } from "@/app/opal/im/components/LayoutSwitcher";
+import { useState, useEffect } from "react";
+import { IconComments, IconMessages } from "@optiaxiom/icons";
 import { createPortal } from "react-dom";
 import { VAUS, type VAU } from "@/app/opal/data/vaus";
 
@@ -168,19 +169,20 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						</Menu>
 					</Box>
 					<Box display="flex" alignItems="center" gap="8">
-						<Button
-							appearance="default"
-							size="md"
-							icon={<IconBolt size={14} />}
-							onClick={onOpalClick}
-							style={{
-								borderColor: "var(--ax-colors-border-accent)",
-								boxShadow: "inset 0 0 0 1px var(--ax-colors-border-accent)",
-								fontWeight: 600,
-							}}
-						>
-							Ask Opal
-						</Button>
+						<OpalChatButton
+						options={[
+							{
+								label: "Opal",
+								addon: <Image src="/opal-orb.svg" alt="" width={16} height={16} style={{ borderRadius: "50%" }} />,
+								execute: () => onOpalClick?.(),
+							},
+							{
+								label: "Team Messages",
+								addon: <IconMessages size={16} />,
+								execute: () => router.push("/opal/messages"),
+							},
+						]}
+					/>
 						<Button appearance="subtle" size="md" icon={<IconSearch size={20} />} aria-label="Search" />
 						<NotificationDropdown />
 						<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
@@ -414,9 +416,6 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 			<Box display="flex" alignItems="center" gap="4">
 				{isOpalRoute ? (
 					<>
-						<Suspense fallback={null}>
-							<LayoutSwitcher />
-						</Suspense>
 						<Button appearance="subtle" size="md" icon={<IconSearch size={20} />} aria-label="Search" />
 						<NotificationDropdown />
 						<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
@@ -526,16 +525,20 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>
-				<Button appearance="subtle" size="md" aria-label="Opal AI Assistant" onClick={onOpalClick}>
-					<Box display="flex" alignItems="center" gap="8">
-						<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
-						{isCmpTaskDetail && (
-							<Text fontSize="md" fontWeight="500" color="fg.default">
-								Ask Opal
-							</Text>
-						)}
-					</Box>
-				</Button>
+				<OpalChatButton
+					options={[
+						{
+							label: "Opal",
+							addon: <Image src="/opal-orb.svg" alt="" width={16} height={16} style={{ borderRadius: "50%" }} />,
+							execute: () => onOpalClick?.(),
+						},
+						{
+							label: "Team Messages",
+							addon: <IconMessages size={16} />,
+							execute: () => router.push("/opal/messages"),
+						},
+					]}
+				/>
 				<Button appearance="subtle" size="md" icon={<IconSearch size={20} />} aria-label="Search" />
 				<NotificationDropdown />
 				<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />

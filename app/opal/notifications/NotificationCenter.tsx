@@ -40,7 +40,9 @@ import {
     IconRectangleList,
     IconAngleRight,
     IconAngleDown,
-    IconXmark,
+    IconComment,
+    IconAt,
+    IconComments,
 } from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import NextLink from "next/link";
@@ -217,14 +219,12 @@ function NotificationRow({
     toggleSelect,
     getStatusIcon,
     getTypeIcon,
-    isChild = false,
 }: {
     n: Notification;
     selectedIds: Set<string>;
     toggleSelect: (id: string) => void;
     getStatusIcon: (n: Notification) => React.ReactNode;
     getTypeIcon: (n: Notification) => React.ReactNode;
-    isChild?: boolean;
 }) {
     return (
         <Tr
@@ -248,7 +248,7 @@ function NotificationRow({
                     </Box>
                 </Box>
             </Td>
-            <Td style={{ paddingLeft: isChild ? 48 : 4, paddingTop: 8, paddingBottom: 8 }}>
+            <Td style={{ paddingLeft: 4, paddingTop: 8, paddingBottom: 8 }}>
                 <Box display="flex" flexDirection="row" gap="12" alignItems="center">
                     <Box style={{ flexShrink: 0 }}>
                         {getStatusIcon(n) ?? getTypeIcon(n)}
@@ -261,9 +261,20 @@ function NotificationRow({
                             {getCategoryLabel(n.category)} · {n.message}
                         </Box>
                         {n.actionRequired && (
-                            <Badge intent="warning" variant="subtle" style={{ width: "fit-content" }}>
-                                Action Required
-                            </Badge>
+                            <Box>
+                                <Badge intent="warning" variant="subtle">
+                                    Action Required
+                                </Badge>
+                            </Box>
+                        )}
+                        {(n.type === "im_new_message" || n.type === "im_mention" || n.type === "im_thread_reply") && n.deepLink && (
+                            <Box onClick={(e) => e.stopPropagation()}>
+                                <NextLink href={n.deepLink}>
+                                    <Button appearance="subtle" size="sm" icon={<IconComment size={13} />}>
+                                        Reply
+                                    </Button>
+                                </NextLink>
+                            </Box>
                         )}
                     </Box>
                 </Box>
@@ -293,16 +304,14 @@ function NotificationRow({
                     {n.priority}
                 </Text>
             </Td>
-            <Td style={{ width: n.actionRequired ? 80 : 40, paddingTop: 8, paddingBottom: 8, verticalAlign: "middle" }}>
-                <Box onClick={(e) => e.stopPropagation()} display="flex" alignItems="center" gap="4">
-                    {n.actionRequired ? (
-                        <>
-                            <Button appearance="subtle" icon={<IconXmark size={14} />} size="sm" aria-label="Reject" />
-                            <Button appearance="subtle" icon={<IconCheck size={14} />} size="sm" aria-label="Approve" style={{ color: "var(--ax-colors-fg-success)" }} />
-                        </>
-                    ) : (
-                        <Button appearance="subtle" icon={<IconEllipsisSolid />} size="sm" aria-label="Options" />
-                    )}
+            <Td style={{ width: 40, paddingTop: 8, paddingBottom: 8, verticalAlign: "middle" }}>
+                <Box onClick={(e) => e.stopPropagation()}>
+                    <Button
+                        appearance="subtle"
+                        icon={<IconEllipsisSolid />}
+                        size="sm"
+                        aria-label="Options"
+                    />
                 </Box>
             </Td>
         </Tr>
@@ -542,6 +551,14 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
             case "collaboration_agent_deactivated":
                 return <IconCirclePause style={{ color: "var(--ax-colors-fg-error)" }} />;
 
+            // ── Messages ─────────────────────────────────────────────────────────
+            case "im_new_message":
+                return <IconComment style={{ color: "var(--ax-colors-fg-success)" }} />;
+            case "im_mention":
+                return <IconAt style={{ color: "var(--ax-colors-fg-success)" }} />;
+            case "im_thread_reply":
+                return <IconComments style={{ color: "var(--ax-colors-fg-success)" }} />;
+
             // ── System ───────────────────────────────────────────────────────────
             case "system_announcement":
                 return <IconMegaphone style={{ color: "var(--ax-colors-fg-information)" }} />;
@@ -619,31 +636,10 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                 >
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                         <Box display="flex" alignItems="center" gap="12">
-                            <Heading level="1">Activities</Heading>
+                            <Heading level="1">Notifications</Heading>
                             {unreadCount > 0 && (
                                 <Badge intent="information">{unreadCount} unread</Badge>
                             )}
-                        </Box>
-                        <Box display="flex" gap="8">
-                            {!sidebarMode && (
-                                <NextLink href="/opal/notification-catalog" style={{ textDecoration: "none" }}>
-                                    <Button
-                                        appearance="subtle"
-                                        size="sm"
-                                        icon={<IconList />}
-                                    >
-                                        Notification catalog
-                                    </Button>
-                                </NextLink>
-                            )}
-                            <Button
-                                appearance="subtle"
-                                size="sm"
-                                icon={<IconCheckDouble />}
-                                onClick={handleMarkAllAsRead}
-                            >
-                                Mark all as read
-                            </Button>
                         </Box>
                     </Box>
                 </Box>
@@ -734,38 +730,18 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                     </Box>
 
                     <Box display="flex" alignItems="center" gap="12">
-                        {viewMode !== "list" && (
-                            <Button
-                                appearance={isSelectionMode ? "primary" : "subtle"}
-                                size="sm"
-                                onClick={toggleSelectionMode}
-                            >
-                                {isSelectionMode ? "Done" : "Bulk Select"}
+                        <NextLink href="/opal/settings/notifications" style={{ textDecoration: "none" }}>
+                            <Button appearance="subtle" icon={<IconGear />}>
+                                Configure settings
                             </Button>
-                        )}
-                        <Box display="flex" bg="bg.secondary" p="2" rounded="md" gap="2">
-                            <Button
-                                appearance={viewMode === "list" ? "default" : "subtle"}
-                                size="sm"
-                                icon={<IconList />}
-                                onClick={() => setViewMode("list")}
-                                aria-label="Table view"
-                            />
-                            <Button
-                                appearance={viewMode === "detailed" ? "default" : "subtle"}
-                                size="sm"
-                                icon={<IconRectangleList />}
-                                onClick={() => setViewMode("detailed")}
-                                aria-label="Detailed view"
-                            />
-                            <Button
-                                appearance={viewMode === "card" ? "default" : "subtle"}
-                                size="sm"
-                                icon={<IconGrid />}
-                                onClick={() => setViewMode("card")}
-                                aria-label="Grid view"
-                            />
-                        </Box>
+                        </NextLink>
+                        <Button
+                            appearance="default"
+                            icon={<IconCheckDouble />}
+                            onClick={handleMarkAllAsRead}
+                        >
+                            Mark all as read
+                        </Button>
                     </Box>
                 </Box>
             )}
@@ -981,7 +957,6 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     toggleSelect={toggleSelect}
                                                     getStatusIcon={getStatusIcon}
                                                     getTypeIcon={getTypeIcon}
-                                                    isChild
                                                 />
                                             ))}
                                         </React.Fragment>
@@ -1034,10 +1009,9 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     {n.date}, {n.timestamp}
                                                 </Text>
                                                 {n.actionRequired && (
-                                                    <Box display="flex" gap="4" onClick={(e) => e.preventDefault()}>
-                                                        <Button appearance="subtle" icon={<IconXmark size={14} />} size="sm" aria-label="Reject" />
-                                                        <Button appearance="subtle" icon={<IconCheck size={14} />} size="sm" aria-label="Approve" style={{ color: "var(--ax-colors-fg-success)" }} />
-                                                    </Box>
+                                                    <Badge intent="warning" variant="subtle">
+                                                        Action Required
+                                                    </Badge>
                                                 )}
                                             </Box>
                                         </Box>
@@ -1139,9 +1113,10 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                             </Text>
                                                         </Box>
                                                         {n.actionRequired && (
-                                                            <Box pt="4" display="flex" gap="4" onClick={(e) => e.preventDefault()}>
-                                                                <Button appearance="subtle" icon={<IconXmark size={14} />} size="sm" aria-label="Reject" />
-                                                                <Button appearance="subtle" icon={<IconCheck size={14} />} size="sm" aria-label="Approve" style={{ color: "var(--ax-colors-fg-success)" }} />
+                                                            <Box pt="4">
+                                                                <Badge intent="warning" variant="subtle" className="whitespace-nowrap">
+                                                                    Action Required
+                                                                </Badge>
                                                             </Box>
                                                         )}
                                                     </Box>

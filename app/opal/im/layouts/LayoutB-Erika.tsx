@@ -98,7 +98,7 @@ const GROUPS: GroupItem[] = [
 ];
 
 const VAUS: VAUItem[] = [
-  { id: "bubs", name: "Bubs",                     color: "#2563eb" },
+  { id: "bubs", name: "Randy",                     color: "#2563eb" },
   { id: "kara", name: "Kara the Content Creator",  color: "#6B5CE7" },
   { id: "eric", name: "Eric the Experimenter",     color: "#6B5CE7" },
 ];
@@ -109,11 +109,11 @@ const THREADS: Record<string, Message[]> = {
     {
       id: "1", from: "user",
       senderAvatar: "https://i.pravatar.cc/150?img=24",
-      text: "Hey y'all! I'm working on a new blog post and I wanted to get your thoughts. I had Bubs help with some of the content.",
+      text: "Hey y'all! I'm working on a new blog post and I wanted to get your thoughts. I had Randy help with some of the content.",
     },
     {
       id: "2", from: "vau",
-      senderName: "Bubs", senderColor: "#2563eb",
+      senderName: "Randy", senderColor: "#2563eb",
       text: "Sure! I'd be happy to review. Send on over.",
     },
     {
@@ -132,7 +132,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "5", from: "vau",
-      senderName: "Bubs", senderColor: "#2563eb",
+      senderName: "Randy", senderColor: "#2563eb",
       text: "Love it! Opening it up now — give me a moment to read through.",
     },
   ],
@@ -165,7 +165,7 @@ const THREADS: Record<string, Message[]> = {
     {
       id: "6", from: "human",
       senderName: "Jane Smith", senderAvatar: "https://i.pravatar.cc/150?img=47",
-      text: "Also — totally unrelated but have you tried the new Bubs email draft feature? Game changer honestly 🤯",
+      text: "Also — totally unrelated but have you tried the new Randy email draft feature? Game changer honestly 🤯",
     },
     {
       id: "7", from: "user",
@@ -340,7 +340,7 @@ const THREADS: Record<string, Message[]> = {
     {
       id: "2", from: "user",
       senderAvatar: "https://i.pravatar.cc/150?img=24",
-      text: "Great idea! I'll slot it in after the AI section. Want me to have Bubs draft it?",
+      text: "Great idea! I'll slot it in after the AI section. Want me to have Randy draft it?",
     },
     {
       id: "3", from: "human",
@@ -451,12 +451,12 @@ const THREADS: Record<string, Message[]> = {
     {
       id: "2", from: "user",
       senderAvatar: "https://i.pravatar.cc/150?img=24",
-      text: "Bubs for content drafting, Kara for SEO review. Honestly using them both daily at this point.",
+      text: "Randy for content drafting, Kara for SEO review. Honestly using them both daily at this point.",
     },
     {
       id: "3", from: "human",
       senderName: "Lisa Gray", senderAvatar: "https://i.pravatar.cc/150?img=9",
-      text: "Same! Bubs has been a game changer for writing specs. The 'make it punchier' prompt is carrying me 😂",
+      text: "Same! Randy has been a game changer for writing specs. The 'make it punchier' prompt is carrying me 😂",
     },
     {
       id: "4", from: "human",
@@ -471,7 +471,7 @@ const THREADS: Record<string, Message[]> = {
     {
       id: "6", from: "user",
       senderAvatar: "https://i.pravatar.cc/150?img=24",
-      text: "Occasionally with sourced stats. I always double-check numbers Bubs cites before publishing.",
+      text: "Occasionally with sourced stats. I always double-check numbers Randy cites before publishing.",
     },
     {
       id: "7", from: "human",
@@ -513,7 +513,7 @@ const THREADS: Record<string, Message[]> = {
     {
       id: "6", from: "human",
       senderName: "Sara Chen", senderAvatar: "https://i.pravatar.cc/150?img=20",
-      text: "Love it! Updating the calendar now. Also — Bubs is going to draft the landing page copy, should be ready by tomorrow 🤖",
+      text: "Love it! Updating the calendar now. Also — Randy is going to draft the landing page copy, should be ready by tomorrow 🤖",
     },
     {
       id: "7", from: "human",
@@ -530,11 +530,11 @@ const THREADS: Record<string, Message[]> = {
     {
       id: "1", from: "user",
       senderAvatar: "https://i.pravatar.cc/150?img=24",
-      text: "Bubs, can you draft an intro for the Q3 blog post?",
+      text: "Randy, can you draft an intro for the Q3 blog post?",
     },
     {
       id: "2", from: "vau",
-      senderName: "Bubs", senderColor: "#2563eb",
+      senderName: "Randy", senderColor: "#2563eb",
       text: "On it! Here's a draft intro:\n\nAs we head into Q3, our focus shifts to deepening customer engagement and scaling what's working. Here's what's on the horizon.",
     },
     {
@@ -544,7 +544,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "4", from: "vau",
-      senderName: "Bubs", senderColor: "#2563eb",
+      senderName: "Randy", senderColor: "#2563eb",
       text: "Q3 is here. Time to double down on what's working and move faster. Here's the plan.",
     },
     {
@@ -554,7 +554,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "6", from: "vau",
-      senderName: "Bubs", senderColor: "#2563eb",
+      senderName: "Randy", senderColor: "#2563eb",
       text: "Sure! Here are three options:\n\n1. \"The Q3 Playbook: AI, Speed, and Content That Converts\"\n2. \"How We're Using AI to Outpace the Competition This Quarter\"\n3. \"Q3 Is Here — Here's Our Content Strategy (And Why AI Is Central to It)\"",
     },
     {
@@ -564,7 +564,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "8", from: "vau",
-      senderName: "Bubs", senderColor: "#2563eb",
+      senderName: "Randy", senderColor: "#2563eb",
       text: "Great choice — it's punchy and keyword-friendly. Good luck with the post! 🚀",
     },
   ],
@@ -586,7 +586,7 @@ const RESPONDERS: Record<string, Responder> = {
   bf:   { from: "human", name: "Jason Park",            avatar: "https://i.pravatar.cc/150?img=33" },
   vw:   { from: "human", name: "Patrick Lee",           avatar: "https://i.pravatar.cc/150?img=60" },
   cm:   { from: "human", name: "Sara Chen",             avatar: "https://i.pravatar.cc/150?img=20" },
-  bubs: { from: "vau",   name: "Bubs",                  color: "#2563eb" },
+  bubs: { from: "vau",   name: "Randy",                  color: "#2563eb" },
   kara: { from: "vau",   name: "Kara the Content Creator", color: "#6B5CE7" },
   eric: { from: "vau",   name: "Eric the Experimenter", color: "#6B5CE7" },
 };
@@ -597,7 +597,7 @@ const REPLIES: Record<string, string[]> = {
   hw:   ["Noted, I'll follow up.", "Sounds good — let me loop in the team.", "Good catch, thanks for flagging.", "Will do!"],
   bw:   ["I'm in!", "Let me check my calendar.", "That works for me.", "Thanks for the heads up."],
   ms:   ["Great idea!", "I was just thinking the same thing.", "Let me pull the numbers on that.", "100% aligned."],
-  pr:   ["Love this direction.", "Can we get Bubs to draft something?", "I'll review by EOD.", "Adding this to the board now."],
+  pr:   ["Love this direction.", "Can we get Randy to draft something?", "I'll review by EOD.", "Adding this to the board now."],
   td:   ["On my radar.", "Will circle back after standup.", "Flagging this for the team.", "Good to know, thanks."],
   ao:   ["Absolutely!", "This is really exciting.", "I can take a first pass at it.", "Let's make it happen."],
   bf:   ["Good update — keeping the thread going.", "Patrick is looking at that now.", "We're on track for launch.", "Let's review together Thursday."],
@@ -1370,7 +1370,7 @@ function BlogReviewPanel({ open, onClose, onWorkInOpal }: { open: boolean; onClo
   type Annotation = { id: string; text: string; top: number; author: string; avatar: string; resolved: boolean };
   const [annotations, setAnnotations] = useState<Annotation[]>([
     { id: "a1", text: "This opening stat is really strong — let's make sure it's sourced.", top: 310, author: "Lisa Gray",     avatar: "https://i.pravatar.cc/150?img=5",  resolved: false },
-    { id: "a2", text: "Bubs → should we call it out by full name on first mention?",           top: 430, author: "Marcus Santos", avatar: "https://i.pravatar.cc/150?img=12", resolved: false },
+    { id: "a2", text: "Randy → should we call it out by full name on first mention?",           top: 430, author: "Marcus Santos", avatar: "https://i.pravatar.cc/150?img=12", resolved: false },
   ]);
   const [activeAnnotationId, setActiveAnnotationId] = useState<string | null>(null);
   const [collapsedAnnotationIds, setCollapsedAnnotationIds] = useState<Set<string>>(new Set(["a1", "a2"]));
@@ -1615,10 +1615,10 @@ function BlogReviewPanel({ open, onClose, onWorkInOpal }: { open: boolean; onClo
               As we move into Q3, the conversation around AI in content marketing has shifted from "should we use it?" to "how do we use it well?" The early excitement has given way to more nuanced questions about quality, authenticity, and long-term brand equity.
             </Text>
             <Text fontSize="md" color="fg.default" style={{ lineHeight: 1.7 }}>
-              Our team has been piloting AI-assisted content workflows for the past two quarters, using Bubs — our in-house content VAU — to accelerate drafting and ideation. The results are promising: we've seen a 40% reduction in first-draft time and a measurable improvement in content consistency across channels.
+              Our team has been piloting AI-assisted content workflows for the past two quarters, using Randy — our in-house content VAU — to accelerate drafting and ideation. The results are promising: we've seen a 40% reduction in first-draft time and a measurable improvement in content consistency across channels.
             </Text>
             <Text fontSize="md" color="fg.default" style={{ lineHeight: 1.7 }}>
-              But speed isn't the whole story. The most significant gains have come from using AI as a thinking partner rather than a writing replacement. When we ask Bubs to challenge our assumptions or generate alternative angles, we consistently end up with more creative, audience-relevant content.
+              But speed isn't the whole story. The most significant gains have come from using AI as a thinking partner rather than a writing replacement. When we ask Randy to challenge our assumptions or generate alternative angles, we consistently end up with more creative, audience-relevant content.
             </Text>
             <Text fontSize="md" color="fg.default" style={{ lineHeight: 1.7 }}>
               For Q3, we're doubling down on three content pillars: thought leadership, customer stories, and product education. Each has a distinct role in our funnel, and each benefits differently from AI assistance. Thought leadership requires a strong human voice; AI can help with structure and research synthesis. Customer stories need authenticity — AI earns its keep in post-interview editing and SEO optimization.
@@ -1931,7 +1931,7 @@ function BlogReviewPanel({ open, onClose, onWorkInOpal }: { open: boolean; onClo
               disabled={!opalPrompt.trim()}
               style={{ borderRadius: 20, paddingLeft: 10, paddingRight: 12 }}
             >
-              <img src="/opal-orb.png" alt="" width={13} height={13} style={{ display: "inline-block", verticalAlign: "middle", marginRight: 4 }} />
+              <img src="/opal-orb.svg" alt="" width={13} height={13} style={{ display: "inline-block", verticalAlign: "middle", marginRight: 4 }} />
               Send to Opal
             </Button>
           </Box>
@@ -2014,7 +2014,7 @@ function BlogReviewPanel({ open, onClose, onWorkInOpal }: { open: boolean; onClo
             }}
             style={{ borderRadius: 20, paddingLeft: 10, paddingRight: 12, gap: 6 }}
           >
-            <img src="/opal-orb.png" alt="" width={13} height={13} style={{ display: "inline-block", verticalAlign: "middle", marginRight: 4 }} />
+            <img src="/opal-orb.svg" alt="" width={13} height={13} style={{ display: "inline-block", verticalAlign: "middle", marginRight: 4 }} />
             Work with Opal
           </Button>
         </Box>

@@ -30,7 +30,7 @@ export function useOpalNav() {
 
 	return [
 		{
-			label: isCompactIm ? "Chats" : "Opal Chats",
+			label: isCompactIm ? "Chat" : "Chat",
 			url: "/opal",
 			highlight: "/opal",
 			icon: isCompactIm ? (
@@ -66,10 +66,10 @@ export function useOpalNav() {
 			customLayout: true,
 		},
 		{
-			label: imLayout === "B" ? "Messages" : imLayout === "C" ? "Spaces" : "Threads",
-			url: `/opal/im?layout=${imLayout}`,
-			highlight: "/opal/im",
-			icon: isCompactIm ? <IconUserGroup /> : <IconComments />,
+			label: "Team Messages",
+			url: "/opal/messages",
+			highlight: "/opal/messages",
+			icon: <IconComments />,
 			customLayout: true,
 		},
 		{
@@ -81,7 +81,7 @@ export function useOpalNav() {
 			hidePageHeader: true,
 		},
 		{
-			label: "Activities",
+			label: "Notifications",
 			url: "/opal/notifications",
 			highlight: "/opal/notifications",
 			icon: <IconBell />,

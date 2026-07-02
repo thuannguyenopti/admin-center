@@ -1,13 +1,15 @@
 "use client";
 
-import { Badge, Box, Button, Separator } from "@optiaxiom/react";
+import { Badge, Box, Button, Separator, Tooltip } from "@optiaxiom/react";
 import { Text } from "../Text";
 import {
   IconCheck,
   IconCode,
   IconArrowUpRightFromSquare,
-  IconSparkles,
   IconListCheck,
+  IconMessageLines,
+  IconThumbtack,
+  IconEllipsisSolid,
 } from "@optiaxiom/icons";
 import { useEffect, useState } from "react";
 
@@ -103,10 +105,45 @@ export function ApprovalActionCard({
 
   return (
     <Box
-      rounded="lg"
-      onClick={onPreview}
+      style={{ position: "relative" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+    >
+      {/* Hover action bar */}
+      {hovered && (
+        <Box
+          rounded="lg"
+          style={{
+            position: "absolute", top: -44, right: 0,
+            display: "flex", alignItems: "center", gap: 1,
+            background: "var(--ax-colors-bg-default)",
+            border: "1px solid var(--ax-colors-border-secondary)",
+            padding: "5px 7px", zIndex: 10,
+          }}
+        >
+          {["👍", "❤️", "😂"].map(e => (
+            <Tooltip key={e} content={e} delayDuration={300}>
+              <Box rounded="sm" style={{ cursor: "pointer", fontSize: 18, padding: "2px 4px", lineHeight: 1 }}>{e}</Box>
+            </Tooltip>
+          ))}
+          <Tooltip content="Add reaction" delayDuration={300}>
+            <Box rounded="sm" style={{ cursor: "pointer", fontSize: 18, padding: "2px 4px", color: "var(--ax-colors-fg-tertiary)", lineHeight: 1 }}>😊</Box>
+          </Tooltip>
+          <Box style={{ width: 1, height: 20, background: "var(--ax-colors-border-secondary)", margin: "0 3px", flexShrink: 0 }} />
+          <Tooltip content="Reply in thread" delayDuration={300}>
+            <Button size="sm" appearance="subtle" style={{ width: 30, height: 30, padding: 0 }} icon={<IconMessageLines size={15} />} />
+          </Tooltip>
+          <Tooltip content="Pin message" delayDuration={300}>
+            <Button size="sm" appearance="subtle" style={{ width: 30, height: 30, padding: 0 }} icon={<IconThumbtack size={15} />} />
+          </Tooltip>
+          <Tooltip content="More options" delayDuration={300}>
+            <Button size="sm" appearance="subtle" style={{ width: 30, height: 30, padding: 0 }} icon={<IconEllipsisSolid size={15} />} />
+          </Tooltip>
+        </Box>
+      )}
+    <Box
+      rounded="lg"
+      onClick={onPreview}
       style={{
         border: selected
           ? "1.5px solid var(--ax-colors-border-accent)"
@@ -166,9 +203,6 @@ export function ApprovalActionCard({
             >
               {authorName}
             </Text>
-            {isVAU && (
-              <IconSparkles style={{ width: 10, height: 10, color: "var(--ax-colors-fg-secondary)", flexShrink: 0 }} />
-            )}
           </Box>
           {badge && (
             <Badge
@@ -295,6 +329,7 @@ export function ApprovalActionCard({
           </Text>
         )}
       </Box>
+    </Box>
     </Box>
   );
 }

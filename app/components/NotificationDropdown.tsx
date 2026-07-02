@@ -2,7 +2,7 @@
 
 import { Box, Button, Text, Badge } from "@optiaxiom/react";
 import { DetailsPanel, DetailsPanelHeader, DetailsPanelBody } from "@optiaxiom/react/unstable";
-import { IconBell, IconX, IconChecks, IconSpeakerphone, IconLoader2, IconPlug, IconUsers, IconTicket } from "@tabler/icons-react";
+import { IconBell, IconX, IconChecks, IconSpeakerphone, IconLoader2, IconPlug, IconUsers, IconTicket, IconMessage, IconAt, IconMessages } from "@tabler/icons-react";
 import { IconCircleExclamation, IconTriangleExclamation, IconSpinner, IconFileLines, IconCircleCheck as AxiomCircleCheck, IconAgent } from "@optimizely/axiom-icons";
 import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { mockNotifications, getUnreadCount, type Notification } from "@/app/opal/notifications/mockData";
@@ -26,32 +26,8 @@ function CompactNotificationCard({ notification, onDismiss, readIds }: { notific
     const isUnread = notification.status === "unread" && !readIds.has(notification.id);
     const [isHovered, setIsHovered] = useState(false);
 
-    // VAU avatar map — agent ID → avatar path (using existing vau-*.png paths)
-    const VAU_AVATARS: Record<string, string> = {
-        "vau-frank":   "/avatars/avatar-4.png",
-        "vau-tony":    "/avatars/vau-tony.png",
-        "vau-henry":   "/avatars/vau-henry.png",
-        "vau-poppy":   "/avatars/vau-poppy.png",
-        "vau-kerby":   "/avatars/vau-kerby.png",
-        "vau-jonas":   "/avatars/vau-jonas.png",
-        "vau-mayling": "/avatars/vau-mayling.png",
-    };
-
     // Status icon by notification type (matches Figma spec)
     const getAvatar = () => {
-        // VAU notifications — show the agent's avatar image
-        if (notification.agentId && VAU_AVATARS[notification.agentId]) {
-            return (
-                <Box pt="2" style={{ flexShrink: 0 }}>
-                    <img
-                        src={VAU_AVATARS[notification.agentId]}
-                        alt={notification.agentName ?? "VAU"}
-                        style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover", display: "block" }}
-                    />
-                </Box>
-            );
-        }
-
         let icon;
         switch (notification.type) {
             case "agent_execution_chat":
@@ -110,6 +86,15 @@ function CompactNotificationCard({ notification, onDismiss, readIds }: { notific
             case "system_announcement":
             case "system_maintenance":
                 icon = <IconSpeakerphone size={16} color="var(--ax-colors-fg-information)" />;
+                break;
+            case "im_new_message":
+                icon = <IconMessage size={16} color="var(--ax-colors-fg-tertiary)" />;
+                break;
+            case "im_mention":
+                icon = <IconAt size={16} color="var(--ax-colors-fg-tertiary)" />;
+                break;
+            case "im_thread_reply":
+                icon = <IconMessages size={16} color="var(--ax-colors-fg-tertiary)" />;
                 break;
             default:
                 icon = <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
@@ -174,6 +159,16 @@ function CompactNotificationCard({ notification, onDismiss, readIds }: { notific
                     <Text fontSize="sm" color="fg.tertiary" className="line-clamp-2">
                         {notification.message}
                     </Text>
+
+                    {(notification.type === "im_new_message" || notification.type === "im_mention" || notification.type === "im_thread_reply") && notification.deepLink && (
+                        <Box pt="4" onClick={(e) => e.stopPropagation()}>
+                            <a href={notification.deepLink} style={{ textDecoration: "none" }}>
+                                <Button size="sm" appearance="inverse">
+                                    Reply
+                                </Button>
+                            </a>
+                        </Box>
+                    )}
 
                     {notification.approvalRequired && (
                         <Box display="flex" gap="8" pt="8">
