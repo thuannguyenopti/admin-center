@@ -446,7 +446,7 @@ const sourceAvatar: Record<string, string> = {
     "Henry": "/avatars/vau-henry.png",
     "Kerby": "/avatars/vau-kerby.png",
     "Jonas": "/avatars/vau-jonas.png",
-    "Opal chat": "/opal-orb.png",
+    "Opal chat": "/opal-orb.svg",
 };
 
 function AgentCell({ name }: { name: string }) {

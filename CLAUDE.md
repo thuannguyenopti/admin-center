@@ -163,6 +163,10 @@ Configured in `.mcp.json`:
 
 Use the shared data-viz palette (see `app/DATA_VISUALIZATION_COLORS.md`) for charts, legends, heatmaps. Do not use Axiom UI tokens (`bg.*`, `fg.*`) for data-encoding. Live reference: `/data-viz-colors`.
 
+## Cross-Surface Consistency
+
+Before building any UI pattern (row actions, dismiss controls, empty states, modals, etc.), grep the codebase for existing instances of that pattern and replicate them exactly — same components, same props, same layout. When a pattern needs to change (QA fix, redesign), search for every surface it appears on and update all of them in the same pass. Never let two placements of the same pattern diverge.
+
 ## No Monolithic Files
 
 Before writing code, check if files you're touching are monolithic (300+ lines, multiple concerns). If so, split them first. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for the splitting guide.

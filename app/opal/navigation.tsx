@@ -84,6 +84,14 @@ export function useOpalNav() {
 			customLayout: true,
 		},
 		{
+			label: "Team Messages",
+			url: "/opal/messages",
+			highlight: "/opal/messages",
+			additionalHighlights: ["/opal/messages"],
+			icon: <IconComments filled={active("/opal/messages")} />,
+			customLayout: true,
+		},
+		{
 			label: "Virtual Teammates",
 			url: "/opal/virtual-teammates/manage",
 			highlight: "/opal/virtual-teammates/manage",
@@ -97,7 +105,7 @@ export function useOpalNav() {
 			icon: <IconAgent filled={active("/opal/agents")} />,
 			customLayout: true,
 		},
-		{ label: "  " },
+		{ label: "  " },
 		{
 			label: "Activities",
 			url: "/opal/notifications",

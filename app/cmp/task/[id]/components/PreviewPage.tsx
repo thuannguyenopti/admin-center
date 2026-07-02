@@ -36,7 +36,7 @@ export function PreviewPage({
 							<Text color="fg.secondary" fontSize="2xl">Updated on Jun 9, 2020</Text>
 						</Box>
 						<Box alignItems="center" display="flex" style={{ gap: 18 }}>
-							<img alt="brand" height={28} src="/opal-orb.png" width={28} />
+							<img alt="brand" height={28} src="/opal-orb.svg" width={28} />
 							<Box alignItems="center" display="flex" gap="8">
 								<IconCopy size={16} color="var(--ax-colors-fg-secondary)" />
 								<Text fontSize="lg">Share</Text>

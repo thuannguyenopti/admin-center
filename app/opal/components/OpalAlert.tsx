@@ -73,7 +73,7 @@ export function OpalAlert({
             justifyContent: isCTA ? "center" : "flex-start",
           }}
         >
-          <Image src="/opal-orb.png" alt="" width={20} height={20} />
+          <Image src="/opal-orb.svg" alt="" width={20} height={20} />
         </Box>
 
         {/* Text area */}

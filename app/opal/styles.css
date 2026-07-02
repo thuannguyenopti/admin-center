@@ -1,5 +1,17 @@
 /* Opal-specific styles. Imported by app/globals.css. */
 
+/* Message highlight pulse — used when navigating to a search result */
+@keyframes msgHighlight {
+  0%   { background: transparent; }
+  15%  { background: var(--ax-colors-bg-success-subtle); }
+  70%  { background: var(--ax-colors-bg-success-subtle); }
+  100% { background: transparent; }
+}
+.msg-highlight {
+  animation: msgHighlight 1.8s ease forwards;
+  border-radius: 8px;
+}
+
 /* Opal Generate button: sparkle icon turns brand green on hover (details panel + modals) */
 .opalGenerateButton:hover svg {
 	color: var(--ax-colors-fg-accent);

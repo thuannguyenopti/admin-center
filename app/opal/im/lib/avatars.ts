@@ -8,7 +8,7 @@ const HUMAN_AVATAR_MAP: Record<string, string> = {
   frank: "/avatars/avatar-4.png",
   jamie: "/avatars/avatar-3.png",
   "mary-anne": "/avatars/avatar-2.png",
-  "opal-bot": "/opal-orb.png",
+  "opal-bot": "/opal-orb.svg",
 };
 
 export function avatarFor(userId: string): string | undefined {

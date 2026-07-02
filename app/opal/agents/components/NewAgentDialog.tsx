@@ -385,7 +385,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                         </Button>
                                         <Button
                                             appearance="primary-opal"
-                                            icon={<Image src="/opal-orb.png" alt="Opal" width={18} height={18} />}
+                                            icon={<Image src="/opal-orb.svg" alt="Opal" width={18} height={18} />}
                                             onClick={() => setStep("designing")}
                                         >
                                             Generate Agent
@@ -406,7 +406,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                     >
                                         {/* Header */}
                                         <Box display="flex" alignItems="center" gap="8" mb="12">
-                                            <img src="/opal-orb.png" alt="Opal" width={16} height={16} style={{ flexShrink: 0 }} />
+                                            <img src="/opal-orb.svg" alt="Opal" width={16} height={16} style={{ flexShrink: 0 }} />
                                             <Text fontWeight="500" fontSize="md" color="fg.default">
                                                 Start with the following agents and fine tune them for your team
                                             </Text>
@@ -1054,7 +1054,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                             </Button>
                             <Button
                                 appearance="primary-opal"
-                                icon={<Image src="/opal-orb.png" alt="Opal" width={18} height={18} />}
+                                icon={<Image src="/opal-orb.svg" alt="Opal" width={18} height={18} />}
                                 onClick={() => setStep("building")}
                             >
                                 Build Agent

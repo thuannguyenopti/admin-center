@@ -3976,7 +3976,7 @@ function FloatingSelectionToolbar({
           onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
           onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1.02)"; }}
         >
-          <img src="/opal-orb.png" alt="" width={13} height={13} style={{ display: "block", flexShrink: 0, verticalAlign: "middle" }} />
+          <img src="/opal-orb.svg" alt="" width={13} height={13} style={{ display: "block", flexShrink: 0, verticalAlign: "middle" }} />
           Enhance with Opal
         </button>
       </Tooltip>
