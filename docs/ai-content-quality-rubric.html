@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Generated Content Quality Rubric — Opal</title>
+  <style>
+    :root {
+      --bg: #fff;
+      --fg: #1a1a2e;
+      --fg-secondary: #4f576e;
+      --border: #e2e4e9;
+      --accent: #6366f1;
+      --green: #16a34a;
+      --yellow: #ca8a04;
+      --red: #dc2626;
+      --green-bg: #f0fdf4;
+      --yellow-bg: #fefce8;
+      --red-bg: #fef2f2;
+      --header-bg: #f8f9fb;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--fg);
+      background: var(--bg);
+      line-height: 1.6;
+      padding: 48px 32px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 40px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--fg-secondary);
+      font-size: 15px;
+      max-width: 720px;
+    }
+
+    .meta {
+      display: flex;
+      gap: 24px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--fg-secondary);
+    }
+
+    .meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .meta strong { color: var(--fg); font-weight: 600; }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 40px 0 8px;
+    }
+
+    h2 + p {
+      color: var(--fg-secondary);
+      font-size: 14px;
+      margin-bottom: 20px;
+      max-width: 720px;
+    }
+
+    .scoring-guide {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .scoring-guide .level {
+      flex: 1;
+      min-width: 180px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 13px;
+    }
+
+    .scoring-guide .level h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .scoring-guide .level.excellent { border-left: 4px solid var(--green); background: var(--green-bg); }
+    .scoring-guide .level.acceptable { border-left: 4px solid var(--yellow); background: var(--yellow-bg); }
+    .scoring-guide .level.poor { border-left: 4px solid var(--red); background: var(--red-bg); }
+
+    /* Rubric table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-bottom: 40px;
+    }
+
+    thead th {
+      background: var(--header-bg);
+      text-align: left;
+      padding: 12px 16px;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--fg-secondary);
+      border-bottom: 2px solid var(--border);
+    }
+
+    thead th:first-child { border-radius: 8px 0 0 0; }
+    thead th:last-child  { border-radius: 0 8px 0 0; }
+
+    thead th.col-dimension { width: 15%; }
+    thead th.col-criterion { width: 17%; }
+    thead th.col-level     { width: 22.6%; }
+
+    tbody td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tbody td:first-child {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    tbody td:nth-child(2) {
+      font-weight: 500;
+    }
+
+    tbody td.excellent { background: var(--green-bg); }
+    tbody td.acceptable { background: var(--yellow-bg); }
+    tbody td.poor { background: var(--red-bg); }
+
+    tbody tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+    tbody tr:last-child td:last-child  { border-radius: 0 0 8px 0; }
+
+    td ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    td li {
+      margin-bottom: 4px;
+      line-height: 1.5;
+    }
+
+    td li:last-child { margin-bottom: 0; }
+
+    /* Dimension header rows */
+    .dimension-header td {
+      background: var(--header-bg) !important;
+      font-weight: 700 !important;
+      color: var(--fg) !important;
+      font-size: 15px;
+      border-bottom: 2px solid var(--border);
+      padding: 16px;
+    }
+
+    /* Weight badge */
+    .weight {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* Threshold box */
+    .threshold-box {
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin: 32px 0;
+    }
+
+    .threshold-box h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .threshold-box ul {
+      padding-left: 20px;
+    }
+
+    .threshold-box li {
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .threshold-box li strong { color: var(--accent); }
+
+    /* Footer */
+    footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--fg-secondary);
+    }
+
+    footer p { margin-bottom: 8px; }
+
+    @media (max-width: 900px) {
+      body { padding: 24px 16px; }
+      table { font-size: 13px; }
+      thead th, tbody td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>AI-Generated Content Quality Rubric</h1>
+  <p>
+    A shared evaluation framework for assessing whether Opal-generated pages meet
+    production quality. Based on analytic rubric design principles
+    (Allen&nbsp;&amp;&nbsp;Tanner,&nbsp;2006) with domain-specific criteria for the
+    Optimizely design system, brand packs, and content standards.
+  </p>
+  <div class="meta">
+    <span><strong>Scope:</strong> Opal page generation</span>
+    <span><strong>Version:</strong> 1.0</span>
+    <span><strong>Date:</strong> 2026-07-03</span>
+    <span><strong>Dimensions:</strong> 5</span>
+    <span><strong>Criteria:</strong> 18</span>
+  </div>
+</header>
+
+<!-- ───────── Scoring guide ───────── -->
+<h2>Scoring Levels</h2>
+<p>Each criterion is scored on a three-point scale. Descriptors are cumulative: "Excellent" assumes all "Acceptable" conditions are also met.</p>
+
+<div class="scoring-guide">
+  <div class="level excellent">
+    <h3>3 — Excellent</h3>
+    Ready to publish. Indistinguishable from hand-crafted content by a senior designer or editor.
+  </div>
+  <div class="level acceptable">
+    <h3>2 — Acceptable</h3>
+    Usable with minor edits. Meets baseline requirements but has noticeable gaps a reviewer would flag.
+  </div>
+  <div class="level poor">
+    <h3>1 — Poor</h3>
+    Requires significant rework. Structural, visual, or content issues that would block publication.
+  </div>
+</div>
+
+
+<!-- ───────── RUBRIC TABLE ───────── -->
+<h2>Quality Rubric</h2>
+<p>
+  18 criteria grouped into 5 dimensions. Weights reflect relative importance to overall page quality.
+  A page must meet the pass threshold defined below to be considered "good quality."
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th class="col-dimension">Dimension</th>
+      <th class="col-criterion">Criterion</th>
+      <th class="col-level">3 — Excellent</th>
+      <th class="col-level">2 — Acceptable</th>
+      <th class="col-level">1 — Poor</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <!-- ═══ D1: Visual & Layout Correctness ═══ -->
+    <tr class="dimension-header">
+      <td colspan="5">1. Visual &amp; Layout Correctness <span class="weight">30%</span></td>
+    </tr>
+
+    <tr>
+      <td rowspan="4">Visual &amp; Layout</td>
+      <td>Spatial consistency</td>
+      <td class="excellent">
+        <ul>
+          <li>All spacing uses Axiom tokens (4, 8, 12, 16, 20, 24, 32)</li>
+          <li>Consistent vertical rhythm across sections</li>
+          <li>No pixel-level misalignment between siblings</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Most spacing uses tokens; 1&ndash;2 arbitrary values</li>
+          <li>Minor inconsistency in section gaps</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Hardcoded pixel values throughout</li>
+          <li>Irregular spacing with no visible rhythm</li>
+          <li>Overlapping or clipped elements</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Responsive behavior</td>
+      <td class="excellent">
+        <ul>
+          <li>Layout reflows cleanly from desktop to mobile</li>
+          <li>Grid uses <code>minmax()</code> and <code>auto-fill</code>/<code>auto-fit</code></li>
+          <li>No horizontal scroll at any breakpoint</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Desktop looks correct; mobile has minor overflow or tight spacing</li>
+          <li>Breakpoints exist but some elements don't resize well</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Fixed-width layout that breaks below 768px</li>
+          <li>Content overflows or is inaccessible on smaller screens</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Visual parity</td>
+      <td class="excellent">
+        <ul>
+          <li>Generated page is indistinguishable from an existing hand-built page in the same product area</li>
+          <li>Matches established hero/card/section patterns in the codebase</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Recognizably "Opal" but with stylistic inconsistencies (e.g., wrong border radius, shadow level)</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Looks like a generic template; does not resemble existing Opal pages</li>
+          <li>Mixes design languages or introduces novel patterns</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Color &amp; theming</td>
+      <td class="excellent">
+        <ul>
+          <li>All colors use semantic tokens (<code>fg.*</code>, <code>bg.*</code>, <code>border.*</code>)</li>
+          <li>Opal gradients use <code>--opal-gradient-*</code> custom properties</li>
+          <li>Dark mode renders correctly via <code>[data-theme="dark"]</code></li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Mostly semantic tokens; 1&ndash;2 hardcoded hex values</li>
+          <li>Dark mode partially works but some elements are unreadable</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Hardcoded hex colors throughout</li>
+          <li>No dark mode support or contrast failures</li>
+        </ul>
+      </td>
+    </tr>
+
+    <!-- ═══ D2: Component Composition ═══ -->
+    <tr class="dimension-header">
+      <td colspan="5">2. Component Composition <span class="weight">25%</span></td>
+    </tr>
+
+    <tr>
+      <td rowspan="4">Component Composition</td>
+      <td>Axiom component usage</td>
+      <td class="excellent">
+        <ul>
+          <li>Every interactive and layout element uses an Axiom component (Button, Input, Box, Text, Badge, etc.)</li>
+          <li>No raw HTML <code>&lt;button&gt;</code>, <code>&lt;input&gt;</code>, <code>&lt;select&gt;</code>, or <code>&lt;div&gt;</code> for product UI</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Core elements use Axiom; 1&ndash;2 instances of raw HTML for edge cases</li>
+          <li>All interactive controls are Axiom</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Significant use of raw HTML elements alongside Axiom</li>
+          <li>Custom-styled buttons or inputs that bypass the design system</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Prop correctness</td>
+      <td class="excellent">
+        <ul>
+          <li>Props match Axiom API (e.g., <code>appearance="primary"</code>, <code>size="md"</code>)</li>
+          <li>No invalid prop values (e.g., <code>size="sm"</code> on Input)</li>
+          <li>Icons from correct package (<code>@optiaxiom/icons</code> for Opal)</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Props are valid but not optimal (e.g., missing <code>appearance</code>, default sizes everywhere)</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Invalid prop values causing console errors or visual breakage</li>
+          <li>Wrong icon package or missing icons</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Pattern adherence</td>
+      <td class="excellent">
+        <ul>
+          <li>Uses established codebase patterns: <code>usePersistentState</code>, <code>useLayout</code>, <code>Field</code> wrappers, <code>Menu</code> with options prop</li>
+          <li>No legacy patterns (e.g., <code>DropdownMenu</code> instead of <code>Menu</code>)</li>
+          <li>Follows <code>Box asChild</code> pattern where needed (no <code>Box as="span"</code>)</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Most patterns correct; one legacy or anti-pattern present</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Introduces new patterns that conflict with established conventions</li>
+          <li>Hydration errors from incorrect nesting (e.g., <code>&lt;div&gt;</code> inside <code>&lt;p&gt;</code>)</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Accessibility</td>
+      <td class="excellent">
+        <ul>
+          <li>All interactive elements have accessible names (labels, aria-label)</li>
+          <li>Keyboard navigable; focus order matches visual order</li>
+          <li>Sufficient color contrast (WCAG AA)</li>
+          <li>Images have meaningful alt text</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Most elements accessible; 1&ndash;2 missing labels on icon-only buttons</li>
+          <li>Color contrast passes in light mode</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Multiple unlabeled controls or non-focusable interactive elements</li>
+          <li>Color-only information with no text fallback</li>
+        </ul>
+      </td>
+    </tr>
+
+    <!-- ═══ D3: Structural Consistency ═══ -->
+    <tr class="dimension-header">
+      <td colspan="5">3. Structural Consistency <span class="weight">15%</span></td>
+    </tr>
+
+    <tr>
+      <td rowspan="3">Structural Consistency</td>
+      <td>Section completeness</td>
+      <td class="excellent">
+        <ul>
+          <li>All required sections present (hero, body, CTA) per template specification</li>
+          <li>Section order matches template definition</li>
+          <li>No empty or placeholder sections</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Required sections present; order slightly rearranged but still logical</li>
+          <li>One optional section missing</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Missing required sections (e.g., no CTA, no hero)</li>
+          <li>Placeholder text like "Lorem ipsum" or "[Insert headline]"</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Template fidelity</td>
+      <td class="excellent">
+        <ul>
+          <li>Aspect ratio matches template spec (1:1, 4:5, 16:9, etc.)</li>
+          <li>Grid column count and layout matches template</li>
+          <li>Component types match template slots (e.g., image where image expected)</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Overall shape matches; minor deviations in grid or ratio</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Output bears little resemblance to the selected template</li>
+          <li>Wrong aspect ratio or completely different layout structure</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Information hierarchy</td>
+      <td class="excellent">
+        <ul>
+          <li>Clear heading levels (H1 &rarr; H2 &rarr; H3) with no skips</li>
+          <li>Visual weight matches importance: primary CTA is prominent, secondary actions are subtle</li>
+          <li>Content flows logically top-to-bottom</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Heading hierarchy present but one level skipped</li>
+          <li>CTA visible but not obviously the primary action</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>No heading hierarchy; all text at same visual weight</li>
+          <li>CTA buried or competing with secondary actions</li>
+        </ul>
+      </td>
+    </tr>
+
+    <!-- ═══ D4: Content Relevance ═══ -->
+    <tr class="dimension-header">
+      <td colspan="5">4. Content Relevance <span class="weight">15%</span></td>
+    </tr>
+
+    <tr>
+      <td rowspan="4">Content Relevance</td>
+      <td>Topical accuracy</td>
+      <td class="excellent">
+        <ul>
+          <li>All copy is on-topic and specific to the product/feature described</li>
+          <li>No hallucinated features, pricing, or capabilities</li>
+          <li>Statistics and claims are plausible and internally consistent</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Mostly on-topic; 1&ndash;2 vague or generic sentences that could apply to any product</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Fabricated product details or features that don't exist</li>
+          <li>Generic filler text unrelated to the intended topic</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Content depth</td>
+      <td class="excellent">
+        <ul>
+          <li>Body sections contain substantive detail (not just headlines)</li>
+          <li>Feature descriptions include benefit statements</li>
+          <li>Word count appropriate for channel (e.g., &ge;150 words for web pages)</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Content is present but thin; some sections feel like outlines</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Headline-only content with no supporting detail</li>
+          <li>Significantly under target word count</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Channel appropriateness</td>
+      <td class="excellent">
+        <ul>
+          <li>Tone, length, and format match the target channel (Social, Email, Web, Paid)</li>
+          <li>Social: concise, hook-driven. Email: scannable, CTA-focused. Web: detailed, SEO-aware</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Broadly appropriate but some channel conventions missed (e.g., email is too long)</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Content written for wrong channel (e.g., social-length copy on a landing page)</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Localization readiness</td>
+      <td class="excellent">
+        <ul>
+          <li>No hardcoded strings that would block i18n</li>
+          <li>Date/number formats are locale-neutral or parameterized</li>
+          <li>Text fits containers at 130% expansion (typical for DE/FR translations)</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Most strings externalizable; a few inline hardcoded labels</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Strings baked into layout with no extraction path</li>
+          <li>Tight containers that overflow with longer translations</li>
+        </ul>
+      </td>
+    </tr>
+
+    <!-- ═══ D5: Brand Alignment ═══ -->
+    <tr class="dimension-header">
+      <td colspan="5">5. Brand Alignment <span class="weight">15%</span></td>
+    </tr>
+
+    <tr>
+      <td rowspan="3">Brand Alignment</td>
+      <td>Tone &amp; voice</td>
+      <td class="excellent">
+        <ul>
+          <li>Copy embodies all tone keywords defined in the Brand Pack (e.g., "Bold", "Energetic")</li>
+          <li>Follows voice rules: active verbs, second person, outcome-led</li>
+          <li>Avoids all "avoid" examples from the tone config (no jargon, no inflated AI claims)</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Tone is broadly correct but misses 1&ndash;2 keyword dimensions</li>
+          <li>Occasional passive voice or feature-led (not outcome-led) phrasing</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Tone contradicts brand pack (e.g., corporate and stiff when pack says "Bold")</li>
+          <li>Uses explicitly flagged "avoid" phrases</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Visual brand</td>
+      <td class="excellent">
+        <ul>
+          <li>Colors match Brand Pack palette (primary, secondary, accent applied correctly)</li>
+          <li>Typography uses configured heading + body fonts</li>
+          <li>Logo/wordmark present in correct position per brand brief</li>
+          <li>Assets (photos, icons) are from the Brand Pack asset library</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Primary color correct; secondary/accent slightly off</li>
+          <li>Logo present but placement deviates from brief</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Colors unrelated to brand pack</li>
+          <li>Wrong or missing logo; off-brand imagery</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Brand brief compliance</td>
+      <td class="excellent">
+        <ul>
+          <li>All explicit rules in the brand brief are followed</li>
+          <li>Content targets only approved channels defined in the Brand Pack</li>
+          <li>Messaging aligns with brand positioning statement</li>
+        </ul>
+      </td>
+      <td class="acceptable">
+        <ul>
+          <li>Brief mostly followed; one non-critical rule missed</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Brand brief rules ignored or contradicted</li>
+          <li>Content published to unapproved channel</li>
+        </ul>
+      </td>
+    </tr>
+
+  </tbody>
+</table>
+
+
+<!-- ───────── Pass threshold ───────── -->
+<div class="threshold-box">
+  <h3>Pass / Fail Threshold</h3>
+  <p style="margin-bottom: 12px; font-size: 14px; color: var(--fg-secondary);">
+    A generated page is considered <strong>"good quality"</strong> when all of the following are true:
+  </p>
+  <ul>
+    <li><strong>No criterion scores 1 (Poor)</strong> — any Poor score is a blocking defect that requires rework.</li>
+    <li><strong>Weighted average &ge; 2.5</strong> — calculated as: <code>&sum;(dimension_avg &times; weight)</code>. A page at exactly 2.0 across all dimensions is functional but not publishable without review.</li>
+    <li><strong>All blocking checks pass</strong> — Brand Pack has colors defined, typography configured, and at least one tone keyword (mirrors the existing <code>TestPublishTab</code> gate).</li>
+    <li><strong>Accessibility floor</strong> — no WCAG AA contrast failures, all interactive elements keyboard-reachable.</li>
+  </ul>
+</div>
+
+
+<!-- ───────── How to use ───────── -->
+<h2>How to Use This Rubric</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 20%;">Context</th>
+      <th style="width: 40%;">Method</th>
+      <th style="width: 40%;">Outcome</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Manual review</strong></td>
+      <td>Reviewer scores each of the 18 criteria 1&ndash;3 using the descriptors above. Takes 5&ndash;10 minutes per page.</td>
+      <td>Scorecard with per-dimension averages and overall weighted score. Pages &ge; 2.5 pass; others get a list of specific criteria to fix.</td>
+    </tr>
+    <tr>
+      <td><strong>Automated lint</strong></td>
+      <td>Criteria from dimensions 1&ndash;3 (Visual, Component, Structure) are checkable via AST analysis, Axiom lint rules, and accessibility scanners.</td>
+      <td>CI gate that flags poor-scoring criteria before human review. Reduces manual effort to dimensions 4&ndash;5 (Content, Brand).</td>
+    </tr>
+    <tr>
+      <td><strong>LLM self-evaluation</strong></td>
+      <td>Pass the rubric as a system prompt to Opal. After generation, Opal scores its own output and flags any criterion below 3.</td>
+      <td>Self-improvement loop: Opal re-generates sections that scored 2, surfacing only &ge; 2.5 pages to the human reviewer.</td>
+    </tr>
+    <tr>
+      <td><strong>A/B comparison</strong></td>
+      <td>Score both a hand-built page and an AI-generated version of the same content. Compare per-criterion deltas.</td>
+      <td>Identifies which quality dimensions AI excels at vs. struggles with, informing prompt engineering and template design.</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<footer>
+  <p>
+    <strong>Methodology:</strong> Analytic rubric design based on Allen &amp; Tanner (2006),
+    "Rubrics: Tools for Making Learning Goals and Evaluation Criteria Explicit for Both Teachers and Learners,"
+    <em>CBE&mdash;Life Sciences Education</em>, 5(3), 197&ndash;203.
+    Criteria derived from Optimizely Axiom design system conventions, Opal Brand Pack configuration schema,
+    and existing <code>TestPublishTab</code> validation logic.
+  </p>
+  <p>
+    <strong>Maintenance:</strong> Review and update this rubric quarterly or when Axiom major version changes.
+    Add new criteria only when an existing dimension cannot capture a recurring quality issue.
+  </p>
+</footer>
+
+</body>
+</html>
