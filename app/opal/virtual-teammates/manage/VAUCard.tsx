@@ -9,7 +9,7 @@ import { type VAU } from "@/app/opal/data/vaus";
 
 const CAPTION = {
 	fontFamily: "Roboto Mono, monospace",
-	fontSize: 10,
+	fontSize: 12,
 	fontWeight: 400,
 	lineHeight: "1.25",
 	letterSpacing: "0.36px",
@@ -73,7 +73,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 						style={{ width: "100%", height: "100%", objectFit: "cover" }}
 					/>
 				</Box>
-				<Box display="flex" flexDirection="column" gap="4" style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
+				<Box display="flex" flexDirection="column" style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
 					<Box display="flex" alignItems="start" justifyContent="space-between" gap="8">
 						<Text
 							style={{
@@ -92,7 +92,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 						</Box>
 					</Box>
 					{vau.characterName && (
-						<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>
+						<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", marginTop: 4 }}>
 							{vau.characterName}
 						</span>
 					)}

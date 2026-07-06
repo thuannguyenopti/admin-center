@@ -78,13 +78,12 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 	const vau = VAUS.find((v) => v.id === id);
 
 	const isActivity = pathname?.endsWith("/activity");
-	const isWork = pathname?.endsWith("/work");
 	const isPermissions = pathname?.endsWith("/permissions");
 	const isConnectors = pathname?.endsWith("/connectors");
 	const isResponsibilities = pathname?.endsWith("/responsibilities");
 	const isInteractions = pathname?.endsWith("/interactions");
 	const isSettings = pathname?.endsWith("/settings");
-	const isOverview = !isActivity && !isWork && !isPermissions && !isConnectors && !isSettings && !isResponsibilities && !isInteractions;
+	const isOverview = !isActivity && !isPermissions && !isConnectors && !isSettings && !isResponsibilities && !isInteractions;
 
 	return (
 		<Box display="flex" style={{ height: "100%", overflow: "hidden" }}>
@@ -170,15 +169,10 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 				{/* SUPERVISE */}
 				<SectionLabel>Supervise</SectionLabel>
 				<NavItem
-					label="Overview"
+					label="Work"
 					active={isOverview}
 					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}`)}
 					badge={<Badge intent="danger" variant="subtle" style={{ color: "#A95A77" }}>Needs review</Badge>}
-				/>
-				<NavItem
-					label="Work"
-					active={isWork}
-					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/work`)}
 				/>
 				<NavItem
 					label="Activity"

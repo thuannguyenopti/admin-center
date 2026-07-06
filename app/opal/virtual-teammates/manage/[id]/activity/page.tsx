@@ -67,6 +67,13 @@ const COMPLETED_ITEMS = [
 	{ id: "c12", task: "Follow-ups",     sub: "Q3 campaign brief feedback",         date: "Jun 18", dateIndex: 11, durationMin: 5, outcome: "Thread closed" },
 ];
 
+const KPIS = [
+	{ label: "Time reclaimed", value: "4.5 hrs", sub: "+12% vs last week" },
+	{ label: "Fires prevented", value: "9",       sub: "Across 4 workstreams" },
+	{ label: "Threads closed",  value: "14",      sub: "−4 min avg response time" },
+	{ label: "Commitments tracked", value: "23",  sub: "0% dropped" },
+];
+
 const TIME_FRAME_OPTIONS = ["Past 7 days", "Past 30 days", "Past 90 days", "All time"];
 const COMPLETED_PAGE_SIZE = 5;
 
@@ -162,6 +169,18 @@ export default function VATActivityPage() {
 	const [timeFrame, setTimeFrame] = useState("Past 30 days");
 	const [hoveredBar, setHoveredBar] = useState<string | null>(null);
 
+	function KpiCard({ label, value, sub }: { label: string; value: string; sub: string }) {
+		return (
+			<Box bg="bg.default" style={{ flex: 1, border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+				<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>{label}</span>
+				<Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 28, fontWeight: 900, lineHeight: "1", color: "var(--ax-colors-fg-default)" }}>
+					{value}
+				</Text>
+				<Text fontSize="sm" color="fg.secondary">{sub}</Text>
+			</Box>
+		);
+	}
+
 	function SortIcon({ col }: { col: SortKey }) {
 		if (sortKey !== col) return null;
 		return sortDir === "asc"
@@ -177,6 +196,11 @@ export default function VATActivityPage() {
 			<Text color="fg.secondary" fontSize="md" mb="24">
 				A breakdown of how {name} spends their time.
 			</Text>
+
+			{/* Impact KPIs */}
+			<Box style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }} mb="32">
+				{KPIS.map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}
+			</Box>
 
 			<Tabs defaultValue="upcoming">
 				<TabsList>

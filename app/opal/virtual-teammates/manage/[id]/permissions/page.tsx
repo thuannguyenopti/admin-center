@@ -2,8 +2,8 @@
 
 import { useState, useMemo, Fragment } from "react";
 import { useParams } from "next/navigation";
-import { Badge, Box, Button, Heading, Popover, PopoverContent, PopoverTrigger, Text, Textarea } from "@optiaxiom/react";
-import { IconPen, IconSearch } from "@optiaxiom/icons";
+import { Badge, Box, Button, Heading, Menu, MenuContent, MenuTrigger, Popover, PopoverContent, PopoverTrigger, Text, Textarea } from "@optiaxiom/react";
+import { IconGlobe, IconPen, IconPlus, IconSearch, IconUser, IconUserGroup, IconUsers } from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import Image from "next/image";
 import { VAUS } from "@/app/opal/data/vaus";
@@ -206,23 +206,45 @@ const INITIAL_WORKS_WITH: { name: string; avatar: string | null }[] = [
 	{ name: "Alex Wu",     avatar: null },
 ];
 
-const WORKFLOW_TAG_STYLE: React.CSSProperties = {
-	...CAPTION,
-	fontSize: 10,
-	background: "var(--ax-colors-bg-secondary)",
-	color: "var(--ax-colors-fg-secondary)",
-	padding: "3px 10px",
-	borderRadius: 4,
-	border: "1px solid var(--ax-colors-border-default)",
-	whiteSpace: "nowrap" as const,
+type GuardrailTag = { label: string; snippet: string };
+
+const TIER_TAGS: Record<"principal" | "team" | "org" | "public", GuardrailTag[]> = {
+	principal: [],
+	team: [
+		{ label: "Finances & salary",   snippet: "Do not discuss personal finances, salary, compensation details, or any private financial information." },
+		{ label: "Private convos",       snippet: "Do not share private conversations, personal notes, or confidential 1:1 content." },
+		{ label: "Emails",               snippet: "Do not draft, send, or access email content without explicit approval from the user." },
+		{ label: "Health & personal",    snippet: "Do not discuss personal health, medical history, or private personal matters." },
+		{ label: "Performance reviews",  snippet: "Do not share performance review content, ratings, feedback, or promotion discussions." },
+		{ label: "Calendar details",     snippet: "Do not share calendar contents, meeting details, or scheduling information without approval." },
+		{ label: "Legal matters",        snippet: "Do not discuss legal matters, litigation, compliance issues, or regulatory details." },
+	],
+	org: [
+		{ label: "Internal info",        snippet: "Do not share internal company information, strategies, financial data, or internal communications." },
+		{ label: "Team convos",          snippet: "Do not share team meeting notes, internal discussions, or project communications." },
+		{ label: "Projects",             snippet: "Do not share project details, roadmaps, timelines, or work-in-progress information." },
+		{ label: "Headcount",            snippet: "Do not discuss team headcount, hiring plans, layoffs, or org structure changes." },
+		{ label: "Product roadmap",      snippet: "Do not share unannounced product features, development plans, or roadmap details." },
+		{ label: "Customer data",        snippet: "Do not share customer names, account details, usage data, or any customer-specific information." },
+		{ label: "Partnerships & deals", snippet: "Do not discuss partnership details, vendor relationships, contract terms, or commercial agreements." },
+		{ label: "Financials",           snippet: "Do not share revenue figures, cost data, budgets, or any non-public financial information." },
+	],
+	public: [
+		{ label: "Internal info",    snippet: "Do not share any internal company information. Limit all responses to publicly available information only." },
+		{ label: "Financials",       snippet: "Do not share revenue figures, cost data, or any non-public financial information." },
+		{ label: "Personnel",        snippet: "Do not discuss individual employees, their roles, compensation, or personal information." },
+		{ label: "Strategic plans",  snippet: "Do not share business strategies, competitive intelligence, acquisition plans, or future direction." },
+		{ label: "Unreleased work",  snippet: "Do not reference unreleased products, features, campaigns, or content." },
+	],
 };
+
 
 
 // ─── Guardrails ──────────────────────────────────────────────────────────────
 
 type TierId = "principal" | "team" | "org" | "public";
 
-type TierState = { rules: string };
+type TierState = { rules: string; tags: string[] };
 
 type TierConfig = {
 	id: TierId;
@@ -230,26 +252,37 @@ type TierConfig = {
 	accessLabel: string;
 	bodyText?: string;
 	readOnly: boolean;
+	icon: React.ReactNode;
 };
 
 const TIER_CONFIGS: TierConfig[] = [
 	{
 		id: "principal",
-		label: "Principal",
+		label: "Primary user",
 		accessLabel: "Full access — no overrides",
 		bodyText: "Randy shares everything with principals. No blocked topics.",
 		readOnly: true,
+		icon: <IconUser style={{ width: 16, height: 16, flexShrink: 0 }} />,
 	},
-	{ id: "team",   label: "Team member", accessLabel: "Filtered",       readOnly: false },
-	{ id: "org",    label: "Org member",  accessLabel: "Restricted",     readOnly: false },
-	{ id: "public", label: "Public",      accessLabel: "Most restricted", readOnly: false },
+	{ id: "team",   label: "Team member", accessLabel: "Filtered",       readOnly: false, icon: <IconUserGroup style={{ width: 16, height: 16, flexShrink: 0 }} /> },
+	{ id: "org",    label: "Org member",  accessLabel: "Restricted",     readOnly: false, icon: <IconUsers     style={{ width: 16, height: 16, flexShrink: 0 }} /> },
+	{ id: "public", label: "Public",      accessLabel: "Most restricted", readOnly: false, icon: <IconGlobe     style={{ width: 16, height: 16, flexShrink: 0 }} /> },
 ];
 
 const INITIAL_TIER_STATES: Record<TierId, TierState> = {
-	principal: { rules: "" },
-	team:      { rules: "Email content & drafts\nPersonal finances & salary\nPrivate conversations & notes" },
-	org:       { rules: "All internal information\nTeam conversations\nProject details\n\nI can only share publicly available project information." },
-	public:    { rules: "All internal information\n\nI can only share publicly available information." },
+	principal: { rules: "", tags: [] },
+	team: {
+		tags: ["Finances & salary", "Private convos", "Emails"],
+		rules: "Do not discuss personal finances, salary, compensation details, or any private financial information.\nDo not share private conversations, personal notes, or confidential 1:1 content.\nDo not draft, send, or access email content without explicit approval from the user.",
+	},
+	org: {
+		tags: ["Internal info", "Team convos", "Projects"],
+		rules: "Do not share internal company information, strategies, financial data, or internal communications.\nDo not share team meeting notes, internal discussions, or project communications.\nDo not share project details, roadmaps, timelines, or work-in-progress information.\n\nI can only share publicly available project information.",
+	},
+	public: {
+		tags: ["Internal info"],
+		rules: "Do not share any internal company information. Limit all responses to publicly available information only.",
+	},
 };
 
 function GuardrailsSection({ name }: { name: string }) {
@@ -261,7 +294,8 @@ function GuardrailsSection({ name }: { name: string }) {
 	const isDirty =
 		editingTier !== null &&
 		draft !== null &&
-		draft.rules !== savedStates[editingTier].rules;
+		(draft.rules !== savedStates[editingTier].rules ||
+			JSON.stringify(draft.tags) !== JSON.stringify(savedStates[editingTier].tags));
 
 	const startEdit = (tierId: TierId) => {
 		if (editingTier !== null && isDirty) {
@@ -323,25 +357,63 @@ function GuardrailsSection({ name }: { name: string }) {
 						<Box>
 							{/* Row header */}
 							<Box display="flex" alignItems="center" justifyContent="space-between" mb="10">
-								<Box display="flex" flexDirection="column" gap="2">
+								<Box display="flex" alignItems="center" gap="4">
+									<Box style={{ color: "var(--ax-colors-fg-secondary)" }}>{tier.icon}</Box>
 									<Text fontSize="md" color="fg.default" style={{ fontWeight: 500 }}>{tier.label}</Text>
-									</Box>
-								{!tier.readOnly && !isEditing && (
-									<Button
-										appearance="subtle"
-										size="sm"
-										icon={<IconPen />}
-										aria-label={`Edit ${tier.label} guardrails`}
-										onClick={() => startEdit(tier.id)}
-									/>
+								</Box>
+								{!tier.readOnly && (
+									isEditing && TIER_TAGS[tier.id].filter((t) => !(draft?.tags ?? []).includes(t.label)).length > 0 ? (
+										<Menu
+											options={TIER_TAGS[tier.id]
+												.filter((t) => !(draft?.tags ?? []).includes(t.label))
+												.map((tag) => ({
+													label: tag.label,
+													execute: () => setDraft((prev) => prev ? {
+														...prev,
+														tags: [...prev.tags, tag.label],
+														rules: prev.rules ? prev.rules.trim() + "\n" + tag.snippet : tag.snippet,
+													} : prev),
+												}))}
+										>
+											<MenuTrigger asChild>
+												<Button appearance="subtle" size="sm" icon={<IconPlus />}>Add restriction</Button>
+											</MenuTrigger>
+											<MenuContent />
+										</Menu>
+									) : !isEditing ? (
+										<Button
+											appearance="subtle"
+											size="sm"
+											icon={<IconPen />}
+											aria-label={`Edit ${tier.label} guardrails`}
+											onClick={() => startEdit(tier.id)}
+										/>
+									) : null
 								)}
 							</Box>
 
-							{/* Principal — body text */}
+							{/* Body */}
 							{tier.bodyText ? (
 								<Text fontSize="sm" color="fg.tertiary">{tier.bodyText}</Text>
 							) : isEditing ? (
 								<>
+									{/* Current tags — removable (X inside badge) */}
+									{(draft?.tags ?? []).length > 0 && (
+										<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+											{(draft?.tags ?? []).map((label) => (
+												<Badge key={label} intent="danger" variant="subtle" style={{ display: "inline-flex", alignItems: "center", gap: 5, paddingRight: 6 }}>
+													{label}
+													<span
+														onClick={() => setDraft((prev) => prev ? { ...prev, tags: prev.tags.filter((t) => t !== label) } : prev)}
+														style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", opacity: 0.6, lineHeight: 0 }}
+													>
+														<svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+													</span>
+												</Badge>
+											))}
+										</Box>
+									)}
+
 									<Textarea
 										value={draft?.rules ?? ""}
 										onChange={(e) => setDraft((prev) => prev ? { ...prev, rules: e.target.value } : prev)}
@@ -354,11 +426,25 @@ function GuardrailsSection({ name }: { name: string }) {
 									</Box>
 								</>
 							) : (
-								state.rules && (
-									<Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "pre-line" as const }}>
-										{state.rules}
-									</Text>
-								)
+								<>
+									{state.tags.length > 0 && (
+										<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: state.rules ? 10 : 0 }}>
+											{state.tags.map((label) => (
+												<Badge key={label} intent="danger" variant="subtle">{label}</Badge>
+											))}
+										</Box>
+									)}
+									{state.rules && (
+										<Box style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+											{state.rules.split("\n").filter(Boolean).map((line, i) => (
+												<Box key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+													<Box style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--ax-colors-fg-tertiary)", flexShrink: 0, marginTop: 6 }} />
+													<Text fontSize="sm" color="fg.secondary">{line}</Text>
+												</Box>
+											))}
+										</Box>
+									)}
+								</>
 							)}
 						</Box>
 					</Fragment>
@@ -377,8 +463,6 @@ export default function VATPermissionsPage() {
 	const [reportsTo, setReportsTo] = useState(INITIAL_REPORTS_TO);
 	const [worksWith, setWorksWith] = useState(INITIAL_WORKS_WITH);
 
-	const WORKFLOWS = ["Meeting_Prep", "Email_Triage", "CMP/Review_Request", "Notifications"];
-
 	return (
 		<Box style={{ padding: "32px 40px" }}>
 			<Heading level="2" mb="4">Permissions</Heading>
@@ -388,26 +472,22 @@ export default function VATPermissionsPage() {
 
 			{/* People — reports to + works with in one card */}
 			<Box style={CARD}>
-				<Box display="flex" alignItems="start" justifyContent="space-between" mb="20">
-					<Box>
-						<Text style={SECTION_HEADING} mb="4">People</Text>
-						<Text fontSize="sm" color="fg.secondary">Who {name} reports to and collaborates with.</Text>
-					</Box>
-					<AddUserPopover
-						reportsTo={reportsTo}
-						worksWith={worksWith}
-						onAdd={(u, section) => {
-							if (section === "reports-to") setReportsTo((prev) => [...prev, u]);
-							else setWorksWith((prev) => [...prev, u]);
-						}}
-					/>
-				</Box>
-
 				{/* Reports to */}
 				<Box mb="20">
-					<Text fontSize="sm" color="fg.tertiary" style={{ ...CAPTION, marginBottom: 10, display: "block" }}>
-						Reports to
-					</Text>
+					<Box display="flex" alignItems="start" justifyContent="space-between" mb="12">
+						<Box>
+							<Text style={SECTION_HEADING} mb="4">{name} reports to</Text>
+							<Text fontSize="sm" color="fg.secondary">People who can direct {name}&apos;s priorities, review outputs, and approve work before it ships.</Text>
+						</Box>
+						<AddUserPopover
+							reportsTo={reportsTo}
+							worksWith={worksWith}
+							onAdd={(u, section) => {
+								if (section === "reports-to") setReportsTo((prev) => [...prev, u]);
+								else setWorksWith((prev) => [...prev, u]);
+							}}
+						/>
+					</Box>
 					<Box display="flex" alignItems="center" gap="8" style={{ flexWrap: "wrap" }}>
 						{reportsTo.map((u) => (
 							<UserChip key={u.name} user={u} onRemove={() => setReportsTo((prev) => prev.filter((x) => x.name !== u.name))} />
@@ -420,9 +500,10 @@ export default function VATPermissionsPage() {
 
 				{/* Works with */}
 				<Box>
-					<Text fontSize="sm" color="fg.tertiary" style={{ ...CAPTION, marginBottom: 10, display: "block" }}>
-						Works with
-					</Text>
+					<Box mb="12">
+						<Text style={SECTION_HEADING} mb="4">{name} works with</Text>
+						<Text fontSize="sm" color="fg.secondary">Teammates {name} collaborates with, shares updates to, and can receive requests from.</Text>
+					</Box>
 					<Box display="flex" alignItems="center" gap="8" style={{ flexWrap: "wrap" }}>
 						{worksWith.map((u) => (
 							<UserChip key={u.name} user={u} onRemove={() => setWorksWith((prev) => prev.filter((x) => x.name !== u.name))} />
@@ -448,27 +529,7 @@ export default function VATPermissionsPage() {
 				</Box>
 			</Box>
 
-			{/* Workflows */}
-			<Box style={CARD}>
-				<Box display="flex" alignItems="start" justifyContent="space-between" mb="16">
-					<Box>
-						<Text style={SECTION_HEADING} mb="4">{name}&apos;s workflows</Text>
-						<Text fontSize="sm" color="fg.secondary">Tasks that your virtual teammate can run</Text>
-					</Box>
-					<SplitDialog type="workflow" name={name}>
-						<Button appearance="default" size="md" style={{ flexShrink: 0 }}>
-							Install workflow
-						</Button>
-					</SplitDialog>
-				</Box>
-				<Box display="flex" alignItems="center" gap="8" style={{ flexWrap: "wrap" }}>
-					{WORKFLOWS.map((w) => (
-						<Badge key={w} style={{ background: "#E2F5F5", color: "#036988", border: "none" }}>{w}</Badge>
-					))}
-				</Box>
-			</Box>
-
-			{/* Guardrails */}
+{/* Guardrails */}
 			<GuardrailsSection name={name} />
 		</Box>
 	);

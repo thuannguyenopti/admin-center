@@ -229,18 +229,9 @@ export default function VirtualTeammatesPage() {
         flexDirection="column"
         style={{ flex: 1, minHeight: 0, overflowY: "auto", background: "#F9FCF8" }}
       >
-        {/* Iridescent banner */}
-        <Box style={{ width: "100%", height: 161, overflow: "hidden", position: "relative", flexShrink: 0 }}>
-          <img
-            src="/background-opal-new.png"
-            alt=""
-            style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 40%", top: 0, left: 0 }}
-          />
-        </Box>
-
         <Box display="flex" flexDirection="column" style={{ padding: "16px 40px" }}>
-        <Heading level="1" mb="4">Directory</Heading>
-        <Text color="fg.secondary" fontSize="md" mb="12">
+        <Heading level="1" mb="4">Discover teammates</Heading>
+        <Text color="fg.secondary" fontSize="md" mb="32">
           Meet your new favorite coworkers. They do the boring stuff. You get the glory.
         </Text>
 
@@ -269,7 +260,7 @@ export default function VirtualTeammatesPage() {
 
           <TabsContent value="teammates">
             {/* Search + filters */}
-            <Box display="flex" alignItems="center" gap="8" mb="16">
+            <Box display="flex" alignItems="center" gap="8" mb="24">
               <Box style={{ flex: 1, maxWidth: 264 }}>
                 <Input
                   placeholder="Enter name or description"

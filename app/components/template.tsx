@@ -281,7 +281,7 @@ function TemplateContent({
 		.filter(
 			(item: any) =>
 				item?.highlight != null &&
-				(item.exact ? path === item.highlight : path.includes(item.highlight))
+				path.includes(item.highlight)
 		)
 		.sort((a: any, b: any) => b.highlight.length - a.highlight.length)[0];
 	const isCmpTaskDetail = path.startsWith("/cmp/task/");

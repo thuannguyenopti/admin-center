@@ -182,7 +182,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
                 onSelect(vau);
               }}
             >
-              Work with
+              Work together
             </Button>
           </Box>
         </div>
@@ -296,7 +296,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
                 onSelect(vau);
               }}
             >
-              Work with
+              Work together
             </Button>
             <Button
               appearance="default"

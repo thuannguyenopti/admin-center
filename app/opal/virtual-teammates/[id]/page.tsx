@@ -3,7 +3,7 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { Badge, Box, Button, Field, Heading, Input, Text, Tooltip } from "@optiaxiom/react";
-import { IconArrowLeft, IconArrowRight, IconArrowRightArrowLeft, IconCheckCircleSolid, IconChevronDown, IconChevronLeft, IconChevronRight, IconChevronUp, IconCircleInfo, IconFolderBookmark, IconGear, IconMagnifyingGlass, IconPen, IconSparkles, IconUpload, IconUserGroup, IconXmark } from "@optiaxiom/icons";
+import { IconArrowLeft, IconArrowRight, IconCheckCircleSolid, IconChevronDown, IconChevronLeft, IconChevronRight, IconChevronUp, IconCircleInfo, IconFolderBookmark, IconGear, IconMagnifyingGlass, IconPen, IconSparkles, IconUpload, IconUserGroup, IconXmark } from "@optiaxiom/icons";
 import Image from "next/image";
 import { DEFAULT_VAU_EXAMPLES, VAUS, type VAU, type VAUCandidate, type VAUExample } from "@/app/opal/data/vaus";
 import { TOOL_ICONS } from "../tool-icons";
@@ -671,7 +671,6 @@ export default function VAUDetailPage() {
 	const [amaOpen, setAmaOpen] = useState(false);
 	const [activePersonality, setActivePersonality] = useState(0);
 	const [showOnboarding, setShowOnboarding] = useState(() => searchParams?.get("hire") === "true");
-	const [showKeyHandoff, setShowKeyHandoff] = useState(false);
 	const [showToolConnect, setShowToolConnect] = useState(false);
 	const [vauName, setVauName] = useState("");
 	const [connectedTools, setConnectedTools] = useState<Set<string>>(new Set());
@@ -858,7 +857,7 @@ export default function VAUDetailPage() {
 						<Button
 							appearance="subtle"
 							size="lg"
-							onClick={() => { setShowToolConnect(false); setShowOnboarding(true); setShowKeyHandoff(true); }}
+							onClick={() => { setShowToolConnect(false); setShowOnboarding(true); }}
 						>
 							Back
 						</Button>
@@ -1150,78 +1149,8 @@ export default function VAUDetailPage() {
 		const displayAvatarSrc = customAvatar?.src ?? vau.cardImage ?? vau.avatar;
 		const displayAvatarBg = customAvatar?.bg ?? vau.cardBg ?? vau.avatarBg;
 
-		const KeyHandoffOverlay = showKeyHandoff ? (
-			<Box
-				style={{
-					position: "fixed", inset: 0, zIndex: 50,
-					display: "flex", alignItems: "center", justifyContent: "center",
-					backgroundColor: "rgba(57,62,50,0.32)",
-				}}
-			>
-				<Box
-					style={{
-						display: "flex", overflow: "hidden",
-						width: 960, maxWidth: "calc(100vw - 64px)", height: 480,
-						background: "white", borderRadius: 31,
-						border: "1px solid var(--ax-colors-border-default)",
-					}}
-				>
-					{/* Left — copy + actions */}
-					<Box style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-						{/* Main content */}
-						<Box style={{ flex: 1, display: "flex", flexDirection: "column", gap: 43, alignItems: "center", justifyContent: "center", padding: 32 }}>
-							<Box display="flex" flexDirection="column" gap="24" style={{ width: 416 }}>
-								<Text
-									style={{
-										fontFamily: "var(--ax-font-family-headings)",
-										fontSize: 50,
-										fontWeight: 800,
-										lineHeight: "1.04",
-										letterSpacing: "0.5px",
-										color: "#202320",
-										WebkitTextStroke: "1px #202320",
-									}}
-								>
-									Time to hand {displayName} the keys
-								</Text>
-								<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", letterSpacing: "0.32px" }}>
-									Every new teammate gets their own account — {displayName}&apos;s no different. Sign in as {displayName} to connect the tools they&apos;ll use every day.
-								</Text>
-							</Box>
-							<Box style={{ width: 416 }}>
-								<Button
-									appearance="primary"
-									size="lg"
-									icon={<IconArrowRightArrowLeft size={20} />}
-									style={{ width: "100%", justifyContent: "center" }}
-									onClick={() => { setShowKeyHandoff(false); setShowOnboarding(false); setShowToolConnect(true); }}
-								>
-									Sign in as {displayName}
-								</Button>
-							</Box>
-						</Box>
-						{/* Back footer */}
-						<Box style={{ display: "flex", justifyContent: "center", padding: 24, borderTop: "1px solid var(--ax-colors-border-default)" }}>
-							<Button
-								size="lg"
-								icon={<IconArrowLeft size={16} />}
-								onClick={() => setShowKeyHandoff(false)}
-							>
-								Back
-							</Button>
-						</Box>
-					</Box>
-					{/* Right — illustration */}
-					<Box style={{ width: 480, flexShrink: 0, backgroundColor: "#abf542", overflow: "hidden" }}>
-						<Image src="/avatars/keys.png" alt="" width={480} height={480} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-					</Box>
-				</Box>
-			</Box>
-		) : null;
-
 		return (
 			<>
-				{KeyHandoffOverlay}
 				<Box
 					style={{
 						background: "#F9FCF8",
@@ -1322,7 +1251,7 @@ export default function VAUDetailPage() {
 								size="lg"
 								addonAfter={<IconArrowRight size={16} />}
 								disabled={!vauName.trim()}
-								onClick={() => { if (vauName.trim()) setShowKeyHandoff(true); }}
+								onClick={() => { if (vauName.trim()) { setShowOnboarding(false); setShowToolConnect(true); } }}
 							>
 								Next
 							</Button>
