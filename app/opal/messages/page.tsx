@@ -3976,7 +3976,7 @@ function IMMain({
                     )}
                   </Box>
                   {dm.isVAU && (
-                    <Text fontSize="sm" color="fg.tertiary" style={{ fontStyle: "italic" }}>
+                    <Text fontSize="sm" color="fg.tertiary">
                       {isDeactivated ? "This VAU is no longer active" : (dm.role ?? (dm.status === "active" ? "Available" : dm.status === "ooo" ? "Out of Office" : "Offline"))}
                     </Text>
                   )}
