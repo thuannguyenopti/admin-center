@@ -134,7 +134,7 @@ type Message = {
 // ── Mock data ──────────────────────────────────────────────────────────────────
 
 const PRESENCE_COLOR: Record<PresenceStatus, string> = {
-  active: "var(--ax-colors-bg-success)",
+  active: "#22c55e",
   away:   "var(--ax-colors-fg-tertiary)",
   busy:   "var(--ax-colors-fg-tertiary)",
   ooo:    "var(--ax-colors-fg-tertiary)",
@@ -158,7 +158,7 @@ function OOOIndicator({ size, outerBorderColor }: { size: number; outerBorderCol
 
 // Unread/notification dot — always pushed to the far right of its row
 const UNREAD_DOT_STYLE: React.CSSProperties = {
-  width: 8, height: 8, borderRadius: "50%", background: "#22c55e", flexShrink: 0, marginLeft: "auto",
+  width: 8, height: 8, borderRadius: "50%", background: "var(--ax-colors-bg-information)", flexShrink: 0, marginLeft: "auto",
 };
 
 const DMS: DMItem[] = [
@@ -2278,7 +2278,14 @@ function IMSidebar({
                 {results.length === 0 && (
                   <Box px="8" py="8"><Text fontSize="sm" color="fg.tertiary">No messages found</Text></Box>
                 )}
-                {results.map((r, i) => (
+                {(["dm", "group", "channel"] as const).map(type => {
+                  const group = results.filter(r => r.convType === type);
+                  if (group.length === 0) return null;
+                  const label = type === "dm" ? "Direct Messages" : type === "group" ? "Group Chats" : "Channels";
+                  return (
+                    <Box key={type} display="flex" flexDirection="column" gap="4">
+                      <Text style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.08em", color: "var(--ax-colors-fg-tertiary)", padding: "4px 8px 0" }}>{label}</Text>
+                      {group.map((r, i) => (
                   <Box key={`${r.convId}-${r.msg.id}-${i}`} px="8" py="8" rounded="md"
                     style={{ cursor: "pointer", background: "var(--ax-colors-bg-default)", border: "1px solid var(--ax-colors-border-secondary)", marginBottom: 4 }}
                     onClick={() => { if (onHighlightSelect) { onHighlightSelect(r.convId, r.msg.id); } else { onSelect(r.convId); } setGlobalSearch(""); setSidebarSearchVisible(false); }}>
@@ -2314,7 +2321,10 @@ function IMSidebar({
                       </Box>
                     )}
                   </Box>
-                ))}
+                      ))}
+                    </Box>
+                  );
+                })}
               </Box>
             );
           })()
@@ -2345,7 +2355,7 @@ function IMSidebar({
                 </Box>
                 <Text fontSize="md" fontWeight="400" color="fg.default" style={{ flex: 1 }}>{qv.label}</Text>
                 {(quickViewCounts[qv.id] ?? 0) > 0 && (
-                  <Badge intent="warning">{quickViewCounts[qv.id]}</Badge>
+                  <Badge intent="information">{quickViewCounts[qv.id]}</Badge>
                 )}
               </Box>
             ))}
@@ -4165,7 +4175,7 @@ function IMMain({
                     <span>
                       Messages
                       {unreadCount > 0 && selected && (
-                        <Badge intent="warning">{unreadCount}</Badge>
+                        <Badge intent="information">{unreadCount}</Badge>
                       )}
                     </span>
                   </Box>
@@ -4174,7 +4184,7 @@ function IMMain({
                   <Box asChild display="inline-flex" alignItems="center" gap="6">
                     <span>
                       Artifacts
-                      {(isVAU || isGroupWithVAU) && deliverableCount > 0 && <Badge intent="warning">{deliverableCount}</Badge>}
+                      {(isVAU || isGroupWithVAU) && deliverableCount > 0 && <Badge intent="information">{deliverableCount}</Badge>}
                     </span>
                   </Box>
                 </TabsTrigger>
@@ -4183,7 +4193,7 @@ function IMMain({
                     <span>
                       Pins
                       {selected && (pinnedMsgIds[selected]?.length ?? 0) > 0 && (
-                        <Badge intent="warning">{pinnedMsgIds[selected].length}</Badge>
+                        <Badge intent="information">{pinnedMsgIds[selected].length}</Badge>
                       )}
                     </span>
                   </Box>
@@ -4443,7 +4453,7 @@ function IMMain({
                     <Box style={{ maxWidth: 640 }}>
                       <Box display="flex" alignItems="center" gap="8" pb="10">
                         <Text fontSize="xs" fontWeight="500" color="fg.tertiary" style={{ textTransform: "uppercase", letterSpacing: "0.04em" }}>To review</Text>
-                        <Badge intent="warning">{deliverableCount}</Badge>
+                        <Badge intent="information">{deliverableCount}</Badge>
                       </Box>
                       <Box display="flex" flexDirection="column" gap="8">
                         {isVAU && selected && (VAU_DELIVERABLES[selected] ?? []).filter(d => !dismissedDeliverableIds.has(d.id)).map((item) => (
