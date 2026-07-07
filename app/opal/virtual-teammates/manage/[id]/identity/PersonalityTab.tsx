@@ -407,9 +407,9 @@ export function PersonalityTab({
 						<Box>
 							<Box style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
 								<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>Personality traits</Text>
-								<Tooltip delayDuration={300} content="Traits shape how Randy approaches problems and communicates — e.g. 'Decisive' means confident answers without hedging, 'Concise' means no fluff.">
+								<Tooltip delayDuration={300} content="Keywords that shape how your teammate thinks and communicates.">
 									<span style={{ display: "inline-flex" }}>
-										<IconCircleQuestion size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+										<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
 									</span>
 								</Tooltip>
 							</Box>
@@ -493,9 +493,9 @@ export function PersonalityTab({
 				<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px", marginBottom: 12 }}>
 					<Box style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
 						<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>Tone of voice</Text>
-						<Tooltip delayDuration={300} content="These sliders control how Randy sounds in responses — how much detail to include, how warm or formal the language is, and how energetic vs. calm the delivery feels.">
+						<Tooltip delayDuration={300} content="Adjusts how formal, warm, and energetic your teammate sounds.">
 							<span style={{ display: "inline-flex" }}>
-								<IconCircleQuestion size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+								<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
 							</span>
 						</Tooltip>
 					</Box>
@@ -511,9 +511,9 @@ export function PersonalityTab({
 						<Box>
 							<Box style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
 								<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>Values</Text>
-								<Tooltip delayDuration={300} content="Values are the principles Randy weighs when making tradeoffs — they guide judgment on ambiguous tasks and keep priorities consistent with what matters to your team.">
+								<Tooltip delayDuration={300} content="Principles that guide your teammate's priorities and tradeoffs.">
 									<span style={{ display: "inline-flex" }}>
-										<IconCircleQuestion size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+										<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
 									</span>
 								</Tooltip>
 							</Box>
