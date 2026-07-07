@@ -10,10 +10,6 @@ import {
 	Heading,
 	Input,
 	Link,
-	Menu,
-	MenuContent,
-	MenuTrigger,
-	LabelMenuButton,
 	Text,
 	Tooltip,
 	toaster,
@@ -23,30 +19,26 @@ import {
 	IconPlus,
 	IconTrashCan,
 	IconCheck,
-	IconAngleDown,
 	IconCircleInfo,
 	IconPaperPlaneTop,
-	IconPen,
 	IconUpload,
 } from "@optiaxiom/icons";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
+import { BULK_IMPORT_USERS } from "../data";
+import { lookupUserByEmail, UserSearchInput } from "./UserSearchInput";
 import {
-	PRODUCTS,
-	INSTANCES,
-	ROLES,
-	GROUPS,
-	BULK_IMPORT_USERS,
-} from "../data";
+	ProductAccessStep,
+	AccessCard,
+	type AccessEntry,
+} from "./ProductAccessStep";
 
 export type InvitedUser = { email: string; first: string; last: string };
-export type AccessKind = "product" | "group";
-export type AccessInstance = { name: string; roles: string[] };
-export type AccessEntry = {
-	id: string;
-	kind: AccessKind;
-	name: string;
-	instances: AccessInstance[];
-};
+
+// Re-export the access primitives so existing consumers (bulk action modals,
+// etc.) can keep importing them from here.
+export { AccessCard };
+export { AccessEditor, SingleSelectMenu, MultiSelectMenu } from "./ProductAccessStep";
+export type { AccessEntry, AccessKind, AccessInstance } from "./ProductAccessStep";
 
 const STEP_LABELS = ["User list", "Product access", "Review"] as const;
 const PANEL_WIDTH = 700;
@@ -175,7 +167,7 @@ export function InviteUserPanel({
 							<StepUsers users={users} setUsers={setUsers} />
 						))}
 					{step === 2 && (
-						<StepAccess
+						<ProductAccessStep
 							accessList={accessList}
 							setAccessList={setAccessList}
 							onEditorChange={setEditorOpen}
@@ -306,7 +298,31 @@ function StepUsers({
 	const [email, setEmail] = useState("");
 	const [first, setFirst] = useState("");
 	const [last, setLast] = useState("");
-	const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
+	const existingUser = lookupUserByEmail(email);
+	const isExisting = existingUser !== null;
+	const valid =
+		/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim()) &&
+		first.trim() !== "" &&
+		last.trim() !== "";
+
+	const applyUser = (user: { email: string; first: string; last: string }) => {
+		setEmail(user.email);
+		setFirst(user.first);
+		setLast(user.last);
+	};
+
+	const handleEmailChange = (value: string) => {
+		const prevMatch = lookupUserByEmail(email);
+		setEmail(value);
+		const match = lookupUserByEmail(value);
+		if (match) {
+			setFirst(match.first);
+			setLast(match.last);
+		} else if (prevMatch) {
+			setFirst("");
+			setLast("");
+		}
+	};
 
 	const add = () => {
 		if (!valid) return;
@@ -328,7 +344,7 @@ function StepUsers({
 						<Text asChild color="fg.error">
 							<span>*</span>
 						</Text>
-						<Tooltip content="The user's primary email address. They'll receive the invitation here.">
+						<Tooltip content="Search by name or email. Existing users will have their name filled in automatically.">
 							<span style={{ display: "inline-flex" }}>
 								<IconCircleInfo size={14} color="var(--ax-colors-fg-tertiary)" />
 							</span>
@@ -336,12 +352,15 @@ function StepUsers({
 					</Box>
 				}
 			>
-				<Input
+				<UserSearchInput
 					value={email}
-					placeholder="Enter the user's email"
-					onChange={(e) => setEmail(e.target.value)}
-					onKeyDown={(e) => {
-						if (e.key === "Enter") add();
+					onChange={handleEmailChange}
+					onSelectUser={applyUser}
+					excludeEmails={users.map((u) => u.email)}
+					placeholder="Search by name or email"
+					clearOnSelect={false}
+					onEnterManual={(value) => {
+						handleEmailChange(value);
 					}}
 				/>
 			</Field>
@@ -351,17 +370,37 @@ function StepUsers({
 				gap="16"
 				style={{ gridTemplateColumns: "1fr 1fr" }}
 			>
-				<Field label="First name">
+				<Field
+					label={
+						<Box display="inline-flex" alignItems="center" gap="4">
+							<span>First name</span>
+							<Text asChild color="fg.error">
+								<span>*</span>
+							</Text>
+						</Box>
+					}
+				>
 					<Input
 						value={first}
-						placeholder="Optional"
+						placeholder="Enter the user's first name"
+						readOnly={isExisting}
 						onChange={(e) => setFirst(e.target.value)}
 					/>
 				</Field>
-				<Field label="Last name">
+				<Field
+					label={
+						<Box display="inline-flex" alignItems="center" gap="4">
+							<span>Last name</span>
+							<Text asChild color="fg.error">
+								<span>*</span>
+							</Text>
+						</Box>
+					}
+				>
 					<Input
 						value={last}
-						placeholder="Optional"
+						placeholder="Enter the user's last name"
+						readOnly={isExisting}
 						onChange={(e) => setLast(e.target.value)}
 					/>
 				</Field>
@@ -571,352 +610,6 @@ function StepUploadUsers({
 	);
 }
 
-function StepAccess({
-	accessList,
-	setAccessList,
-	onEditorChange,
-	presetProduct,
-}: {
-	accessList: AccessEntry[];
-	setAccessList: (a: AccessEntry[]) => void;
-	onEditorChange: (open: boolean) => void;
-	presetProduct?: string;
-}) {
-	const [editor, setEditor] = useState<
-		| { mode: "new" | "edit"; kind: AccessKind; id?: string; initial: AccessEntry | null }
-		| null
-	>(
-		accessList.length === 0
-			? {
-					mode: "new",
-					kind: "product",
-					initial: presetProduct
-						? {
-								id: "preset",
-								kind: "product",
-								name: presetProduct,
-								instances: [],
-							}
-						: null,
-				}
-			: null,
-	);
-
-	useEffect(() => {
-		onEditorChange(!!editor);
-	}, [editor, onEditorChange]);
-
-	const startNew = (kind: AccessKind) => setEditor({ mode: "new", kind, initial: null });
-	const startEdit = (entry: AccessEntry) =>
-		setEditor({ mode: "edit", kind: entry.kind, id: entry.id, initial: entry });
-
-	const handleSave = (data: Omit<AccessEntry, "id">) => {
-		if (editor?.mode === "edit" && editor.id) {
-			setAccessList(
-				accessList.map((a) =>
-					a.id === editor.id ? { ...data, id: editor.id! } : a,
-				),
-			);
-		} else {
-			setAccessList([
-				...accessList,
-				{ ...data, id: `${Date.now()}-${Math.random()}` },
-			]);
-		}
-		setEditor(null);
-	};
-
-	return (
-		<Box display="flex" flexDirection="column" gap="16">
-			<Box
-				display="flex"
-				alignItems="center"
-				justifyContent="space-between"
-				gap="12"
-			>
-				<Heading level="4">Access</Heading>
-				<Box display="flex" gap="8">
-					<Button
-						appearance="default"
-						size="sm"
-						disabled={!!editor}
-						onClick={() => startNew("product")}
-					>
-						Add product
-					</Button>
-					<Button
-						appearance="default"
-						size="sm"
-						disabled={!!editor}
-						onClick={() => startNew("group")}
-					>
-						Add group
-					</Button>
-				</Box>
-			</Box>
-
-			{accessList.map((entry) =>
-				editor && editor.mode === "edit" && editor.id === entry.id ? (
-					<Box
-						key={entry.id}
-						p="16"
-						rounded="md"
-						border="1"
-						borderColor="border.default"
-					>
-						<AccessEditor
-							kind={editor.kind}
-							initial={editor.initial}
-							onSave={handleSave}
-							onCancel={() => setEditor(null)}
-						/>
-					</Box>
-				) : (
-					<AccessCard
-						key={entry.id}
-						entry={entry}
-						onEdit={() => startEdit(entry)}
-						onDelete={() =>
-							setAccessList(accessList.filter((a) => a.id !== entry.id))
-						}
-					/>
-				),
-			)}
-
-			{editor && editor.mode === "new" && (
-				<Box p="16" rounded="md" border="1" borderColor="border.default">
-					<AccessEditor
-						kind={editor.kind}
-						initial={null}
-						onSave={handleSave}
-						onCancel={() => setEditor(null)}
-					/>
-				</Box>
-			)}
-
-			{accessList.length === 0 && !editor && (
-				<Text fontSize="sm" color="fg.tertiary">
-					No access granted yet. Add product or group access to continue.
-				</Text>
-			)}
-		</Box>
-	);
-}
-
-export function AccessEditor({
-	kind,
-	initial,
-	onSave,
-	onCancel,
-}: {
-	kind: AccessKind;
-	initial: AccessEntry | null;
-	onSave: (entry: Omit<AccessEntry, "id">) => void;
-	onCancel: () => void;
-}) {
-	const productLabel = kind === "group" ? "Group" : "Product";
-	const sourceList = kind === "group" ? GROUPS : PRODUCTS;
-	const [name, setName] = useState(initial?.name ?? "");
-	const [instances, setInstances] = useState<AccessInstance[]>(
-		initial?.instances.map((i) => ({ ...i, roles: [...i.roles] })) ?? [],
-	);
-
-	const setSelectedInstances = (names: string[]) => {
-		setInstances(
-			names.map(
-				(n) => instances.find((i) => i.name === n) ?? { name: n, roles: [] },
-			),
-		);
-	};
-
-	const setRoles = (idx: number, roles: string[]) => {
-		setInstances(instances.map((i, j) => (j === idx ? { ...i, roles } : i)));
-	};
-
-	const canSave =
-		!!name &&
-		instances.length > 0 &&
-		instances.every((i) => i.roles.length > 0);
-
-	return (
-		<Box display="flex" flexDirection="column" gap="12">
-			<Field
-				label={
-					<Box display="inline-flex" alignItems="center" gap="4">
-						<span>{productLabel}</span>
-						<Text asChild color="fg.error">
-							<span>*</span>
-						</Text>
-					</Box>
-				}
-			>
-				<SingleSelectMenu
-					label={productLabel}
-					value={name}
-					options={sourceList as readonly string[]}
-					onChange={setName}
-				/>
-			</Field>
-
-			<Field
-				label={
-					<Box display="inline-flex" alignItems="center" gap="4">
-						<span>Instance</span>
-						{name && (
-							<Text asChild color="fg.error">
-								<span>*</span>
-							</Text>
-						)}
-					</Box>
-				}
-			>
-				<MultiSelectMenu
-					label="Instance"
-					values={instances.map((i) => i.name)}
-					options={INSTANCES as readonly string[]}
-					onChange={setSelectedInstances}
-					disabled={!name}
-				/>
-			</Field>
-
-			{instances.length > 0 && (
-				<Table>
-					<thead>
-						<Tr>
-							<Th>Instance</Th>
-							<Th style={{ width: 220 }}>Role</Th>
-						</Tr>
-					</thead>
-					<tbody>
-						{instances.map((inst, idx) => (
-							<Tr key={inst.name}>
-								<Td>{inst.name}</Td>
-								<Td>
-									<MultiSelectMenu
-										label="Role"
-										values={inst.roles}
-										options={ROLES as readonly string[]}
-										onChange={(roles) => setRoles(idx, roles)}
-									/>
-								</Td>
-							</Tr>
-						))}
-					</tbody>
-				</Table>
-			)}
-
-			<Box display="flex" justifyContent="end" gap="8" mt="4">
-				<Button appearance="subtle" size="sm" onClick={onCancel}>
-					Cancel
-				</Button>
-				<Button
-					appearance="primary"
-					size="sm"
-					disabled={!canSave}
-					onClick={() =>
-						onSave({ kind, name, instances })
-					}
-				>
-					Save {productLabel.toLowerCase()} access
-				</Button>
-			</Box>
-		</Box>
-	);
-}
-
-export function AccessCard({
-	entry,
-	onEdit,
-	onDelete,
-	defaultOpen = false,
-	readOnly = false,
-}: {
-	entry: AccessEntry;
-	onEdit?: () => void;
-	onDelete?: () => void;
-	defaultOpen?: boolean;
-	readOnly?: boolean;
-}) {
-	const [open, setOpen] = useState(defaultOpen);
-	const label = entry.kind === "group" ? "group" : "product";
-
-	return (
-		<Box rounded="md" border="1" borderColor="border.default" bg="bg.default">
-			<Box
-				display="flex"
-				alignItems="center"
-				gap="12"
-				px="16"
-				py="12"
-				cursor="pointer"
-				onClick={() => setOpen((o) => !o)}
-			>
-				<Text fontWeight="600">{entry.name}</Text>
-				<Box flex="1" />
-				<Text fontSize="sm" color="fg.tertiary">
-					{entry.instances.length}{" "}
-					{entry.instances.length === 1 ? "instance" : "instances"}
-				</Text>
-				<Box
-					style={{
-						display: "inline-flex",
-						transform: open ? "rotate(180deg)" : "rotate(0deg)",
-						transition: "transform 150ms ease",
-					}}
-				>
-					<IconAngleDown size={16} color="var(--ax-colors-fg-secondary)" />
-				</Box>
-			</Box>
-			{open && (
-				<Box px="16" pb="16">
-					<Table>
-						<thead>
-							<Tr>
-								<Th>Instance</Th>
-								<Th>Role</Th>
-							</Tr>
-						</thead>
-						<tbody>
-							{entry.instances.map((inst) => (
-								<Tr key={inst.name}>
-									<Td>{inst.name}</Td>
-									<Td>{inst.roles.join(", ") || "—"}</Td>
-								</Tr>
-							))}
-						</tbody>
-					</Table>
-					{!readOnly && (onEdit || onDelete) && (
-						<Box display="flex" justifyContent="end" gap="8" mt="12">
-							{onEdit && (
-								<Button
-									appearance="default"
-									size="sm"
-									icon={<IconPen size={14} />}
-									iconPosition="start"
-									onClick={onEdit}
-								>
-									Edit {label} access
-								</Button>
-							)}
-							{onDelete && (
-								<Button
-									appearance="default"
-									size="sm"
-									icon={<IconTrashCan size={14} />}
-									iconPosition="start"
-									onClick={onDelete}
-								>
-									Delete
-								</Button>
-							)}
-						</Box>
-					)}
-				</Box>
-			)}
-		</Box>
-	);
-}
-
 function StepReview({
 	users,
 	accessList,
@@ -1052,81 +745,3 @@ function StepReview({
 	);
 }
 
-export function SingleSelectMenu({
-	label,
-	value,
-	options,
-	onChange,
-}: {
-	label: string;
-	value: string;
-	options: readonly string[];
-	onChange: (v: string) => void;
-}) {
-	return (
-		<Menu
-			options={options.map((opt) => ({
-				label: opt,
-				execute: () => onChange(opt),
-			}))}
-		>
-			<MenuTrigger asChild>
-				<LabelMenuButton label={label}>
-					{value || `Select ${label.toLowerCase()}`}
-				</LabelMenuButton>
-			</MenuTrigger>
-			<MenuContent />
-		</Menu>
-	);
-}
-
-export function MultiSelectMenu({
-	label,
-	values,
-	options,
-	onChange,
-	disabled,
-}: {
-	label: string;
-	values: string[];
-	options: readonly string[];
-	onChange: (v: string[]) => void;
-	disabled?: boolean;
-}) {
-	const [open, setOpen] = useState(false);
-	const toggle = (opt: string) => {
-		if (values.includes(opt)) onChange(values.filter((v) => v !== opt));
-		else onChange([...values, opt]);
-	};
-	const summary =
-		values.length === 0
-			? `Select ${label.toLowerCase()}`
-			: values.length === 1
-				? values[0]
-				: `${values.length} selected`;
-
-	return (
-		<Menu
-			open={open}
-			onOpenChange={setOpen}
-			options={options.map((opt) => ({
-				label: opt,
-				execute: () => toggle(opt),
-				addon: (
-					<Checkbox
-						checked={values.includes(opt)}
-						aria-label={opt}
-						onCheckedChange={() => toggle(opt)}
-					/>
-				),
-			}))}
-		>
-			<MenuTrigger asChild>
-				<LabelMenuButton label={label} disabled={disabled}>
-					{summary}
-				</LabelMenuButton>
-			</MenuTrigger>
-			<MenuContent />
-		</Menu>
-	);
-}

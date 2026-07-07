@@ -1,6 +1,15 @@
 import { PRODUCTS, INSTANCES, ROLES } from "../users/data";
+import type { AccessEntry } from "../users/components/ProductAccessStep";
 
 export type GroupType = "Product" | "Custom";
+
+export type GroupMember = {
+	email: string;
+	first: string;
+	last: string;
+	/** Which existing group this member was copied from (null = added manually). */
+	sourceGroupId: string | null;
+};
 
 export type Group = {
 	id: string;
@@ -15,6 +24,9 @@ export type Group = {
 	product: string;
 	instance: string;
 	role: string;
+	/** Populated for groups created via the Create Group wizard. */
+	members?: GroupMember[];
+	access?: AccessEntry[];
 };
 
 export const GROUP_TYPES: GroupType[] = ["Product", "Custom"];

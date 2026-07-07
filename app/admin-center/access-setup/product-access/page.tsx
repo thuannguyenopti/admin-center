@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
 	Box,
 	Heading,
-	Link,
 	SearchInput,
 	Text,
 } from "@optiaxiom/react";
@@ -36,9 +35,6 @@ export default function ProductAccessPage() {
 		<Box>
 			<Box display="flex" alignItems="center" gap="12" mb="16">
 				<Heading level="2">Product access</Heading>
-				<Link href="#" fontSize="md">
-					Learn more
-				</Link>
 			</Box>
 
 			<Box

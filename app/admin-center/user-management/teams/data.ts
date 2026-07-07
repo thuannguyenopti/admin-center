@@ -1,5 +1,13 @@
 import { PRODUCTS, INSTANCES } from "../users/data";
 
+export type TeamMember = {
+	email: string;
+	first: string;
+	last: string;
+	/** Which existing team this member was copied from (null = added manually). */
+	sourceTeamId: string | null;
+};
+
 export type Team = {
 	id: string;
 	name: string;
@@ -10,6 +18,8 @@ export type Team = {
 	createdTime: string;
 	modifiedDate: string;
 	modifiedTime: string;
+	/** Populated for teams created via the Create Team wizard. */
+	members?: TeamMember[];
 };
 
 export type TeamFilters = {

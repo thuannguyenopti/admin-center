@@ -11,7 +11,6 @@ import {
 	EllipsisMenuButton,
 	Heading,
 	LabelMenuButton,
-	Link,
 	Menu,
 	MenuContent,
 	MenuTrigger,
@@ -28,10 +27,7 @@ import {
 	AlertDialogHeader,
 } from "@optiaxiom/react";
 import {
-	IconAngleDown,
-	IconAngleRight,
 	IconCircleInfo,
-	IconPen,
 	IconTrashCan,
 	IconXmark,
 } from "@optiaxiom/icons";
@@ -43,6 +39,10 @@ import {
 	PROJECTS,
 	ROLES,
 } from "../users/data";
+import {
+	ProductAccessStep,
+	type AccessEntry,
+} from "../users/components/ProductAccessStep";
 
 const PAGE_SIZE = 10;
 const PANEL_WIDTH = 700;
@@ -345,66 +345,55 @@ function CategoryBadge({ category }: { category: AgentCategory }) {
 	);
 }
 
-function AccessCard({ access }: { access: AgentAccess }) {
-	const [open, setOpen] = useState(true);
-	return (
-		<Box border="1" borderColor="border.tertiary" rounded="md">
-			<Box
-				display="flex"
-				alignItems="center"
-				justifyContent="space-between"
-				p="12"
-				cursor="pointer"
-				onClick={() => setOpen((v) => !v)}
-			>
-				<Box display="flex" alignItems="center" gap="8">
-					<Box
-						display="inline-flex"
-						alignItems="center"
-						justifyContent="center"
-						style={{
-							width: 16,
-							height: 16,
-							transform: open ? "rotate(90deg)" : "rotate(0deg)",
-							transition: "transform 120ms",
-						}}
-					>
-						<IconAngleRight size={14} />
-					</Box>
-					<Text fontWeight="600">{access.product}</Text>
-					<Badge intent="neutral" variant="subtle">
-						{access.instances.length}
-					</Badge>
-				</Box>
-			</Box>
-			{open && (
-				<Box borderT="1" borderColor="border.tertiary" p="12" display="flex" flexDirection="column" gap="8">
-					{access.instances.map((inst) => (
-						<Box key={inst.name} display="flex" alignItems="center" justifyContent="space-between">
-							<Text fontSize="sm" color="fg.default">
-								{inst.name}
-							</Text>
-							<Text fontSize="sm" color="fg.secondary">
-								{inst.role}
-							</Text>
-						</Box>
-					))}
-				</Box>
-			)}
-		</Box>
-	);
+// Convert between the agent's product-access shape and the shared
+// ProductAccessStep model (instance → roles[]).
+function agentAccessToEntries(list: AgentAccess[]): AccessEntry[] {
+	return list.map((a, i) => ({
+		id: `${a.product}-${i}`,
+		kind: "product",
+		name: a.product,
+		instances: a.instances.map((inst) => ({
+			name: inst.name,
+			roles: inst.role ? [inst.role] : [],
+		})),
+	}));
+}
+
+function entriesToAgentAccess(entries: AccessEntry[]): AgentAccess[] {
+	return entries.map((e) => ({
+		product: e.name,
+		instances: e.instances.map((inst) => ({
+			name: inst.name,
+			role: inst.roles.join(", "),
+		})),
+	}));
 }
 
 function AgentDetailPanel({
 	agent,
 	onClose,
 	onRequestDelete,
+	onUpdateAccess,
+	onToggleStatus,
 }: {
 	agent: Agent | null;
 	onClose: () => void;
 	onRequestDelete: () => void;
+	onUpdateAccess: (agentId: string, access: AgentAccess[]) => void;
+	onToggleStatus: (agent: Agent) => void;
 }) {
 	const open = !!agent;
+	const [tab, setTab] = useState<"info" | "access">("info");
+	const [accessEntries, setAccessEntries] = useState<AccessEntry[]>([]);
+
+	// Re-seed local access only when a different agent is opened (keyed on id),
+	// so propagating edits back up doesn't reset the inline editor.
+	useEffect(() => {
+		if (agent) {
+			setTab("info");
+			setAccessEntries(agentAccessToEntries(agent.productAccess));
+		}
+	}, [agent?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	useEffect(() => {
 		if (!open) return;
@@ -421,6 +410,11 @@ function AgentDetailPanel({
 	}, [open, onClose]);
 
 	if (!open || !agent || typeof document === "undefined") return null;
+
+	const applyAccess = (next: AccessEntry[]) => {
+		setAccessEntries(next);
+		onUpdateAccess(agent.id, entriesToAgentAccess(next));
+	};
 
 	return createPortal(
 		<>
@@ -494,10 +488,38 @@ function AgentDetailPanel({
 							</Box>
 						</Box>
 
-						<Box>
-							<Heading level="4">Info</Heading>
+						{/* Tabs */}
+						<Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">
+							{(
+								[
+									["info", "Info"],
+									["access", "Product access"],
+								] as const
+							).map(([key, label]) => (
+								<Box
+									key={key}
+									pb="12"
+									cursor="pointer"
+									borderB={tab === key ? "2" : "0"}
+									onClick={() => setTab(key)}
+									style={
+										tab === key
+											? { borderBottomColor: "var(--ax-colors-fg-default)" }
+											: {}
+									}
+								>
+									<Text
+										fontWeight={tab === key ? "600" : "400"}
+										color={tab === key ? "fg.default" : "fg.tertiary"}
+									>
+										{label}
+									</Text>
+								</Box>
+							))}
+						</Box>
+
+						{tab === "info" && (
 							<Box
-								mt="12"
 								display="grid"
 								gap="16"
 								style={{ gridTemplateColumns: "1fr 1fr" }}
@@ -541,16 +563,16 @@ function AgentDetailPanel({
 									</Box>
 								</Box>
 							</Box>
-						</Box>
+						)}
 
-						<Box>
-							<Heading level="4">Product access</Heading>
-							<Box mt="12" display="flex" flexDirection="column" gap="8">
-								{agent.productAccess.map((access) => (
-									<AccessCard key={access.product} access={access} />
-								))}
-							</Box>
-						</Box>
+						{tab === "access" && (
+							<ProductAccessStep
+								accessList={accessEntries}
+								setAccessList={applyAccess}
+								autoOpenWhenEmpty={false}
+								showGroupAccess={false}
+							/>
+						)}
 					</Box>
 				</Box>
 
@@ -564,10 +586,9 @@ function AgentDetailPanel({
 					borderColor="border.tertiary"
 					bg="bg.page"
 				>
-					<Button appearance="default" addonBefore={<IconPen size={14} />}>
-						Edit Access
+					<Button appearance="default" onClick={() => onToggleStatus(agent)}>
+						{agent.status === "Active" ? "Deactivate" : "Activate"}
 					</Button>
-					<Button appearance="default">Deactivate</Button>
 					<Button
 						appearance="danger-outline"
 						addonBefore={<IconTrashCan size={14} />}
@@ -663,14 +684,20 @@ export default function VirtualTeammatesPage() {
 		if (detailAgent?.id === a.id) setDetailAgent(updated);
 	};
 
+	const updateAgentAccess = (agentId: string, productAccess: AgentAccess[]) => {
+		setAgents((list) =>
+			list.map((x) => (x.id === agentId ? { ...x, productAccess } : x)),
+		);
+		setDetailAgent((cur) =>
+			cur && cur.id === agentId ? { ...cur, productAccess } : cur,
+		);
+	};
+
 	return (
 		<Box>
 			<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
 				<Box display="flex" alignItems="center" gap="12">
 					<Heading level="2">Virtual Teammates</Heading>
-					<Link href="#" fontSize="md">
-						Learn more
-					</Link>
 					<Tooltip content="Virtual Teammates are AI agents granted access to your Optimizely products.">
 						<span style={{ display: "inline-flex" }}>
 							<IconCircleInfo size={16} color="var(--ax-colors-fg-tertiary)" />
@@ -827,6 +854,8 @@ export default function VirtualTeammatesPage() {
 				agent={detailAgent}
 				onClose={() => setDetailAgent(null)}
 				onRequestDelete={() => detailAgent && setConfirmDelete(detailAgent)}
+				onUpdateAccess={updateAgentAccess}
+				onToggleStatus={toggleStatus}
 			/>
 
 			<AlertDialog

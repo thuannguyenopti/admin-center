@@ -15,7 +15,6 @@ import {
 	Pagination,
 	SearchInput,
 	Text,
-	ToggleButton,
 	AlertDialog,
 	AlertDialogContent,
 	AlertDialogHeader,
@@ -37,6 +36,10 @@ import {
 	BulkActionModals,
 	type BulkModal,
 } from "./components/bulk/BulkActionModals";
+import { UploadsTab } from "./components/uploads/UploadsTab";
+import { ImportUsersPanel } from "./components/uploads/ImportUsersPanel";
+import { UploadDetailsModal } from "./components/uploads/UploadDetailsModal";
+import { type Upload } from "./components/uploads/data";
 import {
 	USERS,
 	PRODUCTS,
@@ -118,6 +121,8 @@ export default function AdminCenterUsersPage() {
 	const [invitePanelOpen, setInvitePanelOpen] = useState(false);
 	const [inviteMode, setInviteMode] = useState<"manual" | "upload">("manual");
 	const [bulkModal, setBulkModal] = useState<BulkModal>(null);
+	const [importPanelOpen, setImportPanelOpen] = useState(false);
+	const [detailUpload, setDetailUpload] = useState<Upload | null>(null);
 
 	const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
@@ -270,15 +275,16 @@ export default function AdminCenterUsersPage() {
 			<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
 				<Box display="flex" alignItems="center" gap="12">
 					<Heading level="2">Users</Heading>
-					<Link href="#" fontSize="md">
-						Learn more
-					</Link>
 				</Box>
 				<Box display="flex" alignItems="center" gap="8">
 					<Button appearance="default" addonBefore={<IconFileExport size={16} />}>
 						Export User
 					</Button>
-					<Button appearance="default" addonBefore={<IconFileImport size={16} />}>
+					<Button
+						appearance="default"
+						addonBefore={<IconFileImport size={16} />}
+						onClick={() => setImportPanelOpen(true)}
+					>
 						Import User
 					</Button>
 					<Menu
@@ -333,7 +339,9 @@ export default function AdminCenterUsersPage() {
 				))}
 			</Box>
 
-			{activeTab !== "all" ? (
+			{activeTab === "upload" ? (
+				<UploadsTab onViewDetails={setDetailUpload} />
+			) : activeTab === "invitations" ? (
 				<Box
 					p="32"
 					textAlign="center"
@@ -342,8 +350,7 @@ export default function AdminCenterUsersPage() {
 					border="1"
 				>
 					<Text color="fg.tertiary">
-						{activeTab === "invitations" ? "Invitations" : "Upload"} view is not yet
-						implemented.
+						Invitations view is not yet implemented.
 					</Text>
 				</Box>
 			) : (
@@ -369,22 +376,15 @@ export default function AdminCenterUsersPage() {
 									borderColor: "var(--ax-colors-bg-accent-subtle-hovered)",
 								}}
 							>
-								<ToggleButton
+								<Button
 									appearance="subtle"
 									size="lg"
-									pressed={filtersOpen}
-									onPressedChange={setFiltersOpen}
+									icon={<IconFilter />}
+									onClick={() => setFiltersOpen((open) => !open)}
 									aria-expanded={filtersOpen}
-									icon={
-										<div style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-											<IconFilter />
-											<IconAngleDown />
-										</div>
-									}
-									iconPosition="end"
 								>
 									Filter
-								</ToggleButton>
+								</Button>
 								{activeFilterCount > 0 ? (
 									<Box
 										aria-label={`${activeFilterCount} active filter${activeFilterCount === 1 ? "" : "s"}`}
@@ -492,7 +492,11 @@ export default function AdminCenterUsersPage() {
 									selected
 								</Text>
 								<Box display="flex" alignItems="center" gap="8">
-									<Button appearance="default" size="sm">
+									<Button
+										appearance="default"
+										size="sm"
+										onClick={() => setBulkModal("editAccess")}
+									>
 										Edit access
 									</Button>
 									<Button
@@ -531,9 +535,12 @@ export default function AdminCenterUsersPage() {
 										]}
 									>
 										<MenuTrigger asChild>
-											<Button appearance="default" size="sm">
+											<Button
+												appearance="default"
+												size="sm"
+												addonAfter={<IconAngleDown size={14} />}
+											>
 												More actions
-												<IconAngleDown size={14} />
 											</Button>
 										</MenuTrigger>
 										<MenuContent />
@@ -712,6 +719,19 @@ export default function AdminCenterUsersPage() {
 				onDeleteUsers={applyBulkDelete}
 				onClearSelection={clearSelection}
 			/>
+
+			<ImportUsersPanel
+				open={importPanelOpen}
+				onClose={() => setImportPanelOpen(false)}
+				onViewDetails={setDetailUpload}
+			/>
+
+			{detailUpload && (
+				<UploadDetailsModal
+					upload={detailUpload}
+					onClose={() => setDetailUpload(null)}
+				/>
+			)}
 		</Box>
 	);
 }

@@ -342,7 +342,7 @@ export default function ProductAccessDetailPage() {
 				</Text>
 			</Box>
 
-			<Heading level="1">{product.name}</Heading>
+			<Heading level="2">{product.name}</Heading>
 
 			{stats && (
 				<Box

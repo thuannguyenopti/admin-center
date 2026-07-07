@@ -86,9 +86,6 @@ export default function NotificationSettingsPage() {
 			<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
 				<Box display="flex" alignItems="center" gap="12">
 					<Heading level="2">Notifications</Heading>
-					<Link href="#" fontSize="md">
-						Learn more
-					</Link>
 				</Box>
 			</Box>
 

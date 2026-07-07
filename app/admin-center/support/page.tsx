@@ -1,187 +1,237 @@
 "use client";
 
+import { useState } from "react";
 import {
+	Banner,
 	Box,
 	Button,
 	Heading,
-	Link,
+	Input,
+	SearchInput,
 	Text,
+	toaster,
 } from "@optiaxiom/react";
-import {
-	IconUsers,
-	IconCircleQuestion,
-	IconBook,
-	IconComments,
-	IconCircleCheck,
-	IconArrowRight,
-} from "@optiaxiom/icons";
+import { AccessTab } from "./components/AccessTab";
+import { SettingsTab } from "./components/SettingsTab";
 
-type ContactCard = {
-	role: string;
-	name: string;
-	phone: string;
-	email: string;
-};
-
-const CONTACTS: ContactCard[] = [
-	{
-		role: "Account Executive",
-		name: "Test",
-		phone: "(850) 000-0022",
-		email: "ae@optimizely.com",
-	},
-	{
-		role: "Customer Support Manager",
-		name: "Customer Support",
-		phone: "035 885 8990",
-		email: "csm@optimizely.com",
-	},
-];
-
-type ResourceCard = {
-	title: string;
-	description: string;
-	icon: React.ReactNode;
-	href: string;
-};
-
-const RESOURCES: ResourceCard[] = [
-	{
-		title: "Documentation",
-		description: "Guides, references, and API documentation for all products.",
-		icon: <IconBook size={18} />,
-		href: "#",
-	},
-	{
-		title: "Community Forum",
-		description: "Ask questions and share knowledge with other Optimizely users.",
-		icon: <IconComments size={18} />,
-		href: "#",
-	},
-	{
-		title: "Status Page",
-		description: "Live status and incident history across Optimizely services.",
-		icon: <IconCircleCheck size={18} />,
-		href: "#",
-	},
-	{
-		title: "Submit a Ticket",
-		description: "Open a support request with our customer support team.",
-		icon: <IconCircleQuestion size={18} />,
-		href: "#",
-	},
-];
+const TABS = [
+	"Access",
+	"Settings",
+	"Account Activation",
+	"User Home Organization",
+	"View User Permissions",
+	"Usage & Billing",
+] as const;
+type Tab = (typeof TABS)[number];
 
 export default function SupportPage() {
+	const [tab, setTab] = useState<Tab>("Access");
+
 	return (
 		<Box>
-			<Text color="fg.secondary" fontSize="md" mb="24">
-				Need help? Contact your account team or browse resources below.
-			</Text>
-
-			<Box mb="32">
-				<Heading level="4">Your account team</Heading>
-				<Text fontSize="sm" color="fg.secondary" mb="16">
-					Reach out directly to the people supporting your organization.
-				</Text>
-				<Box display="grid" gap="16" style={{ gridTemplateColumns: "1fr 1fr" }}>
-					{CONTACTS.map((c) => (
-						<Box
-							key={c.role}
-							bg="bg.default"
-							rounded="md"
-							border="1"
-							borderColor="border.tertiary"
-							p="20"
-							display="flex"
-							flexDirection="column"
-							gap="12"
+			<Box
+				display="flex"
+				gap="24"
+				borderB="1"
+				borderColor="border.tertiary"
+				mb="24"
+				flexWrap="wrap"
+			>
+				{TABS.map((t) => (
+					<Box
+						key={t}
+						pb="12"
+						cursor="pointer"
+						borderB={tab === t ? "2" : "0"}
+						onClick={() => setTab(t)}
+						style={
+							tab === t ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}
+						}
+					>
+						<Text
+							fontWeight={tab === t ? "600" : "400"}
+							color={tab === t ? "fg.default" : "fg.tertiary"}
 						>
-							<Box display="flex" alignItems="center" gap="12">
-								<Box
-									display="inline-flex"
-									alignItems="center"
-									justifyContent="center"
-									rounded="full"
-									bg="bg.accent.subtle"
-									color="fg.accent"
-									style={{ width: 36, height: 36 }}
-								>
-									<IconUsers size={18} />
-								</Box>
-								<Box display="flex" flexDirection="column" gap="2">
-									<Text fontSize="sm" color="fg.tertiary">
-										{c.role}
-									</Text>
-									<Text fontWeight="600" color="fg.default">
-										{c.name}
-									</Text>
-								</Box>
-							</Box>
-							<Box display="flex" flexDirection="column" gap="4">
-								<Text fontWeight="500" color="fg.default">
-									{c.phone}
-								</Text>
-								<Link href={`mailto:${c.email}`} fontSize="md">
-									{c.email}
-								</Link>
-							</Box>
-						</Box>
-					))}
-				</Box>
+							{t}
+						</Text>
+					</Box>
+				))}
 			</Box>
 
-			<Box mb="32">
-				<Heading level="4">Resources</Heading>
-				<Text fontSize="sm" color="fg.secondary" mb="16">
-					Self-service documentation and community resources.
+			{tab === "Access" && <AccessTab />}
+			{tab === "Settings" && <SettingsTab />}
+			{tab === "Account Activation" && <AccountActivationTab />}
+			{tab === "User Home Organization" && <UserHomeOrganizationTab />}
+			{tab === "View User Permissions" && <ViewUserPermissionsTab />}
+			{tab === "Usage & Billing" && <UsageBillingTab />}
+		</Box>
+	);
+}
+
+function AccountActivationTab() {
+	const [email, setEmail] = useState("");
+	const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
+
+	return (
+		<Box display="flex" flexDirection="column" gap="16" style={{ maxWidth: 820 }}>
+			<Heading level="3">Account Activation</Heading>
+			<Text color="fg.secondary">
+				Use this form to unlock a user or resend their invitation.
+			</Text>
+
+			<Box style={{ maxWidth: 520 }}>
+				<Input
+					value={email}
+					placeholder="User email..."
+					onChange={(e) => setEmail(e.target.value)}
+				/>
+			</Box>
+
+			<Box display="flex" gap="12">
+				<Button
+					appearance="default"
+					disabled={!valid}
+					onClick={() => toaster.create("User unlocked", { intent: "success" })}
+				>
+					Unlock User
+				</Button>
+				<Button
+					appearance="default"
+					disabled={!valid}
+					onClick={() => toaster.create("Invitation resent", { intent: "success" })}
+				>
+					Resend Invitation
+				</Button>
+			</Box>
+		</Box>
+	);
+}
+
+function UserHomeOrganizationTab() {
+	const [email, setEmail] = useState("");
+	const [org, setOrg] = useState("");
+	const emailValid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
+
+	return (
+		<Box display="flex" flexDirection="column" gap="16" style={{ maxWidth: 820 }}>
+			<Heading level="3">User Home Organization</Heading>
+
+			<Banner intent="warning">
+				<Text fontSize="sm">
+					To move a user from one organization to another, you must be an admin in both
+					organizations. Otherwise, this action will result in a 403 permission error.
 				</Text>
-				<Box display="grid" gap="16" style={{ gridTemplateColumns: "1fr 1fr" }}>
-					{RESOURCES.map((r) => (
-						<Box
-							key={r.title}
-							bg="bg.default"
-							rounded="md"
-							border="1"
-							borderColor="border.tertiary"
-							p="20"
-							display="flex"
-							flexDirection="column"
-							gap="12"
-						>
-							<Box display="flex" alignItems="center" gap="12">
-								<Box
-									display="inline-flex"
-									alignItems="center"
-									justifyContent="center"
-									rounded="full"
-									bg="bg.accent.subtle"
-									color="fg.accent"
-									style={{ width: 36, height: 36 }}
-								>
-									{r.icon}
-								</Box>
-								<Text fontWeight="600" fontSize="lg" color="fg.default">
-									{r.title}
-								</Text>
-							</Box>
-							<Text fontSize="sm" color="fg.secondary">
-								{r.description}
-							</Text>
-							<Box>
-								<Link href={r.href} style={{ textDecoration: "none" }}>
-									<Button
-										appearance="subtle"
-										size="sm"
-										addonAfter={<IconArrowRight size={14} />}
-									>
-										Open
-									</Button>
-								</Link>
-							</Box>
-						</Box>
-					))}
-				</Box>
+			</Banner>
+
+			<Text color="fg.secondary">
+				Use this form to get a user&rsquo;s home organization information.
+			</Text>
+			<Box style={{ maxWidth: 520 }}>
+				<Input
+					value={email}
+					placeholder="User email..."
+					onChange={(e) => setEmail(e.target.value)}
+				/>
+			</Box>
+			<Box>
+				<Button
+					appearance="default"
+					disabled={!emailValid}
+					onClick={() =>
+						toaster.create("Fetched user's home organization", { intent: "success" })
+					}
+				>
+					Get User&rsquo;s Information
+				</Button>
+			</Box>
+
+			<Text color="fg.secondary">
+				Use this form to move a user from one home organization to another. Enter their
+				email in the field above, then search for the new home organization in the field
+				below.
+			</Text>
+			<Box style={{ maxWidth: 520 }}>
+				<SearchInput
+					size="lg"
+					placeholder="Search for an organization by name..."
+					value={org}
+					onChange={(e) => setOrg(e.target.value)}
+				/>
+			</Box>
+			<Box>
+				<Button
+					appearance="default"
+					disabled={!emailValid || !org.trim()}
+					onClick={() =>
+						toaster.create("User's home organization updated", { intent: "success" })
+					}
+				>
+					Update User&rsquo;s Home Organization
+				</Button>
+			</Box>
+		</Box>
+	);
+}
+
+function ViewUserPermissionsTab() {
+	const [email, setEmail] = useState("");
+	const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
+
+	return (
+		<Box display="flex" flexDirection="column" gap="16" style={{ maxWidth: 820 }}>
+			<Heading level="3">User Permissions</Heading>
+			<Text color="fg.secondary">
+				Use this form to view all of the permissions assigned to a user.
+			</Text>
+			<Box style={{ maxWidth: 520 }}>
+				<Input
+					value={email}
+					placeholder="User email..."
+					onChange={(e) => setEmail(e.target.value)}
+				/>
+			</Box>
+			<Box>
+				<Button
+					appearance="default"
+					disabled={!valid}
+					onClick={() =>
+						toaster.create("Fetched user permissions", { intent: "success" })
+					}
+				>
+					Get User Permissions
+				</Button>
+			</Box>
+		</Box>
+	);
+}
+
+function UsageBillingTab() {
+	const [org, setOrg] = useState("");
+
+	return (
+		<Box display="flex" flexDirection="column" gap="16" style={{ maxWidth: 820 }}>
+			<Heading level="3">Usage &amp; Billing</Heading>
+			<Text color="fg.secondary">
+				Use this form to look up usage and billing details for an organization.
+			</Text>
+			<Box style={{ maxWidth: 520 }}>
+				<SearchInput
+					size="lg"
+					placeholder="Search for an organization by name..."
+					value={org}
+					onChange={(e) => setOrg(e.target.value)}
+				/>
+			</Box>
+			<Box>
+				<Button
+					appearance="default"
+					disabled={!org.trim()}
+					onClick={() =>
+						toaster.create("Fetched usage & billing details", { intent: "success" })
+					}
+				>
+					Get Usage &amp; Billing
+				</Button>
 			</Box>
 		</Box>
 	);

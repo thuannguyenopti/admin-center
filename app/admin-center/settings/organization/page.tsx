@@ -7,7 +7,6 @@ import {
 	Button,
 	Heading,
 	Link,
-	EllipsisMenuButton,
 	Menu,
 	MenuContent,
 	MenuTrigger,
@@ -17,45 +16,7 @@ import {
 import {
 	IconPen,
 	IconCopy,
-	IconPlus,
 } from "@optiaxiom/icons";
-
-import { Table, Tr, Th, Td } from "@/app/components/Table";
-
-type StatusRow = {
-	label: string;
-	value: string;
-	intent: "success" | "warning" | "neutral" | "danger" | "information";
-};
-
-const STATUS_ROWS: StatusRow[] = [
-	{ label: "Account Status", value: "Active", intent: "success" },
-	{ label: "Subscription Status", value: "Active", intent: "success" },
-	{ label: "SSO Status", value: "Configured", intent: "success" },
-	{ label: "SCIM Status", value: "Disabled", intent: "neutral" },
-	{ label: "MFA Status", value: "Required", intent: "warning" },
-];
-
-const PRODUCT_ROWS = [
-	{ name: "CMS", instances: 3, status: "Active", contractEnd: "Dec 31, 2026" },
-	{ name: "CMP", instances: 2, status: "Active", contractEnd: "Dec 31, 2026" },
-	{ name: "Opal", instances: 1, status: "Active", contractEnd: "Mar 14, 2027" },
-	{ name: "Connect Platform", instances: 1, status: "Active", contractEnd: "Oct 02, 2026" },
-	{ name: "Frontend Hosting", instances: 1, status: "Trial", contractEnd: "Aug 18, 2026" },
-];
-
-type DomainRow = {
-	domain: string;
-	status: "Verified" | "Pending" | "Failed";
-	added: string;
-};
-
-const DOMAIN_ROWS: DomainRow[] = [
-	{ domain: "optimizely.com", status: "Verified", added: "Jan 04, 2024" },
-	{ domain: "episerver.com", status: "Verified", added: "Jan 04, 2024" },
-	{ domain: "welcome.optimizely.com", status: "Pending", added: "May 22, 2026" },
-	{ domain: "partner.optimizely.com", status: "Failed", added: "Mar 11, 2026" },
-];
 
 type Contact = { name: string; phone: string; email: string };
 
@@ -88,26 +49,54 @@ function FieldValue({
 	);
 }
 
-function domainIntent(s: DomainRow["status"]): "success" | "warning" | "danger" {
-	if (s === "Verified") return "success";
-	if (s === "Pending") return "warning";
-	return "danger";
-}
+const TABS = ["Overview", "Developer Access"] as const;
+type Tab = (typeof TABS)[number];
 
 export default function OrganizationSettingsPage() {
 	const [primaryContact, setPrimaryContact] = useState(CONTACTS[0]);
+	const [tab, setTab] = useState<Tab>("Overview");
 
 	return (
 		<Box>
 			<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
 				<Box display="flex" alignItems="center" gap="12">
 					<Heading level="2">Organization</Heading>
-					<Link href="#" fontSize="md">
-						Learn more
-					</Link>
 				</Box>
 			</Box>
 
+			<Box
+				display="flex"
+				gap="24"
+				borderB="1"
+				borderColor="border.tertiary"
+				mb="24"
+				flexWrap="wrap"
+			>
+				{TABS.map((t) => (
+					<Box
+						key={t}
+						pb="12"
+						cursor="pointer"
+						borderB={tab === t ? "2" : "0"}
+						onClick={() => setTab(t)}
+						style={
+							tab === t ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}
+						}
+					>
+						<Text
+							fontWeight={tab === t ? "600" : "400"}
+							color={tab === t ? "fg.default" : "fg.tertiary"}
+						>
+							{t}
+						</Text>
+					</Box>
+				))}
+			</Box>
+
+			{tab === "Developer Access" && <DeveloperAccessTab />}
+
+			{tab === "Overview" && (
+			<>
 			<Box mb="32">
 				<Heading level="4">Profile</Heading>
 				<Text fontSize="sm" color="fg.secondary" mb="16">
@@ -183,138 +172,83 @@ export default function OrganizationSettingsPage() {
 				</Box>
 			</Box>
 
-			<Box mb="32">
-				<Heading level="4">Status indicators</Heading>
-				<Text fontSize="sm" color="fg.secondary" mb="16">
-					Quick view of account-wide configuration health.
-				</Text>
+			</>
+			)}
+		</Box>
+	);
+}
+
+function DeveloperAccessTab() {
+	return (
+		<Box style={{ maxWidth: 880 }}>
+			<Heading level="4">Developer Access</Heading>
+			<Text color="fg.secondary" mt="8" mb="24">
+				This setting allows approved external developers to access OCP and build apps
+				under your organization&rsquo;s vendor identity.
+			</Text>
+
+			<Box
+				bg="bg.default"
+				rounded="md"
+				border="1"
+				borderColor="border.tertiary"
+				p="24"
+				mb="24"
+			>
 				<Box
-					bg="bg.default"
-					rounded="md"
-					border="1"
-					borderColor="border.tertiary"
+					display="flex"
+					gap="48"
+					alignItems="start"
+					flexWrap="wrap"
+					mb="16"
 				>
-					{STATUS_ROWS.map((row, i) => (
-						<Box
-							key={row.label}
-							display="flex"
-							alignItems="center"
-							justifyContent="space-between"
-							p="16"
-							borderB={i === STATUS_ROWS.length - 1 ? "0" : "1"}
-							borderColor="border.tertiary"
-						>
-							<Text fontWeight="500" color="fg.default">
-								{row.label}
-							</Text>
-							<Box display="flex" alignItems="center" gap="16">
-								<Badge intent={row.intent} variant="subtle">
-									{row.value}
-								</Badge>
-								<Link href="#" fontSize="md">
-									Manage
-								</Link>
-							</Box>
+					<Box display="flex" flexDirection="column" gap="12">
+						<Text fontWeight="600" color="fg.default">
+							Developer Access Status
+						</Text>
+						<Box>
+							<Badge intent="success" variant="subtle">
+								ACTIVE
+							</Badge>
 						</Box>
-					))}
+					</Box>
+					<Box display="flex" flexDirection="column" gap="4">
+						<Text fontSize="sm" color="fg.tertiary">
+							Vendor name:
+						</Text>
+						<Text fontWeight="600" color="fg.default">
+							technology_abc
+						</Text>
+					</Box>
 				</Box>
+
+				<Text fontSize="sm" color="fg.secondary">
+					If this configuration is incorrect or needs to be updated, please contact your{" "}
+					<Link href="mailto:support@optimizely.com" fontSize="sm">
+						Optimizely Support
+					</Link>{" "}
+					representative.
+				</Text>
 			</Box>
 
-			<Box mb="32">
-				<Heading level="4">Products</Heading>
-				<Text fontSize="sm" color="fg.secondary" mb="16">
-					Subscribed products and their contract terms.
+			<Box bg="bg.information.subtle" rounded="md" p="24" style={{ maxWidth: 520 }}>
+				<Text fontWeight="600" color="fg.default" mb="16">
+					To grant developer access:
 				</Text>
-				<Table>
-					<thead>
-						<Tr>
-							<Th>Product</Th>
-							<Th>Instances</Th>
-							<Th>Status</Th>
-							<Th>Contract End</Th>
-						</Tr>
-					</thead>
-					<tbody>
-						{PRODUCT_ROWS.map((p) => (
-							<Tr key={p.name}>
-								<Td>{p.name}</Td>
-								<Td>{p.instances}</Td>
-								<Td>
-									<Badge
-										intent={p.status === "Active" ? "success" : "warning"}
-										variant="subtle"
-									>
-										{p.status}
-									</Badge>
-								</Td>
-								<Td>{p.contractEnd}</Td>
-							</Tr>
+				<Box asChild>
+					<ol style={{ margin: 0, paddingLeft: 20, display: "grid", gap: 8 }}>
+						{[
+							"Go to User Management",
+							"Invite the developer user",
+							"Assign the OCP Developer role",
+							"Send the invitation",
+						].map((step) => (
+							<li key={step}>
+								<Text color="fg.default">{step}</Text>
+							</li>
 						))}
-					</tbody>
-				</Table>
-			</Box>
-
-			<Box mb="32">
-				<Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
-					<Heading level="4">Domains</Heading>
-					<Button
-						appearance="primary"
-						size="sm"
-						addonBefore={<IconPlus size={14} />}
-					>
-						Add Domain
-					</Button>
+					</ol>
 				</Box>
-				<Text fontSize="sm" color="fg.secondary" mb="16">
-					Verified domains are eligible for SSO and email branding.
-				</Text>
-				<Table>
-					<thead>
-						<Tr>
-							<Th>Domain</Th>
-							<Th>Verification status</Th>
-							<Th>Date added</Th>
-							<Th style={{ width: 60 }} />
-						</Tr>
-					</thead>
-					<tbody>
-						{DOMAIN_ROWS.map((d) => (
-							<Tr key={d.domain}>
-								<Td>{d.domain}</Td>
-								<Td>
-									<Badge intent={domainIntent(d.status)} variant="subtle">
-										{d.status}
-									</Badge>
-								</Td>
-								<Td>{d.added}</Td>
-								<Td type="raw" style={{ width: 60 }}>
-									<Box display="flex" justifyContent="end">
-										<Menu
-											options={[
-												{ label: "View", execute: () => {} },
-												{ label: "Verify", execute: () => {} },
-												{
-													intent: "danger",
-													label: "Remove",
-													execute: () => {},
-												},
-											]}
-										>
-											<MenuTrigger asChild>
-												<EllipsisMenuButton
-													appearance="subtle"
-													size="sm"
-													aria-label={`Actions for ${d.domain}`}
-												/>
-											</MenuTrigger>
-											<MenuContent />
-										</Menu>
-									</Box>
-								</Td>
-							</Tr>
-						))}
-					</tbody>
-				</Table>
 			</Box>
 		</Box>
 	);

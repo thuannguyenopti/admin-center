@@ -6,7 +6,6 @@ import {
 	Box,
 	Button,
 	Heading,
-	Link,
 	Menu,
 	MenuContent,
 	MenuTrigger,
@@ -162,9 +161,6 @@ export default function RolesPage() {
 			<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
 				<Box display="flex" alignItems="center" gap="12">
 					<Heading level="2">Roles</Heading>
-					<Link href="#" fontSize="md">
-						Learn more
-					</Link>
 				</Box>
 				<Box display="flex" alignItems="center" gap="8">
 					<Button appearance="primary" addonBefore={<IconPlus size={16} />}>

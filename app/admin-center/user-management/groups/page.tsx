@@ -2,13 +2,19 @@
 
 import { useMemo, useState } from "react";
 import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogBody,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogFooter,
+	AlertDialogHeader,
 	Badge,
 	Box,
 	Button,
 	EllipsisMenuButton,
 	Heading,
 	LabelMenuButton,
-	Link,
 	Menu,
 	MenuContent,
 	MenuTrigger,
@@ -30,6 +36,8 @@ import {
 	type Group,
 	type GroupFilters,
 } from "./data";
+import { CreateGroupPanel, type CreateGroupPayload } from "./components/CreateGroupPanel";
+import { GroupDetailPanel } from "./components/GroupDetailPanel";
 
 const PAGE_SIZE = 10;
 
@@ -72,9 +80,51 @@ function GroupTypeBadge({ type }: { type: Group["groupType"] }) {
 }
 
 export default function AdminCenterGroupsPage() {
-	const [groups] = useState<Group[]>(GROUPS_DATA);
+	const [groups, setGroups] = useState<Group[]>(GROUPS_DATA);
 	const [filters, setFilters] = useState<GroupFilters>(DEFAULT_GROUP_FILTERS);
 	const [currentPage, setCurrentPage] = useState(1);
+	const [createOpen, setCreateOpen] = useState(false);
+	const [detailGroup, setDetailGroup] = useState<Group | null>(null);
+	const [confirmDelete, setConfirmDelete] = useState<Group | null>(null);
+
+	const fmtDate = (d: Date) =>
+		d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+	const fmtTime = (d: Date) =>
+		d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+
+	const handleCreateGroup = (payload: CreateGroupPayload) => {
+		const now = new Date();
+		const firstAccess = payload.access[0];
+		const firstInstance = firstAccess?.instances[0];
+		const newGroup: Group = {
+			id: `g-new-${Date.now()}`,
+			name: payload.name,
+			description: payload.description || null,
+			users: payload.members.length,
+			groupType: "Custom",
+			createdDate: fmtDate(now),
+			createdTime: fmtTime(now),
+			modifiedDate: fmtDate(now),
+			modifiedTime: fmtTime(now),
+			product: firstAccess?.name ?? PRODUCTS[0],
+			instance: firstInstance?.name ?? INSTANCES[0],
+			role: firstInstance?.roles[0] ?? ROLES[0],
+			members: payload.members,
+			access: payload.access,
+		};
+		setGroups((prev) => [newGroup, ...prev]);
+		setCurrentPage(1);
+	};
+
+	const handleSaveGroup = (updated: Group) => {
+		setGroups((prev) => prev.map((g) => (g.id === updated.id ? updated : g)));
+	};
+
+	const handleDeleteGroup = (g: Group) => {
+		setGroups((prev) => prev.filter((x) => x.id !== g.id));
+		if (detailGroup?.id === g.id) setDetailGroup(null);
+		setConfirmDelete(null);
+	};
 
 	const filtered = useMemo(
 		() => filterGroups(groups, filters),
@@ -102,15 +152,13 @@ export default function AdminCenterGroupsPage() {
 			>
 				<Box display="flex" alignItems="center" gap="12">
 					<Heading level="2">Group Access</Heading>
-					<Link href="#" fontSize="md">
-						Learn more
-					</Link>
 				</Box>
 				<Box display="flex" alignItems="center" gap="8">
 					<Button
 						appearance="primary"
 						icon={<IconPlus size={16} />}
 						iconPosition="start"
+						onClick={() => setCreateOpen(true)}
 					>
 						Create new Group
 					</Button>
@@ -178,7 +226,7 @@ export default function AdminCenterGroupsPage() {
 						</tr>
 					) : (
 						pageRows.map((g) => (
-							<Tr key={g.id}>
+							<Tr key={g.id} onClick={() => setDetailGroup(g)}>
 								<Td>
 									<Box display="flex" flexDirection="column" gap="2">
 										<Text fontWeight="500" color="fg.default">
@@ -212,15 +260,19 @@ export default function AdminCenterGroupsPage() {
 									</Box>
 								</Td>
 								<Td type="raw" style={{ width: 60 }}>
-									<Box display="flex" justifyContent="end">
+									<Box
+										display="flex"
+										justifyContent="end"
+										onClick={(e) => e.stopPropagation()}
+									>
 										<Menu
 											options={[
-												{ label: "View details", execute: () => {} },
-												{ label: "Edit group", execute: () => {} },
+												{ label: "View details", execute: () => setDetailGroup(g) },
+												{ label: "Edit group", execute: () => setDetailGroup(g) },
 												{
 													intent: "danger",
 													label: "Delete group",
-													execute: () => {},
+													execute: () => setConfirmDelete(g),
 												},
 											]}
 										>
@@ -248,6 +300,42 @@ export default function AdminCenterGroupsPage() {
 					onPageChange={setCurrentPage}
 				/>
 			</Box>
+
+			<CreateGroupPanel
+				open={createOpen}
+				onClose={() => setCreateOpen(false)}
+				onSubmit={handleCreateGroup}
+			/>
+
+			<GroupDetailPanel
+				group={detailGroup}
+				onClose={() => setDetailGroup(null)}
+				onSave={handleSaveGroup}
+				onDelete={handleDeleteGroup}
+			/>
+
+			<AlertDialog
+				open={!!confirmDelete}
+				onOpenChange={(v) => !v && setConfirmDelete(null)}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>Delete this group</AlertDialogHeader>
+					<AlertDialogBody>
+						{confirmDelete
+							? `"${confirmDelete.name}" will be permanently removed. Assigned users will lose access granted through this group. This action cannot be undone.`
+							: ""}
+					</AlertDialogBody>
+					<AlertDialogFooter>
+						<AlertDialogCancel />
+						<AlertDialogAction
+							appearance="danger"
+							onClick={() => confirmDelete && handleDeleteGroup(confirmDelete)}
+						>
+							Delete group
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</Box>
 	);
 }

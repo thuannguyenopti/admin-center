@@ -291,9 +291,6 @@ export default function ActivityLogPage() {
 			<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
 				<Box display="flex" alignItems="center" gap="12">
 					<Heading level="2">Activity Log</Heading>
-					<Link href="#" fontSize="md">
-						Learn more
-					</Link>
 				</Box>
 				<Box display="flex" alignItems="center" gap="8">
 					<Button appearance="default" addonBefore={<IconDownload size={16} />}>

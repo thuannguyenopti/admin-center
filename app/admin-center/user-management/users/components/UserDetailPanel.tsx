@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
 	Box,
@@ -19,8 +19,21 @@ import {
 	IconCircleInfo,
 } from "@optiaxiom/icons";
 import { type User, type UserType } from "../data";
+import { ProductAccessStep, type AccessEntry } from "./ProductAccessStep";
 
 const PANEL_WIDTH = 700;
+
+/** Seed the editable access list from the user's granted product/instance/role. */
+function deriveUserAccess(user: User): AccessEntry[] {
+	return [
+		{
+			id: `${user.product}-0`,
+			kind: "product",
+			name: user.product,
+			instances: [{ name: user.instance, roles: [user.role] }],
+		},
+	];
+}
 
 function StatusText({ status }: { status: User["activationStatus"] }) {
 	if (status === "Active")
@@ -70,6 +83,13 @@ export function UserDetailPanel({
 	onUserTypeChange: (t: UserType) => void;
 }) {
 	const open = !!user;
+	const [accessEntries, setAccessEntries] = useState<AccessEntry[]>([]);
+
+	// Re-seed the editable access list only when a different user is opened
+	// (keyed on id), so edits aren't reset while the panel stays open.
+	useEffect(() => {
+		if (user) setAccessEntries(deriveUserAccess(user));
+	}, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	useEffect(() => {
 		if (!open) return;
@@ -340,30 +360,12 @@ export function UserDetailPanel({
 						)}
 
 						{tab === "product" && (
-							<Box display="flex" flexDirection="column" gap="8">
-								<Text fontSize="sm" color="fg.secondary">
-									Granted on
-								</Text>
-								<Box
-									display="flex"
-									alignItems="center"
-									justifyContent="space-between"
-									p="12"
-									rounded="md"
-									border="1"
-									borderColor="border.tertiary"
-								>
-									<Box>
-										<Text fontWeight="600">{user.product}</Text>
-										<Text fontSize="sm" color="fg.tertiary">
-											{user.instance} · {user.project}
-										</Text>
-									</Box>
-									<Text fontSize="sm" color="fg.secondary">
-										{user.role}
-									</Text>
-								</Box>
-							</Box>
+							<ProductAccessStep
+								accessList={accessEntries}
+								setAccessList={setAccessEntries}
+								autoOpenWhenEmpty={false}
+								showGroupAccess={false}
+							/>
 						)}
 
 						{tab === "group" && (

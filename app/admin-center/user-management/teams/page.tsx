@@ -2,12 +2,18 @@
 
 import { useMemo, useState } from "react";
 import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogBody,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogFooter,
+	AlertDialogHeader,
 	Box,
 	Button,
 	EllipsisMenuButton,
 	Heading,
 	LabelMenuButton,
-	Link,
 	Menu,
 	MenuContent,
 	MenuTrigger,
@@ -27,6 +33,8 @@ import {
 	type Team,
 	type TeamFilters,
 } from "./data";
+import { CreateTeamPanel, type CreateTeamPayload } from "./components/CreateTeamPanel";
+import { TeamDetailPanel } from "./components/TeamDetailPanel";
 
 const PAGE_SIZE = 10;
 
@@ -58,9 +66,50 @@ function FilterDropdown({
 }
 
 export default function AdminCenterTeamsPage() {
-	const [teams] = useState<Team[]>(TEAMS_DATA);
+	const [teams, setTeams] = useState<Team[]>(TEAMS_DATA);
 	const [filters, setFilters] = useState<TeamFilters>(DEFAULT_TEAM_FILTERS);
 	const [currentPage, setCurrentPage] = useState(1);
+	const [createOpen, setCreateOpen] = useState(false);
+	const [detailTeam, setDetailTeam] = useState<Team | null>(null);
+	const [confirmDelete, setConfirmDelete] = useState<Team | null>(null);
+
+	const handleSaveTeam = (updated: Team) => {
+		setTeams((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+	};
+
+	const handleDeleteTeam = (t: Team) => {
+		setTeams((prev) => prev.filter((x) => x.id !== t.id));
+		if (detailTeam?.id === t.id) setDetailTeam(null);
+		setConfirmDelete(null);
+	};
+
+	const handleCreateTeam = (payload: CreateTeamPayload) => {
+		const now = new Date();
+		const fmtDate = now.toLocaleDateString("en-US", {
+			month: "short",
+			day: "numeric",
+			year: "numeric",
+		});
+		const fmtTime = now.toLocaleTimeString("en-US", {
+			hour: "2-digit",
+			minute: "2-digit",
+			hour12: true,
+		});
+		const newTeam: Team = {
+			id: `t-new-${Date.now()}`,
+			name: payload.name,
+			description: payload.description || null,
+			productName: payload.product,
+			instanceName: payload.instance,
+			createdDate: fmtDate,
+			createdTime: fmtTime,
+			modifiedDate: fmtDate,
+			modifiedTime: fmtTime,
+			members: payload.members,
+		};
+		setTeams((prev) => [newTeam, ...prev]);
+		setCurrentPage(1);
+	};
 
 	const filtered = useMemo(
 		() => filterTeams(teams, filters),
@@ -88,15 +137,13 @@ export default function AdminCenterTeamsPage() {
 			>
 				<Box display="flex" alignItems="center" gap="12">
 					<Heading level="2">Teams Access</Heading>
-					<Link href="#" fontSize="md">
-						Learn more
-					</Link>
 				</Box>
 				<Box display="flex" alignItems="center" gap="8">
 					<Button
 						appearance="primary"
 						icon={<IconPlus size={16} />}
 						iconPosition="start"
+						onClick={() => setCreateOpen(true)}
 					>
 						Create new Team
 					</Button>
@@ -152,7 +199,7 @@ export default function AdminCenterTeamsPage() {
 						</tr>
 					) : (
 						pageRows.map((t) => (
-							<Tr key={t.id}>
+							<Tr key={t.id} onClick={() => setDetailTeam(t)}>
 								<Td>
 									<Box display="flex" flexDirection="column" gap="2">
 										<Text fontWeight="500" color="fg.default">
@@ -184,15 +231,19 @@ export default function AdminCenterTeamsPage() {
 									</Box>
 								</Td>
 								<Td type="raw" style={{ width: 60 }}>
-									<Box display="flex" justifyContent="end">
+									<Box
+										display="flex"
+										justifyContent="end"
+										onClick={(e) => e.stopPropagation()}
+									>
 										<Menu
 											options={[
-												{ label: "View details", execute: () => {} },
-												{ label: "Edit team", execute: () => {} },
+												{ label: "View details", execute: () => setDetailTeam(t) },
+												{ label: "Edit team", execute: () => setDetailTeam(t) },
 												{
 													intent: "danger",
 													label: "Delete team",
-													execute: () => {},
+													execute: () => setConfirmDelete(t),
 												},
 											]}
 										>
@@ -220,6 +271,42 @@ export default function AdminCenterTeamsPage() {
 					onPageChange={setCurrentPage}
 				/>
 			</Box>
+
+			<CreateTeamPanel
+				open={createOpen}
+				onClose={() => setCreateOpen(false)}
+				onSubmit={handleCreateTeam}
+			/>
+
+			<TeamDetailPanel
+				team={detailTeam}
+				onClose={() => setDetailTeam(null)}
+				onSave={handleSaveTeam}
+				onDelete={handleDeleteTeam}
+			/>
+
+			<AlertDialog
+				open={!!confirmDelete}
+				onOpenChange={(v) => !v && setConfirmDelete(null)}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>Delete this team</AlertDialogHeader>
+					<AlertDialogBody>
+						{confirmDelete
+							? `"${confirmDelete.name}" will be permanently removed. Assigned users will lose access granted through this team. This action cannot be undone.`
+							: ""}
+					</AlertDialogBody>
+					<AlertDialogFooter>
+						<AlertDialogCancel />
+						<AlertDialogAction
+							appearance="danger"
+							onClick={() => confirmDelete && handleDeleteTeam(confirmDelete)}
+						>
+							Delete team
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</Box>
 	);
 }

@@ -6,12 +6,14 @@ import { EditUserTypeModal, type UserTypeUpdate } from "./EditUserTypeModal";
 import { ResetPasswordModal } from "./ResetPasswordModal";
 import { AddAccessModal } from "./AddAccessModal";
 import { RemoveAccessModal } from "./RemoveAccessModal";
+import { EditAccessModal } from "./EditAccessModal";
 import { DeleteUsersModal } from "./DeleteUsersModal";
 
 export type BulkModal =
 	| "editInfo"
 	| "editType"
 	| "resetPw"
+	| "editAccess"
 	| "addAccess"
 	| "removeAccess"
 	| "delete"
@@ -48,6 +50,10 @@ export function BulkActionModals({
 		case "resetPw":
 			return (
 				<ResetPasswordModal users={users} onClose={onClose} onSuccess={onClearSelection} />
+			);
+		case "editAccess":
+			return (
+				<EditAccessModal users={users} onClose={onClose} onSuccess={onClearSelection} />
 			);
 		case "addAccess":
 			return (
