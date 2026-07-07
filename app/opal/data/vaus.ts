@@ -3,7 +3,7 @@
 
 export type VAUTag = { label: string; bg: string; color: string };
 export type VAUAgent = { emoji: string; handle: string };
-export type VAUExample = { emoji: string; title: string; frequency: string; description?: string };
+export type VAUExample = { emoji: string; title: string; frequency: string; description?: string; icon?: string };
 export type VAUCandidate = { avatar: string; avatarBg: string; name: string; characterName?: string; id?: string };
 export type VAUPersonality = { label: string; description: string; sampleChat?: string; traits?: string[]; icon?: "gear" | "sparkle" | "people" | "search" };
 
@@ -270,12 +270,12 @@ export const VAUS: VAU[] = [
 			{ avatar: "/avatars/bub.png",     avatarBg: "#E0F0F8", name: "Chief of Staff", characterName: "Fin", id: "fin" },
 		],
 		examples: [
-			{ emoji: "📅", title: "Daily briefing", frequency: "First thing in the morning", description: "I'll round up overnight changes, your day's calendar, and what needs you first — so you start the day knowing where to focus. In addition to that I can do much more!" },
-			{ emoji: "👋", title: "Status nudges", frequency: "Sent when things stall", description: "I'll quietly nudge when a thread goes quiet or a commitment slips — to the right person, with the right context, at exactly the right moment. In addition to that I can do much more!" },
-			{ emoji: "✅", title: "Action item tracking", frequency: "Updated in real time", description: "I'll catch commitments from meetings, emails, and chats — and keep a running list of what's owed, who owes it, and when it's due. In addition to that I can do much more!" },
-			{ emoji: "📊", title: "Weekly recap", frequency: "Fridays at 4pm", description: "Every Friday, I'll recap what got done, what didn't, and what's worth sharing up in your team update — so nothing gets lost between meetings. In addition to that I can do much more!" },
-			{ emoji: "🗺️", title: "Stakeholder map", frequency: "Per initiative", description: "I'll map who owns what and flag who needs to be in the loop — so nothing stalls because the wrong person wasn't in the room. In addition to that I can do much more!" },
-			{ emoji: "⚡", title: "Meeting prep brief", frequency: "1 hour before", description: "I'll pull together the context, relevant docs, and open items before any important meeting — so you walk in prepared, not scrambling. In addition to that I can do much more!" },
+			{ emoji: "📅", title: "Daily briefing", frequency: "First thing in the morning", description: "I'll round up overnight changes, your day's calendar, and what needs you first — so you start the day knowing where to focus. In addition to that I can do much more!", icon: "/vau-icons/newspaper.png" },
+			{ emoji: "👋", title: "Status nudges", frequency: "Sent when things stall", description: "I'll quietly nudge when a thread goes quiet or a commitment slips — to the right person, with the right context, at exactly the right moment. In addition to that I can do much more!", icon: "/vau-icons/bell.png" },
+			{ emoji: "✅", title: "Action item tracking", frequency: "Updated in real time", description: "I'll catch commitments from meetings, emails, and chats — and keep a running list of what's owed, who owes it, and when it's due. In addition to that I can do much more!", icon: "/vau-icons/checkmark.png" },
+			{ emoji: "📊", title: "Weekly recap", frequency: "Fridays at 4pm", description: "Every Friday, I'll recap what got done, what didn't, and what's worth sharing up in your team update — so nothing gets lost between meetings. In addition to that I can do much more!", icon: "/vau-icons/file.png" },
+			{ emoji: "🗺️", title: "Stakeholder map", frequency: "Per initiative", description: "I'll map who owns what and flag who needs to be in the loop — so nothing stalls because the wrong person wasn't in the room. In addition to that I can do much more!", icon: "/vau-icons/glass.png" },
+			{ emoji: "⚡", title: "Meeting prep brief", frequency: "1 hour before", description: "I'll pull together the context, relevant docs, and open items before any important meeting — so you walk in prepared, not scrambling. In addition to that I can do much more!", icon: "/vau-icons/brief.png" },
 		],
 	},
 	{
@@ -310,7 +310,7 @@ export const VAUS: VAU[] = [
 			{ avatar: "/avatars/bike.png",      avatarBg: "#F5EDE0", name: "Chief of Staff", characterName: "Pip" },
 		],
 		examples: [
-			{ emoji: "📅", title: "Daily briefing", frequency: "First thing in the morning", description: "I'll round up overnight changes, your day's calendar, and what needs you first — so you start the day knowing where to focus. In addition to that I can do much more!" },
+			{ emoji: "📅", title: "Daily briefing", frequency: "First thing in the morning", description: "I'll round up overnight changes, your day's calendar, and what needs you first — so you start the day knowing where to focus. In addition to that I can do much more!", icon: "/vau-icons/newspaper.png" },
 			{ emoji: "👋", title: "Status nudges", frequency: "Sent when things stall", description: "I'll quietly nudge when a thread goes quiet or a commitment slips — to the right person, with the right context, at exactly the right moment. In addition to that I can do much more!" },
 			{ emoji: "✅", title: "Action item tracking", frequency: "Updated in real time", description: "I'll catch commitments from meetings, emails, and chats — and keep a running list of what's owed, who owes it, and when it's due. In addition to that I can do much more!" },
 			{ emoji: "📊", title: "Weekly recap", frequency: "Fridays at 4pm", description: "Every Friday, I'll recap what got done, what didn't, and what's worth sharing up in your team update — so nothing gets lost between meetings. In addition to that I can do much more!" },

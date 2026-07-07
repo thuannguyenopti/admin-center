@@ -158,7 +158,7 @@ function KpiCard({
 					fontWeight: 900,
 					lineHeight: "1.04",
 					letterSpacing: "0.56px",
-					color: "#226b1e",
+					color: "var(--ax-colors-fg-default)",
 				}}
 			>
 				{value}
@@ -168,7 +168,7 @@ function KpiCard({
 				style={{
 					fontSize: 12,
 					lineHeight: "1.33",
-					color: subGreen ? "#226b1e" : "var(--ax-colors-fg-secondary)",
+					color: "var(--ax-colors-fg-secondary)",
 					whiteSpace: "nowrap",
 				}}
 			>
@@ -203,22 +203,26 @@ function ActionCard({ example, onClick }: { example: VAUExample; onClick?: () =>
 				transition: "border-color 0.15s ease, box-shadow 0.15s ease",
 			}}
 		>
-			<Box display="flex" gap="12" alignItems="start">
+			<Box display="flex" gap="12" alignItems="center">
 				<Box
 					style={{
-						width: 48,
-						height: 48,
-						minWidth: 48,
-						background: "#0d3a29",
+						width: example.icon ? 64 : 48,
+						height: example.icon ? 64 : 48,
+						minWidth: example.icon ? 64 : 48,
+						background: example.icon ? "transparent" : "#0d3a29",
 						borderRadius: 8,
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
 						fontSize: 22,
 						flexShrink: 0,
+						overflow: "hidden",
 					}}
 				>
-					{example.emoji}
+					{example.icon
+						? <img src={example.icon} alt={example.title} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+						: example.emoji
+					}
 				</Box>
 				<Box display="flex" flexDirection="column" gap="8" style={{ flex: 1 }}>
 					<Text
@@ -1049,8 +1053,8 @@ export default function VAUDetailPage() {
 												</Text>
 											</Box>
 											{/* Chevron */}
-											<Box style={{ color: "var(--ax-colors-fg-default)", flexShrink: 0 }}>
-												{isExpanded ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+											<Box style={{ color: "var(--ax-colors-fg-default)", flexShrink: 0, display: "flex", alignItems: "center", alignSelf: "center" }}>
+												{isExpanded ? <IconChevronUp size={22} /> : <IconChevronDown size={22} />}
 											</Box>
 										</Box>
 
@@ -1064,10 +1068,6 @@ export default function VAUDetailPage() {
 															<Badge key={trait} variant="subtle">{trait}</Badge>
 														))}
 													</Box>
-												)}
-												{/* Divider */}
-												{p.traits && p.traits.length > 0 && p.sampleChat && (
-													<Box style={{ height: 1, background: "var(--ax-colors-border-default)", marginBottom: 16 }} />
 												)}
 												{/* Sounds like */}
 												{p.sampleChat && (
@@ -1090,10 +1090,9 @@ export default function VAUDetailPage() {
 							})}
 						</Box>
 					</Box>
-					</Box>
 
-					{/* Bottom action bar */}
-					<Box display="flex" justifyContent="flex-end" alignItems="center" gap="8" style={{ padding: "16px 48px", borderTop: "1px solid var(--ax-colors-border-secondary)" }}>
+					{/* Action buttons */}
+					<Box display="flex" justifyContent="flex-end" alignItems="center" gap="8" style={{ marginTop: 32, width: "100%", maxWidth: 544 }}>
 						<Button
 							appearance="subtle"
 							size="lg"
@@ -1110,6 +1109,7 @@ export default function VAUDetailPage() {
 						>
 							Save
 						</Button>
+					</Box>
 					</Box>
 				</Box>
 
@@ -1455,7 +1455,7 @@ export default function VAUDetailPage() {
 					<Text
 						fontSize="md"
 						color="fg.secondary"
-						style={{ lineHeight: "1.5", letterSpacing: "0.32px", maxWidth: 580, display: "block", marginBottom: 32 }}
+						style={{ lineHeight: "1.5", letterSpacing: "0.32px", maxWidth: 580, display: "block", marginBottom: 24 }}
 					>
 						{staticDescription}
 					</Text>
@@ -1475,7 +1475,7 @@ export default function VAUDetailPage() {
 
 					{/* My pitch */}
 					{vau.pitchStats && vau.pitchStats.length > 0 && (
-						<Box display="flex" flexDirection="column" gap="16" style={{ marginBottom: 24 }}>
+						<Box display="flex" flexDirection="column" gap="16" style={{ marginBottom: 32 }}>
 							<Box display="flex" flexDirection="column" gap="4">
 								<Text
 									style={{
@@ -1516,7 +1516,7 @@ export default function VAUDetailPage() {
 										<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>{stat.label}</span>
 										{/* Value row — number + tool icons side by side */}
 										<Box display="flex" alignItems="center" gap="8">
-											<Heading level="2" style={{ color: "#226B1E", flexShrink: 0, lineHeight: 1 }}>
+											<Heading level="2" style={{ color: "var(--ax-colors-fg-default)", flexShrink: 0, lineHeight: 1 }}>
 											{stat.value}
 										</Heading>
 											{stat.showTools && vau.tools.length > 0 && (
@@ -1594,7 +1594,7 @@ export default function VAUDetailPage() {
 
 					{/* Divider between My pitch and What I do */}
 					{vau.pitchStats && vau.pitchStats.length > 0 && (
-						<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", marginBottom: 24 }} />
+						<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", marginBottom: 32 }} />
 					)}
 
 					{/* What I do */}
