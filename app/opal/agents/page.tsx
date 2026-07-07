@@ -7,22 +7,27 @@ import {
     Button,
     Badge,
     Avatar,
+    Checkbox,
+    Field,
+    Input,
+    SearchInput,
+    Switch,
+    LabelMenuButton,
     Menu,
     MenuTrigger,
     MenuContent,
-    LabelMenuButton,
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
     DropdownMenuItem,
     Link,
+    Separator,
     Tooltip,
 } from "@optiaxiom/react";
-import { Table, Tr, Td } from "@/app/components/Table";
+import { Table, Tr, Td, Th } from "@/app/components/Table";
 import { DataTableHeaderCell } from "@optiaxiom/react/unstable";
 import { useReactTable, getCoreRowModel, type ColumnDef } from "@tanstack/react-table";
-import { IconUserRobot as IconAgent, IconCodeBranch, IconUpload, IconSearch, IconPlus, IconChevronDown, IconPen, IconTrashCan, IconDownload, IconEllipsisSolid, IconEye, IconEyeSlash, IconArrowRightArrowLeft } from "@optiaxiom/icons";
-import { Input } from "@/app/components/Input";
+import { IconAgent, IconCodeBranch, IconUpload, IconSliders, IconXmark, IconPlus, IconCirclePlus, IconChevronDown, IconPen, IconTrashCan, IconDownload, IconEllipsisSolid, IconEye, IconEyeSlash, IconArrowRightArrowLeft, IconCircleStop, IconCircleQuestion } from "@optiaxiom/icons";
 import { NewAgentDialog } from "./components/NewAgentDialog";
 import { ImportAgentDialog } from "./components/ImportAgentDialog";
 import { ExportAgentDialog } from "./components/ExportAgentDialog";
@@ -286,6 +291,29 @@ const REORDERABLE_COLUMN_DEFS: ColumnDef<AgentRow>[] = [
     { id: "status",       header: "Status",        enableResizing: true,  size: 100, minSize: 80  },
 ];
 
+// ─── Activity Log Data ────────────────────────────────────────────────────────
+
+type LogStatus = "Completed" | "Failed" | "Pending" | "In Progress";
+
+const ACTIVITY_LOGS_DATA = [
+    { id: "alog-0a", agentId: "experiment-planning",   executionTime: "Jun 30, 2026, 4:31 AM",  trigger: "Message",   triggeredBy: { name: "John Smith",   initials: "JS" }, status: "In Progress" as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Rudimentary", credits: null, evaluationScore: null,  duration: "—"      },
+    { id: "alog-0b", agentId: "email-campaign",        executionTime: "Jun 30, 2026, 4:30 AM",  trigger: "Scheduled", triggeredBy: { name: "Sarah Connor", initials: "SC" }, status: "In Progress" as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Standard",    credits: null, evaluationScore: null,  duration: "—"      },
+    { id: "alog-0c", agentId: "seo-keyword-research",  executionTime: "Jun 30, 2026, 4:29 AM",  trigger: "Message",   triggeredBy: { name: "John Smith",   initials: "JS" }, status: "Pending"     as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Rudimentary", credits: null, evaluationScore: null,  duration: "—"      },
+    { id: "alog-1",  agentId: "experiment-planning",   executionTime: "Jun 30, 2026, 4:27 AM",  trigger: "Message",   triggeredBy: { name: "John Smith",   initials: "JS" }, status: "Completed" as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Rudimentary", credits: 12,   evaluationScore: null,  duration: "57s"    },
+    { id: "alog-2",  agentId: "experiment-planning",   executionTime: "Jun 30, 2026, 4:26 AM",  trigger: "Message",   triggeredBy: { name: "John Smith",   initials: "JS" }, status: "Completed" as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Rudimentary", credits: 14,   evaluationScore: null,  duration: "44s"    },
+    { id: "alog-3",  agentId: "analyze-competitors",   executionTime: "Jun 30, 2026, 4:25 AM",  trigger: "Message",   triggeredBy: { name: "John Smith",   initials: "JS" }, status: "Completed" as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Rudimentary", credits: 2,    evaluationScore: null,  duration: "5s"     },
+    { id: "alog-4",  agentId: "seo-audit",             executionTime: "Jun 30, 2026, 4:25 AM",  trigger: "Message",   triggeredBy: { name: "John Smith",   initials: "JS" }, status: "Completed" as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Rudimentary", credits: 2,    evaluationScore: null,  duration: "7s"     },
+    { id: "alog-5",  agentId: "ab-experiment",         executionTime: "Jun 30, 2026, 4:24 AM",  trigger: "Message",   triggeredBy: { name: "John Smith",   initials: "JS" }, status: "Completed" as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Rudimentary", credits: 2,    evaluationScore: null,  duration: "7s"     },
+    { id: "alog-6",  agentId: "email-campaign",        executionTime: "Jun 30, 2026, 4:23 AM",  trigger: "Message",   triggeredBy: { name: "John Smith",   initials: "JS" }, status: "Completed" as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Rudimentary", credits: 2,    evaluationScore: null,  duration: "6s"     },
+    { id: "alog-7",  agentId: "optimize-geo",          executionTime: "Jun 30, 2026, 4:23 AM",  trigger: "Message",   triggeredBy: { name: "John Smith",   initials: "JS" }, status: "Failed"    as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Simple",      credits: null, evaluationScore: null,  duration: "37s"    },
+    { id: "alog-8",  agentId: "geo-recommendations",   executionTime: "Jun 30, 2026, 4:15 AM",  trigger: "Message",   triggeredBy: { name: "Sarah Connor", initials: "SC" }, status: "Completed" as LogStatus, modelProvider: "Gemini",           inferenceLevel: "Rudimentary", credits: 4,    evaluationScore: null,  duration: "7s"     },
+    { id: "alog-9",  agentId: "geo-recommendations",   executionTime: "Jun 30, 2026, 4:15 AM",  trigger: "Message",   triggeredBy: { name: "Sarah Connor", initials: "SC" }, status: "Completed" as LogStatus, modelProvider: "Gemini",           inferenceLevel: "Rudimentary", credits: 2,    evaluationScore: null,  duration: "3s"     },
+    { id: "alog-10", agentId: "social-media-strategy", executionTime: "Jun 29, 2026, 3:55 PM",  trigger: "Scheduled", triggeredBy: { name: "Sarah Connor", initials: "SC" }, status: "Completed" as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Standard",    credits: 28,   evaluationScore: 0.94,  duration: "2m 14s" },
+    { id: "alog-11", agentId: "content-calendar",      executionTime: "Jun 29, 2026, 2:12 PM",  trigger: "Message",   triggeredBy: { name: "John Smith",   initials: "JS" }, status: "Failed"    as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Rudimentary", credits: null, evaluationScore: null,  duration: "12s"    },
+    { id: "alog-12", agentId: "ad-variations",         executionTime: "Jun 28, 2026, 11:40 AM", trigger: "Scheduled", triggeredBy: { name: "Sarah Connor", initials: "SC" }, status: "Completed" as LogStatus, modelProvider: "Instance Default", inferenceLevel: "Standard",    credits: 19,   evaluationScore: 0.87,  duration: "1m 32s" },
+];
+
+
 export default function AgentsPage() {
     const router = useRouter();
     const pathname = usePathname();
@@ -313,7 +341,6 @@ export default function AgentsPage() {
     const [importAgentOpen, setImportAgentOpen] = useState(false);
     const [exportAgentOpen, setExportAgentOpen] = useState(false);
     const [exportAgent, setExportAgent] = useState<typeof STATIC_AGENTS[number] | null>(null);
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
     const [showTypeCol, setShowTypeCol] = useState(true);
     const [typeHeaderHovered, setTypeHeaderHovered] = useState(false);
@@ -337,11 +364,77 @@ export default function AgentsPage() {
         });
     };
 
-    const categories = Array.from(new Set(agents.flatMap((agent) => agent.tags?.map((tag) => tag.label) ?? []))).sort();
+    // ── Search & filter ───────────────────────────────────────────────────────
+    const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState<string[]>([]);
+    const [agentTypeFilter, setAgentTypeFilter] = useState<string[]>([]);
+    const [filterOpen, setFilterOpen] = useState(false);
+    const [logFilterOpen, setLogFilterOpen] = useState(false);
+
+    // ── Bulk selection ────────────────────────────────────────────────────────
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
+
+    // ── Activity log filters + selection ─────────────────────────────────────
+    const [logSearchQuery, setLogSearchQuery] = useState("");
+    const [logStatusFilter, setLogStatusFilter] = useState("All");
+    const [logTriggeredByFilter, setLogTriggeredByFilter] = useState("All Users");
+    const [logDateRangeFilter, setLogDateRangeFilter] = useState("Last 30 days");
+    const [filterVariantB, setFilterVariantB] = useState(false);
+    const [selectedLogIds, setSelectedLogIds] = useState<Set<string>>(new Set());
+    const [hoveredLogId, setHoveredLogId] = useState<string | null>(null);
+    const filteredLogs = useMemo(() => ACTIVITY_LOGS_DATA.filter(log => {
+        if (logSearchQuery) {
+            const a = STATIC_AGENTS.find(x => x.id === log.agentId);
+            if (!(a?.name ?? log.agentId).toLowerCase().includes(logSearchQuery.toLowerCase())) return false;
+        }
+        if (logStatusFilter !== "All" && log.status !== logStatusFilter) return false;
+        if (logTriggeredByFilter !== "All Users" && log.triggeredBy.name !== logTriggeredByFilter) return false;
+        return true;
+    }), [logSearchQuery, logStatusFilter, logTriggeredByFilter]);
+
+    const cancellableLogs = useMemo(() => filteredLogs.filter(l => l.status === "Pending" || l.status === "In Progress"), [filteredLogs]);
+    const allLogsSelected = filteredLogs.length > 0 && filteredLogs.every(l => selectedLogIds.has(l.id));
+    const someLogsSelected = filteredLogs.some(l => selectedLogIds.has(l.id)) && !allLogsSelected;
+    const canCancelSelection = selectedLogIds.size > 0 && [...selectedLogIds].every(id => {
+        const log = filteredLogs.find(l => l.id === id);
+        return log?.status === "Pending" || log?.status === "In Progress";
+    });
+    const nonCancellableSelectedCount = [...selectedLogIds].filter(id => {
+        const log = filteredLogs.find(l => l.id === id);
+        return log && log.status !== "Pending" && log.status !== "In Progress";
+    }).length;
+    const toggleLogSelect = (id: string) => setSelectedLogIds(prev => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+    });
+    const toggleAllLogs = () => {
+        if (allLogsSelected) setSelectedLogIds(new Set());
+        else setSelectedLogIds(new Set(cancellableLogs.map(l => l.id)));
+    };
     const showCategoryColors = searchParams.get("categoryPills") === "colored";
-    const filteredAgents = agents.filter((agent) =>
-        selectedCategories.length === 0 ? true : agent.tags?.some((tag) => selectedCategories.includes(tag.label))
-    );
+
+    const filteredAgents = agents.filter((agent) => {
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            if (!agent.name.toLowerCase().includes(q) && !agent.description.toLowerCase().includes(q)) return false;
+        }
+        if (statusFilter.length > 0 && !statusFilter.includes(agent.status)) return false;
+        return true;
+    });
+
+    const allSelected = filteredAgents.length > 0 && filteredAgents.every(a => selectedIds.has(a.id));
+    const someSelected = selectedIds.size > 0 && !allSelected;
+    const toggleSelect = (id: string) => setSelectedIds(prev => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+    });
+    const toggleAll = () => {
+        if (allSelected) setSelectedIds(new Set());
+        else setSelectedIds(new Set(filteredAgents.map(a => a.id)));
+    };
 
     // ── Column resizing (TanStack) ─────────────────────────────────────────────
     const table = useReactTable<AgentRow>({
@@ -361,56 +454,7 @@ export default function AgentsPage() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         table.getHeaderGroups()[0]?.headers.map(h => [h.id, h as any]) ?? []
     ) as Record<string, any>;
-    const categoryLabel = selectedCategories.length === 0
-        ? "All"
-        : selectedCategories.length === 1
-            ? selectedCategories[0]
-            : `${selectedCategories.length} selected`;
-    const categoryOptions = useMemo(
-        () => [
-            {
-                label: "All",
-                execute: () => setSelectedCategories([]),
-                multi: false,
-                selected: () => selectedCategories.length === 0,
-            },
-            ...categories.map((category) => {
-                const categoryTag = agents.flatMap((agent) => agent.tags ?? []).find((tag) => tag.label === category);
 
-                return showCategoryColors
-                    ? {
-                        key: category,
-                        label: "",
-                        keywords: category,
-                        addon: (
-                            <Badge intent={categoryTag?.intent as TagIntent} variant="subtle">
-                                {category}
-                            </Badge>
-                        ),
-                        execute: () =>
-                            setSelectedCategories((current) =>
-                                current.includes(category)
-                                    ? current.filter((item) => item !== category)
-                                    : [...current, category]
-                            ),
-                        multi: true,
-                        selected: () => selectedCategories.includes(category),
-                    }
-                    : {
-                        label: category,
-                        execute: () =>
-                            setSelectedCategories((current) =>
-                                current.includes(category)
-                                    ? current.filter((item) => item !== category)
-                                    : [...current, category]
-                            ),
-                        multi: true,
-                        selected: () => selectedCategories.includes(category),
-                    };
-            }),
-        ],
-        [categories, selectedCategories, showCategoryColors]
-    );
     const toggleCategoryPills = () => {
         const nextParams = new URLSearchParams(searchParams.toString());
 
@@ -429,16 +473,26 @@ export default function AgentsPage() {
         <NewAgentDialog open={newAgentOpen} onOpenChange={setNewAgentOpen} />
         <ImportAgentDialog open={importAgentOpen} onOpenChange={setImportAgentOpen} />
         <ExportAgentDialog open={exportAgentOpen} onOpenChange={setExportAgentOpen} agent={exportAgent} />
-        <Box px="32" py="24" display="flex" flexDirection="column" gap="24" overflow="auto" h="full">
+        <Box px="32" pb="24" display="flex" flexDirection="column" gap="24" h="full" bg="bg.page" style={{ overflowY: "auto", overflowX: "hidden" }}>
             {/* Header */}
-            <Box display="flex" flexDirection="column" gap="8">
-                <Heading level="1">Agents</Heading>
-                <Text color="fg.secondary">Empower your marketing team by customizing Opal agents to meet your specific needs.</Text>
+            <Box display="flex" alignItems="center" justifyContent="space-between" gap="16" style={{ paddingTop: 24 }}>
+                <Box display="flex" flexDirection="column" gap="8">
+                    <Heading level="1">Agents</Heading>
+                    <Text color="fg.secondary">Empower your marketing team by customizing Opal agents to meet your specific needs.</Text>
+                </Box>
+                <Box display="flex" alignItems="center" gap="16" px="12" py="8" rounded="md" style={{ flexShrink: 0, background: "var(--ax-colors-bg-secondary)", border: "1px dashed var(--ax-colors-border-secondary)" }}>
+                    <Text fontSize="xs" fontWeight="500" color="fg.tertiary" style={{ textTransform: "uppercase", letterSpacing: "0.06em", flexShrink: 0 }}>Feedback</Text>
+                    <Box display="flex" alignItems="center" gap="8">
+                        <Switch checked={filterVariantB} onCheckedChange={setFilterVariantB} />
+                        <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>Expanded filters</Text>
+                    </Box>
+                </Box>
             </Box>
 
-            {/* Tabs */}
-            <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">
-                {["Your Agents", "Agent Directory"].map((tab) => (
+            {/* Sticky header: tabs + conditional filter/toolbar */}
+            <Box style={{ position: "sticky", top: 0, zIndex: 20, background: "var(--ax-colors-bg-page)", marginLeft: -32, marginRight: -32, paddingLeft: 32, paddingRight: 32 }}>
+                <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">
+                {["Your Agents", "Agent Activity"].map((tab) => (
                     <Box
                         key={tab}
                         pb="12"
@@ -456,108 +510,522 @@ export default function AgentsPage() {
                         </Text>
                     </Box>
                 ))}
-            </Box>
-
-            {/* Toolbar */}
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Box display="flex" gap="12" alignItems="center">
-                    <Box style={{ width: 264 }}>
-                        <Input placeholder="Enter name or description" />
-                    </Box>
-
-                    <Menu placeholder="Search type..." options={[{ label: "All" }]}>
-                        <MenuTrigger asChild>
-                            <LabelMenuButton label="Type" h="40">
-                                All
-                            </LabelMenuButton>
-                        </MenuTrigger>
-                        <MenuContent />
-                    </Menu>
-
-                    <Menu
-                        placeholder="Search category..."
-                        inputVisible="always"
-                        options={categoryOptions}
-                    >
-                        <MenuTrigger asChild>
-                            <LabelMenuButton label="Category" h="40">
-                                {categoryLabel}
-                            </LabelMenuButton>
-                        </MenuTrigger>
-                        <MenuContent style={{ maxHeight: "320px", overflowY: "auto" }} />
-                    </Menu>
-
-                    <Menu placeholder="Search created by..." options={[{ label: "All" }]}>
-                        <MenuTrigger asChild>
-                            <LabelMenuButton label="Created by" h="40">
-                                All
-                            </LabelMenuButton>
-                        </MenuTrigger>
-                        <MenuContent />
-                    </Menu>
-
-                    <Menu placeholder="Search modified by..." options={[{ label: "All" }]}>
-                        <MenuTrigger asChild>
-                            <LabelMenuButton label="Modified by" h="40">
-                                All
-                            </LabelMenuButton>
-                        </MenuTrigger>
-                        <MenuContent />
-                    </Menu>
                 </Box>
-                <DropdownMenu open={addAgentOpen} onOpenChange={setAddAgentOpen}>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            appearance="primary"
-                            iconPosition="end"
-                            icon={<IconChevronDown />}
-                            className="data-[state=open]:ring-2 data-[state=open]:ring-offset-2 data-[state=open]:ring-[var(--ax-colors-border-accent)] outline-none focus:ring-0"
-                        >
-                            Add Agent
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); setTimeout(() => setNewAgentOpen(true), 150); }}>
-                            <Box mt="2" style={{ flexShrink: 0 }}>
-                                <Box rounded="md" overflow="hidden" style={{ width: 20, height: 20, flexShrink: 0 }}>
-                                        <img src="/opal.png" width={20} height={20} style={{ display: "block" }} alt="Opal" />
+                {activeTab === "Agent Activity" ? (
+                    <Box display="flex" flexDirection="column" gap="8" style={{ paddingTop: 16, paddingBottom: 0 }}>
+                        <Box display="flex" gap="8" alignItems="center">
+                            {filterVariantB ? (
+                                <>
+                                    <Box style={{ width: 400 }}>
+                                        <SearchInput
+                                            placeholder="Search by agent name"
+                                            size="lg"
+                                            value={logSearchQuery}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLogSearchQuery(e.target.value)}
+                                        />
                                     </Box>
-                            </Box>
-                            <Box>
-                                <Text fontWeight="500" fontSize="md">Add with Opal</Text>
-                                <Text fontSize="sm" color="fg.secondary">Describe the agent you want and Opal will configure it for you.</Text>
-                            </Box>
+                                    <Menu options={[
+                                        { label: "All Statuses", execute: () => setLogStatusFilter("All") },
+                                        { label: "Completed", execute: () => setLogStatusFilter("Completed") },
+                                        { label: "Failed", execute: () => setLogStatusFilter("Failed") },
+                                    ]}>
+                                        <MenuTrigger asChild>
+                                            <LabelMenuButton label="Status">{logStatusFilter === "All" ? "All" : logStatusFilter}</LabelMenuButton>
+                                        </MenuTrigger>
+                                        <MenuContent />
+                                    </Menu>
+                                    <Menu options={[
+                                        { label: "All Types", execute: () => {} },
+                                        { label: "Specialized", execute: () => {} },
+                                        { label: "Workflow", execute: () => {} },
+                                    ]}>
+                                        <MenuTrigger asChild>
+                                            <LabelMenuButton label="Agent Type">All</LabelMenuButton>
+                                        </MenuTrigger>
+                                        <MenuContent />
+                                    </Menu>
+                                    <Menu options={[{ label: "All Users", execute: () => {} }]}>
+                                        <MenuTrigger asChild>
+                                            <LabelMenuButton label="Triggered By">All</LabelMenuButton>
+                                        </MenuTrigger>
+                                        <MenuContent />
+                                    </Menu>
+                                    <Menu options={[
+                                        { label: "All Time", execute: () => setLogDateRangeFilter("All") },
+                                        { label: "Last 7 days", execute: () => setLogDateRangeFilter("Last 7 days") },
+                                        { label: "Last 30 days", execute: () => setLogDateRangeFilter("Last 30 days") },
+                                        { label: "Last 90 days", execute: () => setLogDateRangeFilter("Last 90 days") },
+                                    ]}>
+                                        <MenuTrigger asChild>
+                                            <LabelMenuButton label="Date Range">{logDateRangeFilter === "All" ? "All" : logDateRangeFilter}</LabelMenuButton>
+                                        </MenuTrigger>
+                                        <MenuContent />
+                                    </Menu>
+                                </>
+                            ) : (
+                                <>
+                                    <Box style={{ width: 400 }}>
+                                        <SearchInput
+                                            placeholder="Search by agent name"
+                                            size="lg"
+                                            value={logSearchQuery}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLogSearchQuery(e.target.value)}
+                                        />
+                                    </Box>
+                                    <DropdownMenu open={logFilterOpen} onOpenChange={setLogFilterOpen}>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                appearance="default"
+                                                size="lg"
+                                                icon={<IconSliders size={16} />}
+                                                aria-label="Open filters"
+                                            />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start" style={{ width: 302 }}>
+                                            <Box px="12" py="8" display="flex" flexDirection="column" gap="24">
+                                                <Text fontWeight="500" fontSize="md">Filters</Text>
+                                                <Box display="flex" gap="48">
+                                                    <Box display="flex" flexDirection="column" gap="12">
+                                                        <Text fontSize="sm" color="fg.secondary">Status</Text>
+                                                        {(["Completed", "Failed"] as const).map(s => (
+                                                            <Checkbox
+                                                                key={s}
+                                                                checked={logStatusFilter === s}
+                                                                onCheckedChange={checked => setLogStatusFilter(checked ? s : "All")}
+                                                            >{s}</Checkbox>
+                                                        ))}
+                                                    </Box>
+                                                    <Box display="flex" flexDirection="column" gap="12">
+                                                        <Text fontSize="sm" color="fg.secondary">Agent Type</Text>
+                                                        {(["Specialized", "Workflow"] as const).map(t => (
+                                                            <Checkbox key={t} checked={false} onCheckedChange={() => {}}>{t}</Checkbox>
+                                                        ))}
+                                                    </Box>
+                                                </Box>
+                                                <Field label="Triggered By">
+                                                    <Input size="lg" placeholder="All users" />
+                                                </Field>
+                                                <Field label="Date Range">
+                                                    <Input size="lg" placeholder="Last 30 days" />
+                                                </Field>
+                                            </Box>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </>
+                            )}
                         </Box>
-                        <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
-                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); router.push("/opal/agents/setup"); }}>
-                            <Box mt="2" color="fg.default"><IconAgent /></Box>
-                            <Box>
-                                <Text fontWeight="500" fontSize="md">Build with Opal</Text>
-                                <Text fontSize="sm" color="fg.secondary">Start with Opal in chat, use action cards to shape the brief, and then refine the draft.</Text>
+                        {selectedLogIds.size > 0 && (
+                            <Box display="flex" alignItems="center" gap="8" px="12" bg="bg.secondary" rounded="md" style={{ height: 40 }}>
+                                <Text fontWeight="600" fontSize="sm">{selectedLogIds.size} selected</Text>
+                                <Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} onClick={() => setSelectedLogIds(new Set())} aria-label="Clear selection" />
+                                {nonCancellableSelectedCount > 0 && (
+                                    <>
+                                        <Box display="flex" alignItems="center" gap="4">
+                                            <Text fontSize="sm" color="fg.secondary">{nonCancellableSelectedCount} can't be canceled</Text>
+                                            <Tooltip content="Only running or pending executions can be canceled" delayDuration={100}>
+                                                <Box style={{ display: "inline-flex", cursor: "default" }}>
+                                                    <IconCircleQuestion size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+                                                </Box>
+                                            </Tooltip>
+                                        </Box>
+                                        <Button
+                                            appearance="default"
+                                            size="sm"
+                                            onClick={() => setSelectedLogIds(new Set(
+                                                [...selectedLogIds].filter(id => {
+                                                    const log = filteredLogs.find(l => l.id === id);
+                                                    return log?.status === "Pending" || log?.status === "In Progress";
+                                                })
+                                            ))}
+                                        >
+                                            Keep cancelable only
+                                        </Button>
+                                    </>
+                                )}
+                                <Box style={{ flex: 1 }} />
+                                <Button appearance="danger-outline" size="md" icon={<IconCircleStop size={14} />} disabled={!canCancelSelection} onClick={() => setSelectedLogIds(new Set())}>
+                                    Cancel Run
+                                </Button>
                             </Box>
-                        </Box>
-                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); router.push("/opal/agents/workflow"); }}>
-                            <Box mt="2" color="fg.default"><IconCodeBranch /></Box>
-                            <Box>
-                                <Text fontWeight="500" fontSize="md">Workflow</Text>
-                                <Text fontSize="sm" color="fg.secondary">Orchestrate agents and tools to fulfill your requirements.</Text>
+                        )}
+                    </Box>
+                ) : (
+                    <Box display="flex" justifyContent="space-between" alignItems="start" gap="12" style={{ paddingTop: 16, paddingBottom: 0 }}>
+                <Box display="flex" flexDirection="column" gap="8" style={{ flex: 1, minWidth: 0 }}>
+                    <Box display="flex" gap="8" alignItems="center" style={{ flex: 1 }}>
+                        {filterVariantB ? (
+                            <>
+                                <Box style={{ width: 400 }}>
+                                    <SearchInput
+                                        placeholder="Search agents"
+                                        size="lg"
+                                        value={searchQuery}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                                    />
+                                </Box>
+                                <Menu options={[
+                                    { label: "All Statuses", execute: () => setStatusFilter([]) },
+                                    { label: "Active", execute: () => setStatusFilter(["Active"]) },
+                                    { label: "Inactive", execute: () => setStatusFilter(["Inactive"]) },
+                                ]}>
+                                    <MenuTrigger asChild>
+                                        <LabelMenuButton label="Status">{statusFilter.length === 0 ? "All" : statusFilter[0]}</LabelMenuButton>
+                                    </MenuTrigger>
+                                    <MenuContent />
+                                </Menu>
+                                <Menu options={[
+                                    { label: "All Types", execute: () => setAgentTypeFilter([]) },
+                                    { label: "Specialized", execute: () => setAgentTypeFilter(["Specialized"]) },
+                                    { label: "Workflow", execute: () => setAgentTypeFilter(["Workflow"]) },
+                                ]}>
+                                    <MenuTrigger asChild>
+                                        <LabelMenuButton label="Agent Type">{agentTypeFilter.length === 0 ? "All" : agentTypeFilter[0]}</LabelMenuButton>
+                                    </MenuTrigger>
+                                    <MenuContent />
+                                </Menu>
+                                <Menu options={[{ label: "All Users", execute: () => {} }]}>
+                                    <MenuTrigger asChild>
+                                        <LabelMenuButton label="Created By">All</LabelMenuButton>
+                                    </MenuTrigger>
+                                    <MenuContent />
+                                </Menu>
+                            </>
+                        ) : (
+                            <>
+                                <Box style={{ width: 400 }}>
+                                    <SearchInput
+                                        placeholder="Search agents"
+                                        size="lg"
+                                        value={searchQuery}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                                    />
+                                </Box>
+                                <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            appearance="default"
+                                            size="lg"
+                                            icon={<IconSliders size={16} />}
+                                            aria-label="Open filters"
+                                        />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" style={{ width: 302 }}>
+                                        <Box px="12" py="8" display="flex" flexDirection="column" gap="24">
+                                            <Text fontWeight="500" fontSize="md">Filters</Text>
+                                            <Box display="flex" gap="48">
+                                                <Box display="flex" flexDirection="column" gap="12">
+                                                    <Text fontSize="sm" color="fg.secondary">Status</Text>
+                                                    {(["Active", "Inactive"] as const).map(s => (
+                                                        <Checkbox
+                                                            key={s}
+                                                            checked={statusFilter.includes(s)}
+                                                            onCheckedChange={(checked) =>
+                                                                setStatusFilter(prev =>
+                                                                    checked === true ? [...prev, s] : prev.filter(x => x !== s)
+                                                                )
+                                                            }
+                                                        >
+                                                            {s}
+                                                        </Checkbox>
+                                                    ))}
+                                                </Box>
+                                                <Box display="flex" flexDirection="column" gap="12">
+                                                    <Text fontSize="sm" color="fg.secondary">Agent Type</Text>
+                                                    {(["Specialized", "Workflow"] as const).map(t => (
+                                                        <Checkbox
+                                                            key={t}
+                                                            checked={agentTypeFilter.includes(t)}
+                                                            onCheckedChange={(checked) =>
+                                                                setAgentTypeFilter(prev =>
+                                                                    checked === true ? [...prev, t] : prev.filter(x => x !== t)
+                                                                )
+                                                            }
+                                                        >
+                                                            {t}
+                                                        </Checkbox>
+                                                    ))}
+                                                </Box>
+                                            </Box>
+                                            <Field label="Created by">
+                                                <Input size="lg" placeholder="All users" />
+                                            </Field>
+                                            <Field label="Modified by">
+                                                <Input size="lg" placeholder="All users" />
+                                            </Field>
+                                        </Box>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </>
+                        )}
+                        {selectedIds.size > 0 && (
+                            <Box display="flex" alignItems="center" gap="8" px="12" bg="bg.secondary" rounded="md" style={{ height: 40, flex: 1 }}>
+                                <Text fontWeight="600" fontSize="sm">{selectedIds.size} selected</Text>
+                                <Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} onClick={() => setSelectedIds(new Set())} aria-label="Clear selection" />
+                                <Box style={{ flex: 1 }} />
+                                <Button appearance="danger-outline" size="md" icon={<IconTrashCan size={14} />} onClick={() => {
+                                    const toDelete = Array.from(selectedIds);
+                                    const updated = userAgents.filter(a => !toDelete.includes(a.id));
+                                    setUserAgents(updated);
+                                    localStorage.setItem("opal_user_agents", JSON.stringify(updated.map(({ icon: _icon, ...rest }) => rest)));
+                                    setSelectedIds(new Set());
+                                }}>
+                                    Delete
+                                </Button>
                             </Box>
+                        )}
+                    </Box>
+                    {!filterVariantB && (statusFilter.length > 0 || agentTypeFilter.length > 0) && (
+                        <Box display="flex" gap="8" flexWrap="wrap">
+                            {statusFilter.map(s => (
+                                <Box
+                                    key={s}
+                                    display="inline-flex"
+                                    alignItems="center"
+                                    gap="4"
+                                    style={{
+                                        height: 24,
+                                        paddingLeft: 8,
+                                        paddingRight: 4,
+                                        borderRadius: 8,
+                                        background: "var(--ax-colors-bg-tertiary)",
+                                        fontFamily: "var(--ax-font-family-caption)",
+                                        fontSize: 11,
+                                        letterSpacing: "0.04em",
+                                        textTransform: "uppercase",
+                                    }}
+                                >
+                                    <strong>STATUS:</strong>&nbsp;{s}
+                                    <Button size="sm" appearance="subtle" icon={<IconXmark size={10} />}
+                                        onClick={() => setStatusFilter(prev => prev.filter(x => x !== s))}
+                                        aria-label={`Remove ${s} status filter`}
+                                        style={{ width: 16, height: 16 }}
+                                    />
+                                </Box>
+                            ))}
+                            {agentTypeFilter.map(t => (
+                                <Box
+                                    key={t}
+                                    display="inline-flex"
+                                    alignItems="center"
+                                    gap="4"
+                                    style={{
+                                        height: 24,
+                                        paddingLeft: 8,
+                                        paddingRight: 4,
+                                        borderRadius: 8,
+                                        background: "var(--ax-colors-bg-tertiary)",
+                                        fontFamily: "var(--ax-font-family-caption)",
+                                        fontSize: 11,
+                                        letterSpacing: "0.04em",
+                                        textTransform: "uppercase",
+                                    }}
+                                >
+                                    <strong>AGENT TYPE:</strong>&nbsp;{t}
+                                    <Button size="sm" appearance="subtle" icon={<IconXmark size={10} />}
+                                        onClick={() => setAgentTypeFilter(prev => prev.filter(x => x !== t))}
+                                        aria-label={`Remove ${t} type filter`}
+                                        style={{ width: 16, height: 16 }}
+                                    />
+                                </Box>
+                            ))}
                         </Box>
-                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); setTimeout(() => setImportAgentOpen(true), 150); }}>
-                            <Box mt="2" color="fg.default"><IconUpload /></Box>
-                            <Box>
-                                <Text fontWeight="500" fontSize="md">Upload</Text>
-                                <Text fontSize="sm" color="fg.secondary">Upload an agent from a JSON file.</Text>
+                    )}
+                </Box>
+                {selectedIds.size === 0 && <Box display="flex" gap="8" alignItems="center" style={{ flexShrink: 0 }}>
+                    <DropdownMenu open={addAgentOpen} onOpenChange={setAddAgentOpen}>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                appearance="primary"
+                                size="lg"
+                                iconPosition="end"
+                                icon={<IconChevronDown />}
+                                addonBefore={
+                                    <Box
+                                        rounded="sm"
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                        style={{
+                                            backgroundColor: "var(--_1bzuvea)",
+                                            color: "var(--ze7z71)",
+                                            padding: 4,
+                                            width: 28,
+                                            height: 28,
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        <IconCirclePlus size={16} />
+                                    </Box>
+                                }
+                                className="data-[state=open]:ring-2 data-[state=open]:ring-offset-2 data-[state=open]:ring-[var(--ax-colors-border-accent)] outline-none focus:ring-0"
+                            >
+                                Add Agent
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); setTimeout(() => setNewAgentOpen(true), 150); }}>
+                                <Box mt="2" style={{ flexShrink: 0 }}>
+                                    <Box rounded="md" overflow="hidden" style={{ width: 20, height: 20, flexShrink: 0 }}>
+                                            <img src="/opal.png" width={20} height={20} style={{ display: "block" }} alt="Opal" />
+                                        </Box>
+                                </Box>
+                                <Box>
+                                    <Text fontWeight="500" fontSize="md">Add with Opal</Text>
+                                    <Text fontSize="sm" color="fg.secondary">Describe the agent you want and Opal will configure it for you.</Text>
+                                </Box>
                             </Box>
-                        </Box>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                            <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
+                            <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); router.push("/opal/agents/setup"); }}>
+                                <Box mt="2" color="fg.default"><IconAgent /></Box>
+                                <Box>
+                                    <Text fontWeight="500" fontSize="md">Build with Opal</Text>
+                                    <Text fontSize="sm" color="fg.secondary">Start with Opal in chat, use action cards to shape the brief, and then refine the draft.</Text>
+                                </Box>
+                            </Box>
+                            <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); router.push("/opal/agents/workflow"); }}>
+                                <Box mt="2" color="fg.default"><IconCodeBranch /></Box>
+                                <Box>
+                                    <Text fontWeight="500" fontSize="md">Workflow</Text>
+                                    <Text fontSize="sm" color="fg.secondary">Orchestrate agents and tools to fulfill your requirements.</Text>
+                                </Box>
+                            </Box>
+                            <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); setTimeout(() => setImportAgentOpen(true), 150); }}>
+                                <Box mt="2" color="fg.default"><IconUpload /></Box>
+                                <Box>
+                                    <Text fontWeight="500" fontSize="md">Upload</Text>
+                                    <Text fontSize="sm" color="fg.secondary">Upload an agent from a JSON file.</Text>
+                                </Box>
+                            </Box>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </Box>}
+                    </Box>
+                )}
             </Box>
 
-            {/* Table */}
-            <Table style={{ overflowX: "auto" }}>
-                <thead className="[&_th>div]:!shadow-none [&_th>div]:!border-b-0">
-                    <Tr>
+            {activeTab === "Agent Activity" ? (<>
+                    <Table style={{ isolation: "isolate" }}>
+                        <thead className="[&_th>div]:!shadow-none [&_th>div]:!border-b-0" style={{ position: "sticky", top: 93, zIndex: 10, background: "var(--ax-colors-bg-default)" }}>
+                            <Tr className="hover:!bg-transparent cursor-default">
+                                <Th style={{ width: 40, minWidth: 40, paddingLeft: 16, paddingRight: 8 }}>
+                                    <Checkbox
+                                        checked={allLogsSelected}
+                                        indeterminate={someLogsSelected}
+                                        onCheckedChange={() => toggleAllLogs()}
+                                    />
+                                </Th>
+                                <Th style={{ minWidth: 48 }}>TYPE</Th>
+                                {["EXECUTION TIME", "AGENT", "TRIGGER", "TRIGGERED BY", "STATUS", "MODEL PROVIDER", "INFERENCE LEVEL", "CREDITS", "EVALUATION SCORE", "DURATION"].map(col => (
+                                    <Th key={col} style={{ whiteSpace: "nowrap" }}>{col}</Th>
+                                ))}
+                            </Tr>
+                        </thead>
+                        <tbody>
+                            {filteredLogs.map(log => {
+                                const logAgent = STATIC_AGENTS.find(a => a.id === log.agentId);
+                                const isSelected = selectedLogIds.has(log.id);
+                                return (
+                                    <Tr
+                                        key={log.id}
+                                        style={isSelected ? { background: "var(--ax-colors-bg-accent-subtle)" } : undefined}
+                                        onMouseEnter={() => setHoveredLogId(log.id)}
+                                        onMouseLeave={() => setHoveredLogId(null)}
+                                    >
+                                        <Td style={{ width: 40, minWidth: 40, paddingLeft: 16 }}>
+                                            <Box
+                                                style={{ display: "inline-flex" }}
+                                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                            >
+                                                <Box style={{
+                                                    opacity: selectedLogIds.size > 0 || hoveredLogId === log.id ? 1 : 0,
+                                                    transition: "opacity 0.1s",
+                                                }}>
+                                                    <Checkbox
+                                                        checked={isSelected}
+                                                        onCheckedChange={() => toggleLogSelect(log.id)}
+                                                    />
+                                                </Box>
+                                            </Box>
+                                        </Td>
+                                        <Td style={{ minWidth: 48 }}>
+                                            <Box
+                                                rounded="lg"
+                                                style={{
+                                                    width: 28, height: 28,
+                                                    background: "radial-gradient(ellipse at 100% 50%, rgba(186,158,245,0.20) 0%, rgba(168,184,240,0.17) 55%, rgba(144,210,187,0.155) 77%, rgba(119,236,133,0.14) 100%), #fff",
+                                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                                }}
+                                                color="fg.secondary"
+                                            >
+                                                {logAgent?.icon ?? <IconAgent />}
+                                            </Box>
+                                        </Td>
+                                        <Td style={{ whiteSpace: "nowrap" }}>
+                                            <Text fontSize="sm">{log.executionTime}</Text>
+                                        </Td>
+                                        <Td style={{ minWidth: 180 }}>
+                                            <Box>
+                                                <Text fontWeight="500">{logAgent?.name ?? log.agentId}</Text>
+                                                <Text fontSize="sm" color="fg.secondary">{logAgent?.handle}</Text>
+                                            </Box>
+                                        </Td>
+                                        <Td>
+                                            <Text fontSize="sm">{log.trigger}</Text>
+                                        </Td>
+                                        <Td style={{ minWidth: 160 }}>
+                                            <Box display="flex" flexDirection="row" gap="8" alignItems="center">
+                                                <Avatar name={log.triggeredBy.name} size="sm" />
+                                                <Text fontSize="sm" style={{ whiteSpace: "nowrap" }}>{log.triggeredBy.name}</Text>
+                                            </Box>
+                                        </Td>
+                                        <Td style={{ whiteSpace: "nowrap" }}>
+                                            <Badge
+                                                intent={
+                                                    log.status === "Completed" ? "success" :
+                                                    log.status === "Failed" ? "danger" :
+                                                    log.status === "In Progress" ? "information" :
+                                                    "warning"
+                                                }
+                                                variant="subtle"
+                                            >
+                                                {log.status}
+                                            </Badge>
+                                        </Td>
+                                        <Td style={{ whiteSpace: "nowrap" }}>
+                                            <Badge intent="neutral" variant="subtle">{log.modelProvider}</Badge>
+                                        </Td>
+                                        <Td style={{ whiteSpace: "nowrap" }}>
+                                            <Badge intent="neutral" variant="subtle">{log.inferenceLevel}</Badge>
+                                        </Td>
+                                        <Td>
+                                            <Text fontSize="sm">{log.credits != null ? log.credits : "—"}</Text>
+                                        </Td>
+                                        <Td>
+                                            <Text fontSize="sm">{log.evaluationScore != null ? log.evaluationScore.toFixed(2) : "—"}</Text>
+                                        </Td>
+                                        <Td>
+                                            <Text fontSize="sm">{log.duration}</Text>
+                                        </Td>
+                                    </Tr>
+                                );
+                            })}
+                        </tbody>
+                    </Table>
+            </>) : (<>
+            <Table style={{ isolation: "isolate" }}>
+                <thead className="[&_th>div]:!shadow-none [&_th>div]:!border-b-0" style={{ position: "sticky", top: 93, zIndex: 10, background: "var(--ax-colors-bg-default)" }}>
+                    <Tr className="hover:!bg-transparent cursor-default">
+                        {/* Bulk select header checkbox */}
+                        <th
+                            className="text-left p-4 text-xs font-normal py-3 align-middle"
+                            style={{ width: 40, minWidth: 40, paddingLeft: 16 }}
+                        >
+                            <Checkbox
+                                checked={allSelected}
+                                indeterminate={someSelected}
+                                onCheckedChange={() => toggleAll()}
+                            />
+                        </th>
                         <th
                             className="text-left p-4 text-xs font-normal py-3 align-middle text-[var(--ax-colors-fg-tertiary)]"
                             style={{ width: 48, minWidth: 48 }}
@@ -673,7 +1141,28 @@ export default function AgentsPage() {
                 </thead>
                 <tbody>
                     {filteredAgents.map((agent, index) => (
-                        <Tr key={index} url={agent.id === 'cmp-workflow' ? '/opal/agents/workflow?preset=cmp-workflow' : `/opal/agents/setup?id=${agent.id}&mode=edit`}>
+                        <Tr
+                            key={index}
+                            url={agent.id === 'cmp-workflow' ? '/opal/agents/workflow?preset=cmp-workflow' : `/opal/agents/setup?id=${agent.id}&mode=edit`}
+                            style={selectedIds.has(agent.id) ? { background: "var(--ax-colors-bg-accent-subtle)" } : undefined}
+                            onMouseEnter={() => setHoveredRowId(agent.id)}
+                            onMouseLeave={() => setHoveredRowId(null)}
+                        >
+                            {/* Bulk select checkbox — visible on hover or when any row is selected */}
+                            <Td style={{ width: 40, minWidth: 40, paddingLeft: 16 }}>
+                                <Box
+                                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                    style={{
+                                        opacity: selectedIds.size > 0 || hoveredRowId === agent.id ? 1 : 0,
+                                        transition: "opacity 0.1s",
+                                    }}
+                                >
+                                    <Checkbox
+                                        checked={selectedIds.has(agent.id)}
+                                        onCheckedChange={() => toggleSelect(agent.id)}
+                                    />
+                                </Box>
+                            </Td>
                             {/* Fixed: Type icon */}
                             <Td style={{ width: 48, minWidth: 48 }}>
                                 {showTypeCol && (
@@ -683,7 +1172,7 @@ export default function AgentsPage() {
                                             style={{
                                                 width: 28,
                                                 height: 28,
-                                                background: "linear-gradient(90deg, rgba(186, 158, 245, 0.2), rgba(168, 184, 240, 0.17) 60%, rgba(119, 236, 133, 0.14)), linear-gradient(#fff, #fff)",
+                                                background: "radial-gradient(ellipse at 100% 50%, rgba(186,158,245,0.20) 0%, rgba(168,184,240,0.17) 55%, rgba(144,210,187,0.155) 77%, rgba(119,236,133,0.14) 100%), #fff",
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
@@ -765,7 +1254,7 @@ export default function AgentsPage() {
                                                     bg="bg.default"
                                                     style={{ width: "24px", height: "24px" }}
                                                 >
-                                                    <Image src="/logo.svg" alt="Optimizely" width={16} height={16} />
+                                                    <Image src="/optimizely-favicon-new.svg" alt="Optimizely" width={20} height={20} />
                                                 </Box>
                                             ) : (
                                                 <Avatar name={agent.creator.name} src={agent.creator.avatar} size="sm" />
@@ -781,7 +1270,7 @@ export default function AgentsPage() {
                                                 showCategoryColors ? (
                                                     <Badge key={tag.label} intent={tag.intent as TagIntent} variant="subtle">{tag.label}</Badge>
                                                 ) : (
-                                                    <Badge key={tag.label}>{tag.label}</Badge>
+                                                    <Badge key={tag.label} intent="information" variant="subtle">{tag.label}</Badge>
                                                 )
                                             ))}
                                         </Box>
@@ -867,7 +1356,8 @@ export default function AgentsPage() {
                     ))}
                 </tbody>
             </Table>
+            </>)}
         </Box>
-        </>
+</>
     );
 }

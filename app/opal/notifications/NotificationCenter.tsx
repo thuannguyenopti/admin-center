@@ -6,13 +6,20 @@ import {
     Text,
     Button,
     Badge,
+    Switch,
     Menu,
     MenuTrigger,
     MenuContent,
     LabelMenuButton,
     Checkbox,
-    Separator,
+    SearchInput,
     Pagination,
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    Field,
+    Input,
+    Separator,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { IconAgent } from "@optimizely/axiom-icons";
@@ -35,18 +42,16 @@ import {
     IconGear,
     IconTrashCan,
     IconBellSlash,
-    IconGrid,
     IconList,
-    IconRectangleList,
+
     IconAngleRight,
     IconAngleDown,
-    IconComment,
-    IconAt,
-    IconComments,
+    IconXmark,
+    IconChevronDown,
+    IconSliders,
 } from "@optiaxiom/icons";
-import { Input } from "@/app/components/Input";
 import NextLink from "next/link";
-import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
     mockNotifications,
     filterNotifications,
@@ -172,7 +177,7 @@ function PriorityDot({ priority }: { priority: Notification["priority"] }) {
 
 function CategoryBadge({ category }: { category: Notification["category"] }) {
     const colorMap: Record<string, { intent: string; variant: "subtle" | "strong" }> = {
-        agent_execution: { intent: "primary", variant: "subtle" },
+        agent_execution: { intent: "neutral", variant: "subtle" },
         guardrail: { intent: "neutral", variant: "strong" },
         directory: { intent: "information", variant: "subtle" },
         tools: { intent: "success", variant: "subtle" },
@@ -181,7 +186,7 @@ function CategoryBadge({ category }: { category: Notification["category"] }) {
     };
     const config = colorMap[category] || { intent: "neutral", variant: "subtle" };
     return (
-        <Badge variant={config.variant as any} intent={config.intent as any} className="whitespace-nowrap">
+        <Badge variant={config.variant as any} intent={config.intent as any} style={{ whiteSpace: "nowrap" }}>
             {getCategoryLabel(category)}
         </Badge>
     );
@@ -219,19 +224,28 @@ function NotificationRow({
     toggleSelect,
     getStatusIcon,
     getTypeIcon,
+    isChild = false,
+    hoveredId,
+    onHoverChange,
 }: {
     n: Notification;
     selectedIds: Set<string>;
     toggleSelect: (id: string) => void;
     getStatusIcon: (n: Notification) => React.ReactNode;
     getTypeIcon: (n: Notification) => React.ReactNode;
+    isChild?: boolean;
+    hoveredId: string | null;
+    onHoverChange: (id: string | null) => void;
 }) {
     return (
         <Tr
             url={n.deepLink}
+            onMouseEnter={() => onHoverChange(n.id)}
+            onMouseLeave={() => onHoverChange(null)}
             style={{
-                backgroundColor:
-                    n.status === "unread" ? "var(--ax-colors-bg-secondary)" : "var(--ax-colors-bg-page)",
+                backgroundColor: selectedIds.has(n.id)
+                    ? "var(--ax-colors-bg-success-subtle)"
+                    : "var(--ax-colors-bg-default)",
             }}
         >
             <Td style={{ paddingLeft: 4, paddingRight: 0, paddingTop: 8, paddingBottom: 8, verticalAlign: "middle" }}>
@@ -240,7 +254,10 @@ function NotificationRow({
                     <Box style={{ width: 8, height: 8, flexShrink: 0 }}>
                         {n.status === "unread" && <UnreadIndicator />}
                     </Box>
-                    <Box onClick={(e) => e.stopPropagation()}>
+                    <Box
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ opacity: selectedIds.size > 0 || hoveredId === n.id ? 1 : 0, transition: "opacity 0.1s" }}
+                    >
                         <Checkbox
                             checked={selectedIds.has(n.id)}
                             onCheckedChange={() => toggleSelect(n.id)}
@@ -248,9 +265,9 @@ function NotificationRow({
                     </Box>
                 </Box>
             </Td>
-            <Td style={{ paddingLeft: 4, paddingTop: 8, paddingBottom: 8 }}>
-                <Box display="flex" flexDirection="row" gap="12" alignItems="center">
-                    <Box style={{ flexShrink: 0 }}>
+            <Td style={{ paddingLeft: isChild ? 48 : 4, paddingTop: 8, paddingBottom: 8 }}>
+                <Box display="flex" flexDirection="row" gap="12" alignItems="start">
+                    <Box style={{ flexShrink: 0, marginTop: 2 }}>
                         {getStatusIcon(n) ?? getTypeIcon(n)}
                     </Box>
                     <Box display="flex" flexDirection="column" gap="4">
@@ -261,25 +278,14 @@ function NotificationRow({
                             {getCategoryLabel(n.category)} · {n.message}
                         </Box>
                         {n.actionRequired && (
-                            <Box>
-                                <Badge intent="warning" variant="subtle">
-                                    Action Required
-                                </Badge>
-                            </Box>
-                        )}
-                        {(n.type === "im_new_message" || n.type === "im_mention" || n.type === "im_thread_reply") && n.deepLink && (
-                            <Box onClick={(e) => e.stopPropagation()}>
-                                <NextLink href={n.deepLink}>
-                                    <Button appearance="subtle" size="sm" icon={<IconComment size={13} />}>
-                                        Reply
-                                    </Button>
-                                </NextLink>
-                            </Box>
+                            <Badge intent="warning" variant="subtle" style={{ width: "fit-content" }}>
+                                Action Required
+                            </Badge>
                         )}
                     </Box>
                 </Box>
             </Td>
-            <Td style={{ paddingTop: 8, paddingBottom: 8, verticalAlign: "middle" }}>
+            <Td style={{ paddingTop: 8, paddingBottom: 8, verticalAlign: "middle", overflow: "hidden" }}>
                 <CategoryBadge category={n.category} />
             </Td>
             <Td style={{ paddingTop: 8, paddingBottom: 8, verticalAlign: "middle" }}>
@@ -304,14 +310,9 @@ function NotificationRow({
                     {n.priority}
                 </Text>
             </Td>
-            <Td style={{ width: 40, paddingTop: 8, paddingBottom: 8, verticalAlign: "middle" }}>
+            <Td style={{ width: 40, paddingTop: 8, paddingBottom: 8, verticalAlign: "top" }}>
                 <Box onClick={(e) => e.stopPropagation()}>
-                    <Button
-                        appearance="subtle"
-                        icon={<IconEllipsisSolid />}
-                        size="sm"
-                        aria-label="Options"
-                    />
+                    <Button appearance="subtle" icon={<IconEllipsisSolid />} size="md" aria-label="Options" />
                 </Box>
             </Td>
         </Tr>
@@ -331,22 +332,13 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
     const [dateRangeFilter, setDateRangeFilter] = useState("All");
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-    const [viewMode, setViewMode] = useState<"list" | "card" | "detailed">("list");
-    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [hoveredId, setHoveredId] = useState<string | null>(null);
+    const [filterOpen, setFilterOpen] = useState(false);
+    const [filterVariantB, setFilterVariantB] = useState(false);
+    const [activeTab, setActiveTab] = useState<"all" | "unread" | "action-required">("all");
+
     const [isLoading, setIsLoading] = useState(true);
     const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
-    const [isScrolled, setIsScrolled] = useState(false);
-    const contentPaneRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        const el = contentPaneRef.current;
-        if (!el) return;
-        const onScroll = (e: Event) => {
-            setIsScrolled((e.target as Element).scrollTop > 20);
-        };
-        el.addEventListener("scroll", onScroll, true);
-        return () => el.removeEventListener("scroll", onScroll, true);
-    }, []);
-
     const toggleGroup = (key: string) => {
         setCollapsedGroups((prev) => {
             const next = new Set(prev);
@@ -370,6 +362,9 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
         [notifications]
     );
 
+    const unreadTabCount = useMemo(() => notifications.filter(n => n.status === "unread").length, [notifications]);
+    const actionRequiredTabCount = useMemo(() => notifications.filter(n => n.actionRequired).length, [notifications]);
+
     // Filtered + searched results
     const filteredNotifications = useMemo(() => {
         let result = filterNotifications(notifications, {
@@ -380,6 +375,8 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
             dateRange: dateRangeFilter,
         });
         result = searchNotifications(result, searchQuery);
+        if (activeTab === "unread") result = result.filter(n => n.status === "unread");
+        if (activeTab === "action-required") result = result.filter(n => n.actionRequired);
         return result;
     }, [
         notifications,
@@ -389,6 +386,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
         priorityFilter,
         dateRangeFilter,
         searchQuery,
+        activeTab,
     ]);
 
     // Pagination
@@ -422,6 +420,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
     const allOnPageSelected =
         paginatedNotifications.length > 0 &&
         paginatedNotifications.every((n) => selectedIds.has(n.id));
+    const someOnPageSelected = selectedIds.size > 0 && !allOnPageSelected;
 
     const toggleSelectAll = () => {
         if (allOnPageSelected) {
@@ -439,12 +438,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
         }
     };
 
-    const toggleSelectionMode = () => {
-        setIsSelectionMode(!isSelectionMode);
-        if (isSelectionMode) {
-            setSelectedIds(new Set()); // Clear selection when exiting mode
-        }
-    };
+
 
     const toggleSelect = (id: string) => {
         setSelectedIds((prev) => {
@@ -551,14 +545,6 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
             case "collaboration_agent_deactivated":
                 return <IconCirclePause style={{ color: "var(--ax-colors-fg-error)" }} />;
 
-            // ── Messages ─────────────────────────────────────────────────────────
-            case "im_new_message":
-                return <IconComment style={{ color: "var(--ax-colors-fg-success)" }} />;
-            case "im_mention":
-                return <IconAt style={{ color: "var(--ax-colors-fg-success)" }} />;
-            case "im_thread_reply":
-                return <IconComments style={{ color: "var(--ax-colors-fg-success)" }} />;
-
             // ── System ───────────────────────────────────────────────────────────
             case "system_announcement":
                 return <IconMegaphone style={{ color: "var(--ax-colors-fg-information)" }} />;
@@ -608,190 +594,234 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
 
     return (
         <Box
+            px="32"
+            pb="24"
             display="flex"
             flexDirection="column"
-            style={{ height: "calc(100dvh - 48px)", overflow: "hidden" }}
-            bg="bg.default"
+            gap="24"
+            h="full"
+            bg="bg.page"
+            style={{ overflowY: "auto", overflowX: "hidden" }}
         >
-            {/* ── Sticky collapsible header ─────────────────────────────────────── */}
-            <Box
-                px="32"
-                style={{
-                    flexShrink: 0,
-                    background: "var(--ax-colors-bg-page)",
-                    transition: "padding 0.2s ease",
-                    paddingTop: isScrolled ? 12 : 24,
-                    paddingBottom: isScrolled ? 12 : 0,
-                }}
-            >
-                {/* Heading row — collapses on scroll */}
-                <Box
-                    style={{
-                        overflow: "hidden",
-                        maxHeight: isScrolled ? 0 : 80,
-                        opacity: isScrolled ? 0 : 1,
-                        marginBottom: isScrolled ? 0 : 16,
-                        transition: "max-height 0.2s ease, opacity 0.15s ease, margin-bottom 0.2s ease",
-                    }}
-                >
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                        <Box display="flex" alignItems="center" gap="12">
-                            <Heading level="1">Notifications</Heading>
-                            {unreadCount > 0 && (
-                                <Badge intent="information">{unreadCount} unread</Badge>
-                            )}
+            {/* ── Heading row — scrolls away naturally ─────────────────────────── */}
+            {!sidebarMode && (
+                <Box display="flex" justifyContent="space-between" alignItems="center" gap="16" style={{ paddingTop: 24 }}>
+                    <Heading level="1">Notification Center</Heading>
+                    <Box display="flex" alignItems="center" gap="16" px="12" py="8" rounded="md" style={{ flexShrink: 0, background: "var(--ax-colors-bg-secondary)", border: "1px dashed var(--ax-colors-border-secondary)" }}>
+                        <Text fontSize="xs" fontWeight="500" color="fg.tertiary" style={{ textTransform: "uppercase", letterSpacing: "0.06em", flexShrink: 0 }}>Feedback</Text>
+                        <Box display="flex" alignItems="center" gap="8">
+                            <Switch checked={filterVariantB} onCheckedChange={setFilterVariantB} />
+                            <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>Expanded filters</Text>
                         </Box>
+                        <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+                        <NextLink href="/opal/notification-catalog" style={{ textDecoration: "none" }}>
+                            <Box display="flex" alignItems="center" gap="6">
+                                <IconList size={14} style={{ color: "var(--ax-colors-fg-secondary)" }} />
+                                <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>Notification catalog</Text>
+                            </Box>
+                        </NextLink>
                     </Box>
                 </Box>
+            )}
 
-                {/* ── Filters — stays visible when scrolled ─────────────────────── */}
+            {/* ── Sticky: tabs + filters ─────────────────────────────────────────── */}
             {!sidebarMode && (
-                <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="12">
-                    <Box display="flex" gap="12" alignItems="center" flexWrap="wrap">
-                        <Box style={{ width: 264 }}>
-                            <Input
-                                placeholder="Search notifications..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </Box>
-
-                        <Menu
-                            options={CATEGORY_OPTIONS.map((opt) => ({
-                                label: opt === "All" ? "All Types" : getCategoryLabel(opt),
-                                execute: () => setCategoryFilter(opt),
-                            }))}
-                        >
-                            <MenuTrigger asChild>
-                                <LabelMenuButton label="Type" h="40">
-                                    {categoryFilter === "All"
-                                        ? "All Types"
-                                        : getCategoryLabel(categoryFilter)}
-                                </LabelMenuButton>
-                            </MenuTrigger>
-                            <MenuContent />
-                        </Menu>
-
-                        <Menu
-                            options={STATUS_OPTIONS.map((opt) => ({
-                                label: opt,
-                                execute: () => setStatusFilter(opt),
-                            }))}
-                        >
-                            <MenuTrigger asChild>
-                                <LabelMenuButton label="Status" h="40">
-                                    {statusFilter}
-                                </LabelMenuButton>
-                            </MenuTrigger>
-                            <MenuContent />
-                        </Menu>
-
-                        <Menu
-                            options={["All", ...agentNames].map((opt) => ({
-                                label: opt === "All" ? "All Agents" : opt,
-                                execute: () => setAgentFilter(opt),
-                            }))}
-                        >
-                            <MenuTrigger asChild>
-                                <LabelMenuButton label="Agent" h="40">
-                                    {agentFilter === "All" ? "All Agents" : agentFilter}
-                                </LabelMenuButton>
-                            </MenuTrigger>
-                            <MenuContent />
-                        </Menu>
-
-                        <Menu
-                            options={PRIORITY_OPTIONS.map((opt) => ({
-                                label: opt,
-                                execute: () => setPriorityFilter(opt),
-                            }))}
-                        >
-                            <MenuTrigger asChild>
-                                <LabelMenuButton label="Priority" h="40">
-                                    {priorityFilter}
-                                </LabelMenuButton>
-                            </MenuTrigger>
-                            <MenuContent />
-                        </Menu>
-
-                        <Menu
-                            options={DATE_OPTIONS.map((opt) => ({
-                                label: opt === "All" ? "All Time" : opt,
-                                execute: () => setDateRangeFilter(opt),
-                            }))}
-                        >
-                            <MenuTrigger asChild>
-                                <LabelMenuButton label="Time" h="40">
-                                    {dateRangeFilter === "All" ? "All Time" : dateRangeFilter}
-                                </LabelMenuButton>
-                            </MenuTrigger>
-                            <MenuContent />
-                        </Menu>
+                <Box style={{ position: "sticky", top: 0, zIndex: 20, background: "var(--ax-colors-bg-page)", marginLeft: -32, marginRight: -32, paddingLeft: 32, paddingRight: 32 }}>
+                    {/* Tabs */}
+                    <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary" style={{ marginBottom: 16 }}>
+                        {(["all", "action-required", "unread"] as const).map((tab) => {
+                            const labels = { all: "All", unread: "Unread", "action-required": "Action Required" };
+                            const counts: Record<string, number | null> = { all: null, unread: unreadTabCount, "action-required": actionRequiredTabCount };
+                            return (
+                                <Box
+                                    key={tab}
+                                    pb="12"
+                                    cursor="pointer"
+                                    borderB={activeTab === tab ? "2" : "0"}
+                                    onClick={() => { setActiveTab(tab); setCurrentPage(1); }}
+                                    style={activeTab === tab ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
+                                >
+                                    <Box display="flex" alignItems="center" gap="8">
+                                        <Text fontWeight={activeTab === tab ? "500" : "400"} color={activeTab === tab ? "fg.default" : "fg.secondary"}>
+                                            {labels[tab]}
+                                        </Text>
+                                        {counts[tab] != null && (counts[tab] as number) > 0 && (
+                                            <Badge intent="information">{counts[tab]}</Badge>
+                                        )}
+                                    </Box>
+                                </Box>
+                            );
+                        })}
                     </Box>
 
-                    <Box display="flex" alignItems="center" gap="12">
-                        <NextLink href="/opal/settings/notifications" style={{ textDecoration: "none" }}>
-                            <Button appearance="subtle" icon={<IconGear />}>
-                                Configure settings
-                            </Button>
-                        </NextLink>
+                    {/* Filters */}
+                    <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="12" style={{ paddingBottom: 16 }}>
+                        <Box display="flex" gap="8" alignItems="center" style={{ flex: 1 }}>
+                            {filterVariantB ? (
+                                <>
+                                    <Box style={{ width: 400 }}>
+                                        <SearchInput
+                                            placeholder="Search notifications..."
+                                            size="lg"
+                                            value={searchQuery}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                                        />
+                                    </Box>
+                                    <Menu options={[
+                                        { label: "All Statuses", execute: () => setStatusFilter("All") },
+                                        { label: "Unread", execute: () => setStatusFilter("Unread") },
+                                        { label: "Read", execute: () => setStatusFilter("Read") },
+                                    ]}>
+                                        <MenuTrigger asChild>
+                                            <LabelMenuButton label="Status">{statusFilter === "All" ? "All" : statusFilter}</LabelMenuButton>
+                                        </MenuTrigger>
+                                        <MenuContent />
+                                    </Menu>
+                                    <Menu options={[
+                                        { label: "All Priorities", execute: () => setPriorityFilter("All") },
+                                        ...["Critical", "High", "Medium", "Low"].map(p => ({ label: p, execute: () => setPriorityFilter(p) })),
+                                    ]}>
+                                        <MenuTrigger asChild>
+                                            <LabelMenuButton label="Priority">{priorityFilter === "All" ? "All" : priorityFilter}</LabelMenuButton>
+                                        </MenuTrigger>
+                                        <MenuContent />
+                                    </Menu>
+                                    <Menu options={CATEGORY_OPTIONS.map(opt => ({ label: opt === "All" ? "All Types" : getCategoryLabel(opt), execute: () => setCategoryFilter(opt) }))}>
+                                        <MenuTrigger asChild>
+                                            <LabelMenuButton label="Type">{categoryFilter === "All" ? "All" : getCategoryLabel(categoryFilter)}</LabelMenuButton>
+                                        </MenuTrigger>
+                                        <MenuContent />
+                                    </Menu>
+                                    <Menu options={["All", ...agentNames].map(opt => ({ label: opt === "All" ? "All Agents" : opt, execute: () => setAgentFilter(opt) }))}>
+                                        <MenuTrigger asChild>
+                                            <LabelMenuButton label="Agent">{agentFilter === "All" ? "All" : agentFilter}</LabelMenuButton>
+                                        </MenuTrigger>
+                                        <MenuContent />
+                                    </Menu>
+                                    <Menu options={DATE_OPTIONS.map(opt => ({ label: opt === "All" ? "All Time" : opt, execute: () => setDateRangeFilter(opt) }))}>
+                                        <MenuTrigger asChild>
+                                            <LabelMenuButton label="Time">{dateRangeFilter === "All" ? "All" : dateRangeFilter}</LabelMenuButton>
+                                        </MenuTrigger>
+                                        <MenuContent />
+                                    </Menu>
+                                </>
+                            ) : (
+                                <>
+                                    <Box style={{ width: 400 }}>
+                                        <SearchInput
+                                            placeholder="Search notifications..."
+                                            size="lg"
+                                            value={searchQuery}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                                        />
+                                    </Box>
+                                    <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                appearance="default"
+                                                size="lg"
+                                                icon={<IconSliders size={16} />}
+                                                aria-label="Open filters"
+                                            />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start" style={{ width: 320 }}>
+                                            <Box px="12" py="8" display="flex" flexDirection="column" gap="24">
+                                                <Text fontWeight="500" fontSize="md">Filters</Text>
+                                                <Box display="flex" gap="48">
+                                                    <Box display="flex" flexDirection="column" gap="12">
+                                                        <Text fontSize="sm" color="fg.secondary">Status</Text>
+                                                        {(["Unread", "Read"] as const).map(s => (
+                                                            <Checkbox
+                                                                key={s}
+                                                                checked={statusFilter === s}
+                                                                onCheckedChange={checked => setStatusFilter(checked ? s : "All")}
+                                                            >
+                                                                {s}
+                                                            </Checkbox>
+                                                        ))}
+                                                    </Box>
+                                                    <Box display="flex" flexDirection="column" gap="12">
+                                                        <Text fontSize="sm" color="fg.secondary">Priority</Text>
+                                                        {(["Critical", "High", "Medium", "Low"] as const).map(p => (
+                                                            <Checkbox
+                                                                key={p}
+                                                                checked={priorityFilter === p}
+                                                                onCheckedChange={checked => setPriorityFilter(checked ? p : "All")}
+                                                            >
+                                                                {p}
+                                                            </Checkbox>
+                                                        ))}
+                                                    </Box>
+                                                </Box>
+                                                <Field label="Type">
+                                                    <Menu options={CATEGORY_OPTIONS.map(opt => ({ label: opt === "All" ? "All Types" : getCategoryLabel(opt), execute: () => setCategoryFilter(opt) }))}>
+                                                        <MenuTrigger asChild>
+                                                            <LabelMenuButton label="Type">
+                                                                {categoryFilter === "All" ? "All Types" : getCategoryLabel(categoryFilter)}
+                                                            </LabelMenuButton>
+                                                        </MenuTrigger>
+                                                        <MenuContent />
+                                                    </Menu>
+                                                </Field>
+                                                <Field label="Agent">
+                                                    <Menu options={["All", ...agentNames].map(opt => ({ label: opt === "All" ? "All Agents" : opt, execute: () => setAgentFilter(opt) }))}>
+                                                        <MenuTrigger asChild>
+                                                            <LabelMenuButton label="Agent">
+                                                                {agentFilter === "All" ? "All Agents" : agentFilter}
+                                                            </LabelMenuButton>
+                                                        </MenuTrigger>
+                                                        <MenuContent />
+                                                    </Menu>
+                                                </Field>
+                                                <Field label="Time">
+                                                    <Menu options={DATE_OPTIONS.map(opt => ({ label: opt === "All" ? "All Time" : opt, execute: () => setDateRangeFilter(opt) }))}>
+                                                        <MenuTrigger asChild>
+                                                            <LabelMenuButton label="Time">
+                                                                {dateRangeFilter === "All" ? "All Time" : dateRangeFilter}
+                                                            </LabelMenuButton>
+                                                        </MenuTrigger>
+                                                        <MenuContent />
+                                                    </Menu>
+                                                </Field>
+                                            </Box>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </>
+                            )}
+                            {selectedIds.size > 0 && (
+                                <Box display="flex" alignItems="center" gap="8" px="12" bg="bg.secondary" rounded="md" style={{ height: 40, flex: 1 }}>
+                                    <Text fontWeight="600" fontSize="sm">{selectedIds.size} selected</Text>
+                                    <Button
+                                        appearance="subtle"
+                                        size="sm"
+                                        icon={<IconXmark size={16} />}
+                                        onClick={() => setSelectedIds(new Set())}
+                                        aria-label="Clear selection"
+                                    />
+                                    <Box style={{ flex: 1 }} />
+                                    <Button appearance="subtle" size="md" icon={<IconCheck size={14} />} onClick={handleBulkMarkAsRead}>Mark as read</Button>
+                                    <Separator orientation="vertical" />
+                                    <Button appearance="subtle" size="md" icon={<IconBellSlash size={14} />} onClick={handleBulkMarkAsUnread}>Mark as unread</Button>
+                                    <Separator orientation="vertical" />
+                                    <Button appearance="subtle" size="md" icon={<IconTrashCan size={14} />} onClick={handleBulkDismiss}>Dismiss</Button>
+                                </Box>
+                            )}
+                        </Box>
                         <Button
-                            appearance="default"
+                            appearance="subtle"
+                            size="lg"
                             icon={<IconCheckDouble />}
                             onClick={handleMarkAllAsRead}
+                            style={{ flexShrink: 0 }}
                         >
                             Mark all as read
                         </Button>
                     </Box>
                 </Box>
             )}
-            </Box>{/* end sticky header */}
 
-            {/* ── Scrollable content area ───────────────────────────────────────── */}
-            <Box ref={contentPaneRef} flex="1" overflow="auto" px="32" pt="16" display="flex" flexDirection="column" gap="16" style={{ minHeight: 0 }}>
-
-            {/* ── Bulk Actions Bar ──────────────────────────────────────────────── */}
-            {selectedIds.size > 0 && (
-                <Box
-                    display="flex"
-                    alignItems="center"
-                    gap="12"
-                    p="12"
-                    bg="bg.information.subtle"
-                    rounded="md"
-                    border="1"
-                    borderColor="border.default"
-                >
-                    <Text fontWeight="600" fontSize="sm">
-                        {selectedIds.size} selected
-                    </Text>
-                    <Separator orientation="vertical" />
-                    <Button
-                        appearance="subtle"
-                        size="sm"
-                        icon={<IconCheck size={14} />}
-                        onClick={handleBulkMarkAsRead}
-                    >
-                        Mark as read
-                    </Button>
-                    <Button
-                        appearance="subtle"
-                        size="sm"
-                        icon={<IconBellSlash size={14} />}
-                        onClick={handleBulkMarkAsUnread}
-                    >
-                        Mark as unread
-                    </Button>
-                    <Button
-                        appearance="subtle"
-                        size="sm"
-                        icon={<IconTrashCan size={14} />}
-                        onClick={handleBulkDismiss}
-                    >
-                        Dismiss
-                    </Button>
-                </Box>
-            )}
+            {/* ── Content ───────────────────────────────────────────────────────── */}
+            <Box display="flex" flexDirection="column" gap="16">
 
             {/* ── Empty State ───────────────────────────────────────────────────── */}
             {filteredNotifications.length === 0 && (
@@ -847,8 +877,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
             {/* ── Notification Table / Grid ─────────────────────────────────────── */}
             {filteredNotifications.length > 0 && (
                 <Box>
-                    {viewMode === "list" ? (
-                        <Table tableStyle={{ tableLayout: "fixed", width: "100%" }}>
+                    <Table tableStyle={{ tableLayout: "fixed", width: "100%" }}>
                             <thead>
                                 {/* Native <tr>/<th> used intentionally: Axiom's TableHeaderCell
                                     puts box-shadow on an inner <div> (not the <th>), so padding on
@@ -865,13 +894,14 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                             <Box style={{ width: 8, flexShrink: 0 }} />
                                             <Checkbox
                                                 checked={allOnPageSelected}
+                                                indeterminate={someOnPageSelected}
                                                 onCheckedChange={toggleSelectAll}
                                             />
                                         </Box>
                                     </th>
                                     {(["Notification", "Category", "Timestamp", "Priority", ""] as const).map((label, i) => (
                                         <th key={label || "actions"} style={{
-                                            width: i === 1 ? 140 : i === 2 ? 120 : i === 3 ? 100 : i === 4 ? 40 : undefined,
+                                            width: i === 1 ? 180 : i === 2 ? 120 : i === 3 ? 100 : i === 4 ? 80 : undefined,
                                             padding: i === 0 ? "8px 8px" : "8px 16px",
                                             boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)",
                                             background: "var(--ax-colors-bg-default)",
@@ -902,6 +932,8 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                 toggleSelect={toggleSelect}
                                                 getStatusIcon={getStatusIcon}
                                                 getTypeIcon={getTypeIcon}
+                                                hoveredId={hoveredId}
+                                                onHoverChange={setHoveredId}
                                             />
                                         );
                                     }
@@ -914,12 +946,18 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                 onClick={() => toggleGroup(group.key)}
                                                 suppressActiveStyle
                                                 style={{ cursor: "pointer" }}
+                                                onMouseEnter={() => setHoveredId(group.key)}
+                                                onMouseLeave={() => setHoveredId(null)}
                                             >
                                                 <Td style={{ paddingLeft: 16, paddingRight: 0, paddingTop: 6, paddingBottom: 6, verticalAlign: "middle" }}>
                                                     <Box display="flex" alignItems="center" gap="8">
-                                                        <Box onClick={(e) => e.stopPropagation()}>
+                                                        <Box
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            style={{ opacity: selectedIds.size > 0 || hoveredId === group.key ? 1 : 0, transition: "opacity 0.1s" }}
+                                                        >
                                                             <Checkbox
                                                                 checked={group.notifications.every((r) => selectedIds.has(r.id))}
+                                                                indeterminate={group.notifications.some((r) => selectedIds.has(r.id)) && !group.notifications.every((r) => selectedIds.has(r.id))}
                                                                 onCheckedChange={(checked) => {
                                                                     group.notifications.forEach((r) => {
                                                                         if (checked && !selectedIds.has(r.id)) toggleSelect(r.id);
@@ -945,7 +983,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                         <Text fontSize="md" fontWeight="500" color="fg.default">
                                                             {group.label}
                                                         </Text>
-                                                        <Badge variant="subtle">{group.notifications.length}</Badge>
+                                                        <Badge intent="information" variant="subtle">{group.notifications.length}</Badge>
                                                     </Box>
                                                 </Td>
                                             </Tr>
@@ -957,6 +995,9 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     toggleSelect={toggleSelect}
                                                     getStatusIcon={getStatusIcon}
                                                     getTypeIcon={getTypeIcon}
+                                                    isChild
+                                                    hoveredId={hoveredId}
+                                                    onHoverChange={setHoveredId}
                                                 />
                                             ))}
                                         </React.Fragment>
@@ -964,177 +1005,6 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                 })}
                             </tbody>
                         </Table>
-                    ) : viewMode === "card" ? (
-                        <Box
-                            display="grid"
-                            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}
-                        >
-                            {paginatedNotifications.map((n) => (
-                                <NextLink key={n.id} href={n.deepLink} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-                                    <Box
-                                        className="hover:shadow-md transition-shadow cursor-pointer h-full"
-                                        display="flex"
-                                        gap="12"
-                                        p="16"
-                                        bg={n.status === "unread" ? "bg.secondary" : "bg.default"}
-                                        border="1"
-                                        borderColor="border.tertiary"
-                                        rounded="lg"
-                                        style={{ position: "relative" }}
-                                    >
-                                        <Box style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }} onClick={(e: any) => e.stopPropagation()}>
-                                            {isSelectionMode && (
-                                                <Checkbox
-                                                    checked={selectedIds.has(n.id)}
-                                                    onCheckedChange={() => toggleSelect(n.id)}
-                                                />
-                                            )}
-                                        </Box>
-                                        {/* Content column */}
-                                        <Box display="flex" flexDirection="column" gap="12" style={{ flex: 1, minWidth: 0 }}>
-                                            <Box display="flex" flexDirection="column" gap="4">
-                                                <Box display="flex" gap="8" alignItems="center" style={{ flexWrap: "wrap" }}>
-                                                    {getStatusIcon(n)}
-                                                    <CategoryBadge category={n.category} />
-                                                </Box>
-                                                <Text fontWeight={n.status === "unread" ? "600" : "500"} className="line-clamp-1">
-                                                    {n.title}
-                                                </Text>
-                                            </Box>
-                                            <Text fontSize="md" color="fg.secondary" style={{ minHeight: "40px" }} className="line-clamp-2">
-                                                {n.message}
-                                            </Text>
-                                            <Box display="flex" justifyContent="space-between" alignItems="center" style={{ marginTop: "auto" }}>
-                                                <Text fontSize="sm" color="fg.tertiary">
-                                                    {n.date}, {n.timestamp}
-                                                </Text>
-                                                {n.actionRequired && (
-                                                    <Badge intent="warning" variant="subtle">
-                                                        Action Required
-                                                    </Badge>
-                                                )}
-                                            </Box>
-                                        </Box>
-                                        {/* Red dot column */}
-                                        <Box display="flex" alignItems="start" style={{ paddingTop: "6px", width: "16px", minWidth: "16px", flexShrink: 0, justifyContent: "center" }}>
-                                            {n.status === "unread" && (
-                                                <Box rounded="full" style={{ width: "8px", height: "8px", backgroundColor: "var(--ax-colors-fg-error)" }} />
-                                            )}
-                                        </Box>
-                                    </Box>
-                                </NextLink>
-                            ))}
-                        </Box>
-                    ) : (
-                        <Box display="flex" flexDirection="column" gap="24" pb="32">
-                            {Object.entries(
-                                paginatedNotifications.reduce((groups, n) => {
-                                    const date = n.date;
-                                    if (!groups[date]) groups[date] = [];
-                                    groups[date].push(n);
-                                    return groups;
-                                }, {} as Record<string, Notification[]>)
-                            ).map(([date, notifications]) => (
-                                <Box key={date} display="flex" flexDirection="column" gap="16">
-                                    <Box display="flex" alignItems="center" justifyContent="space-between">
-                                        <Text fontSize="md" fontWeight="500" color="fg.tertiary">
-                                            {date}
-                                        </Text>
-                                        {isSelectionMode && (
-                                            <Button
-                                                appearance="subtle"
-                                                size="sm"
-                                                onClick={() => {
-                                                    const ids = notifications.map(n => n.id);
-                                                    const allSelected = ids.every(id => selectedIds.has(id));
-                                                    setSelectedIds(prev => {
-                                                        const next = new Set(prev);
-                                                        ids.forEach(id => {
-                                                            if (allSelected) next.delete(id);
-                                                            else next.add(id);
-                                                        });
-                                                        return next;
-                                                    });
-                                                }}
-                                            >
-                                                {notifications.every(n => selectedIds.has(n.id)) ? "Deselect group" : "Select group"}
-                                            </Button>
-                                        )}
-                                    </Box>
-                                    <Box display="flex" flexDirection="column" gap="16">
-                                        {notifications.map((n) => (
-                                            <NextLink key={n.id} href={n.deepLink} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-                                                <Box
-                                                    className="hover:shadow-sm transition-shadow cursor-pointer"
-                                                    p="16"
-                                                    bg={n.status === "unread" ? "bg.default" : "bg.secondary"}
-                                                    border="1"
-                                                    borderColor="border.tertiary"
-                                                    rounded="xl"
-                                                    display="flex"
-                                                    gap="16"
-                                                    alignItems="start"
-                                                >
-                                                    <Box style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                                                        {isSelectionMode && (
-                                                            <Checkbox
-                                                                checked={selectedIds.has(n.id)}
-                                                                onCheckedChange={() => toggleSelect(n.id)}
-                                                            />
-                                                        )}
-                                                    </Box>
-
-                                                    {/* Status Icon */}
-                                                    <Box style={{ flexShrink: 0 }} pt="4">
-                                                        {getStatusIcon(n) || getTypeIcon(n) || <IconCircleInfo style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />}
-                                                    </Box>
-
-                                                    {/* Content Column */}
-                                                    <Box flex="1" display="flex" flexDirection="column" gap="4" style={{ minWidth: 0 }}>
-                                                        <Box display="flex" alignItems="center" gap="8" style={{ minWidth: 0 }}>
-                                                            {n.status === "unread" && <UnreadIndicator />}
-                                                            <Text
-                                                                fontWeight={n.status === "unread" ? "600" : "500"}
-                                                                fontSize="md"
-                                                                color="fg.default"
-                                                                className="line-clamp-1"
-                                                                style={{ minWidth: 0, flex: 1 }}
-                                                            >
-                                                                {n.title}
-                                                            </Text>
-                                                        </Box>
-                                                        <Box display="flex" alignItems="center" gap="4" flexWrap="wrap">
-                                                            <Text fontSize="sm" color="fg.tertiary">
-                                                                {getCategoryLabel(n.category)}
-                                                            </Text>
-                                                            <Text fontSize="sm" color="fg.tertiary">•</Text>
-                                                            <Text fontSize="sm" color="fg.tertiary" className="line-clamp-1">
-                                                                {n.message}
-                                                            </Text>
-                                                        </Box>
-                                                        {n.actionRequired && (
-                                                            <Box pt="4">
-                                                                <Badge intent="warning" variant="subtle" className="whitespace-nowrap">
-                                                                    Action Required
-                                                                </Badge>
-                                                            </Box>
-                                                        )}
-                                                    </Box>
-
-                                                    {/* Meta Column */}
-                                                    <Box display="flex" alignItems="center" gap="8" pt="4" style={{ flexShrink: 0 }}>
-                                                        <Text fontSize="sm" color="fg.tertiary" className="whitespace-nowrap">
-                                                            {n.timestamp}
-                                                        </Text>
-                                                    </Box>
-                                                </Box>
-                                            </NextLink>
-                                        ))}
-                                    </Box>
-                                </Box>
-                            ))}
-                        </Box>
-                    )}
                 </Box>
             )}
 
@@ -1160,8 +1030,8 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                 )
             }
 
-            </Box>{/* end scrollable content area */}
-        </Box >
+            </Box>{/* end content */}
+        </Box>
     );
 }
 

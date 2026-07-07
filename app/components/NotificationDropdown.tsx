@@ -2,7 +2,7 @@
 
 import { Box, Button, Text, Badge } from "@optiaxiom/react";
 import { DetailsPanel, DetailsPanelHeader, DetailsPanelBody } from "@optiaxiom/react/unstable";
-import { IconBell, IconX, IconChecks, IconSpeakerphone, IconLoader2, IconPlug, IconUsers, IconTicket, IconMessage, IconAt, IconMessages } from "@tabler/icons-react";
+import { IconBell, IconX, IconChecks, IconSpeakerphone, IconLoader2, IconPlug, IconUsers, IconTicket } from "@tabler/icons-react";
 import { IconCircleExclamation, IconTriangleExclamation, IconSpinner, IconFileLines, IconCircleCheck as AxiomCircleCheck, IconAgent } from "@optimizely/axiom-icons";
 import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { mockNotifications, getUnreadCount, type Notification } from "@/app/opal/notifications/mockData";
@@ -26,8 +26,32 @@ function CompactNotificationCard({ notification, onDismiss, readIds }: { notific
     const isUnread = notification.status === "unread" && !readIds.has(notification.id);
     const [isHovered, setIsHovered] = useState(false);
 
+    // VAU avatar map — agent ID → avatar path (using existing vau-*.png paths)
+    const VAU_AVATARS: Record<string, string> = {
+        "vau-frank":   "/avatars/avatar-4.png",
+        "vau-tony":    "/avatars/vau-tony.png",
+        "vau-henry":   "/avatars/vau-henry.png",
+        "vau-poppy":   "/avatars/vau-poppy.png",
+        "vau-kerby":   "/avatars/vau-kerby.png",
+        "vau-jonas":   "/avatars/vau-jonas.png",
+        "vau-mayling": "/avatars/vau-mayling.png",
+    };
+
     // Status icon by notification type (matches Figma spec)
     const getAvatar = () => {
+        // VAU notifications — show the agent's avatar image
+        if (notification.agentId && VAU_AVATARS[notification.agentId]) {
+            return (
+                <Box pt="2" style={{ flexShrink: 0 }}>
+                    <img
+                        src={VAU_AVATARS[notification.agentId]}
+                        alt={notification.agentName ?? "VAU"}
+                        style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover", display: "block" }}
+                    />
+                </Box>
+            );
+        }
+
         let icon;
         switch (notification.type) {
             case "agent_execution_chat":
@@ -86,15 +110,6 @@ function CompactNotificationCard({ notification, onDismiss, readIds }: { notific
             case "system_announcement":
             case "system_maintenance":
                 icon = <IconSpeakerphone size={16} color="var(--ax-colors-fg-information)" />;
-                break;
-            case "im_new_message":
-                icon = <IconMessage size={16} color="var(--ax-colors-fg-tertiary)" />;
-                break;
-            case "im_mention":
-                icon = <IconAt size={16} color="var(--ax-colors-fg-tertiary)" />;
-                break;
-            case "im_thread_reply":
-                icon = <IconMessages size={16} color="var(--ax-colors-fg-tertiary)" />;
                 break;
             default:
                 icon = <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
@@ -159,16 +174,6 @@ function CompactNotificationCard({ notification, onDismiss, readIds }: { notific
                     <Text fontSize="sm" color="fg.tertiary" className="line-clamp-2">
                         {notification.message}
                     </Text>
-
-                    {(notification.type === "im_new_message" || notification.type === "im_mention" || notification.type === "im_thread_reply") && notification.deepLink && (
-                        <Box pt="4" onClick={(e) => e.stopPropagation()}>
-                            <a href={notification.deepLink} style={{ textDecoration: "none" }}>
-                                <Button size="sm" appearance="inverse">
-                                    Reply
-                                </Button>
-                            </a>
-                        </Box>
-                    )}
 
                     {notification.approvalRequired && (
                         <Box display="flex" gap="8" pt="8">
@@ -273,49 +278,45 @@ export function NotificationPanel({ onClose, initialActiveTab, onTabChange, dism
                 <DetailsPanelBody p="0" overflowY="auto">
                     {/* Tab Bar */}
                     <Box
-                        px="8"
+                        px="16"
                         display="flex"
                         alignItems="center"
-                        gap="0"
                         borderB="1"
                         borderColor="border.tertiary"
                         bg="bg.page"
-                        style={{ minHeight: 40, position: "sticky", top: 0, zIndex: 10 }}
+                        style={{ position: "sticky", top: 0, zIndex: 10 }}
                     >
-                        {([
-                            { key: "all" as const, label: "All", count: null },
-                            { key: "action_required" as const, label: "Action Required", count: actionRequiredCount },
-                            { key: "unread" as const, label: "Unread", count: unreadCount },
-                        ]).map(tab => (
-                            <button
-                                key={tab.key}
-                                type="button"
-                                onClick={() => { setActiveTab(tab.key); onTabChange(tab.key); }}
-                                style={{
-                                    background: "transparent",
-                                    border: "none",
-                                    borderBottom: activeTab === tab.key ? "2px solid var(--ax-colors-fg-accent)" : "2px solid transparent",
-                                    padding: "10px 8px",
-                                    margin: 0,
-                                    cursor: "pointer",
-                                    whiteSpace: "nowrap",
-                                    transition: "color 0.15s, border-color 0.15s",
-                                    flexShrink: tab.key === "all" ? 0 : 1,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    minWidth: 0,
-                                }}
-                            >
-                                <Text
-                                    fontSize="sm"
-                                    fontWeight={activeTab === tab.key ? "600" : "400"}
-                                    color={activeTab === tab.key ? "fg.default" : "fg.tertiary"}
+                        <Box display="flex" gap="16" style={{ flex: 1 }}>
+                            {([
+                                { key: "all" as const, label: "All", count: null },
+                                { key: "action_required" as const, label: "Action Required", count: actionRequiredCount },
+                                { key: "unread" as const, label: "Unread", count: unreadCount },
+                            ]).map(tab => (
+                                <Box
+                                    key={tab.key}
+                                    pb="10"
+                                    pt="10"
+                                    cursor="pointer"
+                                    borderB={activeTab === tab.key ? "2" : "0"}
+                                    onClick={() => { setActiveTab(tab.key); onTabChange(tab.key); }}
+                                    style={activeTab === tab.key ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
                                 >
-                                    {tab.label}{tab.count !== null ? ` (${tab.count})` : ""}
-                                </Text>
-                            </button>
-                        ))}
-                        <Box flex="1" style={{ minWidth: 8 }} />
+                                    <Box display="flex" alignItems="center" gap="6">
+                                        <Text
+                                            fontSize="sm"
+                                            fontWeight={activeTab === tab.key ? "500" : "400"}
+                                            color={activeTab === tab.key ? "fg.default" : "fg.secondary"}
+                                            style={{ whiteSpace: "nowrap" }}
+                                        >
+                                            {tab.label}
+                                        </Text>
+                                        {tab.count != null && tab.count > 0 && (
+                                            <Badge intent="information">{tab.count}</Badge>
+                                        )}
+                                    </Box>
+                                </Box>
+                            ))}
+                        </Box>
                         <Button
                             appearance="subtle"
                             size="sm"
@@ -324,7 +325,7 @@ export function NotificationPanel({ onClose, initialActiveTab, onTabChange, dism
                             style={{ flexShrink: 0 }}
                             onClick={() => onMarkAllRead(filtered.map(n => n.id))}
                         >
-                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Mark all as read</span>
+                            Mark all as read
                         </Button>
                     </Box>
 

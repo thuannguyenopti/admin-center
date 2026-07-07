@@ -11,11 +11,15 @@ import {
     Switch,
     Tabs,
     TabsContent,
+    Checkbox,
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
     DropdownMenuItem,
     LabelMenuButton,
+    SearchInput,
+    Tooltip,
+    Field,
     toaster,
 } from "@optiaxiom/react";
 import {
@@ -27,6 +31,9 @@ import {
     IconScrewdriverWrench,
     IconEllipsisSolid,
     IconSearch,
+    IconSliders,
+    IconCircleInfo,
+    IconArrowsRotate,
 } from "@optiaxiom/icons";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { Input } from "@/app/components/Input";
@@ -979,17 +986,242 @@ function ConnectorCard({
 
 // ── Tools tab ─────────────────────────────────────────────────────────────────
 
+interface ToolBundle {
+    id: string;
+    name: string;
+    isOptimizely: boolean;
+    toolCount: number;
+    externalCount?: number;
+    isActive: boolean;
+    enabledInChat: boolean;
+    enabledForYou: boolean;
+    provider: "Optimizely" | "External" | "Remote MCP";
+    toolType: "Standard" | "Remote MCP";
+}
+
+const TOOL_BUNDLES: ToolBundle[] = [
+    { id: "campaign", name: "Campaign Tools", isOptimizely: true, toolCount: 16, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
+    { id: "cmp", name: "CMP Tools", isOptimizely: true, toolCount: 60, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
+    { id: "cms-saas", name: "CMS SaaS Tools", isOptimizely: true, toolCount: 19, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
+    { id: "configured-commerce", name: "Configured Commerce Tools", isOptimizely: true, toolCount: 6, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
+    { id: "connectors-helper", name: "Connectors Helper Tools", isOptimizely: true, toolCount: 1, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
+    { id: "content-recs", name: "Content Recommendations Tools", isOptimizely: true, toolCount: 3, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
+    { id: "experimentation", name: "Experimentation Tools", isOptimizely: true, toolCount: 30, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
+    { id: "graph", name: "Graph Tools", isOptimizely: true, toolCount: 3, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
+    { id: "ip-portco", name: "IP_PortCo_IY_Test", isOptimizely: false, toolCount: 4, isActive: true, enabledInChat: false, enabledForYou: false, provider: "External", toolType: "Standard" },
+    { id: "local-exp", name: "Local exp tools", isOptimizely: false, toolCount: 1, isActive: true, enabledInChat: true, enabledForYou: true, provider: "External", toolType: "Standard" },
+    { id: "ms365", name: "Microsoft 365 Opal Tools (hosted in DN45NvXhlicsCGNDZ0vPhg OCP account)", isOptimizely: false, toolCount: 67, externalCount: 67, isActive: true, enabledInChat: true, enabledForYou: true, provider: "Remote MCP", toolType: "Remote MCP" },
+    { id: "odp", name: "ODP Tools", isOptimizely: true, toolCount: 9, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
+    { id: "gws", name: "Opal Tool Google Workspace (hosted in DN45NvXhlicsCGNDZ0vPhg OCP account)", isOptimizely: false, toolCount: 63, externalCount: 63, isActive: true, enabledInChat: true, enabledForYou: true, provider: "Remote MCP", toolType: "Remote MCP" },
+    { id: "sfdc", name: "Opal Tool Salesforce CRM (hosted in DN45NvXhlicsCGNDZ0vPhg OCP account)", isOptimizely: false, toolCount: 14, externalCount: 14, isActive: true, enabledInChat: false, enabledForYou: false, provider: "Remote MCP", toolType: "Remote MCP" },
+];
+
 function ToolsTab() {
+    const [search, setSearch] = useState("");
+    const [filterOpen, setFilterOpen] = useState(false);
+    const [providerFilter, setProviderFilter] = useState("All");
+    const [activeStatusFilter, setActiveStatusFilter] = useState("All");
+    const [enabledInChatFilter, setEnabledInChatFilter] = useState("All");
+    const [toolTypeFilter, setToolTypeFilter] = useState("All");
+    const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [bundles, setBundles] = useState<ToolBundle[]>(TOOL_BUNDLES);
+
+    const totalEnabledInChat = bundles.filter(b => b.enabledInChat).reduce((sum, b) => sum + b.toolCount, 0);
+
+    const filtered = useMemo(() => bundles.filter(b => {
+        const q = search.toLowerCase();
+        if (q && !b.name.toLowerCase().includes(q)) return false;
+        if (providerFilter !== "All" && b.provider !== providerFilter) return false;
+        if (activeStatusFilter !== "All") {
+            if (activeStatusFilter === "Active" && !b.isActive) return false;
+            if (activeStatusFilter === "Inactive" && b.isActive) return false;
+        }
+        if (enabledInChatFilter !== "All") {
+            if (enabledInChatFilter === "Enabled" && !b.enabledInChat) return false;
+            if (enabledInChatFilter === "Disabled" && b.enabledInChat) return false;
+        }
+        if (toolTypeFilter !== "All" && b.toolType !== toolTypeFilter) return false;
+        return true;
+    }), [bundles, search, providerFilter, activeStatusFilter, enabledInChatFilter, toolTypeFilter]);
+
+    const hasFilters = providerFilter !== "All" || activeStatusFilter !== "All" || enabledInChatFilter !== "All" || toolTypeFilter !== "All";
+
+    const toggleField = (id: string, field: "isActive" | "enabledInChat" | "enabledForYou") => {
+        setBundles(prev => prev.map(b => b.id === id ? { ...b, [field]: !b[field] } : b));
+    };
+
     return (
-        <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            py="48"
-            rounded="md"
-            style={{ border: "1px solid var(--ax-colors-border-tertiary)" }}
-        >
-            <Text color="fg.tertiary">Tools content coming soon.</Text>
+        <Box display="flex" flexDirection="column" gap="24">
+            {/* Toolbar row */}
+            <Box display="flex" gap="8" alignItems="center">
+                <Box style={{ width: 400 }}>
+                    <SearchInput
+                        placeholder="Search tools..."
+                        size="lg"
+                        value={search}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+                    />
+                </Box>
+                <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            appearance={hasFilters ? "primary" : "default"}
+                            size="lg"
+                            icon={<IconSliders size={16} />}
+                            aria-label="Open filters"
+                        />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" style={{ width: 320 }}>
+                        <Box px="12" py="8" display="flex" flexDirection="column" gap="24">
+                            <Text fontWeight="500" fontSize="md">Filters</Text>
+                            <Box display="flex" gap="40">
+                                <Box display="flex" flexDirection="column" gap="12">
+                                    <Text fontSize="sm" color="fg.secondary">Provider</Text>
+                                    {(["All", "Optimizely", "External", "Remote MCP"] as const).map(v => (
+                                        <Checkbox key={v} checked={providerFilter === v} onCheckedChange={() => setProviderFilter(v)}>{v}</Checkbox>
+                                    ))}
+                                </Box>
+                                <Box display="flex" flexDirection="column" gap="12">
+                                    <Text fontSize="sm" color="fg.secondary">Active Status</Text>
+                                    {(["All", "Active", "Inactive"] as const).map(v => (
+                                        <Checkbox key={v} checked={activeStatusFilter === v} onCheckedChange={() => setActiveStatusFilter(v)}>{v}</Checkbox>
+                                    ))}
+                                </Box>
+                            </Box>
+                            <Box display="flex" gap="40">
+                                <Box display="flex" flexDirection="column" gap="12">
+                                    <Text fontSize="sm" color="fg.secondary">Enabled in Chat</Text>
+                                    {(["All", "Enabled", "Disabled"] as const).map(v => (
+                                        <Checkbox key={v} checked={enabledInChatFilter === v} onCheckedChange={() => setEnabledInChatFilter(v)}>{v}</Checkbox>
+                                    ))}
+                                </Box>
+                                <Box display="flex" flexDirection="column" gap="12">
+                                    <Text fontSize="sm" color="fg.secondary">Tool Type</Text>
+                                    {(["All", "Standard", "Remote MCP"] as const).map(v => (
+                                        <Checkbox key={v} checked={toolTypeFilter === v} onCheckedChange={() => setToolTypeFilter(v)}>{v}</Checkbox>
+                                    ))}
+                                </Box>
+                            </Box>
+                        </Box>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <Box style={{ flex: 1 }} />
+                <Button appearance="primary" size="lg" icon={<IconPlus size={16} />}>
+                    Add tool registry
+                </Button>
+            </Box>
+
+            {/* Table */}
+            <Table>
+                <thead>
+                    <Tr className="hover:!bg-transparent cursor-default">
+                        <th style={{ width: 40, padding: "8px 0", boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }} />
+                        <Th style={{ boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }}>Name</Th>
+                        <Th style={{ width: 160, boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }}>External Provider</Th>
+                        <Th style={{ width: 120, boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }}>
+                            <Box display="flex" alignItems="center" gap="4">
+                                Active
+                                <Tooltip content="Whether this tool bundle is active and available to agents" delayDuration={100}>
+                                    <Box style={{ display: "inline-flex", cursor: "default" }}><IconCircleInfo size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} /></Box>
+                                </Tooltip>
+                            </Box>
+                        </Th>
+                        <Th style={{ width: 180, boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }}>
+                            <Box display="flex" alignItems="center" gap="4">
+                                Enabled in Chat
+                                <Tooltip content="Tools enabled for use in Opal chat" delayDuration={100}>
+                                    <Box style={{ display: "inline-flex", cursor: "default" }}><IconCircleInfo size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} /></Box>
+                                </Tooltip>
+                                <Badge intent="neutral" variant="subtle">{totalEnabledInChat}</Badge>
+                                <Tooltip content="Refresh tool counts" delayDuration={100}>
+                                    <Button appearance="subtle" size="sm" icon={<IconArrowsRotate size={14} />} aria-label="Refresh" onClick={() => {}} />
+                                </Tooltip>
+                            </Box>
+                        </Th>
+                        <Th style={{ width: 160, boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }}>
+                            <Box display="flex" alignItems="center" gap="4">
+                                Enabled for You
+                                <Tooltip content="Tools enabled specifically for your account" delayDuration={100}>
+                                    <Box style={{ display: "inline-flex", cursor: "default" }}><IconCircleInfo size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} /></Box>
+                                </Tooltip>
+                            </Box>
+                        </Th>
+                    </Tr>
+                </thead>
+                <tbody>
+                    {filtered.length === 0 ? (
+                        <tr>
+                            <td colSpan={6}>
+                                <Box display="flex" justifyContent="center" py="48">
+                                    <Text color="fg.tertiary">No tools match your search.</Text>
+                                </Box>
+                            </td>
+                        </tr>
+                    ) : filtered.map(bundle => (
+                        <Fragment key={bundle.id}>
+                            <Tr>
+                                <Td type="button" style={{ width: 40 }}>
+                                    <Button
+                                        appearance="subtle"
+                                        size="sm"
+                                        icon={expandedId === bundle.id ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
+                                        aria-label={expandedId === bundle.id ? "Collapse" : "Expand"}
+                                        onClick={() => setExpandedId(prev => prev === bundle.id ? null : bundle.id)}
+                                    />
+                                </Td>
+                                <Td type="header">
+                                    <Box display="flex" alignItems="center" gap="8">
+                                        {bundle.isOptimizely && (
+                                            <Box style={{ width: 18, height: 18, flexShrink: 0 }}>
+                                                <img src="/optimizely-favicon-new.svg" alt="Optimizely" width={18} height={18} />
+                                            </Box>
+                                        )}
+                                        <Text fontWeight="500" fontSize="sm">{bundle.name}</Text>
+                                        <Badge intent="neutral" variant="subtle">{bundle.toolCount}</Badge>
+                                    </Box>
+                                </Td>
+                                <Td>
+                                    {bundle.externalCount != null ? (
+                                        <Badge intent="neutral" variant="subtle">{bundle.externalCount}</Badge>
+                                    ) : null}
+                                </Td>
+                                <Td>
+                                    <Switch
+                                        checked={bundle.isActive}
+                                        onCheckedChange={() => toggleField(bundle.id, "isActive")}
+                                        aria-label="Active"
+                                    />
+                                </Td>
+                                <Td>
+                                    <Switch
+                                        checked={bundle.enabledInChat}
+                                        onCheckedChange={() => toggleField(bundle.id, "enabledInChat")}
+                                        aria-label="Enabled in Chat"
+                                    />
+                                </Td>
+                                <Td>
+                                    <Switch
+                                        checked={bundle.enabledForYou}
+                                        onCheckedChange={() => toggleField(bundle.id, "enabledForYou")}
+                                        aria-label="Enabled for You"
+                                    />
+                                </Td>
+                            </Tr>
+                            {expandedId === bundle.id && (
+                                <tr>
+                                    <td colSpan={6} style={{ padding: 0 }}>
+                                        <Box px="48" py="12" bg="bg.page" style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
+                                            <Text fontSize="sm" color="fg.tertiary">
+                                                {bundle.toolCount} tool{bundle.toolCount !== 1 ? "s" : ""} in this bundle
+                                            </Text>
+                                        </Box>
+                                    </td>
+                                </tr>
+                            )}
+                        </Fragment>
+                    ))}
+                </tbody>
+            </Table>
         </Box>
     );
 }
