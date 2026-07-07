@@ -66,7 +66,7 @@ export const VAUS: VAU[] = [
 		cardBg: "#fef1c6",
 		cardImage: "/vau-card-campaign-strategist.png",
 		cardCategory: "Marketing & Growth",
-		cardSkills: ["Launch positioning", "Messaging", "Competitive intel", "GTM strategy"],
+		cardSkills: ["Launch positioning", "Messaging", "Strategy", "GTM strategy"],
 		whyHireMe: "Built to turn audience data into campaigns that actually convert.",
 		experience: ["GTM briefs crafted from raw roadmap data.", "Competitive positioning updated on signal.", "Sales enablement kits shipped on launch day."],
 		passions: "Mid-century product design. Things that were beautiful and built to last.",

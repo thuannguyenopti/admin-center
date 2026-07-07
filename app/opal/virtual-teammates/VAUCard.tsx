@@ -125,15 +125,15 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 
           {DIVIDER}
 
-          {/* Character illustration */}
+          {/* Character illustration — flex: 1 absorbs height diff between 1-line and 2-line name cards */}
           <Box
             style={{
               width: "100%",
-              height: 200,
+              flex: 1,
+              minHeight: 140,
               borderRadius: 8,
               background: vau.cardBg ?? vau.avatarBg,
               overflow: "hidden",
-              flexShrink: 0,
               padding: vau.cardImagePadding ?? 0,
               boxSizing: "border-box",
             }}
@@ -152,7 +152,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
           </Box>
 
           {/* SKILLS */}
-          <Box display="flex" flexDirection="column" gap="6" style={{ paddingTop: 2 }}>
+          <Box display="flex" flexDirection="column" gap="8">
             <span style={{ ...CAPTION }}>Skills</span>
             <Box display="flex" style={{ flexWrap: "wrap", gap: 4, height: 44, overflow: "hidden", alignContent: "flex-start" }}>
               {frontSkills.map((skill) => (
@@ -164,7 +164,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
           {DIVIDER}
 
           {/* WORKS WITH YOUR TOOLS */}
-          <Box display="flex" flexDirection="column" gap="6">
+          <Box display="flex" flexDirection="column" gap="8">
             <span style={{ ...CAPTION }}>Works with your tools</span>
             <ToolChips tools={vau.tools} />
           </Box>
@@ -172,7 +172,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
           {DIVIDER}
 
           {/* Hire button */}
-          <Box style={{ marginTop: "auto", paddingTop: 8 }}>
+          <Box>
             <Button
               appearance="primary"
               size="lg"
@@ -201,12 +201,12 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             padding: 20,
             display: "flex",
             flexDirection: "column",
-            gap: 0,
+            gap: 8,
             overflow: "hidden",
           }}
         >
           {/* Back face header: avatar + title + badge */}
-          <Box display="flex" alignItems="center" gap="12" style={{ marginBottom: 6 }}>
+          <Box display="flex" alignItems="center" gap="12">
             <Box
               style={{
                 width: 52,
@@ -233,7 +233,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 
           {/* WHY HIRE ME */}
           {vau.whyHireMe && (
-            <Box display="flex" flexDirection="column" gap="4" style={{ padding: "6px 0" }}>
+            <Box display="flex" flexDirection="column" gap="4">
               <span style={{ ...CAPTION }}>Why hire me</span>
               <Text fontSize="md" color="fg.default" style={{ lineHeight: "1.4" }}>{vau.whyHireMe}</Text>
             </Box>
@@ -243,7 +243,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 
           {/* EXPERIENCE */}
           {vau.experience && vau.experience.length > 0 && (
-            <Box display="flex" flexDirection="column" gap="4" style={{ padding: "6px 0" }}>
+            <Box display="flex" flexDirection="column" gap="4">
               <span style={{ ...CAPTION }}>Experience</span>
               <ul style={{ margin: 0, paddingLeft: 18, listStyleType: "disc" }}>
                 {vau.experience.map((item) => (
@@ -258,7 +258,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
           {DIVIDER}
 
           {/* WORKS WITH YOUR TOOLS */}
-          <Box display="flex" flexDirection="column" gap="4" style={{ padding: "6px 0" }}>
+          <Box display="flex" flexDirection="column" gap="4">
             <span style={{ ...CAPTION }}>Works with your tools</span>
             <ToolChips tools={vau.tools} />
           </Box>
@@ -267,7 +267,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 
           {/* PASSIONS */}
           {vau.passions && (
-            <Box display="flex" flexDirection="column" gap="4" style={{ padding: "6px 0" }}>
+            <Box display="flex" flexDirection="column" gap="4">
               <span style={{ ...CAPTION }}>Passions</span>
               <Text fontSize="md" color="fg.default" style={{ lineHeight: "1.4" }}>{vau.passions}</Text>
             </Box>
@@ -276,7 +276,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
           {DIVIDER}
 
           {/* SKILLS */}
-          <Box display="flex" flexDirection="column" gap="4" style={{ padding: "6px 0" }}>
+          <Box display="flex" flexDirection="column" gap="4">
             <span style={{ ...CAPTION }}>Skills</span>
             <Box display="flex" style={{ flexWrap: "wrap", gap: 4 }}>
               {frontSkills.map((skill) => (
