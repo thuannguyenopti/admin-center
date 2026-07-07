@@ -104,7 +104,7 @@ export default function VATIdentityPage() {
 
 	// Tab + preview state (lifted for cross-panel coordination)
 	const [activeTab, setActiveTab] = useState("basics");
-	const [previewOpen, setPreviewOpen] = useState(true);
+	const [previewOpen, setPreviewOpen] = useState(false);
 	const [previewPrompt, setPreviewPrompt] = useState("Summarize my week");
 
 	// Basics tab state

@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
 	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
 	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
 	Badge, Box, Button, Popover, PopoverContent, PopoverTrigger, Text, Tooltip,
 } from "@optiaxiom/react";
 import {
-	IconArrowUp, IconBolt, IconCircleQuestion, IconGear, IconPlus, IconRocket, IconStar, IconUpload, IconXmark,
+	IconArrowUp, IconBolt, IconChevronDown, IconChevronUp, IconCircleQuestion, IconGear, IconPlus, IconRocket, IconStar, IconUpload, IconXmark,
 } from "@optiaxiom/icons";
 
 const CAPTION: React.CSSProperties = {
@@ -102,6 +102,13 @@ const QUICK_ADD_VALUES = [
 	"Honest, not harsh",
 	"Bias toward action",
 ];
+
+function getToneSummary(d: number, w: number, e: number): string {
+	const dl = d <= 33 ? "Brief" : d >= 67 ? "Detailed" : "Balanced";
+	const wl = w <= 33 ? "Formal" : w >= 67 ? "Warm" : "Balanced";
+	const el = e <= 33 ? "Calm" : e >= 67 ? "Playful" : "Balanced";
+	return `${dl} · ${wl} · ${el}`;
+}
 
 // ── 3-option tone picker ──────────────────────────────────────────────────
 
@@ -255,6 +262,65 @@ function UploadPopover() {
 	);
 }
 
+// ── Accordion section ─────────────────────────────────────────────────────
+
+function AccordionSection({
+	title,
+	tooltip,
+	summary,
+	isOpen,
+	onToggle,
+	actionButton,
+	children,
+}: {
+	title: string;
+	tooltip?: string;
+	summary: string;
+	isOpen: boolean;
+	onToggle: () => void;
+	actionButton?: ReactNode;
+	children: ReactNode;
+}) {
+	return (
+		<Box
+			bg="bg.default"
+			style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, marginBottom: 12, overflow: "hidden" }}
+		>
+			<Box
+				onClick={onToggle}
+				style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", cursor: "pointer" }}
+			>
+				<Box style={{ flex: 1, minWidth: 0 }}>
+					<Box style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+						<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>{title}</Text>
+						{tooltip && (
+							<Tooltip delayDuration={300} content={tooltip}>
+								<span style={{ display: "inline-flex" }}>
+									<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
+								</span>
+							</Tooltip>
+						)}
+					</Box>
+					{!isOpen && (
+						<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginTop: 2 }}>{summary}</Text>
+					)}
+				</Box>
+				<Box style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 16, flexShrink: 0 }}>
+					{isOpen && actionButton}
+					<Box style={{ color: "var(--ax-colors-fg-tertiary)", display: "flex", alignItems: "center" }}>
+						{isOpen ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+					</Box>
+				</Box>
+			</Box>
+			{isOpen && (
+				<Box style={{ padding: "0 20px 20px", borderTop: "1px solid var(--ax-colors-border-default)" }}>
+					{children}
+				</Box>
+			)}
+		</Box>
+	);
+}
+
 // ── Main component ────────────────────────────────────────────────────────
 
 export function PersonalityTab({
@@ -283,6 +349,16 @@ export function PersonalityTab({
 	const [newTrait, setNewTrait] = useState("");
 	const [showAddValue, setShowAddValue] = useState(false);
 	const [newValue, setNewValue] = useState("");
+	const [configExpanded, setConfigExpanded] = useState(false);
+	const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+
+	function toggleSection(key: string) {
+		setOpenSections((prev) => {
+			const next = new Set(prev);
+			next.has(key) ? next.delete(key) : next.add(key);
+			return next;
+		});
+	}
 
 	useEffect(() => {
 		if (!toastVisible) return;
@@ -300,6 +376,8 @@ export function PersonalityTab({
 		setToastMessage(`${name}'s personality has been updated to '${t.name.toLowerCase()}'`);
 		setToastVisible(true);
 		setPreviewOpen(true);
+		setConfigExpanded(false);
+		setOpenSections(new Set());
 	}
 
 	function handleTemplateClick(id: string) {
@@ -394,240 +472,283 @@ export function PersonalityTab({
 				<Box style={{ height: 1, background: "var(--ax-colors-border-default)", marginBottom: 32 }} />
 
 				{/* ── Configure manually ── */}
-				<Text style={{ fontSize: 18, fontWeight: 600, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 4 }}>
-					Configure manually
-				</Text>
-				<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginBottom: 20 }}>
-					Edit or add personality traits to meet your exact needs
-				</Text>
-
-				{/* Personality traits */}
-				<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px", marginBottom: 12 }}>
-					<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-						<Box>
-							<Box style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-								<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>Personality traits</Text>
-								<Tooltip delayDuration={300} content="Keywords that shape how your teammate thinks and communicates.">
-									<span style={{ display: "inline-flex" }}>
-										<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
-									</span>
-								</Tooltip>
-							</Box>
-							<Text fontSize="sm" color="fg.secondary">Shape how {name} thinks and communicates</Text>
-						</Box>
-						<Button appearance="primary" size="sm" onClick={() => setShowAddTrait(true)}>Add your own</Button>
+				<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+					<Box>
+						<Text style={{ fontSize: 18, fontWeight: 600, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 4 }}>
+							Configure manually
+						</Text>
+						<Text fontSize="sm" color="fg.secondary" style={{ display: "block" }}>
+							Edit or add personality traits to meet your exact needs
+						</Text>
 					</Box>
-					<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
-						{activeTraits.map((trait) => (
-							<button
-								key={trait}
-								className="trait-pill-active"
-								onClick={() => setActiveTraits((p) => p.filter((t) => t !== trait))}
-								style={{
-									display: "inline-flex", alignItems: "center", gap: 6,
-									padding: "5px 10px", borderRadius: 99,
-									background: "var(--ax-colors-bg-secondary)",
-									border: "1px solid var(--ax-colors-border-default)",
-									cursor: "pointer", fontSize: 13,
-									color: "var(--ax-colors-fg-default)", fontFamily: "inherit",
-								}}
-							>
-								{trait}
-								<IconXmark size={11} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
-							</button>
-						))}
-					</Box>
-					<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 8 }}>SUGGESTED</span>
-					<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: showAddTrait ? 12 : 0 }}>
-						{SUGGESTED_TRAITS.filter((t) => !activeTraits.includes(t)).map((trait) => (
-							<button
-								key={trait}
-								className="trait-pill-suggest"
-								onClick={() => setActiveTraits((p) => [...p, trait])}
-								style={{
-									display: "inline-flex", alignItems: "center", gap: 4,
-									padding: "5px 10px", borderRadius: 99,
-									background: "transparent",
-									border: "1px solid var(--ax-colors-border-default)",
-									cursor: "pointer", fontSize: 13,
-									color: "var(--ax-colors-fg-secondary)", fontFamily: "inherit",
-								}}
-							>
-								+ {trait}
-							</button>
-						))}
-					</Box>
-					{showAddTrait && (
-						<Box style={{ display: "flex", gap: 8, marginTop: 12 }}>
-							<input
-								autoFocus
-								value={newTrait}
-								onChange={(e) => setNewTrait(e.target.value)}
-								placeholder="Enter a trait..."
-								onKeyDown={(e) => {
-									if (e.key === "Enter" && newTrait.trim()) {
-										setActiveTraits((p) => [...p, newTrait.trim()]);
-										setNewTrait("");
-										setShowAddTrait(false);
-									}
-									if (e.key === "Escape") { setNewTrait(""); setShowAddTrait(false); }
-								}}
-								style={{
-									flex: 1, height: 36, padding: "0 12px",
-									border: "1px solid var(--ax-colors-border-default)",
-									borderRadius: 6, background: "var(--ax-colors-bg-input)",
-									fontSize: 14, color: "var(--ax-colors-fg-default)",
-									fontFamily: "inherit", outline: "none",
-								}}
-							/>
-							<Button size="md" style={{ height: 36 }} onClick={() => {
-								if (newTrait.trim()) setActiveTraits((p) => [...p, newTrait.trim()]);
-								setNewTrait(""); setShowAddTrait(false);
-							}}>Save</Button>
-							<Button size="md" style={{ height: 36 }} appearance="subtle" onClick={() => { setNewTrait(""); setShowAddTrait(false); }}>Cancel</Button>
-						</Box>
-					)}
+					<Button
+						appearance="subtle"
+						size="sm"
+						icon={configExpanded ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
+						iconPosition="end"
+						onClick={() => {
+							if (configExpanded) {
+								setConfigExpanded(false);
+								setOpenSections(new Set());
+							} else {
+								setConfigExpanded(true);
+								setOpenSections(new Set(["traits", "tone", "values", "import"]));
+							}
+						}}
+					>
+						View details
+					</Button>
 				</Box>
 
-				{/* Tone of voice */}
-				<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px", marginBottom: 12 }}>
-					<Box style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-						<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>Tone of voice</Text>
-						<Tooltip delayDuration={300} content="Adjusts how formal, warm, and energetic your teammate sounds.">
-							<span style={{ display: "inline-flex" }}>
-								<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
-							</span>
-						</Tooltip>
-					</Box>
-					<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginBottom: 20 }}>Fine-tune {name}&apos;s communication style</Text>
-					<ToneRow label="Detail" leftLabel="Brief" leftEmoji="🐣" rightLabel="Detailed" rightEmoji="🪄" value={detail} onChange={setDetail} />
-					<ToneRow label="Warmth" leftLabel="Formal" leftEmoji="🏛" rightLabel="Warm" rightEmoji="☀️" value={warmth} onChange={setWarmth} />
-					<ToneRow label="Energy" leftLabel="Calm" leftEmoji="🌱" rightLabel="Playful" rightEmoji="🎯" value={energy} onChange={setEnergy} />
-				</Box>
-
-				{/* Values */}
-				<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px", marginBottom: 12 }}>
-					<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-						<Box>
-							<Box style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-								<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>Values</Text>
-								<Tooltip delayDuration={300} content="Principles that guide your teammate's priorities and tradeoffs.">
-									<span style={{ display: "inline-flex" }}>
-										<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
-									</span>
-								</Tooltip>
+				{!configExpanded ? (
+					/* ── Collapsed summary ── */
+					<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "16px 20px", marginBottom: 40 }}>
+						<Box style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+							<Box style={{ display: "flex", gap: 12, alignItems: "baseline" }}>
+								<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0, minWidth: 48 }}>TRAITS</span>
+								<Text fontSize="sm" color="fg.default">{activeTraits.join(" · ")}</Text>
 							</Box>
-							<Text fontSize="sm" color="fg.secondary">Principles that guide {name}&apos;s tradeoffs</Text>
+							<Box style={{ display: "flex", gap: 12, alignItems: "baseline" }}>
+								<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0, minWidth: 48 }}>TONE</span>
+								<Text fontSize="sm" color="fg.default">{getToneSummary(detail, warmth, energy)}</Text>
+							</Box>
+							<Box style={{ display: "flex", gap: 12, alignItems: "baseline" }}>
+								<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0, minWidth: 48 }}>VALUES</span>
+								<Text fontSize="sm" color="fg.default">{values.length} values set</Text>
+							</Box>
 						</Box>
-						<Button appearance="primary" size="sm" onClick={() => setShowAddValue(true)}>Add your own</Button>
 					</Box>
-					<Box style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
-						{values.map((v) => (
-							<Box key={v} style={{
-								display: "flex", alignItems: "center", justifyContent: "space-between",
-								padding: "10px 14px",
-								background: "#EFF5EB",
-								borderRadius: 8,
-							}}>
-								<Text fontSize="md" color="fg.default">{v}</Text>
-								<button
-									onClick={() => setValues((p) => p.filter((x) => x !== v))}
-									style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--ax-colors-fg-tertiary)", display: "flex", alignItems: "center" }}
-								>
-									<IconXmark size={14} />
-								</button>
+				) : (
+					/* ── Expanded accordion ── */
+					<Box style={{ marginBottom: 40 }}>
+
+						{/* Personality traits */}
+						<AccordionSection
+							title="Personality traits"
+							tooltip="Keywords that shape how your teammate thinks and communicates."
+							summary={activeTraits.slice(0, 4).join(" · ") + (activeTraits.length > 4 ? ` +${activeTraits.length - 4}` : "")}
+							isOpen={openSections.has("traits")}
+							onToggle={() => toggleSection("traits")}
+							actionButton={
+								<Box onClick={(e) => e.stopPropagation()}>
+									<Button appearance="primary" size="sm" onClick={() => setShowAddTrait(true)}>Add your own</Button>
+								</Box>
+							}
+						>
+							<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16, marginTop: 16 }}>
+								{activeTraits.map((trait) => (
+									<button
+										key={trait}
+										className="trait-pill-active"
+										onClick={() => setActiveTraits((p) => p.filter((t) => t !== trait))}
+										style={{
+											display: "inline-flex", alignItems: "center", gap: 6,
+											padding: "5px 10px", borderRadius: 99,
+											background: "var(--ax-colors-bg-secondary)",
+											border: "1px solid var(--ax-colors-border-default)",
+											cursor: "pointer", fontSize: 13,
+											color: "var(--ax-colors-fg-default)", fontFamily: "inherit",
+										}}
+									>
+										{trait}
+										<IconXmark size={11} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+									</button>
+								))}
 							</Box>
-						))}
-					</Box>
-					{showAddValue && (
-						<Box style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-							<input
-								autoFocus
-								value={newValue}
-								onChange={(e) => setNewValue(e.target.value)}
-								placeholder="Add a value or principle..."
-								onKeyDown={(e) => {
-									if (e.key === "Enter" && newValue.trim()) {
-										setValues((p) => [...p, newValue.trim()]);
+							<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 8 }}>SUGGESTED</span>
+							<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: showAddTrait ? 12 : 0 }}>
+								{SUGGESTED_TRAITS.filter((t) => !activeTraits.includes(t)).map((trait) => (
+									<button
+										key={trait}
+										className="trait-pill-suggest"
+										onClick={() => setActiveTraits((p) => [...p, trait])}
+										style={{
+											display: "inline-flex", alignItems: "center", gap: 4,
+											padding: "5px 10px", borderRadius: 99,
+											background: "transparent",
+											border: "1px solid var(--ax-colors-border-default)",
+											cursor: "pointer", fontSize: 13,
+											color: "var(--ax-colors-fg-secondary)", fontFamily: "inherit",
+										}}
+									>
+										+ {trait}
+									</button>
+								))}
+							</Box>
+							{showAddTrait && (
+								<Box style={{ display: "flex", gap: 8, marginTop: 12 }}>
+									<input
+										autoFocus
+										value={newTrait}
+										onChange={(e) => setNewTrait(e.target.value)}
+										placeholder="Enter a trait..."
+										onKeyDown={(e) => {
+											if (e.key === "Enter" && newTrait.trim()) {
+												setActiveTraits((p) => [...p, newTrait.trim()]);
+												setNewTrait("");
+												setShowAddTrait(false);
+											}
+											if (e.key === "Escape") { setNewTrait(""); setShowAddTrait(false); }
+										}}
+										style={{
+											flex: 1, height: 36, padding: "0 12px",
+											border: "1px solid var(--ax-colors-border-default)",
+											borderRadius: 6, background: "var(--ax-colors-bg-input)",
+											fontSize: 14, color: "var(--ax-colors-fg-default)",
+											fontFamily: "inherit", outline: "none",
+										}}
+									/>
+									<Button size="md" style={{ height: 36 }} onClick={() => {
+										if (newTrait.trim()) setActiveTraits((p) => [...p, newTrait.trim()]);
+										setNewTrait(""); setShowAddTrait(false);
+									}}>Save</Button>
+									<Button size="md" style={{ height: 36 }} appearance="subtle" onClick={() => { setNewTrait(""); setShowAddTrait(false); }}>Cancel</Button>
+								</Box>
+							)}
+						</AccordionSection>
+
+						{/* Tone of voice */}
+						<AccordionSection
+							title="Tone of voice"
+							tooltip="Adjusts how formal, warm, and energetic your teammate sounds."
+							summary={getToneSummary(detail, warmth, energy)}
+							isOpen={openSections.has("tone")}
+							onToggle={() => toggleSection("tone")}
+						>
+							<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginBottom: 20, marginTop: 16 }}>Fine-tune {name}&apos;s communication style</Text>
+							<ToneRow label="Detail" leftLabel="Brief" leftEmoji="🐣" rightLabel="Detailed" rightEmoji="🪄" value={detail} onChange={setDetail} />
+							<ToneRow label="Warmth" leftLabel="Formal" leftEmoji="🏛" rightLabel="Warm" rightEmoji="☀️" value={warmth} onChange={setWarmth} />
+							<ToneRow label="Energy" leftLabel="Calm" leftEmoji="🌱" rightLabel="Playful" rightEmoji="🎯" value={energy} onChange={setEnergy} />
+						</AccordionSection>
+
+						{/* Values */}
+						<AccordionSection
+							title="Values"
+							tooltip="Principles that guide your teammate's priorities and tradeoffs."
+							summary={`${values.length} values set`}
+							isOpen={openSections.has("values")}
+							onToggle={() => toggleSection("values")}
+							actionButton={
+								<Box onClick={(e) => e.stopPropagation()}>
+									<Button appearance="primary" size="sm" onClick={() => setShowAddValue(true)}>Add your own</Button>
+								</Box>
+							}
+						>
+							<Box style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12, marginTop: 16 }}>
+								{values.map((v) => (
+									<Box key={v} style={{
+										display: "flex", alignItems: "center", justifyContent: "space-between",
+										padding: "10px 14px",
+										background: "#EFF5EB",
+										borderRadius: 8,
+									}}>
+										<Text fontSize="md" color="fg.default">{v}</Text>
+										<button
+											onClick={() => setValues((p) => p.filter((x) => x !== v))}
+											style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--ax-colors-fg-tertiary)", display: "flex", alignItems: "center" }}
+										>
+											<IconXmark size={14} />
+										</button>
+									</Box>
+								))}
+							</Box>
+							{showAddValue && (
+								<Box style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+									<input
+										autoFocus
+										value={newValue}
+										onChange={(e) => setNewValue(e.target.value)}
+										placeholder="Add a value or principle..."
+										onKeyDown={(e) => {
+											if (e.key === "Enter" && newValue.trim()) {
+												setValues((p) => [...p, newValue.trim()]);
+												setNewValue(""); setShowAddValue(false);
+											}
+											if (e.key === "Escape") { setNewValue(""); setShowAddValue(false); }
+										}}
+										style={{
+											flex: 1, height: 36, padding: "0 12px",
+											border: "1px solid var(--ax-colors-border-default)",
+											borderRadius: 6, background: "var(--ax-colors-bg-input)",
+											fontSize: 14, color: "var(--ax-colors-fg-default)",
+											fontFamily: "inherit", outline: "none",
+										}}
+									/>
+									<Button size="md" style={{ height: 36 }} appearance="default" onClick={() => {
+										if (newValue.trim()) setValues((p) => [...p, newValue.trim()]);
 										setNewValue(""); setShowAddValue(false);
-									}
-									if (e.key === "Escape") { setNewValue(""); setShowAddValue(false); }
-								}}
-								style={{
-									flex: 1, height: 36, padding: "0 12px",
-									border: "1px solid var(--ax-colors-border-default)",
-									borderRadius: 6, background: "var(--ax-colors-bg-input)",
-									fontSize: 14, color: "var(--ax-colors-fg-default)",
-									fontFamily: "inherit", outline: "none",
-								}}
-							/>
-							<Button size="md" style={{ height: 36 }} appearance="default" onClick={() => {
-								if (newValue.trim()) setValues((p) => [...p, newValue.trim()]);
-								setNewValue(""); setShowAddValue(false);
-							}}>Save</Button>
-							<Button size="md" style={{ height: 36 }} appearance="subtle" onClick={() => { setNewValue(""); setShowAddValue(false); }}>Cancel</Button>
-						</Box>
-					)}
-					<Box style={{ marginTop: 4 }}>
-						<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 8 }}>QUICK ADD</span>
-						<Box style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-							{QUICK_ADD_VALUES.filter((v) => !values.includes(v)).map((v) => (
-								<button
-									key={v}
-									className="trait-pill-suggest"
-									onClick={() => setValues((p) => [...p, v])}
-									style={{
-										display: "inline-flex", alignItems: "center", gap: 4,
-										padding: "5px 10px", borderRadius: 99,
-										background: "transparent",
-										border: "1px solid var(--ax-colors-border-default)",
-										cursor: "pointer", fontSize: 13,
-										color: "var(--ax-colors-fg-secondary)", fontFamily: "inherit",
-									}}
-								>
-									+ {v}
-								</button>
-							))}
-						</Box>
-					</Box>
-				</Box>
+									}}>Save</Button>
+									<Button size="md" style={{ height: 36 }} appearance="subtle" onClick={() => { setNewValue(""); setShowAddValue(false); }}>Cancel</Button>
+								</Box>
+							)}
+							<Box style={{ marginTop: 4 }}>
+								<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 8 }}>QUICK ADD</span>
+								<Box style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+									{QUICK_ADD_VALUES.filter((v) => !values.includes(v)).map((v) => (
+										<button
+											key={v}
+											className="trait-pill-suggest"
+											onClick={() => setValues((p) => [...p, v])}
+											style={{
+												display: "inline-flex", alignItems: "center", gap: 4,
+												padding: "5px 10px", borderRadius: 99,
+												background: "transparent",
+												border: "1px solid var(--ax-colors-border-default)",
+												cursor: "pointer", fontSize: 13,
+												color: "var(--ax-colors-fg-secondary)", fontFamily: "inherit",
+											}}
+										>
+											+ {v}
+										</button>
+									))}
+								</Box>
+							</Box>
+						</AccordionSection>
 
-				{/* Import a personality */}
-				<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px", marginBottom: 40 }}>
-					<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-						<Box>
-							<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 2 }}>Import a personality</Text>
-							<Text fontSize="sm" color="fg.secondary">Paste a description or upload a file — we&apos;ll extract the traits and tone automatically</Text>
-						</Box>
-						<UploadPopover />
-					</Box>
-					<Box style={{
-						display: "flex", alignItems: "center",
-						border: "1px solid var(--ax-colors-border-default)",
-						borderRadius: 8, overflow: "hidden",
-						background: "var(--ax-colors-bg-input)",
-						padding: "0 8px 0 0",
-					}}>
-						<input
-							value={importText}
-							onChange={(e) => setImportText(e.target.value)}
-							placeholder="Paste a prompt, persona description, or any notes on how your teammate should sound…"
-							style={{
-								flex: 1, height: 44,
-								padding: "0 14px",
-								border: "none", background: "transparent",
-								fontSize: 14, color: "var(--ax-colors-fg-default)",
-								fontFamily: "inherit", outline: "none",
-							}}
-						/>
-						<Button
-							size="sm"
-							appearance="primary"
-							icon={<IconArrowUp size={14} />}
-							disabled={!importText.trim()}
-						/>
-					</Box>
+						{/* Import a personality */}
+						<AccordionSection
+							title="Import a personality"
+							summary="—"
+							isOpen={openSections.has("import")}
+							onToggle={() => toggleSection("import")}
+							actionButton={
+								<Box onClick={(e) => e.stopPropagation()}>
+									<UploadPopover />
+								</Box>
+							}
+						>
+							<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginBottom: 16, marginTop: 16 }}>Paste a description or upload a file — we&apos;ll extract the traits and tone automatically</Text>
+							<Box style={{
+								display: "flex", alignItems: "center",
+								border: "1px solid var(--ax-colors-border-default)",
+								borderRadius: 8, overflow: "hidden",
+								background: "var(--ax-colors-bg-input)",
+								padding: "0 8px 0 0",
+							}}>
+								<input
+									value={importText}
+									onChange={(e) => setImportText(e.target.value)}
+									placeholder="Paste a prompt, persona description, or any notes on how your teammate should sound…"
+									style={{
+										flex: 1, height: 44,
+										padding: "0 14px",
+										border: "none", background: "transparent",
+										fontSize: 14, color: "var(--ax-colors-fg-default)",
+										fontFamily: "inherit", outline: "none",
+									}}
+								/>
+								<Button
+									size="sm"
+									appearance="primary"
+									icon={<IconArrowUp size={14} />}
+									disabled={!importText.trim()}
+								/>
+							</Box>
+						</AccordionSection>
+
 				</Box>
+				)}
+
 			</Box>
 
 			{/* ── Switch template dialog ── */}
