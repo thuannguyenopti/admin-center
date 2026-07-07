@@ -868,10 +868,11 @@ export default function VAUDetailPage() {
 							disabled={!allConnected}
 							onClick={() => {
 								try {
-									sessionStorage.setItem("im-initial-chat", "conv-demo-frank-dm");
-									sessionStorage.setItem("im-vau-welcome", JSON.stringify({ name: vauName, avatar: customAvatar?.src ?? vau.avatar }));
+									const chosenAvatar = customAvatar?.src ?? vau.avatar;
+									sessionStorage.setItem("im-vau-welcome", JSON.stringify({ name: vauName, avatar: chosenAvatar }));
+									localStorage.setItem("vau-bubs-avatar", chosenAvatar);
 								} catch {}
-								router.push("/opal/im");
+								router.push("/opal/messages?conversation=bubs");
 							}}
 						>
 							Start working together

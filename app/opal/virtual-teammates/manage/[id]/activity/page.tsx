@@ -3,10 +3,11 @@
 import { useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import {
-	Box, Button, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger,
+	Badge, Box, Button, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger,
 	Tabs, TabsContent, TabsList, TabsTrigger, Text,
 } from "@optiaxiom/react";
-import { IconArrowDown, IconArrowUp, IconChevronLeft, IconChevronRight, IconGripVertical } from "@optiaxiom/icons";
+import { IconArrowDown, IconArrowUp, IconArrowUpRightFromSquare, IconChevronLeft, IconChevronRight, IconGripVertical, IconSearch } from "@optiaxiom/icons";
+import { Input } from "@/app/components/Input";
 import { VAUS } from "@/app/opal/data/vaus";
 
 const CAPTION: React.CSSProperties = {
@@ -53,34 +54,27 @@ const INITIAL_QUEUE = [
 ];
 
 const COMPLETED_ITEMS = [
-	{ id: "c1",  task: "Email Triage",   sub: "Morning inbox sweep",               date: "Jun 24", dateIndex: 0,  durationMin: 4, outcome: "12 emails triaged" },
-	{ id: "c2",  task: "Meeting Prep",   sub: '"Q3 Roadmap Review" brief',          date: "Jun 24", dateIndex: 1,  durationMin: 6, outcome: "Brief sent" },
-	{ id: "c3",  task: "Status Nudges",  sub: "Follow-up pings to 3 threads",       date: "Jun 23", dateIndex: 2,  durationMin: 2, outcome: "3 replies received" },
-	{ id: "c4",  task: "Morning Brief",  sub: "Daily digest delivered",             date: "Jun 23", dateIndex: 3,  durationMin: 1, outcome: "Delivered" },
-	{ id: "c5",  task: "Follow-ups",     sub: "Sarah Chen feedback loop",           date: "Jun 22", dateIndex: 4,  durationMin: 8, outcome: "Response drafted" },
-	{ id: "c6",  task: "Weekly Recap",   sub: "End-of-week performance summary",    date: "Jun 21", dateIndex: 5,  durationMin: 5, outcome: "Report published" },
-	{ id: "c7",  task: "Meeting Prep",   sub: '"Design Review" brief',              date: "Jun 21", dateIndex: 6,  durationMin: 6, outcome: "Brief sent" },
-	{ id: "c8",  task: "Email Triage",   sub: "Afternoon inbox sweep",              date: "Jun 20", dateIndex: 7,  durationMin: 3, outcome: "8 emails triaged" },
-	{ id: "c9",  task: "Status Nudges",  sub: "CMP task deadline reminders",        date: "Jun 20", dateIndex: 8,  durationMin: 2, outcome: "2 replies received" },
-	{ id: "c10", task: "Morning Brief",  sub: "Daily digest delivered",             date: "Jun 19", dateIndex: 9,  durationMin: 1, outcome: "Delivered" },
-	{ id: "c11", task: "Competitor Intel", sub: "Weekly landscape digest",          date: "Jun 19", dateIndex: 10, durationMin: 7, outcome: "Report sent" },
-	{ id: "c12", task: "Follow-ups",     sub: "Q3 campaign brief feedback",         date: "Jun 18", dateIndex: 11, durationMin: 5, outcome: "Thread closed" },
-];
-
-const KPIS = [
-	{ label: "Time reclaimed", value: "4.5 hrs", sub: "+12% vs last week" },
-	{ label: "Fires prevented", value: "9",       sub: "Across 4 workstreams" },
-	{ label: "Threads closed",  value: "14",      sub: "−4 min avg response time" },
-	{ label: "Commitments tracked", value: "23",  sub: "0% dropped" },
+	{ id: "c1",  task: "Email Triage",     sub: "Morning inbox sweep",               dateIndex: 0,  executionTime: "Jul 6, 2026, 9:53 AM",  trigger: "scheduled" as const, artifactLabel: "Triage summary",         artifactHref: "#" },
+	{ id: "c2",  task: "Meeting Prep",     sub: '"Q3 Roadmap Review" brief',          dateIndex: 1,  executionTime: "Jul 6, 2026, 8:01 AM",  trigger: "scheduled" as const, artifactLabel: "Q3 Roadmap brief",       artifactHref: "#" },
+	{ id: "c3",  task: "Status Nudges",    sub: "Follow-up pings to 3 threads",       dateIndex: 2,  executionTime: "Jul 5, 2026, 4:12 PM",  trigger: "message" as const,   artifactLabel: "Thread summary",         artifactHref: "#" },
+	{ id: "c4",  task: "Morning Brief",    sub: "Daily digest delivered",             dateIndex: 3,  executionTime: "Jul 5, 2026, 7:00 AM",  trigger: "scheduled" as const, artifactLabel: "Daily digest",           artifactHref: "#" },
+	{ id: "c5",  task: "Follow-ups",       sub: "Sarah Chen feedback loop",           dateIndex: 4,  executionTime: "Jul 4, 2026, 2:45 PM",  trigger: "message" as const,   artifactLabel: "Draft follow-up email",  artifactHref: "#" },
+	{ id: "c6",  task: "Weekly Recap",     sub: "End-of-week performance summary",    dateIndex: 5,  executionTime: "Jul 4, 2026, 5:00 PM",  trigger: "scheduled" as const, artifactLabel: "Weekly recap report",    artifactHref: "#" },
+	{ id: "c7",  task: "Meeting Prep",     sub: '"Design Review" brief',              dateIndex: 6,  executionTime: "Jul 3, 2026, 9:30 AM",  trigger: "scheduled" as const, artifactLabel: "Design Review brief",    artifactHref: "#" },
+	{ id: "c8",  task: "Email Triage",     sub: "Afternoon inbox sweep",              dateIndex: 7,  executionTime: "Jul 3, 2026, 1:00 PM",  trigger: "scheduled" as const, artifactLabel: "Triage summary",         artifactHref: "#" },
+	{ id: "c9",  task: "Status Nudges",    sub: "CMP task deadline reminders",        dateIndex: 8,  executionTime: "Jul 2, 2026, 3:20 PM",  trigger: "message" as const,   artifactLabel: "Reminder log",           artifactHref: "#" },
+	{ id: "c10", task: "Morning Brief",    sub: "Daily digest delivered",             dateIndex: 9,  executionTime: "Jul 2, 2026, 7:00 AM",  trigger: "scheduled" as const, artifactLabel: "Daily digest",           artifactHref: "#" },
+	{ id: "c11", task: "Competitor Intel", sub: "Weekly landscape digest",            dateIndex: 10, executionTime: "Jul 1, 2026, 11:15 AM", trigger: "scheduled" as const, artifactLabel: "Landscape digest",       artifactHref: "#" },
+	{ id: "c12", task: "Follow-ups",       sub: "Q3 campaign brief feedback",         dateIndex: 11, executionTime: "Jul 1, 2026, 10:02 AM", trigger: "message" as const,   artifactLabel: "Draft response",         artifactHref: "#" },
 ];
 
 const TIME_FRAME_OPTIONS = ["Past 7 days", "Past 30 days", "Past 90 days", "All time"];
 const COMPLETED_PAGE_SIZE = 5;
 
-type SortKey = "task" | "date" | "duration";
+type SortKey = "task" | "executionTime" | "trigger";
 type SortDir = "asc" | "desc";
 
-function StatusBadge({ status }: { status: "next_up" | "queued" | "completed" }) {
+function QueueStatusBadge({ status }: { status: "next_up" | "queued" }) {
 	if (status === "next_up") {
 		return (
 			<span style={{ ...CAPTION, background: "var(--ax-colors-fg-default)", color: "var(--ax-colors-bg-default)", padding: "3px 10px", borderRadius: 32, whiteSpace: "nowrap" as const }}>
@@ -88,19 +82,13 @@ function StatusBadge({ status }: { status: "next_up" | "queued" | "completed" })
 			</span>
 		);
 	}
-	if (status === "queued") {
-		return (
-			<span style={{ ...CAPTION, background: "var(--ax-colors-bg-secondary)", color: "var(--ax-colors-fg-secondary)", padding: "3px 10px", borderRadius: 32, whiteSpace: "nowrap" as const, border: "1px solid var(--ax-colors-border-default)" }}>
-				Queued
-			</span>
-		);
-	}
 	return (
-		<span style={{ ...CAPTION, background: "#E8F5E4", color: "#226b1e", padding: "3px 10px", borderRadius: 32, whiteSpace: "nowrap" as const }}>
-			Completed
+		<span style={{ ...CAPTION, background: "var(--ax-colors-bg-secondary)", color: "var(--ax-colors-fg-secondary)", padding: "3px 10px", borderRadius: 32, whiteSpace: "nowrap" as const, border: "1px solid var(--ax-colors-border-default)" }}>
+			Queued
 		</span>
 	);
 }
+
 
 export default function VATActivityPage() {
 	const params = useParams();
@@ -135,8 +123,13 @@ export default function VATActivityPage() {
 		setDragOverIndex(null);
 	};
 
+	// Completed filters
+	const [completedQuery, setCompletedQuery] = useState("");
+	const [completedStatus, setCompletedStatus] = useState("All");
+	const [completedDateRange, setCompletedDateRange] = useState("All time");
+
 	// Completed sort + pagination
-	const [sortKey, setSortKey] = useState<SortKey>("date");
+	const [sortKey, setSortKey] = useState<SortKey>("executionTime");
 	const [sortDir, setSortDir] = useState<SortDir>("asc");
 	const [completedPage, setCompletedPage] = useState(0);
 
@@ -150,10 +143,17 @@ export default function VATActivityPage() {
 		setCompletedPage(0);
 	};
 
-	const sortedCompleted = [...COMPLETED_ITEMS].sort((a, b) => {
+	const filteredCompleted = COMPLETED_ITEMS.filter((item) => {
+		const q = completedQuery.trim().toLowerCase();
+		if (q && !item.task.toLowerCase().includes(q) && !item.sub.toLowerCase().includes(q) && !item.artifactLabel.toLowerCase().includes(q)) return false;
+		if (completedStatus !== "All" && completedStatus.toLowerCase() !== "completed") return false;
+		return true;
+	});
+
+	const sortedCompleted = [...filteredCompleted].sort((a, b) => {
 		const dir = sortDir === "asc" ? 1 : -1;
 		if (sortKey === "task") return dir * a.task.localeCompare(b.task);
-		if (sortKey === "duration") return dir * (a.durationMin - b.durationMin);
+		if (sortKey === "trigger") return dir * a.trigger.localeCompare(b.trigger);
 		return dir * (a.dateIndex - b.dateIndex);
 	});
 
@@ -168,18 +168,6 @@ export default function VATActivityPage() {
 	// Activity Overview time frame + chart hover
 	const [timeFrame, setTimeFrame] = useState("Past 30 days");
 	const [hoveredBar, setHoveredBar] = useState<string | null>(null);
-
-	function KpiCard({ label, value, sub }: { label: string; value: string; sub: string }) {
-		return (
-			<Box bg="bg.default" style={{ flex: 1, border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-				<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>{label}</span>
-				<Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 28, fontWeight: 900, lineHeight: "1", color: "var(--ax-colors-fg-default)" }}>
-					{value}
-				</Text>
-				<Text fontSize="sm" color="fg.secondary">{sub}</Text>
-			</Box>
-		);
-	}
 
 	function SortIcon({ col }: { col: SortKey }) {
 		if (sortKey !== col) return null;
@@ -197,27 +185,22 @@ export default function VATActivityPage() {
 				A breakdown of how {name} spends their time.
 			</Text>
 
-			{/* Impact KPIs */}
-			<Box style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }} mb="32">
-				{KPIS.map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}
-			</Box>
-
-			<Tabs defaultValue="upcoming">
+			<Tabs defaultValue="overview">
 				<TabsList>
-					<TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+					<TabsTrigger value="overview">Overview</TabsTrigger>
 					<TabsTrigger value="completed">Completed</TabsTrigger>
 				</TabsList>
 
-				{/* ─── Upcoming ──────────────────────────────────────────────── */}
-				<TabsContent value="upcoming">
+				{/* ─── Overview ──────────────────────────────────────────────── */}
+				<TabsContent value="overview">
 					<Box pt="32">
-						{/* Randy's queue */}
+						{/* Upcoming work */}
 						<Box mb="40">
 							<Text style={SECTION_HEADING} mb="4">
-								{name}&apos;s queue
+								Upcoming work
 							</Text>
 							<Text color="fg.secondary" fontSize="sm" mb="16">
-								What&apos;s coming up. Drag to reorder — whatever&apos;s first is up next.
+								What&apos;s coming up and when it&apos;ll run.
 							</Text>
 							<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden" }}>
 								{/* Header */}
@@ -225,7 +208,7 @@ export default function VATActivityPage() {
 									<Box style={{ width: 28, flexShrink: 0 }} />
 									<span style={{ ...TABLE_HEADER, flex: 1 }}>Task</span>
 									<span style={{ ...TABLE_HEADER, width: 140 }}>Status</span>
-									<span style={{ ...TABLE_HEADER, width: 120 }}>Time</span>
+									<span style={{ ...TABLE_HEADER, width: 120 }}>Date/Time</span>
 									<span style={{ ...TABLE_HEADER, width: 200 }}>Actions</span>
 								</Box>
 								{queueItems.map((item, i) => (
@@ -256,7 +239,7 @@ export default function VATActivityPage() {
 											<Text fontSize="sm" color="fg.secondary">{item.sub}</Text>
 										</Box>
 										<Box style={{ width: 140 }}>
-											<StatusBadge status={i === 0 ? "next_up" : "queued"} />
+											<QueueStatusBadge status={i === 0 ? "next_up" : "queued"} />
 										</Box>
 										<Text fontSize="md" color="fg.secondary" style={{ width: 120 }}>{item.time}</Text>
 										<Box display="flex" gap="8" style={{ width: 200 }}>
@@ -413,6 +396,26 @@ export default function VATActivityPage() {
 								</Box>
 							</Box>
 						</Box>
+
+						{/* Usage */}
+						<Box mt="40">
+							<Text style={SECTION_HEADING} mb="4">Usage</Text>
+							<Text color="fg.secondary" fontSize="sm" mb="16">
+								{name}&apos;s credit usage for the current billing period.
+							</Text>
+							<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px" }}>
+								<Box style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 12 }}>
+									<Text style={{ fontSize: 18, fontWeight: 700, lineHeight: "1", color: "var(--ax-colors-fg-default)" }}>340</Text>
+									<Text fontSize="md" color="fg.tertiary" style={{ fontWeight: 400 }}>/1000</Text>
+								</Box>
+								<Box style={{ display: "flex", alignItems: "center", gap: 12 }}>
+									<Box style={{ flex: 1, height: 8, background: "var(--ax-colors-bg-secondary)", borderRadius: 999, overflow: "hidden" }}>
+										<Box style={{ width: "34%", height: "100%", background: "var(--ax-colors-fg-default)", borderRadius: 999 }} />
+									</Box>
+									<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)", whiteSpace: "nowrap" as const }}>34% USED</span>
+								</Box>
+							</Box>
+						</Box>
 					</Box>
 				</TabsContent>
 
@@ -425,11 +428,49 @@ export default function VATActivityPage() {
 						<Text color="fg.secondary" fontSize="sm" mb="16">
 							A record of what {name} handled — click a column header to sort.
 						</Text>
+
+						{/* Filters */}
+						<Box display="flex" alignItems="center" gap="8" mb="16">
+							<Box style={{ width: 260 }}>
+								<Input
+									placeholder="Search tasks or artifacts"
+									addonBefore={<IconSearch />}
+									value={completedQuery}
+									onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+										setCompletedQuery(e.target.value);
+										setCompletedPage(0);
+									}}
+								/>
+							</Box>
+							<Menu
+								options={["All", "Completed", "Failed", "Canceled"].map((opt) => ({
+									label: opt,
+									onClick: () => { setCompletedStatus(opt); setCompletedPage(0); },
+								}))}
+							>
+								<MenuTrigger asChild>
+									<LabelMenuButton label="Status">{completedStatus}</LabelMenuButton>
+								</MenuTrigger>
+								<MenuContent />
+							</Menu>
+							<Menu
+								options={["All time", "Today", "Past 7 days", "Past 30 days", "Past 90 days"].map((opt) => ({
+									label: opt,
+									onClick: () => { setCompletedDateRange(opt); setCompletedPage(0); },
+								}))}
+							>
+								<MenuTrigger asChild>
+									<LabelMenuButton label="Date range">{completedDateRange}</LabelMenuButton>
+								</MenuTrigger>
+								<MenuContent />
+							</Menu>
+						</Box>
+
 						<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden" }}>
 							{/* Sortable header */}
 							<Box display="flex" alignItems="center" style={{ padding: "10px 20px", borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
 								<Box
-									style={{ flex: 1, cursor: "pointer", userSelect: "none" as const }}
+									style={{ flex: 1, minWidth: 200, cursor: "pointer", userSelect: "none" as const }}
 									onClick={() => handleSort("task")}
 								>
 									<span style={TABLE_HEADER}>
@@ -438,24 +479,25 @@ export default function VATActivityPage() {
 									</span>
 								</Box>
 								<Box
-									style={{ width: 100, cursor: "pointer", userSelect: "none" as const }}
-									onClick={() => handleSort("date")}
+									style={{ width: 200, cursor: "pointer", userSelect: "none" as const }}
+									onClick={() => handleSort("executionTime")}
 								>
 									<span style={TABLE_HEADER}>
-										Date
-										<SortIcon col="date" />
+										Execution Time
+										<SortIcon col="executionTime" />
 									</span>
 								</Box>
 								<Box
-									style={{ width: 100, cursor: "pointer", userSelect: "none" as const }}
-									onClick={() => handleSort("duration")}
+									style={{ width: 140, cursor: "pointer", userSelect: "none" as const }}
+									onClick={() => handleSort("trigger")}
 								>
 									<span style={TABLE_HEADER}>
-										Duration
-										<SortIcon col="duration" />
+										Trigger
+										<SortIcon col="trigger" />
 									</span>
 								</Box>
-								<span style={{ ...TABLE_HEADER, flex: 1 }}>Outcome</span>
+								<span style={{ ...TABLE_HEADER, width: 120 }}>Status</span>
+								<span style={{ ...TABLE_HEADER, width: 180 }}>Artifact</span>
 							</Box>
 
 							{pagedCompleted.map((item) => (
@@ -464,9 +506,30 @@ export default function VATActivityPage() {
 										<Text fontSize="md" color="fg.default" style={{ fontWeight: 500 }}>{item.task}</Text>
 										<Text fontSize="sm" color="fg.secondary">{item.sub}</Text>
 									</Box>
-									<Text fontSize="sm" color="fg.secondary" style={{ width: 100 }}>{item.date}</Text>
-									<Text fontSize="sm" color="fg.secondary" style={{ width: 100 }}>{item.durationMin}m</Text>
-									<Text fontSize="sm" color="fg.secondary" style={{ flex: 1 }}>{item.outcome}</Text>
+									<Text fontSize="sm" color="fg.secondary" style={{ width: 200 }}>{item.executionTime}</Text>
+									<Box style={{ width: 140 }}>
+										{item.trigger === "message"
+											? <Badge intent="information" variant="subtle">Message</Badge>
+											: <Badge variant="subtle">Scheduled</Badge>}
+									</Box>
+									<Box style={{ width: 120 }}>
+										<Badge intent="success" variant="subtle">Completed</Badge>
+									</Box>
+									<Box style={{ width: 180 }}>
+										<Box
+											asChild
+											display="inline-flex"
+											alignItems="center"
+											gap="4"
+											className="vat-artifact-link"
+											style={{ cursor: "pointer", color: "var(--ax-colors-fg-default)", fontSize: 14 }}
+										>
+											<span>
+												{item.artifactLabel}
+												<IconArrowUpRightFromSquare style={{ width: 12, height: 12, flexShrink: 0 }} />
+											</span>
+										</Box>
+									</Box>
 								</Box>
 							))}
 						</Box>

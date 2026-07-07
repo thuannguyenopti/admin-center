@@ -444,9 +444,9 @@ function TemplateContent({
 													);
 												}
 
-												const isActive =
-													routeHighlight?.label === menuItem.label ||
-													(menuItem.exact
+												const isActive = routeHighlight
+													? routeHighlight.label === menuItem.label
+													: (menuItem.exact
 														? path === menuItem.highlight
 														: path.includes(menuItem.highlight));
 

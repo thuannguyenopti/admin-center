@@ -304,7 +304,7 @@ export default function VATWorkPage() {
 	const id = params?.id as string;
 	const vau = VAUS.find((v) => v.id === id);
 	const [showBreakDialog, setShowBreakDialog] = useState(false);
-	const [reviewItem, setReviewItem] = useState<null>(null);
+	const [reviewItem, setReviewItem] = useState<{ title: string; description: string; source: string; priority: string } | null>(null);
 	const [dismissedTitles, setDismissedTitles] = useState<Set<string>>(new Set());
 
 	// Approvals pagination
@@ -327,7 +327,7 @@ export default function VATWorkPage() {
 	}, []);
 
 	// All work filters
-	const [view, setView] = useState<"list" | "grid">("list");
+	const [view, setView] = useState<"list" | "grid">("grid");
 	const [query, setQuery] = useState("");
 	const [typeFilter, setTypeFilter] = useState("All");
 	const [sourceFilter, setSourceFilter] = useState("All");
@@ -373,12 +373,32 @@ export default function VATWorkPage() {
 					<Button appearance="default" size="md" addonBefore={<IconPause />} onClick={() => setShowBreakDialog(true)}>
 						Give {name} a break
 					</Button>
-					<Button appearance="primary" size="md" addonBefore={<IconComments />} onClick={() => router.push("/opal/im")}>
+					<Button appearance="primary" size="md" addonBefore={<IconComments />} onClick={() => router.push("/opal/messages?conversation=bubs")}>
 						Chat with {name}
 					</Button>
 				</Box>
 			</Box>
 			<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", marginBottom: 32 }} />
+
+			{/* Randy's Impact stats */}
+			<Box mb="40">
+				<Text style={{ ...SECTION_HEADING, marginBottom: 4 }}>{name}&apos;s Impact</Text>
+				<Text fontSize="sm" color="fg.secondary" mb="16">Here&apos;s how {name}&apos;s been making your week easier.</Text>
+				<Box style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12 }}>
+					{[
+						{ label: "TIME RECLAIMED", value: "4.5 hrs", sub: "+12% vs last week" },
+						{ label: "FIRES PREVENTED", value: "9", sub: "Across 4 workstreams" },
+						{ label: "THREADS CLOSED", value: "14", sub: "−4 min avg response time" },
+						{ label: "COMMITMENTS TRACKED", value: "23", sub: "0% dropped" },
+					].map((stat) => (
+						<Box key={stat.label} bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "16px 20px" }}>
+							<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 8 }}>{stat.label}</span>
+							<Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 28, fontWeight: 700, lineHeight: "1", color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 6 }}>{stat.value}</Text>
+							<Text fontSize="sm" color="fg.secondary">{stat.sub}</Text>
+						</Box>
+					))}
+				</Box>
+			</Box>
 
 			{/* Give a break dialog */}
 			<AlertDialog open={showBreakDialog} onOpenChange={setShowBreakDialog}>
@@ -412,45 +432,6 @@ export default function VATWorkPage() {
 				</AlertDialogContent>
 			</AlertDialog>
 
-			{/* Pinned */}
-			<Box mb="40">
-				<Box display="flex" alignItems="center" justifyContent="space-between" mb="4">
-					<Text style={SECTION_HEADING}>Pinned</Text>
-					<Box display="flex" alignItems="center" gap="8">
-						<Button appearance="subtle" size="sm">See all</Button>
-						<Button appearance="subtle" size="sm" icon={<IconChevronLeft />} disabled={!canGoBack} aria-label="Previous" onClick={() => setCarouselPage((p) => p - 1)} />
-						<Button appearance="subtle" size="sm" icon={<IconChevronRight />} disabled={!canGoForward} aria-label="Next" onClick={() => setCarouselPage((p) => p + 1)} />
-					</Box>
-				</Box>
-				<Text color="fg.secondary" fontSize="sm" mb="16">
-					Work your chief of staff has completed that you have saved
-				</Text>
-				<Box ref={carouselRef} style={{ overflow: "hidden" }}>
-					<Box style={{ display: "flex", gap: GAP, transform: `translateX(${translateX}px)`, transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)" }}>
-						{PINNED_ITEMS.map((item) => item.type === "artifact" ? (
-							<PinnedArtifactCard key={item.title} item={item} flexBasis={flexBasis} avatarSrc={vau?.avatar} avatarBg={vau?.avatarBg} />
-						) : (
-							<Box key={item.title} bg="bg.default" style={{ flex: `0 0 ${flexBasis}`, width: flexBasis, border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer" }}>
-								<Box display="flex" flexDirection="column" gap="8" style={{ padding: 16, flex: 1 }}>
-									<span style={{ ...CAPTION, fontSize: 9, background: item.priorityBg, color: item.priorityColor, padding: "2px 8px", borderRadius: 32, alignSelf: "flex-start" }}>
-										{item.priority}
-									</span>
-									<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, lineHeight: "1.3" }}>{item.title}</Text>
-									<Text fontSize="sm" color="fg.secondary" style={{ flex: 1, lineHeight: "1.5" }}>{item.description}</Text>
-									<Box style={{ marginTop: "auto" }}>
-										<Text fontSize="sm" color="fg.default" style={{ fontWeight: 500 }}>{item.filename}</Text>
-										<Box display="flex" alignItems="center" justifyContent="space-between" style={{ marginTop: 4 }}>
-											<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)" }}>{item.fileType}</span>
-											<Text fontSize="sm" color="fg.tertiary">Created {item.age}</Text>
-										</Box>
-									</Box>
-								</Box>
-							</Box>
-						))}
-					</Box>
-				</Box>
-			</Box>
-
 			{/* Needs review */}
 			<Box mb="40">
 				<Box display="flex" alignItems="center" gap="8" mb="4">
@@ -464,10 +445,11 @@ export default function VATWorkPage() {
 					{APPROVALS.slice(0, visibleApprovals).map((item, i) => (
 						<Box
 							key={item.title}
-							className={i >= prevVisibleRef.current && visibleApprovals > prevVisibleRef.current ? "vat-approval-appear" : undefined}
+							className={`vat-review-row${i >= prevVisibleRef.current && visibleApprovals > prevVisibleRef.current ? " vat-approval-appear" : ""}`}
 							display="flex"
 							alignItems="center"
 							gap="16"
+							onClick={() => setReviewItem({ title: item.title, description: item.sub, source: "Randy", priority: "High" })}
 							style={{ padding: "16px 20px", borderTop: i > 0 ? "1px solid var(--ax-colors-border-secondary)" : "none", cursor: "pointer" }}
 						>
 							<span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>

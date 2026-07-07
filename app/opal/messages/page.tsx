@@ -120,7 +120,7 @@ type Reaction = { emoji: string; count: number };
 type Message = {
   id: string;
   from: "user" | "vau" | "human" | "system";
-  type?: "text" | "attachment" | "hitl";
+  type?: "text" | "attachment" | "hitl" | "daily-brief";
   senderName?: string;
   senderAvatar?: string;
   senderColor?: string;
@@ -129,6 +129,7 @@ type Message = {
   reactions?: Reaction[];
   threadCount?: number;
   agentCard?: { name: string; emoji: string; description: string; tags: string[]; connectors: string[]; workingWith: string[] };
+  quickActions?: { label: string; icon?: string }[];
 };
 
 // ── Mock data ──────────────────────────────────────────────────────────────────
@@ -166,7 +167,7 @@ const DMS: DMItem[] = [
   { id: "hw",   name: "Harry Winston-Brown",        avatar: "https://i.pravatar.cc/150?img=52", status: "busy",   preview: "Happy to help 😄 Let me know if anything else comes up!", time: "Yesterday" },
   { id: "pr",   name: "Priya Rajan",                avatar: "https://i.pravatar.cc/150?img=44", status: "away",  unread: 3, hasDraft: true, preview: "Just flagging in case you hadn't seen the calendar invite!", time: "11:45 AM" },
   { id: "ao",   name: "Amara Osei",                 avatar: "https://i.pravatar.cc/150?img=38", status: "active", preview: "You: I've put together the full Q4 content brief based on our conversation", time: "10:02 AM" },
-  { id: "bubs", name: "Randy",                       avatar: "/vau-bubs.svg",                    status: "active", isVAU: true, role: "Chief of Staff",              preview: "Randy sent an item that needs your approval", time: "9:54 AM" },
+  { id: "bubs", name: "Randy",                       avatar: "/avatars/vau-frank.png",                    status: "active", isVAU: true, role: "Chief of Staff",              preview: "Randy sent an item that needs your approval", time: "9:54 AM" },
   { id: "kara", name: "Kara",                       avatar: "/vau-kara.svg",                    status: "active", isVAU: true, role: "Content Strategy Expert",  preview: "Kara sent an item that needs your approval", time: "9:30 AM" },
   { id: "eric", name: "Eric",                       avatar: "/vau-eric.svg",                    status: "ooo",    isVAU: true, role: "Experimentation Manager",   preview: "Test is configured and ready to launch 🧪", time: "8:15 AM" },
   { id: "sage", name: "Sage",                       avatar: "",                                                   isVAU: true, isDeactivated: true, role: "Email Automation", preview: "All 8 emails are drafted and staged for review.", time: "Mon" },
@@ -186,7 +187,7 @@ const GROUPS: GroupItem[] = [
   { id: "vw", name: "VAU Working Group", members: "8 members", emoji: "🤖", preview: "Lisa: This is super helpful, bookmarking this 🙏", time: "12:34 PM",
     createdBy: "Lisa Gray", createdOn: "March 3, 2025",
     memberList: [
-      { name: "Randy",          avatar: "/vau-bubs.svg" },
+      { name: "Randy",          avatar: "/avatars/vau-frank.png" },
       { name: "Kara",          avatar: "/vau-kara.svg" },
       { name: "Eric",          avatar: "/vau-eric.svg" },
       { name: "Lisa Gray",     avatar: "https://i.pravatar.cc/150?img=5" },
@@ -214,14 +215,14 @@ const GROUPS: GroupItem[] = [
   { id: "sg", name: "Stride GEO", members: "Randy ✨ · Nadia, Jason", emoji: "🌍", unread: 2, preview: "Randy sent an item that needs your approval", time: "10:55 AM",
     createdBy: "Jason Park", createdOn: "September 22, 2025",
     memberList: [
-      { name: "Randy",        avatar: "/vau-bubs.svg" },
+      { name: "Randy",        avatar: "/avatars/vau-frank.png" },
       { name: "Nadia Flores", avatar: "https://i.pravatar.cc/150?img=29" },
       { name: "Jason Park",   avatar: "https://i.pravatar.cc/150?img=7" },
     ]},
   { id: "q4gs", name: "Q4 Growth Sprint", members: "Kara ✨ · Sarah, Jason +1", emoji: "📈", preview: "Kara: Kicking off the brief drafts now. I'll ping when the first set is ready 📝", time: "9:47 AM",
     createdBy: "Sarah Kim", createdOn: "August 5, 2025",
     memberList: [
-      { name: "Randy",        avatar: "/vau-bubs.svg" },
+      { name: "Randy",        avatar: "/avatars/vau-frank.png" },
       { name: "Kara",         avatar: "/vau-kara.svg" },
       { name: "Sarah Kim",    avatar: "https://i.pravatar.cc/150?img=39" },
       { name: "Jason Park",   avatar: "https://i.pravatar.cc/150?img=7" },
@@ -425,7 +426,7 @@ const TYPING_USERS: Record<string, { name: string; avatar: string }[]> = {
   js:   [{ name: "Jane Smith",  avatar: "https://i.pravatar.cc/150?img=47" }],
   pr:   [{ name: "Priya Rajan", avatar: "https://i.pravatar.cc/150?img=44" }],
   bf:   [{ name: "Patrick Lee", avatar: "https://i.pravatar.cc/150?img=53" }, { name: "Jason Wu", avatar: "https://i.pravatar.cc/150?img=61" }],
-  vw:   [{ name: "Randy",        avatar: "/vau-bubs.svg" }],
+  vw:   [{ name: "Randy",        avatar: "/avatars/vau-frank.png" }],
 };
 
 const GROUP_VAU_IDS: Record<string, string[]> = {
@@ -482,19 +483,19 @@ const CHANNEL_VAU_IDS: Record<string, string[]> = {
 // Prototype review items for group chats
 const GROUP_DELIVERABLES: Record<string, GroupDeliverable[]> = {
   vw: [
-    { id: "gvw1", title: "Q3 Content Strategy Draft",           type: "Blog Post",   vauId: "bubs", vauName: "Randy", vauAvatar: "/vau-bubs.svg" },
+    { id: "gvw1", title: "Q3 Content Strategy Draft",           type: "Blog Post",   vauId: "bubs", vauName: "Randy", vauAvatar: "/avatars/vau-frank.png" },
     { id: "gvw2", title: "SEO Keyword Analysis for Q4 Content", type: "SEO Article", vauId: "kara", vauName: "Kara", vauAvatar: "/vau-kara.svg" },
     { id: "gvw3", title: "Homepage CTA Multivariate Test",      type: "A/B Test",    vauId: "eric", vauName: "Eric", vauAvatar: "/vau-eric.svg" },
   ],
   sg: [
-    { id: "sg1", title: "Stride GEO: Updated Article Draft", type: "SEO Article", vauId: "bubs", vauName: "Randy", vauAvatar: "/vau-bubs.svg" },
+    { id: "sg1", title: "Stride GEO: Updated Article Draft", type: "SEO Article", vauId: "bubs", vauName: "Randy", vauAvatar: "/avatars/vau-frank.png" },
   ],
   q4gs: [],
 };
 
 const CHANNEL_DELIVERABLES: Record<string, GroupDeliverable[]> = {
   "ch-marketing": [
-    { id: "chm1", title: "Q4 Campaign Performance Report", type: "Analytics Report", vauId: "bubs", vauName: "Randy", vauAvatar: "/vau-bubs.svg" },
+    { id: "chm1", title: "Q4 Campaign Performance Report", type: "Analytics Report", vauId: "bubs", vauName: "Randy", vauAvatar: "/avatars/vau-frank.png" },
   ],
 };
 
@@ -643,7 +644,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "2", from: "vau",
-      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
       text: "Sure! I'd be happy to review. Send on over.",
       reactions: [{ emoji: "👍", count: 2 }, { emoji: "😊", count: 1 }],
     },
@@ -663,7 +664,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "5", from: "vau",
-      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
       text: "Love it! Opening it up now — give me a moment to read through.",
       reactions: [{ emoji: "❤️", count: 3 }, { emoji: "🔥", count: 2 }],
     },
@@ -1132,7 +1133,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "2", from: "vau",
-      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
       text: "On it! Here's a draft intro:\n\nAs we head into Q3, our focus shifts to deepening customer engagement and scaling what's working. Here's what's on the horizon.",
     },
     {
@@ -1142,7 +1143,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "4", from: "vau",
-      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
       text: "Q3 is here. Time to double down on what's working and move faster. Here's the plan.",
     },
     {
@@ -1152,7 +1153,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "6", from: "vau",
-      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
       text: "Sure! Here are three options:\n\n1. \"The Q3 Playbook: AI, Speed, and Content That Converts\"\n2. \"How We're Using AI to Outpace the Competition This Quarter\"\n3. \"Q3 Is Here — Here's Our Content Strategy (And Why AI Is Central to It)\"",
     },
     {
@@ -1162,13 +1163,13 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "8", from: "vau",
-      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
       text: "@Erika — great choice! It's punchy and keyword-friendly. Good luck with the post! 🚀",
       threadCount: 1,
     },
     {
       id: "9", from: "vau", type: "hitl",
-      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
       text: "",
     },
   ],
@@ -1259,7 +1260,7 @@ const THREADS: Record<string, Message[]> = {
   sg: [
     {
       id: "sg1", from: "vau",
-      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
       text: "Hey team! Just wrapped the second pass on the Stride GEO article. Incorporated all the feedback from last week's review session.",
     },
     {
@@ -1269,7 +1270,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "sg3", from: "vau",
-      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
       text: "Yes! Rewrote the first 3 Q&As completely in Stride's adventurous, explorer-first voice. Much stronger now.",
       reactions: [{ emoji: "👍", count: 2 }],
     },
@@ -1280,17 +1281,17 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "sg5", from: "vau",
-      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
       text: "Yes, holding that cluster. Also expanded the activities section based on SEO gap analysis — adds trail running, open-water diving, and skydiving explicitly.",
     },
     {
       id: "sg6", from: "vau",
-      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
       text: "Done — all three rounds of feedback incorporated:\n\n✓ **Activities** — Explicitly listed trail running, climbing, diving, skydiving, and multi-terrain endurance challenges\n✓ **Team use cases** — Rewired around competitive multi-sport group challenges, not generic team building\n✓ **Opening tone** — Rewrote the first 3 Q&As in Stride's adventurous, explorer-first voice\n\nThe updated article is ready for final review. See the revised artifact below.",
     },
     {
       id: "sg7", from: "vau", type: "hitl",
-      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
       text: "",
     },
   ],
@@ -1368,7 +1369,7 @@ const RESPONDERS: Record<string, Responder> = {
   vw:   { from: "human", name: "Patrick Lee",           avatar: "https://i.pravatar.cc/150?img=60" },
   cm:   { from: "human", name: "Sara Chen",             avatar: "https://i.pravatar.cc/150?img=20" },
   q4gs: { from: "human", name: "Sarah Kim",             avatar: "https://i.pravatar.cc/150?img=39" },
-  bubs: { from: "vau",   name: "Randy", avatar: "/vau-bubs.svg", color: "var(--opal-vau-bubs)" },
+  bubs: { from: "vau",   name: "Randy", avatar: "/avatars/vau-frank.png", color: "var(--opal-vau-bubs)" },
   kara: { from: "vau",   name: "Kara", avatar: "/vau-kara.svg", color: "var(--opal-vau-kara)" },
   eric: { from: "vau",   name: "Eric", avatar: "/vau-eric.svg", color: "var(--opal-vau-eric)" },
 };
@@ -1502,7 +1503,7 @@ const PROFILE_LOOKUP: Record<string, ProfileEntry> = {
   "Amara Osei":            { name: "Amara Osei",            email: "amara.osei@optimizely.com",    avatar: "https://i.pravatar.cc/150?img=38", isVAU: false },
   "Erika Schreiber":       { name: "Erika Schreiber",       email: "erika.schreiber@optimizely.com", avatar: "https://i.pravatar.cc/150?img=24", isVAU: false },
   "Me":                    { name: "Erika Schreiber",       email: "erika.schreiber@optimizely.com", avatar: "https://i.pravatar.cc/150?img=24", isVAU: false },
-  "Randy":                  { name: "Randy",                  email: "randy@opal.optimizely.com",    avatar: "/vau-bubs.svg",  isVAU: true, status: "Offline" },
+  "Randy":                  { name: "Randy",                  email: "randy@opal.optimizely.com",    avatar: "/avatars/vau-frank.png",  isVAU: true, status: "Offline" },
   "Kara":                  { name: "Kara",                  email: "kara@opal.optimizely.com",     avatar: "/vau-kara.svg",  isVAU: true, status: "Available" },
   "Eric":                  { name: "Eric",                  email: "eric@opal.optimizely.com",     avatar: "/vau-eric.svg",  isVAU: true, status: "Out of Office" },
   "Sage":                  { name: "Sage",                  email: "sage@opal.optimizely.com",     avatar: "",               isVAU: true, status: "Deactivated" },
@@ -1890,6 +1891,33 @@ function MessageBubble({ msg, time, onOpenThread, isPinned, onPin, onMarkConvoUn
             </>
           )}
         </Box>
+        {msg.quickActions && msg.quickActions.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+            {msg.quickActions.map((action) => (
+              <div
+                key={action.label}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "5px 12px",
+                  borderRadius: 999,
+                  border: "1px solid var(--ax-colors-border-default)",
+                  background: "var(--ax-colors-bg-default)",
+                  fontSize: 13,
+                  color: "var(--ax-colors-fg-default)",
+                  cursor: "pointer",
+                  userSelect: "none",
+                  whiteSpace: "nowrap",
+                  transition: "background 0.1s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "var(--ax-colors-bg-default)")}
+              >
+                {action.icon && <span style={{ fontSize: 14 }}>{action.icon}</span>}
+                {action.label}
+              </div>
+            ))}
+          </div>
+        )}
         {(msg.threadCount ?? 0) > 0 && (
           <Button size="md" appearance="subtle" icon={<IconMessageLines />} style={{ marginTop: 2 }} onClick={() => onOpenThread?.(msg)}>
             {msg.threadCount} {msg.threadCount === 1 ? "reply" : "replies"}
@@ -4348,6 +4376,27 @@ function IMMain({
                           <AvatarWithHoverCard name="Me" src={msg.senderAvatar} size="md" />
                         </Box>
                       </Box>
+                    ) : msg.type === "daily-brief" ? (
+                      <Box key={msg.id} id={`msg-${msg.id}`} display="flex" gap="12" alignItems="start" py="4">
+                        <Box pt="4" style={{ flexShrink: 0 }}>
+                          <AvatarWithHoverCard name={msg.senderName ?? ""} src={msg.senderAvatar} size="md" />
+                        </Box>
+                        <Box display="flex" flexDirection="column" gap="4">
+                          <Box display="flex" gap="8" style={{ alignItems: "baseline", marginBottom: 2 }}>
+                            {msg.senderName && <Text fontSize="md" fontWeight="500" color="fg.default">{msg.senderName}</Text>}
+                            <Text fontSize="sm" color="fg.tertiary">{getMockTime(idx)}</Text>
+                          </Box>
+                          <Box style={{ background: "var(--ax-colors-bg-default)", border: "1px solid var(--ax-colors-border-default)", borderRadius: 12, padding: 20, maxWidth: 420 }}>
+                            <Box style={{ width: "100%", borderRadius: 6, overflow: "hidden", marginBottom: 16 }}>
+                              <img src="/avatars/daily-brief.png" alt="Daily brief" style={{ width: "100%", height: "auto", display: "block" }} />
+                            </Box>
+                            <Box display="flex" justifyContent="flex-end" gap="8">
+                              <Button size="md">Download</Button>
+                              <Button appearance="primary" size="md">Open brief</Button>
+                            </Box>
+                          </Box>
+                        </Box>
+                      </Box>
                     ) : msg.type === "hitl" ? (
                       <Box key={msg.id} id={`msg-${msg.id}`} display="flex" gap="12" alignItems="start" py="4">
                         <Box pt="4" style={{ flexShrink: 0 }}>
@@ -4361,7 +4410,7 @@ function IMMain({
                           {selected === "sg" ? (
                             <ApprovalActionCard
                               authorName="Randy"
-                              authorAvatar="/vau-bubs.svg"
+                              authorAvatar={DMS.find(d => d.id === "bubs")?.avatar ?? "/avatars/vau-frank.png"}
                               isVAU
                               badge="UPDATED"
                               fileName="discover-the-unknown-qa.md"
@@ -5197,7 +5246,7 @@ function IMMain({
             {/* Header */}
             <Box display="flex" alignItems="center" gap="10" px="16"
               style={{ height: 56, borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}>
-              <img src="/vau-bubs.svg" alt="Randy" style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0 }} />
+              <img src={selectedDM?.avatar ?? "/avatars/vau-frank.png"} alt="Randy" style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0 }} />
               <Box style={{ flex: 1, minWidth: 0 }}>
                 <Text fontSize="sm" fontWeight="600" color="fg.default">Randy</Text>
                 <Text color="fg.tertiary" style={{ fontSize: 11 }}>GEO Content Strategist</Text>
@@ -5238,7 +5287,7 @@ function IMMain({
 
               <ApprovalActionCard
                 authorName="Randy"
-                authorAvatar="/vau-bubs.svg"
+                authorAvatar="/avatars/vau-frank.png"
                 isVAU
                 badge="UPDATED"
                 fileName="discover-the-unknown-qa.md"
@@ -5942,7 +5991,7 @@ const RECENT_CONTACTS: (DMItem & { role: string })[] = [
   { id: "ao",   name: "Amara Osei",          avatar: "https://i.pravatar.cc/150?img=38", status: "active", role: "Brand Designer" },
   { id: "pr",   name: "Priya Rajan",         avatar: "https://i.pravatar.cc/150?img=44", status: "away",   role: "UX Researcher" },
   { id: "hw",   name: "Harry Winston-Brown", avatar: "https://i.pravatar.cc/150?img=52", status: "busy",   role: "Product Manager" },
-  { id: "bubs", name: "Randy",                avatar: "/vau-bubs.svg",                    status: "active", isVAU: true, role: "Content Drafting" },
+  { id: "bubs", name: "Randy",                avatar: "/avatars/vau-frank.png",                    status: "active", isVAU: true, role: "Content Drafting" },
   { id: "kara", name: "Kara",                avatar: "/vau-kara.svg",                    status: "active", isVAU: true, role: "SEO & Content Strategy" },
   { id: "eric", name: "Eric",                avatar: "/vau-eric.svg",                    status: "ooo",    isVAU: true, role: "A/B Testing & Experimentation" },
 ];
@@ -6844,8 +6893,50 @@ export default function MessagesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selected, setSelected] = useState(() => searchParams.get("conversation") ?? "bubs");
+  const [bubsAvatar, setBubsAvatar] = useState<string>("/avatars/vau-frank.png");
   const [threads, setThreads] = useState<Record<string, Message[]>>({ ...THREADS, ...CHANNEL_THREADS });
-  useEffect(() => { setThreads({ ...THREADS, ...CHANNEL_THREADS }); }, []);
+  useEffect(() => {
+    const base = { ...THREADS, ...CHANNEL_THREADS };
+    try {
+      // Apply persisted avatar choice
+      const stored = localStorage.getItem("vau-bubs-avatar");
+      const chosenAvatar = stored ?? "/avatars/vau-frank.png";
+      if (stored) {
+        setBubsAvatar(stored);
+        const entry = DMS.find(d => d.id === "bubs");
+        if (entry) entry.avatar = stored;
+        // Patch existing thread messages
+        base.bubs = (base.bubs ?? []).map(m =>
+          m.senderName === "Randy" ? { ...m, senderAvatar: stored } : m
+        );
+      }
+
+      // Inject welcome message from onboarding
+      const raw = sessionStorage.getItem("im-vau-welcome");
+      if (raw) {
+        sessionStorage.removeItem("im-vau-welcome");
+        const parsed = JSON.parse(raw) as { name?: string; avatar?: string };
+        const vauAvatar = parsed.avatar ?? chosenAvatar;
+        const vauName = parsed.name ?? "Randy";
+        const welcome: Message[] = [
+          {
+            id: "welcome-0",
+            from: "vau",
+            senderName: vauName,
+            senderAvatar: vauAvatar,
+            senderColor: "var(--opal-vau-bubs)",
+            text: "👋 Hey, I'm so excited to start working together! This is what I have planned for you: daily brief daily at 8 AM, weekly summary Friday at 5 PM. Let me know if you'd like to receive these at a different time.",
+            quickActions: [
+              { label: "Edit daily brief time" },
+              { label: "Edit weekly summary time" },
+            ],
+          },
+        ];
+        base.bubs = welcome;
+      }
+    } catch {}
+    setThreads(base);
+  }, []);
 
   useEffect(() => {
     const convo = searchParams.get("conversation");

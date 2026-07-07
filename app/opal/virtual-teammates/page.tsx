@@ -3,14 +3,10 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
+  Badge,
   Box,
   Heading,
   Text,
-  Badge,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
   LabelMenuButton,
   DropdownMenu,
   DropdownMenuTrigger,
@@ -85,29 +81,6 @@ function NavRow({
   );
 }
 
-const NAV_COUNT_STYLE: React.CSSProperties = {
-  background: "var(--ax-colors-bg-secondary)",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minWidth: 20,
-  minHeight: 20,
-  padding: "2px 6px",
-  borderRadius: 32,
-  fontFamily: "Roboto Mono, monospace",
-  fontSize: 12,
-  lineHeight: "1.25",
-  letterSpacing: "0.36px",
-  textTransform: "uppercase" as const,
-  color: "var(--ax-colors-fg-default)",
-  flexShrink: 0,
-};
-
-const NAV_COUNT_ACTIVE_STYLE: React.CSSProperties = {
-  ...NAV_COUNT_STYLE,
-  background: "var(--ax-colors-fg-default)",
-  color: "var(--ax-colors-bg-default)",
-};
 
 // ── Filter dropdown ───────────────────────────────────────────────────────────
 
@@ -192,7 +165,7 @@ export default function VirtualTeammatesPage() {
             key={item.label}
             active={isActive}
             onClick={() => setActiveNavItem(item.label)}
-            addonAfter={<span style={isActive ? NAV_COUNT_ACTIVE_STYLE : NAV_COUNT_STYLE}>{item.count}</span>}
+            addonAfter={<Badge intent="information" variant="subtle">{item.count}</Badge>}
           >
             {item.label}
           </NavRow>
@@ -230,35 +203,12 @@ export default function VirtualTeammatesPage() {
         style={{ flex: 1, minHeight: 0, overflowY: "auto", background: "#F9FCF8" }}
       >
         <Box display="flex" flexDirection="column" style={{ padding: "16px 40px" }}>
-        <Heading level="1" mb="4">Discover teammates</Heading>
+        <Heading level="1" mb="4">Directory</Heading>
         <Text color="fg.secondary" fontSize="md" mb="32">
           Meet your new favorite coworkers. They do the boring stuff. You get the glory.
         </Text>
 
-        <Tabs defaultValue="teammates">
-          <TabsList mb="12">
-            <TabsTrigger value="teammates">
-              <Box asChild display="inline-flex" alignItems="center" gap="8">
-                <span>
-                  Virtual Teammates
-                  <Badge
-                    style={{
-                      background: "var(--ax-colors-fg-default)",
-                      color: "var(--ax-colors-bg-default)",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      borderRadius: 20,
-                      padding: "1px 7px",
-                    }}
-                  >
-                    {filtered.length}
-                  </Badge>
-                </span>
-              </Box>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="teammates">
+        <>
             {/* Search + filters */}
             <Box display="flex" alignItems="center" gap="8" mb="24">
               <Box style={{ flex: 1, maxWidth: 264 }}>
@@ -309,8 +259,7 @@ export default function VirtualTeammatesPage() {
                 ))}
               </Box>
             )}
-          </TabsContent>
-        </Tabs>
+        </>
         </Box>
       </Box>
     </Box>

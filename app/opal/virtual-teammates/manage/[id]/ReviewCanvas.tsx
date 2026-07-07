@@ -136,8 +136,8 @@ function ReviewCanvasInner({ item, vauName, vauAvatar, vauAvatarBg, onClose, onA
 						{item.title}
 					</Text>
 				</Box>
-				<Button appearance="subtle" size="sm" addonBefore={<IconArrowRotateLeft />} onClick={onClose}>
-					Send back
+				<Button appearance="default" size="sm" addonBefore={<IconArrowRotateLeft />} onClick={onClose}>
+					Deny
 				</Button>
 				<Button
 					appearance="primary"
@@ -145,7 +145,7 @@ function ReviewCanvasInner({ item, vauName, vauAvatar, vauAvatarBg, onClose, onA
 					addonBefore={<IconCircleCheck />}
 					onClick={() => { onApprove(); onClose(); }}
 				>
-					Approve &amp; send
+					Approve
 				</Button>
 			</Box>
 
@@ -253,7 +253,7 @@ function ReviewCanvasInner({ item, vauName, vauAvatar, vauAvatarBg, onClose, onA
 								<Box
 									style={{
 										maxWidth: "75%",
-										background: msg.from === "user" ? "#C8DEB8" : "var(--ax-colors-bg-default)",
+										background: msg.from === "user" ? "var(--ax-colors-bg-success-subtle)" : "var(--ax-colors-bg-default)",
 										border: msg.from === "user" ? "none" : "1px solid var(--ax-colors-border-secondary)",
 										borderRadius: msg.from === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
 										padding: "10px 14px",

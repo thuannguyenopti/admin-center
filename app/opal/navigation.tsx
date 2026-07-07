@@ -10,7 +10,6 @@ import {
 	IconAgent,
 	IconPuzzlePiece,
 	IconGear,
-	IconUserGroup,
 	IconImagePortrait,
 } from "@optiaxiom/icons";
 
@@ -75,15 +74,6 @@ export function useOpalNav() {
 			customLayout: true,
 		},
 		{
-			label: imLayout === "B" ? "Messages" : imLayout === "C" ? "Spaces" : "Threads",
-			url: `/opal/im?layout=${imLayout}`,
-			highlight: "/opal/im",
-			icon: isCompactIm
-				? <IconUserGroup filled={active("/opal/im")} />
-				: <IconComments filled={active("/opal/im")} />,
-			customLayout: true,
-		},
-		{
 			label: "Team Messages",
 			url: "/opal/messages",
 			highlight: "/opal/messages",
@@ -126,7 +116,6 @@ export function useOpalNav() {
 			url: "/opal/virtual-teammates",
 			highlight: "/opal/virtual-teammates",
 			icon: <IconStore filled={active("/opal/virtual-teammates", true)} />,
-			exact: true,
 			customLayout: true,
 		},
 		{
