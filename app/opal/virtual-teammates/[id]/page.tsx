@@ -989,9 +989,10 @@ export default function VAUDetailPage() {
 				{/* ── Left panel ── */}
 				<Box style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, minWidth: 0, background: "#F9FCF8" }}>
 					{/* Scrollable content */}
-					<Box style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "32px 185px 48px" }}>
+					<Box style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "32px 40px 48px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+					<Box style={{ width: "100%", maxWidth: 544 }}>
 						{/* Breadcrumb */}
-						<Box display="flex" alignItems="center" gap="4" style={{ marginBottom: 32 }}>
+						<Box display="flex" alignItems="center" gap="4" style={{ marginBottom: 24 }}>
 							<Button appearance="subtle" size="sm" style={{ padding: 0, height: "auto" }} onClick={() => { setShowPersonalityPicker(false); setShowOnboarding(false); }}>
 								<Text fontSize="sm" color="fg.tertiary">First day on the job</Text>
 							</Button>
@@ -1007,12 +1008,12 @@ export default function VAUDetailPage() {
 						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 36, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.5px", color: "#202320", WebkitTextStroke: "1px #202320", marginBottom: 8, display: "block" }}>
 							{"What's their personality?"}
 						</Text>
-						<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", display: "block", marginBottom: 32 }}>
+						<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", display: "block", marginBottom: 20 }}>
 							Are they a hype machine or a voice of reason? Your call.
 						</Text>
 
 						{/* Personality cards */}
-						<Box display="flex" flexDirection="column" gap="12">
+						<Box display="flex" flexDirection="column" gap="16">
 							{personalities.map((p, i) => {
 								const isSelected = selectedPersonality === i;
 								const isExpanded = expandedPersonality === i;
@@ -1033,22 +1034,22 @@ export default function VAUDetailPage() {
 										}}
 									>
 										{/* Card header */}
-										<Box display="flex" alignItems="center" gap="16">
+										<Box display="flex" alignItems="stretch" gap="16">
 											{/* Icon */}
-											<Box style={{ width: 52, height: 52, borderRadius: 10, background: "#E8F5E2", display: "flex", alignItems: "center", justifyContent: "center", color: "#2D6A27", flexShrink: 0 }}>
+											<Box style={{ width: 56, minHeight: 56, borderRadius: 10, background: "#E3F3F8", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ax-colors-fg-default)", flexShrink: 0, alignSelf: "stretch" }}>
 												{PERSONALITY_ICONS[p.icon ?? "gear"]}
 											</Box>
 											{/* Text */}
 											<Box style={{ flex: 1, minWidth: 0 }}>
-												<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 17, fontWeight: 700, color: "#202320", display: "block", marginBottom: 4 }}>
+												<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 18, fontWeight: 600, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 4 }}>
 													{p.label}
 												</Text>
-												<Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.5" }}>
+												<Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5", fontWeight: 400 }}>
 													{p.description}
 												</Text>
 											</Box>
 											{/* Chevron */}
-											<Box style={{ color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }}>
+											<Box style={{ color: "var(--ax-colors-fg-default)", flexShrink: 0 }}>
 												{isExpanded ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
 											</Box>
 										</Box>
@@ -1056,18 +1057,17 @@ export default function VAUDetailPage() {
 										{/* Expanded content */}
 										{isExpanded && (
 											<Box style={{ marginTop: 16 }}>
-												{/* Trait pills */}
+												{/* Trait pills — Axiom default subtle badges */}
 												{p.traits && p.traits.length > 0 && (
 													<Box display="flex" gap="6" style={{ flexWrap: "wrap", marginBottom: 16 }}>
 														{p.traits.map((trait) => (
-															<span
-																key={trait}
-																style={{ ...CAPTION, color: "var(--ax-colors-fg-secondary)", background: "var(--ax-colors-bg-neutral)", border: "1px solid var(--ax-colors-border-default)", borderRadius: 6, padding: "3px 8px" }}
-															>
-																{trait}
-															</span>
+															<Badge key={trait} variant="subtle">{trait}</Badge>
 														))}
 													</Box>
+												)}
+												{/* Divider */}
+												{p.traits && p.traits.length > 0 && p.sampleChat && (
+													<Box style={{ height: 1, background: "var(--ax-colors-border-default)", marginBottom: 16 }} />
 												)}
 												{/* Sounds like */}
 												{p.sampleChat && (
@@ -1077,7 +1077,7 @@ export default function VAUDetailPage() {
 															<Box style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: displayAvatarBg, border: "1px solid var(--ax-colors-border-default)" }}>
 																<Image src={displayAvatarSrc} alt="" width={32} height={32} unoptimized style={{ width: "100%", height: "100%", objectFit: "contain" }} />
 															</Box>
-															<Box style={{ background: "rgba(95, 147, 31, 0.08)", border: "1px solid var(--ax-colors-border-default)", borderRadius: "0 12px 12px 12px", padding: "10px 12px", flex: 1 }}>
+															<Box style={{ background: "#EEFFD9", borderRadius: 8, padding: "10px 12px", flex: 1 }}>
 																<Text fontSize="sm" color="fg.default" style={{ lineHeight: "1.5" }}>{p.sampleChat}</Text>
 															</Box>
 														</Box>
@@ -1089,6 +1089,7 @@ export default function VAUDetailPage() {
 								);
 							})}
 						</Box>
+					</Box>
 					</Box>
 
 					{/* Bottom action bar */}
