@@ -7,12 +7,12 @@ import {
 	Badge, Box, Button, Popover, PopoverContent, PopoverTrigger, Text, Tooltip,
 } from "@optiaxiom/react";
 import {
-	IconArrowUp, IconBolt, IconChevronDown, IconChevronUp, IconCircleQuestion, IconGear, IconPlus, IconRocket, IconStar, IconUpload, IconXmark,
+	IconArrowUp, IconChevronDown, IconChevronUp, IconCircleQuestion, IconPlus, IconUpload, IconXmark,
 } from "@optiaxiom/icons";
 
 const CAPTION: React.CSSProperties = {
 	fontFamily: "Roboto Mono, monospace",
-	fontSize: 9,
+	fontSize: 12,
 	fontWeight: 400,
 	lineHeight: "1.25",
 	letterSpacing: "0.08em",
@@ -23,7 +23,7 @@ type TemplateData = {
 	id: string;
 	name: string;
 	quote: string;
-	icon: React.ElementType;
+	icon: string;
 	description: string;
 	traits: string[];
 	tone: string[];
@@ -39,50 +39,50 @@ const TEMPLATES: TemplateData[] = [
 		id: "pragmatist",
 		name: "The pragmatist",
 		quote: '"Done talks."',
-		icon: IconGear,
+		icon: "/vt-icon-tape.png",
 		description:
 			"Done, done, and done. They cut through noise, skip the chit-chat, and get the job done. Always right, all the time.",
 		traits: ["DECISIVE", "GROUNDED", "NO-NONSENSE", "RELIABLE"],
 		tone: ["DIRECT", "PLAINSPOKEN", "WRY"],
 		toneExtra: 2,
-		detail: 20, warmth: 25, energy: 30,
+		detail: 0, warmth: 0, energy: 0,
 		defaultTraits: ["Decisive", "Grounded", "No-nonsense", "Reliable"],
 	},
 	{
 		id: "tastemaker",
 		name: "The tastemaker",
 		quote: '"I liked it before."',
-		icon: IconStar,
+		icon: "/vt-icon-disco.png",
 		description:
 			"The first to bring a crazy idea to life. They are nonchalant, set the standard, and somehow always know what's next.",
 		traits: ["OPINIONATED", "DISCERNING", "AHEAD OF THE CURVE"],
 		tone: ["CONFIDENT", "CULTURED", "COOL"],
-		detail: 50, warmth: 45, energy: 55,
+		detail: 50, warmth: 50, energy: 50,
 		defaultTraits: ["Opinionated", "Discerning", "Ahead of the curve", "Witty"],
 	},
 	{
 		id: "hype-machine",
 		name: "The hype machine",
 		quote: '"Wait, hear me out."',
-		icon: IconRocket,
+		icon: "/vt-icon-finger.png",
 		description:
 			'Enthusiasm is contagious and they\'re patient zero. They turn "meh" ideas into "wait, actually…" moments.',
 		traits: ["ENTHUSIASTIC", "PERSUASIVE", "FUNNY", "ZERO CHILL"],
 		tone: ["WARM", "SUPPORTIVE", "ENERGETIC"],
-		detail: 75, warmth: 80, energy: 90,
+		detail: 100, warmth: 100, energy: 100,
 		defaultTraits: ["Enthusiastic", "Persuasive", "Funny", "Infectious"],
 	},
 	{
 		id: "spicy-realist",
 		name: "The spicy realist",
 		quote: '"Just saying."',
-		icon: IconBolt,
+		icon: "/vt-icon-chili.png",
 		description:
 			"Skeptical? Always. Wrong? Rarely. They poke holes in bad ideas before they become expensive ones.",
 		traits: ["SKEPTICAL", "SHARP", "BLUNT", "CONTRARIAN"],
 		tone: ["DEADPAN", "BONE DRY", "WITTY"],
 		toneExtra: 1,
-		detail: 30, warmth: 15, energy: 35,
+		detail: 0, warmth: 0, energy: 50,
 		defaultTraits: ["Skeptical", "Sharp", "Blunt", "Contrarian"],
 	},
 ];
@@ -104,62 +104,13 @@ const QUICK_ADD_VALUES = [
 ];
 
 function getToneSummary(d: number, w: number, e: number): string {
-	const dl = d <= 33 ? "Brief" : d >= 67 ? "Detailed" : "Balanced";
-	const wl = w <= 33 ? "Formal" : w >= 67 ? "Warm" : "Balanced";
-	const el = e <= 33 ? "Calm" : e >= 67 ? "Playful" : "Balanced";
+	const dl = d === 0 ? "Brief" : d === 100 ? "Detailed" : "Balanced";
+	const wl = w === 0 ? "Formal" : w === 100 ? "Warm" : "Balanced";
+	const el = e === 0 ? "Mild" : e === 100 ? "Extra hot" : "Balanced";
 	return `${dl} · ${wl} · ${el}`;
 }
 
-// ── 3-option tone picker ──────────────────────────────────────────────────
-
-function ToneOption({
-	selected,
-	onClick,
-	emoji,
-	label,
-	isCenter,
-}: {
-	selected: boolean;
-	onClick: () => void;
-	emoji?: string;
-	label: string;
-	isCenter?: boolean;
-}) {
-	return (
-		<button
-			onClick={onClick}
-			className="tone-option"
-			data-selected={selected || undefined}
-			style={{
-				flex: 1,
-				display: "flex",
-				flexDirection: "column",
-				alignItems: "center",
-				justifyContent: "center",
-				gap: 6,
-				padding: "10px 6px",
-				borderRadius: 8,
-				border: selected ? "1.5px solid #197A94" : "1px solid var(--ax-colors-border-default)",
-				background: selected ? "#EFF5EB" : "transparent",
-				cursor: "pointer",
-				fontFamily: "inherit",
-			}}
-		>
-			<span style={{ fontSize: 16, lineHeight: 1 }}>
-				{isCenter ? "⚖️" : emoji}
-			</span>
-			<span style={{
-				...CAPTION,
-				fontSize: 8,
-				color: selected ? "#616755" : "var(--ax-colors-fg-tertiary)",
-				lineHeight: 1.2,
-				textAlign: "center",
-			}}>
-				{label}
-			</span>
-		</button>
-	);
-}
+// ── Tone slider row ───────────────────────────────────────────────────────
 
 function ToneRow({
 	label,
@@ -172,16 +123,24 @@ function ToneRow({
 	rightLabel: string; rightEmoji: string;
 	value: number; onChange: (v: number) => void;
 }) {
-	const selected = value <= 33 ? 0 : value >= 67 ? 100 : 50;
 	return (
-		<Box style={{ marginBottom: 16 }}>
-			<Text fontSize="sm" color="fg.secondary" style={{ fontWeight: 500, display: "block", marginBottom: 8 }}>
+		<Box style={{ marginBottom: 36 }}>
+			<Text fontSize="sm" color="fg.secondary" style={{ fontWeight: 400, display: "block", marginBottom: 8 }}>
 				{label}
 			</Text>
-			<Box style={{ display: "flex", gap: 8 }}>
-				<ToneOption selected={selected === 0} onClick={() => onChange(0)} emoji={leftEmoji} label={leftLabel} />
-				<ToneOption selected={selected === 50} onClick={() => onChange(50)} isCenter label="Balanced" />
-				<ToneOption selected={selected === 100} onClick={() => onChange(100)} emoji={rightEmoji} label={rightLabel} />
+			<input
+				type="range"
+				min={0}
+				max={100}
+				step={50}
+				value={value}
+				onChange={(e) => onChange(Number(e.target.value))}
+				style={{ width: "100%", display: "block", cursor: "pointer", accentColor: "#616755" }}
+			/>
+			<Box style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginTop: 6 }}>
+				<Text fontSize="sm" color="fg.secondary">{leftEmoji} {leftLabel}</Text>
+				<Text fontSize="sm" color="fg.secondary" style={{ textAlign: "center" }}>⚖️ Balanced</Text>
+				<Text fontSize="sm" color="fg.secondary" style={{ textAlign: "right" }}>{rightEmoji} {rightLabel}</Text>
 			</Box>
 		</Box>
 	);
@@ -267,6 +226,7 @@ function UploadPopover() {
 function AccordionSection({
 	title,
 	tooltip,
+	subtitle,
 	summary,
 	isOpen,
 	onToggle,
@@ -275,6 +235,7 @@ function AccordionSection({
 }: {
 	title: string;
 	tooltip?: string;
+	subtitle?: string;
 	summary: string;
 	isOpen: boolean;
 	onToggle: () => void;
@@ -284,14 +245,11 @@ function AccordionSection({
 	return (
 		<Box
 			bg="bg.default"
-			style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, marginBottom: 12, overflow: "hidden" }}
+			style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, marginBottom: 16, padding: "20px 24px" }}
 		>
-			<Box
-				onClick={onToggle}
-				style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", cursor: "pointer" }}
-			>
-				<Box style={{ flex: 1, minWidth: 0 }}>
-					<Box style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+			<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+				<Box onClick={onToggle} style={{ cursor: "pointer", flex: 1, minWidth: 0 }}>
+					<Box style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
 						<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>{title}</Text>
 						{tooltip && (
 							<Tooltip delayDuration={300} content={tooltip}>
@@ -301,19 +259,26 @@ function AccordionSection({
 							</Tooltip>
 						)}
 					</Box>
-					{!isOpen && (
-						<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginTop: 2 }}>{summary}</Text>
-					)}
+					<Text fontSize="sm" color="fg.secondary" style={{ display: "block" }}>
+						{isOpen ? (subtitle ?? summary) : summary}
+					</Text>
 				</Box>
-				<Box style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 16, flexShrink: 0 }}>
-					{isOpen && actionButton}
-					<Box style={{ color: "var(--ax-colors-fg-tertiary)", display: "flex", alignItems: "center" }}>
+				<Box style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 16 }}>
+					{isOpen && actionButton && (
+						<Box onClick={(e) => e.stopPropagation()}>
+							{actionButton}
+						</Box>
+					)}
+					<Box
+						onClick={onToggle}
+						style={{ color: "var(--ax-colors-fg-tertiary)", display: "inline-flex", alignItems: "center", cursor: "pointer" }}
+					>
 						{isOpen ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
 					</Box>
 				</Box>
 			</Box>
 			{isOpen && (
-				<Box style={{ padding: "0 20px 20px", borderTop: "1px solid var(--ax-colors-border-default)" }}>
+				<Box style={{ marginTop: 20 }}>
 					{children}
 				</Box>
 			)}
@@ -402,7 +367,6 @@ export function PersonalityTab({
 				</Text>
 				<Box style={{ display: "grid", gridTemplateColumns: compact ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
 					{TEMPLATES.map((t) => {
-						const Icon = t.icon;
 						const isSelected = t.id === selectedTemplate;
 						return (
 							<Box
@@ -423,15 +387,7 @@ export function PersonalityTab({
 								}}
 							>
 								<Box style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-									<Box
-										style={{
-											width: 40, height: 40, borderRadius: 8, flexShrink: 0,
-											background: "#EEFFD9",
-											display: "flex", alignItems: "center", justifyContent: "center",
-										}}
-									>
-										<Icon size={18} style={{ color: "var(--ax-colors-fg-default)" }} />
-									</Box>
+									<img src={t.icon} alt="" width={40} height={40} style={{ objectFit: "contain", flexShrink: 0 }} />
 									<Box>
 										<Text asChild fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)", lineHeight: "1.2", display: "block", margin: 0, marginBottom: 4 }}>
 											<h4>{t.name}</h4>
@@ -502,40 +458,41 @@ export function PersonalityTab({
 
 				{!configExpanded ? (
 					/* ── Collapsed summary ── */
-					<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "16px 20px", marginBottom: 40 }}>
-						<Box style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-							<Box style={{ display: "flex", gap: 12, alignItems: "baseline" }}>
+					<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px" }}>
+						<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginBottom: 16 }}>Configuration overview</Text>
+						<Box style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+							<Box style={{ display: "flex", gap: 12, alignItems: "center" }}>
 								<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0, minWidth: 48 }}>TRAITS</span>
-								<Text fontSize="sm" color="fg.default">{activeTraits.join(" · ")}</Text>
+								<Box style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+									{activeTraits.map((t) => <Badge key={t} intent="information">{t.toUpperCase()}</Badge>)}
+								</Box>
 							</Box>
-							<Box style={{ display: "flex", gap: 12, alignItems: "baseline" }}>
+							<Box style={{ display: "flex", gap: 12, alignItems: "center" }}>
 								<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0, minWidth: 48 }}>TONE</span>
-								<Text fontSize="sm" color="fg.default">{getToneSummary(detail, warmth, energy)}</Text>
+								<Box style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+									{getToneSummary(detail, warmth, energy).split(" · ").map((t) => <Badge key={t}>{t.toUpperCase()}</Badge>)}
+								</Box>
 							</Box>
-							<Box style={{ display: "flex", gap: 12, alignItems: "baseline" }}>
+							<Box style={{ display: "flex", gap: 12, alignItems: "center" }}>
 								<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0, minWidth: 48 }}>VALUES</span>
-								<Text fontSize="sm" color="fg.default">{values.length} values set</Text>
+								<Text fontSize="sm" color="fg.secondary">{values.length} values saved</Text>
 							</Box>
 						</Box>
 					</Box>
 				) : (
 					/* ── Expanded accordion ── */
-					<Box style={{ marginBottom: 40 }}>
+					<Box>
 
 						{/* Personality traits */}
 						<AccordionSection
 							title="Personality traits"
 							tooltip="Keywords that shape how your teammate thinks and communicates."
+							subtitle="Shape how Randy thinks and communicates"
 							summary={activeTraits.slice(0, 4).join(" · ") + (activeTraits.length > 4 ? ` +${activeTraits.length - 4}` : "")}
 							isOpen={openSections.has("traits")}
 							onToggle={() => toggleSection("traits")}
-							actionButton={
-								<Box onClick={(e) => e.stopPropagation()}>
-									<Button appearance="primary" size="sm" onClick={() => setShowAddTrait(true)}>Add your own</Button>
-								</Box>
-							}
 						>
-							<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16, marginTop: 16 }}>
+							<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
 								{activeTraits.map((trait) => (
 									<button
 										key={trait}
@@ -556,7 +513,7 @@ export function PersonalityTab({
 								))}
 							</Box>
 							<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 8 }}>SUGGESTED</span>
-							<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: showAddTrait ? 12 : 0 }}>
+							<Box style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
 								{SUGGESTED_TRAITS.filter((t) => !activeTraits.includes(t)).map((trait) => (
 									<button
 										key={trait}
@@ -574,14 +531,14 @@ export function PersonalityTab({
 										+ {trait}
 									</button>
 								))}
-							</Box>
-							{showAddTrait && (
-								<Box style={{ display: "flex", gap: 8, marginTop: 12 }}>
+								{/* Ghost pill / inline input at end of suggested row */}
+								{showAddTrait ? (
 									<input
 										autoFocus
 										value={newTrait}
 										onChange={(e) => setNewTrait(e.target.value)}
-										placeholder="Enter a trait..."
+										placeholder="Type a trait..."
+										onBlur={() => { setNewTrait(""); setShowAddTrait(false); }}
 										onKeyDown={(e) => {
 											if (e.key === "Enter" && newTrait.trim()) {
 												setActiveTraits((p) => [...p, newTrait.trim()]);
@@ -591,50 +548,63 @@ export function PersonalityTab({
 											if (e.key === "Escape") { setNewTrait(""); setShowAddTrait(false); }
 										}}
 										style={{
-											flex: 1, height: 36, padding: "0 12px",
+											height: 29, padding: "0 10px",
 											border: "1px solid var(--ax-colors-border-default)",
-											borderRadius: 6, background: "var(--ax-colors-bg-input)",
-											fontSize: 14, color: "var(--ax-colors-fg-default)",
-											fontFamily: "inherit", outline: "none",
+											borderRadius: 99, background: "var(--ax-colors-bg-input)",
+											fontSize: 13, color: "var(--ax-colors-fg-default)",
+											fontFamily: "inherit", outline: "none", width: 120,
 										}}
 									/>
-									<Button size="md" style={{ height: 36 }} onClick={() => {
-										if (newTrait.trim()) setActiveTraits((p) => [...p, newTrait.trim()]);
-										setNewTrait(""); setShowAddTrait(false);
-									}}>Save</Button>
-									<Button size="md" style={{ height: 36 }} appearance="subtle" onClick={() => { setNewTrait(""); setShowAddTrait(false); }}>Cancel</Button>
-								</Box>
-							)}
+								) : (
+									<button
+										onClick={() => setShowAddTrait(true)}
+										style={{
+											display: "inline-flex", alignItems: "center", gap: 4,
+											padding: "5px 10px", borderRadius: 99,
+											background: "transparent",
+											border: "1.5px dashed var(--ax-colors-border-default)",
+											cursor: "pointer", fontSize: 13,
+											color: "var(--ax-colors-fg-tertiary)", fontFamily: "inherit",
+										}}
+										onMouseEnter={(e) => {
+											(e.currentTarget as HTMLButtonElement).style.borderStyle = "solid";
+											(e.currentTarget as HTMLButtonElement).style.color = "var(--ax-colors-fg-default)";
+										}}
+										onMouseLeave={(e) => {
+											(e.currentTarget as HTMLButtonElement).style.borderStyle = "dashed";
+											(e.currentTarget as HTMLButtonElement).style.color = "var(--ax-colors-fg-tertiary)";
+										}}
+									>
+										+ Add trait
+									</button>
+								)}
+							</Box>
 						</AccordionSection>
 
 						{/* Tone of voice */}
 						<AccordionSection
 							title="Tone of voice"
 							tooltip="Adjusts how formal, warm, and energetic your teammate sounds."
+							subtitle={`Fine-tune ${name}'s communication style`}
 							summary={getToneSummary(detail, warmth, energy)}
 							isOpen={openSections.has("tone")}
 							onToggle={() => toggleSection("tone")}
 						>
-							<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginBottom: 20, marginTop: 16 }}>Fine-tune {name}&apos;s communication style</Text>
 							<ToneRow label="Detail" leftLabel="Brief" leftEmoji="🐣" rightLabel="Detailed" rightEmoji="🪄" value={detail} onChange={setDetail} />
 							<ToneRow label="Warmth" leftLabel="Formal" leftEmoji="🏛" rightLabel="Warm" rightEmoji="☀️" value={warmth} onChange={setWarmth} />
-							<ToneRow label="Energy" leftLabel="Calm" leftEmoji="🌱" rightLabel="Playful" rightEmoji="🎯" value={energy} onChange={setEnergy} />
+							<ToneRow label="Spiciness" leftLabel="Mild" leftEmoji="🧊" rightLabel="Extra hot" rightEmoji="🌶️" value={energy} onChange={setEnergy} />
 						</AccordionSection>
 
 						{/* Values */}
 						<AccordionSection
 							title="Values"
 							tooltip="Principles that guide your teammate's priorities and tradeoffs."
+							subtitle="Principles that guide Randy's tradeoffs"
 							summary={`${values.length} values set`}
 							isOpen={openSections.has("values")}
 							onToggle={() => toggleSection("values")}
-							actionButton={
-								<Box onClick={(e) => e.stopPropagation()}>
-									<Button appearance="primary" size="sm" onClick={() => setShowAddValue(true)}>Add your own</Button>
-								</Box>
-							}
 						>
-							<Box style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12, marginTop: 16 }}>
+							<Box style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
 								{values.map((v) => (
 									<Box key={v} style={{
 										display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -652,36 +622,7 @@ export function PersonalityTab({
 									</Box>
 								))}
 							</Box>
-							{showAddValue && (
-								<Box style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-									<input
-										autoFocus
-										value={newValue}
-										onChange={(e) => setNewValue(e.target.value)}
-										placeholder="Add a value or principle..."
-										onKeyDown={(e) => {
-											if (e.key === "Enter" && newValue.trim()) {
-												setValues((p) => [...p, newValue.trim()]);
-												setNewValue(""); setShowAddValue(false);
-											}
-											if (e.key === "Escape") { setNewValue(""); setShowAddValue(false); }
-										}}
-										style={{
-											flex: 1, height: 36, padding: "0 12px",
-											border: "1px solid var(--ax-colors-border-default)",
-											borderRadius: 6, background: "var(--ax-colors-bg-input)",
-											fontSize: 14, color: "var(--ax-colors-fg-default)",
-											fontFamily: "inherit", outline: "none",
-										}}
-									/>
-									<Button size="md" style={{ height: 36 }} appearance="default" onClick={() => {
-										if (newValue.trim()) setValues((p) => [...p, newValue.trim()]);
-										setNewValue(""); setShowAddValue(false);
-									}}>Save</Button>
-									<Button size="md" style={{ height: 36 }} appearance="subtle" onClick={() => { setNewValue(""); setShowAddValue(false); }}>Cancel</Button>
-								</Box>
-							)}
-							<Box style={{ marginTop: 4 }}>
+							<Box style={{ marginBottom: 12 }}>
 								<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 8 }}>QUICK ADD</span>
 								<Box style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
 									{QUICK_ADD_VALUES.filter((v) => !values.includes(v)).map((v) => (
@@ -703,21 +644,61 @@ export function PersonalityTab({
 									))}
 								</Box>
 							</Box>
+							{/* Ghost input row */}
+							{showAddValue ? (
+								<Box style={{
+									display: "flex", alignItems: "center",
+									border: "1px solid var(--ax-colors-border-default)",
+									borderRadius: 8, padding: "0 14px", background: "var(--ax-colors-bg-input)",
+								}}>
+									<IconPlus size={14} style={{ color: "var(--ax-colors-fg-tertiary)", flexShrink: 0, marginRight: 8 }} />
+									<input
+										autoFocus
+										value={newValue}
+										onChange={(e) => setNewValue(e.target.value)}
+										placeholder="Add a value..."
+										onBlur={() => { setNewValue(""); setShowAddValue(false); }}
+										onKeyDown={(e) => {
+											if (e.key === "Enter" && newValue.trim()) {
+												setValues((p) => [...p, newValue.trim()]);
+												setNewValue(""); setShowAddValue(false);
+											}
+											if (e.key === "Escape") { setNewValue(""); setShowAddValue(false); }
+										}}
+										style={{
+											flex: 1, height: 40, border: "none", background: "transparent",
+											fontSize: 14, color: "var(--ax-colors-fg-default)",
+											fontFamily: "inherit", outline: "none",
+										}}
+									/>
+								</Box>
+							) : (
+								<button
+									onClick={() => setShowAddValue(true)}
+									style={{
+										display: "flex", alignItems: "center", gap: 8, width: "100%",
+										padding: "10px 14px", borderRadius: 8,
+										border: "1.5px dashed var(--ax-colors-border-default)",
+										background: "transparent", cursor: "pointer", fontFamily: "inherit",
+									}}
+									onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderStyle = "solid"; }}
+									onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderStyle = "dashed"; }}
+								>
+									<IconPlus size={14} style={{ color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }} />
+									<Text fontSize="sm" color="fg.tertiary">Add a value...</Text>
+								</button>
+							)}
 						</AccordionSection>
 
 						{/* Import a personality */}
 						<AccordionSection
 							title="Import a personality"
-							summary="—"
+							subtitle="Paste a description or upload a file — we'll extract the traits and tone automatically"
+							summary="Paste or upload to extract traits and tone"
 							isOpen={openSections.has("import")}
 							onToggle={() => toggleSection("import")}
-							actionButton={
-								<Box onClick={(e) => e.stopPropagation()}>
-									<UploadPopover />
-								</Box>
-							}
+							actionButton={<UploadPopover />}
 						>
-							<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginBottom: 16, marginTop: 16 }}>Paste a description or upload a file — we&apos;ll extract the traits and tone automatically</Text>
 							<Box style={{
 								display: "flex", alignItems: "center",
 								border: "1px solid var(--ax-colors-border-default)",
