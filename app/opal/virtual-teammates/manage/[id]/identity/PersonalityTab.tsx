@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import {
 	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
 	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
-	Badge, Box, Button, Popover, PopoverContent, PopoverTrigger, Text,
+	Badge, Box, Button, Popover, PopoverContent, PopoverTrigger, Text, Tooltip,
 } from "@optiaxiom/react";
 import {
-	IconArrowUp, IconBolt, IconGear, IconPlus, IconRocket, IconStar, IconUpload, IconXmark,
+	IconArrowUp, IconBolt, IconCircleQuestion, IconGear, IconPlus, IconRocket, IconStar, IconUpload, IconXmark,
 } from "@optiaxiom/icons";
 
 const CAPTION: React.CSSProperties = {
@@ -322,7 +322,7 @@ export function PersonalityTab({
 				<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginBottom: 20 }}>
 					Choose a personality archetype to guide how your teammate interacts with you
 				</Text>
-				<Box style={{ display: "grid", gridTemplateColumns: compact ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12, marginBottom: 48 }}>
+				<Box style={{ display: "grid", gridTemplateColumns: compact ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12, marginBottom: 32 }}>
 					{TEMPLATES.map((t) => {
 						const Icon = t.icon;
 						const isSelected = t.id === selectedTemplate;
@@ -352,10 +352,10 @@ export function PersonalityTab({
 											display: "flex", alignItems: "center", justifyContent: "center",
 										}}
 									>
-										<Icon size={18} style={{ color: "#616755" }} />
+										<Icon size={18} style={{ color: "var(--ax-colors-fg-default)" }} />
 									</Box>
 									<Box>
-										<Text asChild fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)", lineHeight: "1.2", display: "block", margin: 0 }}>
+										<Text asChild fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)", lineHeight: "1.2", display: "block", margin: 0, marginBottom: 4 }}>
 											<h4>{t.name}</h4>
 										</Text>
 										<Text fontSize="sm" color="fg.tertiary" style={{ fontStyle: "italic", lineHeight: "1.3" }}>
@@ -366,6 +366,7 @@ export function PersonalityTab({
 								<Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.5" }}>
 									{t.description}
 								</Text>
+								<Box style={{ height: 1, background: "var(--ax-colors-border-default)" }} />
 								<Box>
 									<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 6 }}>TRAITS</span>
 									<Box style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
@@ -390,6 +391,8 @@ export function PersonalityTab({
 					})}
 				</Box>
 
+				<Box style={{ height: 1, background: "var(--ax-colors-border-default)", marginBottom: 32 }} />
+
 				{/* ── Configure manually ── */}
 				<Text style={{ fontSize: 18, fontWeight: 600, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 4 }}>
 					Configure manually
@@ -402,7 +405,14 @@ export function PersonalityTab({
 				<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px", marginBottom: 12 }}>
 					<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
 						<Box>
-							<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 2 }}>Personality traits</Text>
+							<Box style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+								<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>Personality traits</Text>
+								<Tooltip delayDuration={300} content="Traits shape how Randy approaches problems and communicates — e.g. 'Decisive' means confident answers without hedging, 'Concise' means no fluff.">
+									<span style={{ display: "inline-flex" }}>
+										<IconCircleQuestion size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+									</span>
+								</Tooltip>
+							</Box>
 							<Text fontSize="sm" color="fg.secondary">Shape how {name} thinks and communicates</Text>
 						</Box>
 						<Button appearance="primary" size="sm" onClick={() => setShowAddTrait(true)}>Add your own</Button>
@@ -481,7 +491,14 @@ export function PersonalityTab({
 
 				{/* Tone of voice */}
 				<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px", marginBottom: 12 }}>
-					<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 4 }}>Tone of voice</Text>
+					<Box style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+						<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>Tone of voice</Text>
+						<Tooltip delayDuration={300} content="These sliders control how Randy sounds in responses — how much detail to include, how warm or formal the language is, and how energetic vs. calm the delivery feels.">
+							<span style={{ display: "inline-flex" }}>
+								<IconCircleQuestion size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+							</span>
+						</Tooltip>
+					</Box>
 					<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginBottom: 20 }}>Fine-tune {name}&apos;s communication style</Text>
 					<ToneRow label="Detail" leftLabel="Brief" leftEmoji="🐣" rightLabel="Detailed" rightEmoji="🪄" value={detail} onChange={setDetail} />
 					<ToneRow label="Warmth" leftLabel="Formal" leftEmoji="🏛" rightLabel="Warm" rightEmoji="☀️" value={warmth} onChange={setWarmth} />
@@ -492,7 +509,14 @@ export function PersonalityTab({
 				<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px", marginBottom: 12 }}>
 					<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
 						<Box>
-							<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 2 }}>Values</Text>
+							<Box style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+								<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>Values</Text>
+								<Tooltip delayDuration={300} content="Values are the principles Randy weighs when making tradeoffs — they guide judgment on ambiguous tasks and keep priorities consistent with what matters to your team.">
+									<span style={{ display: "inline-flex" }}>
+										<IconCircleQuestion size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+									</span>
+								</Tooltip>
+							</Box>
 							<Text fontSize="sm" color="fg.secondary">Principles that guide {name}&apos;s tradeoffs</Text>
 						</Box>
 						<Button appearance="primary" size="sm" onClick={() => setShowAddValue(true)}>Add your own</Button>
