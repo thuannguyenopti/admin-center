@@ -18,6 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Review PR with GitHub Models
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -25,14 +26,15 @@ jobs:
         run: |
           git fetch origin main --depth=50
 
-          DIFF=$(git diff origin/main...HEAD)
+          # Truncate at the source: a huge diff must never exhaust memory or
+          # SIGPIPE the pipeline (this is what broke the review on large PRs).
+          DIFF=$(git diff origin/main...HEAD 2>/dev/null | head -c 60000)
           if [ -z "$DIFF" ]; then
             echo "Empty diff — nothing to review"
             exit 0
           fi
 
-          DIFF=$(echo "$DIFF" | head -c 60000)
-          CLAUDE_MD=$(cat CLAUDE.md 2>/dev/null | head -c 8000 || echo "")
+          CLAUDE_MD=$(cat CLAUDE.md 2>/dev/null | head -c 8000 || true)
 
           PROMPT="You are a code reviewer for the axiom-play repository (a Next.js multi-product UI prototype using the Optimizely Axiom design system).
 
@@ -77,16 +79,25 @@ jobs:
               \"messages\": [{\"role\": \"user\", \"content\": $PROMPT_JSON}]
             }")
 
-          if [ $? -ne 0 ]; then
-            echo "GitHub Models API call failed"
-            exit 1
+          # Advisory bot: never fail the job on an API hiccup — just skip the comment.
+          if [ $? -ne 0 ] || [ -z "$RESPONSE" ]; then
+            echo "GitHub Models API call failed or returned empty — skipping review comment"
+            exit 0
           fi
 
           COMMENT=$(echo "$RESPONSE" | python3 -c "
           import sys, json
-          data = json.load(sys.stdin)
-          print(data['choices'][0]['message']['content'])
+          try:
+              data = json.load(sys.stdin)
+              print(data['choices'][0]['message']['content'])
+          except Exception:
+              print('')
           ")
+
+          if [ -z "$COMMENT" ]; then
+            echo "No review content returned — skipping comment"
+            exit 0
+          fi
 
           BODY="<!-- ai-review-bot -->
 
