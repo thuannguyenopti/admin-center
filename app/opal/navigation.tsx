@@ -115,6 +115,7 @@ export function useOpalNav() {
 			label: "Directory",
 			url: "/opal/virtual-teammates",
 			highlight: "/opal/virtual-teammates",
+			exact: true,
 			icon: <IconStore filled={active("/opal/virtual-teammates", true)} />,
 			customLayout: true,
 		},
