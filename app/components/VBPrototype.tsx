@@ -25,11 +25,11 @@ import {
 	IconSparkles,
 	IconSquare,
 	IconSection,
-	IconDots,
-	IconSettings,
+	IconEllipsisSolid,
+	IconGear,
 	IconChevronLeft,
 	IconCopy,
-} from "@tabler/icons-react";
+} from "@/app/lib/axiom-icons";
 
 import {EleMap} from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
@@ -541,6 +541,7 @@ export default function VBPrototype({
 	const [currentEle, setCurrentEle] = useState<string>("none");
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
 	const [styleEditorEle, setStyleEditorEle] = useState<string | null>(null);
+	const [outlineHidden, setOutlineHidden] = useState(true);
 	const [styleEditorSource, setStyleEditorSource] = useState<"outline" | "elementEditor" | null>(
 		null
 	);
@@ -592,6 +593,23 @@ export default function VBPrototype({
 	const isSingle = outlines.length === 1; // View 3
 	const isMulti = outlines.length > 1; // View 1/2
 	const isEditingElement = currentEle !== "none" || styleEditorEle !== null;
+
+	useEffect(() => {
+		const onKeyDown = (e: KeyboardEvent) => {
+			if (e.key !== "Escape") return;
+			const tag = (e.target as HTMLElement)?.tagName;
+			if (tag === "INPUT" || tag === "TEXTAREA") return;
+			if (isEditingElement) {
+				setCurrentEle("none");
+				setStyleEditorEle(null);
+				setStyleEditorSource(null);
+			} else {
+				setOutlineHidden((h) => !h);
+			}
+		};
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, [isEditingElement]);
 
 	const activeOutline = activeOutlineId
 		? (outlines.find((o) => o.id === activeOutlineId) ?? null)
@@ -650,6 +668,9 @@ export default function VBPrototype({
 			setCurrentEle(eleId);
 
 			if (!eleId || eleId === "none") return;
+
+			// Auto-show outline panel when selecting an element
+			setOutlineHidden(false);
 
 			// ✅ Always drill down from View 1 -> View 2 when multi-outline
 			// (even if the element belongs to the currently active outline)
@@ -809,6 +830,33 @@ export default function VBPrototype({
 		setStyleEditorEle(null);
 		setStyleEditorSource(null);
 	}, [currentEle, setData, setOutlines, setTheEles]);
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key !== "Delete") return;
+			if (currentEle === "none") return;
+			const target = e.target as HTMLElement;
+			if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+				const el = target as HTMLInputElement | HTMLTextAreaElement;
+				if (el.selectionStart !== el.value.length || el.selectionEnd !== el.value.length)
+					return;
+			} else if (target.isContentEditable) {
+				const sel = window.getSelection();
+				if (!sel || sel.rangeCount === 0) return;
+				const range = sel.getRangeAt(0);
+				if (!range.collapsed) return;
+				if (
+					range.endContainer !== target ||
+					range.endOffset !== (target.textContent?.length ?? 0)
+				)
+					return;
+			}
+			e.preventDefault();
+			removeCurrentEle();
+		};
+		document.addEventListener("keydown", handleKeyDown);
+		return () => document.removeEventListener("keydown", handleKeyDown);
+	}, [currentEle, removeCurrentEle]);
 
 	const onStyleChange = useCallback(
 		(templateKey: string) => {
@@ -982,7 +1030,7 @@ export default function VBPrototype({
 				<Menu
 					options={[
 						{
-							addon: <IconSettings size={16} />,
+							addon: <IconGear size={16} />,
 							label: "Properties",
 							execute: () => {
 								setSidebarTab("properties");
@@ -1003,7 +1051,7 @@ export default function VBPrototype({
 					]}
 				>
 					<MenuTrigger
-						icon={<IconDots size={16} />}
+						icon={<IconEllipsisSolid size={16} />}
 						aria-label="more"
 						appearance="subtle"
 						size="sm"
@@ -1526,11 +1574,14 @@ export default function VBPrototype({
 						className="vb-outline"
 						bg="bg.page"
 						style={{
-							width: 324,
-							minWidth: 180,
+							width: outlineHidden ? 8 : 324,
+							minWidth: outlineHidden ? 8 : 180,
 							maxWidth: 600,
+							overflow: "hidden",
+							flexShrink: 0,
 							position: "relative",
 							height: "100%",
+							transition: "width 0.2s ease, min-width 0.2s ease",
 						}}
 					>
 						<DragHandle position="right" minWidth={180} maxWidth={600} />
@@ -1580,6 +1631,7 @@ export default function VBPrototype({
 								setCurrentHoverEle={setCurrentHoverEle}
 								setOutlines={setOutlines as any}
 								preview={preview}
+								contentTypeId={contentType?.id}
 							/>
 						)}
 						<Box borderL="1" borderColor="border.tertiary">
@@ -1669,7 +1721,16 @@ export default function VBPrototype({
 					pr="0"
 					w="auto"
 					className="vb-outline"
-					style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
+					style={{
+						width: outlineHidden ? 8 : 324,
+						minWidth: outlineHidden ? 8 : 180,
+						maxWidth: 600,
+						overflow: "hidden",
+						flexShrink: 0,
+						opacity: outlineHidden ? 0 : 1,
+						position: "relative",
+						transition: "width 0.2s ease, min-width 0.2s ease, opacity 0.2s ease",
+					}}
 				>
 					<DragHandle position="right" minWidth={180} maxWidth={600} />
 
@@ -1699,7 +1760,7 @@ export default function VBPrototype({
 													<Menu
 														options={[
 															{
-																addon: <IconSettings size={16} />,
+																addon: <IconGear size={16} />,
 																label: "Properties",
 																execute: () => {
 																	setSidebarTab("properties");
@@ -1709,7 +1770,7 @@ export default function VBPrototype({
 														]}
 													>
 														<MenuTrigger
-															icon={<IconDots size={16} />}
+															icon={<IconEllipsisSolid size={16} />}
 															aria-label="more"
 															appearance="subtle"
 															size="sm"
@@ -1941,7 +2002,6 @@ export default function VBPrototype({
 									{/* PANE 4: Element Editor or Style Editor */}
 									<div className="min-w-[25%] w-[25%] h-full">
 										<div className="h-full overflow-y-auto">
-											af
 											{styleEditorEle && theEles[styleEditorEle] ? (
 												<StyleEditor
 													outlineTitle={
@@ -2056,7 +2116,7 @@ export default function VBPrototype({
 													<Text
 														fontSize="sm"
 														fontWeight="400"
-														color="fg.accent"
+														color="fg.default"
 														className="cursor-pointer absolute top-0 left-0"
 														onClick={() => {
 															setActivePropertiesSection("menu");
@@ -2077,7 +2137,7 @@ export default function VBPrototype({
 													<Text
 														fontSize="sm"
 														fontWeight="400"
-														color="fg.accent"
+														color="fg.default"
 														className="cursor-pointer absolute top-0 left-0"
 														onClick={() => {
 															setSidebarTab("outline");
@@ -2243,6 +2303,7 @@ export default function VBPrototype({
 						setCurrentHoverEle={setCurrentHoverEle}
 						setOutlines={setOutlines as any}
 						preview={preview}
+						contentTypeId={contentType?.id}
 					/>
 
 					{(() => {

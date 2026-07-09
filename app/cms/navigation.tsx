@@ -12,7 +12,7 @@ import {
 	IconGear,
 	IconPuzzlePiece,
 } from "@optiaxiom/icons";
-import {IconSettingsSearch} from "@tabler/icons-react";
+import {IconSettingsSearch} from "@/app/lib/axiom-icons";
 
 export function useCmsNav() {
 	const path = usePathname() ?? "";

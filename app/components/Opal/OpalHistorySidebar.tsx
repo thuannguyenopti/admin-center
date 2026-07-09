@@ -72,6 +72,7 @@ export function OpalHistorySidebar({
           appearance="subtle"
           size="md"
           aria-label="Search"
+          icon={<IconSearch />}
           style={{
             width: '32px',
             height: '32px',
@@ -79,9 +80,7 @@ export function OpalHistorySidebar({
             minWidth: '32px',
             flexShrink: 0,
           }}
-        >
-          <IconSearch style={{ width: '16px', height: '16px' }} />
-        </Button>
+        />
 
         <Tooltip content={newChatLabel} delayDuration={300}>
           <Button

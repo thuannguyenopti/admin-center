@@ -1,6 +1,6 @@
 "use client";
 
-import { IconBroadcast, IconChevronDown, IconFileText, IconPhoto, IconPlus, IconPuzzle } from "@tabler/icons-react";
+import {IconBroadcast, IconChevronDown, IconFileLines, IconImage, IconPlus, IconPuzzle} from "@/app/lib/axiom-icons";
 import { Box } from "@optiaxiom/react";
 import type { ContentType } from "@/app/db/initialData";
 import { initialCmpContentModels } from "@/app/db/cmpInitialData";
@@ -22,13 +22,13 @@ export function buildAddContentMenuOptions({
 	return [
 		{
 			label: "Asset",
-			addon: <IconPhoto size={20} />,
+			addon: <IconImage size={20} />,
 			description: "Add assets from recommendations",
 			execute: onAddAsset,
 		},
 		{
 			label: "Article",
-			addon: <IconFileText size={20} />,
+			addon: <IconFileLines size={20} />,
 			description: "Add a hardcoded article example",
 			execute: onAddArticle,
 		},
@@ -46,7 +46,7 @@ export function buildAddContentMenuOptions({
 		},
 		{
 			label: "Content Type",
-			addon: <IconFileText size={20} />,
+			addon: <IconFileLines size={20} />,
 			description: "Add content from a content model",
 			subOptions: cmpContentModels
 				.filter((model) => model.isActive !== false)

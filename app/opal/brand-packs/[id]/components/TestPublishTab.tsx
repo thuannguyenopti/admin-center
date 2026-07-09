@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Box, Button, Text } from "@optiaxiom/react";
-import { IconCheck, IconSparkles, IconTriangleExclamation as IconWarning } from "@optimizely/axiom-icons";
-import type { BrandPack } from "../../types";
+import {useState} from "react";
+import {Box, Button, Text} from "@optiaxiom/react";
+import {
+	IconCheck,
+	IconSparkles,
+	IconTriangleExclamation as IconWarning,
+} from "@optimizely/axiom-icons";
+import type {BrandPack} from "../../types";
 
 type TestPublishTabProps = {
 	pack: BrandPack;
@@ -17,14 +21,14 @@ type CheckItem = {
 	blocking: boolean;
 };
 
-function CheckRow({ item }: { item: CheckItem }) {
+function CheckRow({item}: {item: CheckItem}) {
 	return (
 		<Box
 			alignItems="start"
 			display="flex"
 			gap="12"
 			py="12"
-			style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}
+			style={{borderBottom: "1px solid var(--ax-colors-border-tertiary)"}}
 		>
 			{/* Status icon */}
 			<Box
@@ -36,17 +40,17 @@ function CheckRow({ item }: { item: CheckItem }) {
 					background: item.passed
 						? "var(--ax-colors-bg-success-subtle)"
 						: item.blocking
-						? "rgba(220, 38, 38, 0.08)"
-						: "var(--ax-colors-bg-secondary)",
+							? "rgba(220, 38, 38, 0.08)"
+							: "var(--ax-colors-bg-secondary)",
 					flexShrink: 0,
 					height: 28,
 					width: 28,
 				}}
 			>
 				{item.passed ? (
-					<IconCheck size={13} style={{ color: "var(--ax-colors-fg-success)" }} />
+					<IconCheck size={13} style={{color: "var(--ax-colors-fg-success)"}} />
 				) : item.blocking ? (
-					<IconWarning size={13} style={{ color: "#DC2626" }} />
+					<IconWarning size={13} style={{color: "#DC2626"}} />
 				) : (
 					<span
 						style={{
@@ -61,15 +65,15 @@ function CheckRow({ item }: { item: CheckItem }) {
 			</Box>
 
 			{/* Text */}
-			<Box display="flex" flexDirection="column" gap="2" style={{ flex: 1 }}>
+			<Box display="flex" flexDirection="column" gap="2" style={{flex: 1}}>
 				<Text
 					fontWeight="500"
 					style={{
 						color: item.passed
 							? "var(--ax-colors-fg-default)"
 							: item.blocking
-							? "#DC2626"
-							: "var(--ax-colors-fg-secondary)",
+								? "#DC2626"
+								: "var(--ax-colors-fg-secondary)",
 						fontSize: 14,
 					}}
 				>
@@ -88,8 +92,8 @@ function CheckRow({ item }: { item: CheckItem }) {
 					color: item.passed
 						? "var(--ax-colors-fg-success)"
 						: item.blocking
-						? "#DC2626"
-						: "var(--ax-colors-fg-tertiary)",
+							? "#DC2626"
+							: "var(--ax-colors-fg-tertiary)",
 					flexShrink: 0,
 				}}
 			>
@@ -99,7 +103,7 @@ function CheckRow({ item }: { item: CheckItem }) {
 	);
 }
 
-export function TestPublishTab({ pack }: TestPublishTabProps) {
+export function TestPublishTab({pack}: TestPublishTabProps) {
 	const [published, setPublished] = useState(false);
 	const [testing, setTesting] = useState(false);
 
@@ -166,7 +170,7 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 	};
 
 	return (
-		<Box display="flex" flexDirection="column" gap="20" style={{ maxWidth: 680 }}>
+		<Box display="flex" flexDirection="column" gap="20" style={{maxWidth: 680}}>
 			{/* Readiness card */}
 			<Box
 				bg="bg.default"
@@ -186,10 +190,10 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 					gap="16"
 					justifyContent="space-between"
 					p="20"
-					style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}
+					style={{borderBottom: "1px solid var(--ax-colors-border-tertiary)"}}
 				>
 					<Box display="flex" flexDirection="column" gap="4">
-						<Text fontWeight="600" style={{ fontSize: 14 }}>
+						<Text fontWeight="600" style={{fontSize: 14}}>
 							Readiness check
 						</Text>
 						<Text color="fg.tertiary" fontSize="xs">
@@ -201,14 +205,14 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 					<Box
 						bg="bg.secondary"
 						rounded="full"
-						style={{ height: 6, overflow: "hidden", width: 120 }}
+						style={{height: 6, overflow: "hidden", width: 120}}
 					>
 						<Box
 							rounded="full"
 							style={{
 								background: canPublish
 									? "var(--ax-colors-fg-success)"
-									: "var(--ax-colors-bg-accent)",
+									: "var(--ax-colors-fg-secondary)",
 								height: "100%",
 								transition: "width 0.4s ease",
 								width: `${(passed / total) * 100}%`,
@@ -218,12 +222,12 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 				</Box>
 
 				{/* Check list */}
-				<Box p="20" style={{ paddingTop: 8 }}>
+				<Box p="20" style={{paddingTop: 8}}>
 					{checks.map((item) => (
 						<CheckRow key={item.id} item={item} />
 					))}
 					{/* Remove bottom border from last item */}
-					<Box style={{ marginBottom: -1 }} />
+					<Box style={{marginBottom: -1}} />
 				</Box>
 			</Box>
 
@@ -240,7 +244,9 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 				shadow="sm"
 			>
 				<Box display="flex" flexDirection="column" gap="4">
-					<Text fontWeight="600" style={{ fontSize: 14 }}>Test with Opal</Text>
+					<Text fontWeight="600" style={{fontSize: 14}}>
+						Test with Opal
+					</Text>
 					<Text color="fg.secondary" fontSize="sm">
 						Generate sample content using this brand pack before publishing
 					</Text>
@@ -251,7 +257,7 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 						size="sm"
 						icon={<IconSparkles />}
 						onClick={handleTest}
-						style={{ color: testing ? "var(--ax-colors-fg-accent)" : undefined }}
+						style={{color: testing ? "var(--ax-colors-fg-default)" : undefined}}
 					>
 						{testing ? "Generating sample…" : "Run test generation"}
 					</Button>
@@ -283,12 +289,15 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 							display="flex"
 							justifyContent="center"
 							rounded="full"
-							style={{ flexShrink: 0, height: 32, width: 32 }}
+							style={{flexShrink: 0, height: 32, width: 32}}
 						>
-							<IconCheck size={14} style={{ color: "var(--ax-colors-fg-success)" }} />
+							<IconCheck size={14} style={{color: "var(--ax-colors-fg-success)"}} />
 						</Box>
 						<Box display="flex" flexDirection="column" gap="2">
-							<Text fontWeight="600" style={{ color: "var(--ax-colors-fg-success)", fontSize: 14 }}>
+							<Text
+								fontWeight="600"
+								style={{color: "var(--ax-colors-fg-success)", fontSize: 14}}
+							>
 								Published
 							</Text>
 							<Text color="fg.tertiary" fontSize="xs">
@@ -299,8 +308,10 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 				) : (
 					<>
 						<Box display="flex" flexDirection="column" gap="4">
-							<Text fontWeight="600" style={{ fontSize: 14 }}>
-								{canPublish ? "Ready to publish" : "Complete required items to publish"}
+							<Text fontWeight="600" style={{fontSize: 14}}>
+								{canPublish
+									? "Ready to publish"
+									: "Complete required items to publish"}
 							</Text>
 							<Text color="fg.secondary" fontSize="sm">
 								{canPublish
@@ -313,7 +324,10 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 								appearance={canPublish ? "primary" : "default"}
 								size="md"
 								onClick={() => canPublish && setPublished(true)}
-								style={{ opacity: canPublish ? 1 : 0.5, cursor: canPublish ? "pointer" : "default" }}
+								style={{
+									opacity: canPublish ? 1 : 0.5,
+									cursor: canPublish ? "pointer" : "default",
+								}}
 							>
 								Publish brand pack
 							</Button>

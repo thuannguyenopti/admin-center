@@ -4,6 +4,7 @@ import {
 	Box,
 	Card,
 	Text as AxiomText,
+	Link as AxiomLink,
 	Field,
 	Textarea,
 	Select,
@@ -11,11 +12,11 @@ import {
 	SelectContent,
 	Button,
 } from "@optiaxiom/react";
-import { useState } from "react";
-import { Text } from "@/app/components/Text";
-import { Input } from "@/app/components/Input";
+import {useState} from "react";
+import {Text} from "@/app/components/Text";
+import {Input} from "@/app/components/Input";
 import Link from "next/link";
-import { IconArrowLeft, IconDownload } from "@tabler/icons-react";
+import {IconArrowLeft, IconDownload} from "@/app/lib/axiom-icons";
 
 export default function TestPlanBuilderPage() {
 	const [hypothesis, setHypothesis] = useState("");
@@ -42,7 +43,7 @@ export default function TestPlanBuilderPage() {
 			rolloutPlan,
 			decisionCriteria,
 		};
-		const blob = new Blob([JSON.stringify(brief, null, 2)], { type: "application/json" });
+		const blob = new Blob([JSON.stringify(brief, null, 2)], {type: "application/json"});
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;
@@ -53,21 +54,27 @@ export default function TestPlanBuilderPage() {
 
 	return (
 		<Box display="flex" flexDirection="column" gap="24" w="full">
-			<Link
-				href="/web-experimentation/home"
-				style={{ display: "inline-flex", alignItems: "center", gap: "8", marginBottom: "8" }}
-			>
-				<IconArrowLeft size={18} />
-				<AxiomText fontSize="sm" color="fg.accent">
+			<AxiomLink asChild fontSize="sm">
+				<Link
+					href="/web-experimentation/home"
+					style={{
+						display: "inline-flex",
+						alignItems: "center",
+						gap: "8",
+						marginBottom: "8",
+					}}
+				>
+					<IconArrowLeft size={18} />
 					Back to Home
-				</AxiomText>
-			</Link>
+				</Link>
+			</AxiomLink>
 			<Text fontSize="lg" fontWeight="600">
 				Test plan builder
 			</Text>
 			<AxiomText fontSize="sm" color="fg.secondary" mb="8">
-				Structured experiment brief: hypothesis, variants, audience, traffic, duration, sample size,
-				dependencies, risks, rollout, and decision criteria. Draft with AI or export to brief / Jira.
+				Structured experiment brief: hypothesis, variants, audience, traffic, duration,
+				sample size, dependencies, risks, rollout, and decision criteria. Draft with AI or
+				export to brief / Jira.
 			</AxiomText>
 			<Card p="24">
 				<Box display="flex" flexDirection="column" gap="16">
@@ -123,7 +130,9 @@ export default function TestPlanBuilderPage() {
 						<Textarea
 							placeholder="Technical or product dependencies"
 							value={dependencies}
-							onChange={(e) => setDependencies((e.target as HTMLTextAreaElement).value)}
+							onChange={(e) =>
+								setDependencies((e.target as HTMLTextAreaElement).value)
+							}
 							w="full"
 						/>
 					</Field>
@@ -139,7 +148,9 @@ export default function TestPlanBuilderPage() {
 						<Textarea
 							placeholder="How will you roll out the winner?"
 							value={rolloutPlan}
-							onChange={(e) => setRolloutPlan((e.target as HTMLTextAreaElement).value)}
+							onChange={(e) =>
+								setRolloutPlan((e.target as HTMLTextAreaElement).value)
+							}
 							w="full"
 						/>
 					</Field>
@@ -147,7 +158,9 @@ export default function TestPlanBuilderPage() {
 						<Textarea
 							placeholder="When do we call a winner or stop?"
 							value={decisionCriteria}
-							onChange={(e) => setDecisionCriteria((e.target as HTMLTextAreaElement).value)}
+							onChange={(e) =>
+								setDecisionCriteria((e.target as HTMLTextAreaElement).value)
+							}
 							w="full"
 						/>
 					</Field>
@@ -155,7 +168,12 @@ export default function TestPlanBuilderPage() {
 						<Button appearance="subtle" size="lg">
 							Draft with AI
 						</Button>
-						<Button appearance="primary" size="lg" icon={<IconDownload size={18} />} onClick={handleExport}>
+						<Button
+							appearance="primary"
+							size="lg"
+							icon={<IconDownload size={18} />}
+							onClick={handleExport}
+						>
 							Export brief
 						</Button>
 						<Link href="/web-experimentation/home">

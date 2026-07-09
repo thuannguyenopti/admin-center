@@ -50,7 +50,6 @@ const GuardrailHoverCardContent = ({ status, mode, isHelp }: { status?: string, 
                     href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents"
                     target="_blank"
                     fontSize="sm"
-                    color="fg.accent"
                 >
                     Learn more
                 </Link>
@@ -81,7 +80,6 @@ const GuardrailHoverCardContent = ({ status, mode, isHelp }: { status?: string, 
                 href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents"
                 target="_blank"
                 fontSize="sm"
-                color="fg.accent"
             >
                 Learn more
             </Link>
@@ -105,7 +103,6 @@ const QualityScoreHoverCardContent = ({ score, baseScore, isHelp, isPassed: isPa
                     href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents#h_01KACEGNBW103Q3S521AN6YA5R"
                     target="_blank"
                     fontSize="sm"
-                    color="fg.accent"
                 >
                     Learn more
                 </Link>
@@ -135,7 +132,6 @@ const QualityScoreHoverCardContent = ({ score, baseScore, isHelp, isPassed: isPa
                 href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents#h_01KACEGNBW103Q3S521AN6YA5R"
                 target="_blank"
                 fontSize="sm"
-                color="fg.accent"
             >
                 Learn more
             </Link>

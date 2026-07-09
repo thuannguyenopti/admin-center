@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Spinner, Text } from "@optiaxiom/react";
-import { IconCheck, IconChevronDown, IconCopy, IconX } from "@tabler/icons-react";
+import {IconCheck, IconChevronDown, IconCopy, IconXmark} from "@/app/lib/axiom-icons";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vs } from "react-syntax-highlighter/dist/esm/styles/prism";
 
@@ -251,7 +251,7 @@ export function CodePanel({ isOpen, onClose, target }: CodePanelProps) {
 									{copied ? "Copied" : "Copy"}
 								</Button>
 							) : null}
-							<Button appearance="subtle" size="md" onClick={onClose} icon={<IconX size={20} />} aria-label="Close code panel" />
+							<Button appearance="subtle" size="md" onClick={onClose} icon={<IconXmark size={20} />} aria-label="Close code panel" />
 						</Box>
 					</Box>
 

@@ -2,7 +2,7 @@
 
 import { Box } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconCalendar } from "@tabler/icons-react";
+import {IconCalendar} from "@/app/lib/axiom-icons";
 
 export function InlineDate({ label }: { label: string }) {
 	return (

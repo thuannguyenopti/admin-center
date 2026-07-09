@@ -13,34 +13,7 @@ import {
 	TabsTrigger,
 	Text,
 } from "@optiaxiom/react";
-import {
-	IconAdjustmentsHorizontal,
-	IconArchive,
-	IconArrowUp,
-	IconCheck,
-	IconChevronDown,
-	IconChevronRight,
-	IconCopy,
-	IconCursorText,
-	IconDownload,
-	IconDots,
-	IconEdit,
-	IconExternalLink,
-	IconEye,
-	IconFile,
-	IconFolder,
-	IconFolderPlus,
-	IconFolderOpen,
-	IconLink,
-	IconMinus,
-	IconPhoto,
-	IconPlus,
-	IconSend,
-	IconShare3,
-	IconSparkles,
-	IconTrash,
-	IconUpload,
-} from "@tabler/icons-react";
+import {IconAdjustmentsHorizontal, IconArchive, IconArrowUp, IconCheck, IconChevronDown, IconChevronRight, IconCopy, IconCursorText, IconDownload, IconEllipsisSolid, IconEdit, IconArrowUpRightFromSquare, IconEye, IconFile, IconFolder, IconFolderPlus, IconFolderOpen, IconLink, IconMinus, IconImage, IconPlus, IconPaperPlaneTop, IconShare3, IconSparkles, IconTrash, IconUpload} from "@/app/lib/axiom-icons";
 
 type LibraryTab = "assets" | "collections" | "templates" | "dashboards" | "saved-views";
 type AssetLabel = "JPG" | "Word" | "Folder" | "File" | "PDF" | "MSG" | "ZIP" | "PNG" | "Structured Content" | "Article" | "TIFF";
@@ -308,8 +281,8 @@ function ContextMenu({ type, onClose }: { type: "folder" | "asset"; onClose: () 
 
 	const assetMenuItems = [
 		{ label: "Create Task" },
-		{ icon: <IconSend size={16} />, label: "Send" },
-		{ icon: <IconExternalLink size={16} />, label: "Send to OneDrive", disabled: true },
+		{ icon: <IconPaperPlaneTop size={16} />, label: "Send" },
+		{ icon: <IconArrowUpRightFromSquare size={16} />, label: "Send to OneDrive", disabled: true },
 		{ icon: <IconShare3 size={16} />, label: "Share" },
 		{ icon: <IconDownload size={16} />, label: "Download" },
 		{ divider: true },
@@ -335,7 +308,7 @@ function ContextMenu({ type, onClose }: { type: "folder" | "asset"; onClose: () 
 		],
 		edit: [
 			{ label: "Title", icon: <IconEdit size={16} /> },
-			{ label: "Image", icon: <IconPhoto size={16} /> },
+			{ label: "Image", icon: <IconImage size={16} /> },
 			{ label: "Expiry Date", icon: <IconMinus size={16} /> },
 		],
 		downloadAs: [
@@ -717,7 +690,7 @@ function AssetCard({ item }: { item: LibraryItem }) {
 								width: 28,
 							}}
 						>
-							<IconDots size={16} />
+							<IconEllipsisSolid size={16} />
 						</AxiomButton>
 					</Box>
 				)}
@@ -813,7 +786,7 @@ export default function CMPLibraryPage() {
 									/>
 								</Box>
 								<AxiomButton appearance="default" size="md" icon={<IconCopy />} aria-label="Duplicate view" />
-								<AxiomButton appearance="default" size="md" icon={<IconPhoto />} iconPosition="start" aria-label="Media view options">
+								<AxiomButton appearance="default" size="md" icon={<IconImage />} iconPosition="start" aria-label="Media view options">
 									<IconChevronDown size={16} />
 								</AxiomButton>
 								<AxiomButton appearance="subtle" size="md" iconPosition="end" icon={<IconChevronDown />}>

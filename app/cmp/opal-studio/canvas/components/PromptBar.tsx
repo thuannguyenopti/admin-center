@@ -1,7 +1,7 @@
 "use client";
 
-import { Box, Button, Spinner, Text, Textarea } from "@optiaxiom/react";
-import { IconSparkles, IconPhoto, IconVideo } from "@tabler/icons-react";
+import {Box, Button, Spinner, Text, Textarea} from "@optiaxiom/react";
+import {IconSparkles, IconImage, IconVideo} from "@/app/lib/axiom-icons";
 
 export interface PromptHistoryEntry {
 	prompt: string;
@@ -45,8 +45,13 @@ export function PromptBar({
 					transition: "border-color 0.3s ease",
 				}}
 			>
-				<Box p="12" style={{ paddingBottom: 4 }}>
-					<Text fontSize="xs" fontWeight="600" color={isGenerating ? "fg.accent" : "fg.tertiary"} mb="4">
+				<Box p="12" style={{paddingBottom: 4}}>
+					<Text
+						fontSize="xs"
+						fontWeight="600"
+						color={isGenerating ? "fg.accent" : "fg.tertiary"}
+						mb="4"
+					>
 						{isGenerating ? "Generating…" : "Prompt"}
 					</Text>
 					<Textarea
@@ -78,7 +83,7 @@ export function PromptBar({
 					display="flex"
 					alignItems="center"
 					justifyContent="space-between"
-					style={{ padding: "8px 12px" }}
+					style={{padding: "8px 12px"}}
 					borderT="1"
 					borderColor="border.tertiary"
 				>
@@ -86,7 +91,7 @@ export function PromptBar({
 						<Button
 							appearance="subtle"
 							size="sm"
-							icon={<IconPhoto size={16} />}
+							icon={<IconImage size={16} />}
 							aria-label="Upload reference image"
 							disabled={isGenerating}
 						/>
@@ -103,7 +108,7 @@ export function PromptBar({
 						{isGenerating ? (
 							<Box display="flex" alignItems="center" gap="8">
 								<Spinner size="sm" />
-								<Text fontSize="xs" color="fg.accent" fontWeight="600">
+								<Text fontSize="xs" color="fg.secondary" fontWeight="600">
 									Generating image…
 								</Text>
 							</Box>

@@ -1,7 +1,7 @@
 "use client";
 
 import {Box, Button, Tooltip} from "@optiaxiom/react";
-import {IconDots, IconPhotoPin, IconPinEnd, IconPinInvoke, IconX} from "@tabler/icons-react";
+import {IconEllipsisSolid, IconPhotoPin, IconPinEnd, IconPinInvoke, IconXmark} from "@/app/lib/axiom-icons";
 import {useState, useRef, useEffect} from "react";
 import {IconPopOut} from "@optimizely/axiom-icons";
 // @ts-ignore
@@ -86,7 +86,7 @@ export default function ExtensionPanel({
 							size="sm"
 							aria-label="More options"
 							style={{borderRadius: "6px"}}
-							icon={<IconDots />}
+							icon={<IconEllipsisSolid />}
 						/>
 					</Tooltip>
 					<Tooltip content="Pin/Unpin">
@@ -100,7 +100,7 @@ export default function ExtensionPanel({
 					</Tooltip>
 					<Tooltip content="Close">
 						<Button
-							icon={<IconX />}
+							icon={<IconXmark />}
 							appearance="subtle"
 							size="sm"
 							aria-label="Close"

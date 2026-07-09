@@ -1,3 +1,12 @@
+---
+name: frontend-design
+description: >
+  Frontend design rules for Optimizely product UI using Axiom V3. Invoke
+  automatically before writing or reviewing any UI code in app/opal/, app/cmp/,
+  app/cms/, or any other product route. Covers design philosophy, component
+  rules, spacing, density, typography, motion, and visual QA requirements.
+---
+
 # Frontend Design Rule
 
 Design and refine Optimizely product UI with a clean, calm, premium frontend sensibility while staying compliant with Axiom V3 / Optiaxiom React patterns.
@@ -11,7 +20,7 @@ Use this skill when you need to:
 - Review UI for visual hierarchy, spacing, typography, and interaction quality
 - Convert a rough design into a cleaner product-ready interface
 - Fix UI that feels too heavy, cluttered, inverted, generic, or inconsistent
-- Keep Claude/Codex aligned on Optimizely product craft for this repo
+- Keep Claude aligned on Optimizely product craft for this repo
 
 ## Design philosophy
 
@@ -31,7 +40,6 @@ This is not a marketing site, CMS admin clone, or generic dashboard. For Brand P
 ## Required project rules
 
 Before writing UI code:
-- Read `DESIGN_SYSTEM.md`
 - Read `OPAL_DESIGN_SYSTEM.md` when working in `app/opal/`
 - Inspect nearby production-quality screens and reuse their page structure, control sizing, and interaction patterns
 - Use `@optiaxiom/react` components whenever an equivalent exists
@@ -52,12 +60,51 @@ For product UI, these are hard requirements:
 - Do not use arbitrary spacing for layout; use the repo spacing scale
 - Primary page actions use Axiom `Button appearance="primary"` with `size="md"` or `size="lg"` unless the surrounding existing pattern proves otherwise
 - Icon-only actions must use Axiom `Button` and have an accessible label or tooltip
+- Button icons go in the `icon` prop (leading) — Axiom auto-sizes it to the button. Do NOT pass icons as `Button` children or via `addonAfter` for a leading icon. Reserve `addonAfter` for a genuine *trailing* affordance only — practically just the down chevron and the external-link icon — and when you do, set the icon size manually to match the button: `20` for `size="lg"`/`"md"`, `16` for `size="sm"` (i.e. 20/20/16 across lg/md/sm)
 - Never leave dead controls in the UI, including ellipsis menus with no actions
 - Never add a Settings tab for one or two controls; move small identity/status controls into the page header or a contextual menu
-- Files over 300 lines or with multiple concerns must be split before adding more behavior
+- Never create a monolithic file. New components, hooks, data, and utilities belong in separate files from the start. Files over 300 lines or with multiple concerns must be split before adding more behavior
 - Before finishing, visually verify the changed route at desktop and narrower widths
 
 If a prototype, screenshot, HTML file, or PM mock uses raw controls, tiny CTAs, hardcoded colors, or inconsistent sizing, treat those as prototype artifacts. Extract the product requirements, then rebuild with Axiom V3 components and this repo's visual system.
+
+## Common violations: detect and fix
+
+These recur across the repo. Check for them at creation time and before finishing a review. Scope greps to product routes (`app/opal/**`, `app/cmp/**`, `app/cms/**`, etc.).
+
+| Violation | Detect (regex) | Fix |
+|---|---|---|
+| Hardcoded hex/rgb in UI chrome | `#[0-9a-fA-F]{3,6}` or `rgb\(` inside `style=`/`color:`/`background`/`border` (ignore `fill=`/`stroke=` inside inline SVG illustrations) | semantic tokens: `fg.*`, `bg.*`, `border.*` |
+| Manual accent | `fg\.accent`, `bg\.accent`, `border\.accent`, `accentColor`, or the accent hex `#0037[fF]{2}` | remove; hover/selected surfaces → `bg.default.hovered` / `bg.default.pressed`; otherwise let `Button appearance="primary"`, `Link`, or the component's own state own it |
+| Arbitrary px spacing | `(padding\|margin\|gap\|top\|right\|bottom\|left):\s*'?\d+px` | spacing-scale props (`p`, `px`, `py`, `gap`, `mb`, …) |
+| Raw HTML controls | `<button\|<input\|<select\|<textarea\|<a ` in product routes | Axiom `Button`, `Input`, `Select`, `Textarea`, `Link` |
+| Button icon in wrong slot | a leading icon passed as a `Button` child (`<Button[^>]*>\s*<Icon`) or via `addonAfter` | move it to the `icon` prop (auto-sizes). Keep `addonAfter` only for a trailing down-chevron / external-link, sized 20/20/16 (lg/md/sm) |
+| Hand-rolled empty state | a centered `Box` + "No …" heading, or `EmptyList` imported but unused | `EmptyList` (`heading`, `body`, CTA as children) |
+| Dead / empty menu | `Menu` with `options={[]}` or an ellipsis trigger with no real actions | remove it, or give it a distinct purpose |
+
+Illustrative fixes:
+
+```tsx
+// ❌ hardcoded hex + arbitrary border layered onto an Axiom control
+<SearchInput style={{ width: '264px', border: '1px solid #9e9e9e', borderRadius: '4px' }} />
+// ✅ let the component own its chrome
+<SearchInput style={{ width: '264px' }} />
+
+// ❌ manual accent to "highlight" non-interactive text
+<Text style={{ color: '#0037ff' }}>Learn more</Text>
+// ✅ an interactive element that owns accent
+<Link href="...">Learn more</Link>
+
+// ❌ hand-rolled empty state with hardcoded type + color
+<Box display="flex" flexDirection="column" alignItems="center" style={{ maxWidth: '552px' }}>
+  <Heading style={{ fontSize: '28px', color: '#2e3442' }}>No categories</Heading>
+  <AppButton style={{ backgroundColor: '#0037ff', color: '#fff' }}>Create</AppButton>
+</Box>
+// ✅ the shared component
+<EmptyList heading="No categories" body="…">
+  <Button appearance="primary" size="md" onClick={handleCreateClick}>Create</Button>
+</EmptyList>
+```
 
 ## Mandatory visual QA
 
@@ -328,6 +375,37 @@ Avoid:
 
 The UI should primarily feel neutral, elegant, and controlled, with green as an accent.
 
+## Accent color usage
+
+Accent color is **never** applied by hand. There are effectively no valid cases for setting accent manually. Axiom components apply accent internally exactly where it belongs — primary `Button`, `Link`, focus rings, active `Tabs`/`SegmentedControl`, selectable `Card`, checked `Checkbox`/`Radio`, and `Menu` selection. Accent should only ever appear as a byproduct of using the right component. If you are setting accent yourself, you are re-implementing something a component already does, or over-emphasizing.
+
+Do not:
+- Hardcode the accent hex (`#0037ff` and similar) in any `style`, `color`, `background`, `accentColor`, `fill`, or `border` — it bypasses theming and dark mode
+- Set `color="fg.accent"`, `bg="bg.accent"`, or `border.accent` on text, icons, `Box`es, or custom controls — for any reason, including "to make it pop"
+- Set `color="fg.accent"` on a `Link` (or any component that already colors itself). The `Link` is accent by default; the explicit prop is redundant manual accent — remove it.
+- Build your own selected / active / hover / checked / focus state by putting `bg="bg.accent"`, `bg="bg.accent.subtle"`, or `borderColor="border.accent"` on a `Box` or custom control. Use the Axiom component that owns that state (`Tabs`, `SegmentedControl`, selectable `Card`, `Checkbox`, `Radio`, `Menu`, `ListboxItem`). A hand-rolled highlighted row/card/tab is a violation, not an exception.
+- Use accent as decoration, section coloring, or emphasis on content the user cannot act on
+
+Do:
+- Get accent only as a byproduct of using the right Axiom component (`Button appearance="primary"`, `Link`, active `Tabs`, checked `Checkbox`) — never by setting a color/bg/border value yourself
+- If something feels like it needs manual accent, it doesn't: either use the component that owns that state, or let the emphasis come from hierarchy (type, spacing, weight), not color
+- For non-interactive text/icons, use `fg.default` / `fg.secondary` / `fg.tertiary`; for hover/selected surfaces use `bg.default.hovered` / `bg.default.pressed`
+
+Rule of thumb: if you are typing `accent` or a blue hex into a `style`/`color`/`bg`/`border` prop — or onto a `Link` — stop. The fix is to use (or reach for) the Axiom component that already carries that state, or to drop the emphasis entirely.
+
+## Hover, selected, and pressed states
+
+
+Neutral interaction states use the default surface tokens, never accent:
+- Hover: `bg.default.hovered` (CSS var `--ax-colors-bg-default-hovered`)
+- Selected / active / pressed — rows, quick-filter chips, toggles: `bg.default.pressed` (CSS var `--ax-colors-bg-default-pressed`)
+
+Do not:
+- Use `bg.accent` / `bg.accent.subtle` to mark a hovered or selected `Box`, row, or chip — that is accent misuse. Neutral hover/pressed is the default; accent belongs to an Axiom component's own state.
+- Invent the CSS var. The tokens are `--ax-colors-bg-default-hovered` and `--ax-colors-bg-default-pressed`. Note the past-tense `hovered` — `--ax-bg-default-hover` does not exist and silently does nothing.
+
+Prefer the Axiom component that already provides these states (`Table` rows, `Menu`, `ListboxItem`, `ToggleButton`, `Tabs`). Reach for the raw tokens only when styling a custom surface no component covers.
+
 ## Button and control rules
 
 Primary actions should look primary and have readable contrast.
@@ -473,7 +551,7 @@ When these appear, simplify first. Do not decorate your way out of weak hierarch
 ## Review checklist
 
 Before finishing UI work, check:
-- `DESIGN_SYSTEM.md` and `OPAL_DESIGN_SYSTEM.md` were read
+- `OPAL_DESIGN_SYSTEM.md` was read (for any work in `app/opal/`)
 - Axiom V3 components and tokens are used wherever available
 - No raw product `button`, `input`, `select`, or `textarea` was introduced except unavoidable native internals
 - The primary action is visually correct
@@ -490,3 +568,289 @@ Before finishing UI work, check:
 - No empty ellipsis menus, decorative controls, or dead settings tabs slipped in
 - PM/vibe-coded prototypes were translated into requirements, not copied as UI
 - The result looks designed, not assembled
+
+---
+
+## Prop Token Values
+
+Valid values for key props — anything outside this list throws a `SprinklesError`.
+
+| Prop | Valid values |
+|------|-------------|
+| `w`, `h` | `"0"` `"10"` `"12"` `"16"` `"20"` `"24"` `"32"` `"40"` `"48"` `"56"` `"64"` `"80"` `"224"` `"384"` · `"2xs"` `"xs"` `"sm"` `"md"` `"lg"` `"xl"` `"3xl"` · `"1/2"` `"1/3"` `"2/3"` `"1/4"` `"3/4"` · `"auto"` `"fit"` `"full"` `"max"` `"min"` |
+| `p`, `m`, `gap` | `"0"` `"2"` `"4"` `"6"` `"8"` `"10"` `"12"` `"16"` `"20"` `"24"` `"32"` `"40"` `"48"` `"64"` `"80"` · `"auto"` (margin only) |
+| `border` / `borderT/B/L/R` | `"0"` `"1"` `"2"` |
+| `maxH` | `"xs"` `"sm"` `"md"` `"lg"` `"full"` |
+
+Custom values outside the token scale → `style={{ width: '200px', maxHeight: '400px' }}`.
+
+---
+
+## Component Quick Reference
+
+All imports from `@optiaxiom/react`.
+
+### Primitives
+```tsx
+<Box display="flex" flexDirection="column" gap="16" p="24" bg="bg.default" />
+<Group gap="8">{/* horizontal flex */}</Group>
+<Grid gridTemplateColumns="3" gap="16">{/* 3-col grid */}</Grid>
+<Heading level="2">Section Title</Heading>
+<Text color="fg.secondary" fontSize="sm">Muted text</Text>
+```
+
+### Button
+```tsx
+// appearance: "primary" | "default" | "subtle" | "danger" | "danger-outline"
+// size: "sm" | "md" | "lg"
+<Button appearance="primary" size="md">Primary Action</Button>
+<Button appearance="subtle">Tertiary</Button>
+<Button icon={<IconPlus />}>With Icon</Button>
+<Button icon={<IconFilter />} appearance="default" />  {/* icon-only */}
+```
+
+### Form Controls
+```tsx
+<Field label="Email" error="Required">
+  <Input placeholder="Enter email" />
+</Field>
+
+<SearchInput placeholder="Search..." w="224" value={q} onChange={e => setQ(e.target.value)} />
+
+{/* Select — single-value dropdown */}
+<Field label="Status">
+  <Select
+    value={status}
+    onValueChange={setStatus}
+    options={[
+      { label: "Draft", value: "draft", group: { label: "Unpublished" } },
+      { label: "Live",  value: "live",  group: { label: "Published" } },
+    ]}
+  />
+</Field>
+
+<Switch checked={on} onCheckedChange={setOn}>Label</Switch>
+```
+
+> **Select gotcha:** `value` must match an entry in `options` — otherwise downshift throws `"getItemProps"`. Validate:
+> ```tsx
+> const safeValue = useMemo(() => OPTIONS.some(o => o.value === raw) ? raw : OPTIONS[0].value, [raw]);
+> ```
+
+### Tabs
+```tsx
+<Tabs defaultValue="list">
+  <TabsList>
+    <TabsTrigger value="list">List</TabsTrigger>
+    <TabsTrigger value="calendar">Calendar</TabsTrigger>
+  </TabsList>
+  <TabsContent value="list">...</TabsContent>
+</Tabs>
+```
+
+### Menu
+```tsx
+<Menu options={[
+  { label: "Edit", execute: () => {} },
+  { label: "Delete", execute: () => {} },
+]}>
+  <MenuTrigger asChild><Button>Actions</Button></MenuTrigger>
+  <MenuContent />
+</Menu>
+```
+
+### Data Display
+```tsx
+<Avatar name="John Doe" src="/avatar.jpg" />
+// Card does NOT support onClick — wrap in a Box
+<Box onClick={handleClick} cursor="pointer"><Card>...</Card></Box>
+```
+
+### Full component list
+**Primitives**: Box, Cover, Grid, Group, Heading, Separator, Text
+**Form**: Button, Checkbox, DateInput, DateRangePicker, Field, Input, RadioGroup, SearchInput, Select, Switch, Textarea, ToggleButton
+**Feedback**: Alert, AlertDialog, Badge, Banner, Indicator, Progress, Skeleton, Spinner, Toast, Tooltip
+**Navigation**: Breadcrumb, Link, Menu, Pagination, Sidebar, Tabs
+**Layout**: Card, Dialog, Disclosure, Popover, Table, DataTable
+**Other**: Avatar, FileUpload, HoverCard, Pill, PillMenu, SegmentedControl, Sortable
+
+---
+
+## Color Tokens
+
+### Text (fg.*)
+| Token | Usage |
+|-------|-------|
+| `fg.default` | Primary text |
+| `fg.secondary` | Muted/secondary text |
+| `fg.tertiary` | Subtle text, placeholders |
+| `fg.disabled` | Disabled state |
+| `fg.default.inverse` | Text on dark backgrounds |
+| `fg.accent` | Brand accent |
+| `fg.error` / `fg.success` / `fg.warning` | Semantic states |
+| `fg.white` | Always white |
+
+### Background (bg.*)
+| Token | Usage |
+|-------|-------|
+| `bg.default` | Default surface |
+| `bg.default.hovered` | Hover state |
+| `bg.default.pressed` | Selected quick-filter pills, active toggles |
+| `bg.page` | Page background |
+| `bg.secondary` | Secondary surface — neutral gray |
+| `bg.accent` | Primary action fill |
+| `bg.pill.default` | **Only valid on `<Pill>`** — TypeScript error on `<Box>` |
+| `bg.error` / `bg.success` / `bg.warning` / `bg.information` | Semantic states (+ `.subtle`, `.light` variants) |
+
+### Border (border.*)
+| Token | Usage |
+|-------|-------|
+| `border.default` | Default borders |
+| `border.secondary` | Secondary |
+| `border.tertiary` | Subtle |
+| `border.control` | Form control borders |
+| `border.focus` | Focus ring |
+| `border.error` | Error state |
+
+### CSS variables (for raw CSS)
+```css
+var(--ax-colors-fg-default)
+var(--ax-colors-bg-accent)
+var(--ax-colors-border-default)
+var(--ax-spacing-16)
+var(--ax-radii-lg)
+```
+
+---
+
+## Typography
+
+| Token | Size | Usage |
+|-------|------|-------|
+| `xs` | 12px | Captions, labels |
+| `sm` | 14px | Secondary text |
+| `md` | 16px | Body (default) |
+| `lg` | 18px | Large body |
+| `xl` | 20px | Subheadings |
+| `2xl` | 24px | H3 |
+| `3xl` | 30px | H2 |
+| `4xl` | 36px | H1 |
+
+Weights: `400` (body) · `500` (emphasis) · `600` (subheadings) · `700` (headings/buttons)
+
+Border radius tokens: `sm` (2px) · `md` (4px) · `lg` (8px) · `xl` (12px) · `full` (9999px — pills/avatars)
+Shadow tokens: `sm` (subtle) · `md` (cards/dropdowns) · `lg` (modals/popovers)
+
+---
+
+## Visual Pattern → Axiom Mapping
+
+| What you see | What to write |
+|---|---|
+| Primary filled button | `<Button appearance="primary">` |
+| Gray/secondary button | `<Button appearance="default">` |
+| Text-only button | `<Button appearance="subtle">` |
+| Destructive action | `<Button appearance="danger">` |
+| Large bold heading | `<Heading level="1\|2\|3">` |
+| Gray muted text | `<Text color="fg.secondary">` |
+| White card with shadow | `<Card>` or `<Box bg="bg.default" shadow="md" rounded="lg">` |
+| Gray background area | `<Box bg="bg.secondary">` |
+| Bordered section | `<Box border="1" borderColor="border.default" rounded="md">` |
+| Filter chip / dismissible tag | `<Pill>` from `@optiaxiom/react/unstable` |
+| Selected filter chip | `style={{ background: "var(--ax-colors-bg-default-pressed)" }}` — never `bg.accent` on a Box |
+
+---
+
+## Project-Specific Patterns
+
+### Opal product page layout
+```tsx
+<Box px="32" py="24" display="flex" flexDirection="column" gap="24" overflow="auto" h="full">
+  <Box display="flex" flexDirection="column" gap="8">
+    <Heading level="1" fontSize="2xl">Page Title</Heading>
+    <Text color="fg.secondary">One-sentence description.</Text>
+  </Box>
+  <Tabs value={activeTab} onValueChange={setActiveTab}>
+    <TabsList><TabsTrigger value="tab1">Tab 1</TabsTrigger></TabsList>
+  </Tabs>
+  <Box display="flex" flexDirection="column" gap="16" style={{ flex: 1, minHeight: 0 }}>
+    {/* content */}
+  </Box>
+</Box>
+```
+Pages with `customLayout: true` must manage their own height (`h="full"`) — never `100vh`.
+
+### Persistence
+Use `app/usePersistentState.js` to sync UI state to `localStorage`. Always check `isHydrated` before rendering state-dependent content.
+
+### Dark mode
+Use `[data-theme="dark"]` selectors. Never `@media (prefers-color-scheme: dark)`.
+
+### Layout hook
+`useLayout()` from `app/context/LayoutContext.tsx` — exposes `asideContent`, `footerContent`, `hidePageHeader`, `opalPanelControls`.
+
+---
+
+## Agents Area Patterns (`app/opal/agents/`)
+
+### Badge intent (V3 API)
+```tsx
+// In app/opal/ use `intent`, not `colorScheme` (that is V2)
+<Badge intent="success" variant="subtle">New</Badge>
+// Valid: "success" | "information" | "primary" | "danger" | "warning"
+```
+
+### ResizableDetailsTray
+Use `ResizableDetailsTray` from `app/opal/agents/setup/components/ResizableDetailsTray.tsx` for any right-side panel that should be user-resizable.
+```tsx
+<ResizableDetailsTray
+  isOpen={isOpen}
+  onClose={() => setOpen(false)}
+  title="My Panel"
+  defaultWidth={400}
+  minWidth={320}
+  maxWidth={640}
+  footer={<Box>...</Box>}
+>
+  {/* body */}
+</ResizableDetailsTray>
+```
+
+### SelectionTooltip
+Fixed-position tooltip anchored to mouse coordinates from a text selection — uses raw `<div>`, not Axiom Tooltip. Styled with `--ax-colors-bg-default-inverse` / `--ax-colors-fg-default-inverse` for automatic light/dark adaptation.
+
+### BuildWithOpalPage
+When an agent has no configuration, render `<BuildWithOpalPage />` as a full-page replacement (not inside the normal form). Never nest it inside the form layout.
+
+### Lazy-loading heavy panels
+```tsx
+const MyPanel = dynamic(
+  () => import("./components/MyPanel").then((mod) => mod.MyPanel),
+  { ssr: false }
+);
+```
+
+### Workflow builder
+`app/opal/agents/workflow/` uses `@xyflow/react` + `elkjs`. Axiom components appear only in sidebars/toolbars — not on the canvas itself.
+
+---
+
+## Common Mistakes
+
+1. Arbitrary spacing — `padding: 17px` → use `p="16"` token
+2. Hex colors — `color="#333"` → use `color="fg.default"`
+3. Custom button styles — use `<Button>` variants
+4. Hardcoded shadows — use `shadow="sm|md|lg"`
+5. `prefers-color-scheme` media queries — use `[data-theme="dark"]` selectors
+6. Raw HTML for product UI — use Axiom components (raw HTML only in VB website blocks)
+7. `maxHeight="400px"` — not a valid prop; use `style={{ maxHeight: '400px' }}`
+8. `<Select><option>…</option></Select>` — use the `options={[...]}` prop
+9. `bg.pill.default` on `<Box>` — scoped to `<Pill>` only; causes TypeScript build failure
+
+## Debugging: SprinklesError
+
+`"width" has no value "200". Possible values are...`
+
+1. Find the prop (`width` → `w` prop)
+2. Pick the closest valid token from the Prop Token Values table (`200` → `w="224"`)
+3. Or escape with `style` for exact values: `style={{ width: '200px' }}`

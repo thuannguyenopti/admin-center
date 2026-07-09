@@ -6,7 +6,7 @@ import {
   Button,
 } from '@optiaxiom/react';
 import { Text } from '@/app/components/Text';
-import { IconCheck } from '@tabler/icons-react';
+import {IconCheck} from "@/app/lib/axiom-icons";
 import { UploadStats, BaseEntity, BaseFormRow, BaseParsedRow, ImportConfig } from '../types';
 
 interface SuccessStepProps<

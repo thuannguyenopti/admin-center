@@ -18,7 +18,7 @@ import {
 	toaster,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconX } from "@tabler/icons-react";
+import {IconXmark} from "@/app/lib/axiom-icons";
 import { Property, PropertyType, initialContentTypes, ContentType } from "@/app/db/initialData";
 import { useState, useEffect, useMemo } from "react";
 import usePersistentState from "@/app/usePersistentState";
@@ -466,7 +466,7 @@ export default function ConfigurePropertyPane({
 				<Heading level="4">Configure Property</Heading>
 				<Button
 					appearance="subtle"
-					icon={<IconX size={18} />}
+					icon={<IconXmark size={18} />}
 					onClick={onClose}
 					aria-label="Close"
 					size="sm"

@@ -13,11 +13,7 @@ import {
 	Group,
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
-import {
-	IconFile,
-	IconChevronRight,
-	IconChevronDown,
-} from "@tabler/icons-react";
+import {IconFile, IconChevronRight, IconChevronDown} from "@/app/lib/axiom-icons";
 import Item from "@/app/components/Item";
 import { Page } from "@/app/db/initialData";
 

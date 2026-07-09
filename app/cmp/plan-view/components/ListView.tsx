@@ -12,7 +12,7 @@ import {
 	Button,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconChevronDown, IconChevronRight, IconPlus } from "@tabler/icons-react";
+import {IconChevronDown, IconChevronRight, IconPlus} from "@/app/lib/axiom-icons";
 import { StatusBadge, StepBadge } from "./StatusBadge";
 import type { PlanItem } from "../types";
 

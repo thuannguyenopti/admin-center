@@ -238,13 +238,13 @@ export default function NotificationDefaultsPage() {
                             border="1"
                             borderColor={
                                 orgDefaults.emailDigest === option
-                                    ? "border.accent"
+                                    ? "border.default"
                                     : "border.tertiary"
                             }
                             rounded="md"
                             bg={
                                 orgDefaults.emailDigest === option
-                                    ? "bg.accent.subtle"
+                                    ? "bg.default.pressed"
                                     : "bg.default"
                             }
                             className="cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)]"

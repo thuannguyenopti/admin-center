@@ -4,7 +4,7 @@ import { Box, Button } from "@optiaxiom/react";
 import { Pill, PillGroup } from "@optiaxiom/react/unstable";
 import { Text } from "@/app/components/Text";
 import { FilterPill } from "../hooks/useContentFilters";
-import { IconX } from "@tabler/icons-react";
+import {IconXmark} from "@/app/lib/axiom-icons";
 
 interface FilterPillsProps {
   pills: FilterPill[];

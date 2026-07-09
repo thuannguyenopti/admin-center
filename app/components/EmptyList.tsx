@@ -9,10 +9,14 @@ export default function EmptyList({
 	heading,
 	body,
 	children,
+	title,
+	image,
 }: {
 	heading: string;
 	body: string;
 	children?: ReactNode;
+	title?: string;
+	image?: string;
 }) {
 	return (
 		<Box
@@ -26,21 +30,13 @@ export default function EmptyList({
 			justifyContent="center"
 			style={{height: "60vh"}}
 		>
-			<Box
-				style={{
-					width: 600,
-					height: 600,
-					position: "absolute",
-					background: "radial-gradient(rgba(99,102,241,0.18) 0%, rgba(99,102,241,0) 50%)",
-				}}
-			/>
+			{image && <img src={image} alt={title} style={{width: "200px"}} />}
 			<Flow>
-				<Text fontSize="3xl" fontWeight="600">
+				{title && <Text>{title}</Text>}
+				<Heading level="2" mt="4">
 					{heading}
-				</Text>
-				<Text fontSize="lg" mb="8">
-					{body}
-				</Text>
+				</Heading>
+				<Text mb="8">{body}</Text>
 			</Flow>
 			{children && <>{children}</>}
 		</Box>

@@ -7,7 +7,7 @@ import {
 } from '../utils';
 import { Text } from '@/app/components/Text';
 import { Badge, Group, Select, SelectTrigger, SelectContent, Button, Box } from '@optiaxiom/react';
-import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
+import {IconChevronDown, IconChevronUp} from "@/app/lib/axiom-icons";
 import { useState } from 'react';
 
 // Component for collapsible orphan details

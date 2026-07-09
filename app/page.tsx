@@ -6,7 +6,7 @@ import {Button} from "@/app/components/Button";
 import Link from "next/link";
 import {useTheme} from "@/app/hooks/useTheme";
 import {Input} from "./components/Input";
-import {IconUser} from "@tabler/icons-react";
+import {IconUser} from "@/app/lib/axiom-icons";
 import Flow from "./components/Flow";
 
 export default function Home() {

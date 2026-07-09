@@ -1,6 +1,6 @@
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import Item from "@/app/components/Item";
-import {IconCongruentTo, IconTrash, IconPencil, IconDots} from "@tabler/icons-react";
+import {IconCongruentTo, IconTrash, IconPen, IconEllipsisSolid} from "@/app/lib/axiom-icons";
 import {Menu, MenuTrigger, MenuContent, Box, Pagination} from "@optiaxiom/react";
 import {RelatedQuery} from "@/app/db/initialData";
 
@@ -48,7 +48,7 @@ export default function RelatedQueriesTable({
 										options={[
 											{
 												label: "Edit",
-												addon: <IconPencil size={16} />,
+												addon: <IconPen size={16} />,
 												execute: () => onEdit(sq),
 											},
 											{
@@ -61,7 +61,7 @@ export default function RelatedQueriesTable({
 									>
 										<MenuTrigger
 											aria-label="Actions"
-											icon={<IconDots size={16} />}
+											icon={<IconEllipsisSolid size={16} />}
 											appearance="subtle"
 											size="sm"
 										/>

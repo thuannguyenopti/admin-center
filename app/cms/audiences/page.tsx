@@ -1,7 +1,7 @@
 "use client";
 
 import { Heading, SearchInput, Box } from "@optiaxiom/react";
-import { IconSearch, IconChevronDown } from "@tabler/icons-react";
+import {IconSearch, IconChevronDown} from "@/app/lib/axiom-icons";
 import { Button } from "@/app/components/Button";
 import { Flex } from "@/app/components/Flex";
 import { Table, Tr, Th, Td } from "@/app/components/Table";

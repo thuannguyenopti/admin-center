@@ -1,6 +1,6 @@
 const PRIORITY_KEYS = ["text", "label", "name", "title", "heading", "number", "summary", "description", "date"];
 
-const SKIP_KEYS = new Set(["displaySettings", "displayTemplateKey", "displayTemplateKey"]);
+const SKIP_KEYS = new Set(["displaySettings", "displayTemplateKey", "template"]);
 
 function isNonDisplayValue(val: string): boolean {
 	return val.startsWith("/") || val.startsWith("http") || val === "true" || val === "false";

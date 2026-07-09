@@ -1,8 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
-import { useOpalVariationBuild } from "@/app/context/OpalVariationBuildContext";
+import type {ReactNode} from "react";
+import {useEffect, useMemo, useState} from "react";
+import {useOpalVariationBuild} from "@/app/context/OpalVariationBuildContext";
 import {
 	consumePendingVariationBuild,
 	getDynamicOptimizationById,
@@ -13,7 +13,7 @@ import {
 	getStoredExtraVariations,
 } from "@/app/web-experimentation/optimizations/optimizationVariationsStorage";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 import {
 	Box,
 	Heading,
@@ -26,11 +26,11 @@ import {
 	DisclosureContent,
 	DisclosureTrigger,
 } from "@optiaxiom/react";
-import { Button } from "@/app/components/Button";
-import { Table, Tr, Th, Td } from "@/app/components/Table";
+import {Button} from "@/app/components/Button";
+import {Table, Tr, Th, Td} from "@/app/components/Table";
 import {
 	IconChevronDown,
-	IconDots,
+	IconEllipsisSolid,
 	IconLayout,
 	IconUsers,
 	IconAdjustmentsHorizontal,
@@ -42,14 +42,18 @@ import {
 	IconCalendar,
 	IconList,
 	IconTag,
-	IconHistory,
+	IconClockRotateLeft,
 	IconPlus,
-} from "@tabler/icons-react";
-import { IconEye, IconChartColumn } from "@optimizely/axiom-icons";
-import { getOptimizationById } from "../mockData";
-import type { OptimizationStatus } from "../mockData";
-import { evenTrafficPercents, resolveExperimentVariations, type VariationRow } from "../variationSets";
-import { VariationPreviewThumb } from "../VariationPreviewThumb";
+} from "@/app/lib/axiom-icons";
+import {IconEye, IconChartColumn} from "@optimizely/axiom-icons";
+import {getOptimizationById} from "../mockData";
+import type {OptimizationStatus} from "../mockData";
+import {
+	evenTrafficPercents,
+	resolveExperimentVariations,
+	type VariationRow,
+} from "../variationSets";
+import {VariationPreviewThumb} from "../VariationPreviewThumb";
 
 const ICON_STROKE = 1.5;
 const ICON_NAV = 18;
@@ -69,7 +73,7 @@ function SidebarNavItem({
 	indicator?: "attention";
 	onClick?: () => void;
 }) {
-	const accent = "var(--ax-colors-fg-accent)";
+	const accent = "var(--ax-colors-fg-default)";
 	const muted = "var(--ax-colors-fg-secondary)";
 	return (
 		<Button
@@ -84,11 +88,11 @@ function SidebarNavItem({
 				padding: "6px 8px",
 				borderRadius: "6px",
 				fontWeight: active ? 600 : 400,
-				backgroundColor: active ? "var(--ax-colors-bg-accent-subtle)" : undefined,
+				backgroundColor: active ? "var(--ax-colors-bg-default-pressed)" : undefined,
 				color: active ? accent : "var(--ax-colors-fg-default)",
 			}}
 		>
-			<Box display="flex" alignItems="center" gap="10" w="full" style={{ minWidth: 0 }}>
+			<Box display="flex" alignItems="center" gap="10" w="full" style={{minWidth: 0}}>
 				<Box
 					display="flex"
 					alignItems="center"
@@ -131,12 +135,18 @@ function SidebarNavItem({
 	);
 }
 
-function SidebarAccordionSection({ title, children }: { title: string; children: React.ReactNode }) {
+function SidebarAccordionSection({title, children}: {title: string; children: React.ReactNode}) {
 	return (
 		<Box borderT="1" borderColor="border.tertiary" pt="12" mt="12" w="full">
 			<Disclosure defaultOpen>
 				<DisclosureTrigger chevronPosition="start">
-					<Box display="flex" alignItems="center" w="full" py="4" style={{ paddingLeft: 2 }}>
+					<Box
+						display="flex"
+						alignItems="center"
+						w="full"
+						py="4"
+						style={{paddingLeft: 2}}
+					>
 						<AxiomText fontSize="sm" fontWeight="600" color="fg.default">
 							{title}
 						</AxiomText>
@@ -149,7 +159,7 @@ function SidebarAccordionSection({ title, children }: { title: string; children:
 						gap="2"
 						mt="4"
 						w="full"
-						style={{ paddingLeft: "20px" }}
+						style={{paddingLeft: "20px"}}
 					>
 						{children}
 					</Box>
@@ -171,7 +181,7 @@ export default function OptimizationExperimentPage() {
 	const [persistedExtraVariations, setPersistedExtraVariations] = useState<VariationRow[]>([]);
 	const [removedVariationKeys, setRemovedVariationKeys] = useState<string[]>([]);
 	const [variationBuilding, setVariationBuilding] = useState(false);
-	const { runVariationBuild } = useOpalVariationBuild();
+	const {runVariationBuild} = useOpalVariationBuild();
 
 	useEffect(() => {
 		setStatus(null);
@@ -206,16 +216,22 @@ export default function OptimizationExperimentPage() {
 	const effectiveStatus = status ?? optimization?.status ?? "Not Started";
 	const variations = useMemo(
 		() => resolveExperimentVariations(id ?? "", persistedExtraVariations, removedVariationKeys),
-		[id, persistedExtraVariations, removedVariationKeys],
+		[id, persistedExtraVariations, removedVariationKeys]
 	);
-	const trafficPercents = useMemo(() => evenTrafficPercents(variations.length), [variations.length]);
+	const trafficPercents = useMemo(
+		() => evenTrafficPercents(variations.length),
+		[variations.length]
+	);
 
 	if (!id || !optimization) {
 		return (
-			<Box display="flex" flexDirection="column" gap="16" p="24" style={{ maxWidth: "480px" }}>
+			<Box display="flex" flexDirection="column" gap="16" p="24" style={{maxWidth: "480px"}}>
 				<Heading level="3">Experiment not found</Heading>
 				<AxiomText color="fg.secondary">No optimization matches this link.</AxiomText>
-				<Link href="/web-experimentation/optimizations" style={{ color: "var(--ax-colors-fg-accent)" }}>
+				<Link
+					href="/web-experimentation/optimizations"
+					style={{color: "var(--ax-colors-fg-default)"}}
+				>
 					← Back to Optimizations
 				</Link>
 			</Box>
@@ -234,12 +250,12 @@ export default function OptimizationExperimentPage() {
 			w="full"
 			flex="1"
 			h="full"
-			style={{ minHeight: 0, alignSelf: "stretch" }}
+			style={{minHeight: 0, alignSelf: "stretch"}}
 		>
 			{/* Experiment context sidebar — flush to primary nav (left) and below GlobalBar (top); padding is internal only */}
 			<Box
 				className="scrollbar-hide"
-				style={{ flex: "0 0 288px", width: "288px", minHeight: 0 }}
+				style={{flex: "0 0 288px", width: "288px", minHeight: 0}}
 				borderR="1"
 				borderColor="border.tertiary"
 				bg="bg.default"
@@ -255,7 +271,7 @@ export default function OptimizationExperimentPage() {
 					<Link
 						href="/web-experimentation/optimizations"
 						style={{
-							color: "var(--ax-colors-fg-accent)",
+							color: "var(--ax-colors-fg-default)",
 							textDecoration: "none",
 							fontSize: "14px",
 							fontWeight: 500,
@@ -268,44 +284,63 @@ export default function OptimizationExperimentPage() {
 					</Link>
 				</Box>
 
-				<AxiomText fontSize="xs" color="fg.secondary" mb="8" style={{ letterSpacing: "0.02em" }}>
+				<AxiomText
+					fontSize="xs"
+					color="fg.secondary"
+					mb="8"
+					style={{letterSpacing: "0.02em"}}
+				>
 					{optimization.type}
 				</AxiomText>
 
-				<Heading level="2" style={{ fontSize: "1.125rem", lineHeight: 1.35, marginBottom: "10px", fontWeight: 600 }}>
+				<Heading
+					level="2"
+					style={{
+						fontSize: "1.125rem",
+						lineHeight: 1.35,
+						marginBottom: "10px",
+						fontWeight: 600,
+					}}
+				>
 					{optimization.name}
 				</Heading>
-				<AxiomText fontSize="sm" color="fg.secondary" style={{ lineHeight: 1.5 }}>
+				<AxiomText fontSize="sm" color="fg.secondary" style={{lineHeight: 1.5}}>
 					{optimization.description}
 				</AxiomText>
 
 				<Box mt="20">
 					<Box display="flex" flexDirection="column" gap="10">
-						<Box style={{ maxWidth: "100%" }}>
+						<Box style={{maxWidth: "100%"}}>
 							<Menu
 								options={[
-									{ label: "Not Started", execute: () => setStatus("Not Started") },
-									{ label: "Running", execute: () => setStatus("Running") },
-									{ label: "Paused", execute: () => setStatus("Paused") },
-									{ label: "Concluded", execute: () => setStatus("Concluded") },
-									{ label: "Archived", execute: () => setStatus("Archived") },
+									{label: "Not Started", execute: () => setStatus("Not Started")},
+									{label: "Running", execute: () => setStatus("Running")},
+									{label: "Paused", execute: () => setStatus("Paused")},
+									{label: "Concluded", execute: () => setStatus("Concluded")},
+									{label: "Archived", execute: () => setStatus("Archived")},
 								]}
 							>
 								<MenuTrigger asChild>
-									<LabelMenuButton label="Status" style={{ width: "100%" }}>
+									<LabelMenuButton label="Status" style={{width: "100%"}}>
 										{effectiveStatus}
 									</LabelMenuButton>
 								</MenuTrigger>
 								<MenuContent />
 							</Menu>
 						</Box>
-						<Box display="flex" gap="8" alignItems="center" w="full" style={{ minWidth: 0 }}>
-							<Box flex="1" style={{ minWidth: 0 }}>
+						<Box
+							display="flex"
+							gap="8"
+							alignItems="center"
+							w="full"
+							style={{minWidth: 0}}
+						>
+							<Box flex="1" style={{minWidth: 0}}>
 								<Button
 									appearance="primary"
 									size="lg"
 									disabled={!canStart}
-									style={{ width: "100%", justifyContent: "center" }}
+									style={{width: "100%", justifyContent: "center"}}
 								>
 									Start Experiment
 								</Button>
@@ -324,7 +359,11 @@ export default function OptimizationExperimentPage() {
 									padding: 0,
 								}}
 							/>
-							<Link href={resultsHref} style={{ display: "inline-flex", flexShrink: 0 }} title="View results">
+							<Link
+								href={resultsHref}
+								style={{display: "inline-flex", flexShrink: 0}}
+								title="View results"
+							>
 								<Button
 									appearance="subtle"
 									size="lg"
@@ -413,7 +452,7 @@ export default function OptimizationExperimentPage() {
 						disabled
 					/>
 					<SidebarNavItem
-						icon={<IconHistory size={ICON_NAV} stroke={ICON_STROKE} />}
+						icon={<IconClockRotateLeft size={ICON_NAV} stroke={ICON_STROKE} />}
 						label="History"
 						disabled
 					/>
@@ -431,19 +470,19 @@ export default function OptimizationExperimentPage() {
 				pt="24"
 				pb="32"
 				overflow="auto"
-				style={{ minHeight: 0, minWidth: 0 }}
+				style={{minHeight: 0, minWidth: 0}}
 			>
 				<Heading level="3" mb="16">
 					Variations
 				</Heading>
 
-				<Table style={{ width: "100%" }}>
+				<Table style={{width: "100%"}}>
 					<thead>
 						<Tr>
-							<Th style={{ width: "32%" }}>Name</Th>
-							<Th style={{ width: "12%" }}>Traffic</Th>
-							<Th style={{ width: "26%" }}>Preview</Th>
-							<Th style={{ width: "30%" }}>Actions</Th>
+							<Th style={{width: "32%"}}>Name</Th>
+							<Th style={{width: "12%"}}>Traffic</Th>
+							<Th style={{width: "26%"}}>Preview</Th>
+							<Th style={{width: "30%"}}>Actions</Th>
 						</Tr>
 					</thead>
 					<tbody>
@@ -453,21 +492,43 @@ export default function OptimizationExperimentPage() {
 								url={visualEditorHrefForKey(row.key)}
 								suppressActiveStyle
 							>
-								<Td style={{ borderRight: "none" }}>
-									<Box display="flex" flexDirection="row" gap="8" alignItems="start">
+								<Td style={{borderRight: "none"}}>
+									<Box
+										display="flex"
+										flexDirection="row"
+										gap="8"
+										alignItems="start"
+									>
 										<AxiomText
 											fontSize="sm"
 											fontWeight="600"
 											color="fg.default"
-											style={{ flexShrink: 0, minWidth: "1.25rem", textAlign: "center" }}
+											style={{
+												flexShrink: 0,
+												minWidth: "1.25rem",
+												textAlign: "center",
+											}}
 										>
 											{row.letter}
 										</AxiomText>
-										<Box display="flex" flexDirection="column" gap="6" style={{ flex: 1, minWidth: 0 }}>
-											<AxiomText fontSize="sm" fontWeight="600" color="fg.default">
+										<Box
+											display="flex"
+											flexDirection="column"
+											gap="6"
+											style={{flex: 1, minWidth: 0}}
+										>
+											<AxiomText
+												fontSize="sm"
+												fontWeight="600"
+												color="fg.default"
+											>
 												{row.title}
 											</AxiomText>
-											<AxiomText fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.45 }}>
+											<AxiomText
+												fontSize="xs"
+												color="fg.secondary"
+												style={{lineHeight: 1.45}}
+											>
 												{row.description}
 											</AxiomText>
 										</Box>
@@ -512,15 +573,26 @@ export default function OptimizationExperimentPage() {
 										</Box>
 									</Box>
 								</Td>
-								<Td style={{ borderLeft: "none" }}>
-									<Box display="flex" gap="8" alignItems="center" onClick={(e) => e.stopPropagation()}>
+								<Td style={{borderLeft: "none"}}>
+									<Box
+										display="flex"
+										gap="8"
+										alignItems="center"
+										onClick={(e) => e.stopPropagation()}
+									>
 										<Menu
 											options={[
 												{
 													label: "Edit with New Editor",
-													execute: () => router.push(visualEditorHrefForKey(row.key)),
+													execute: () =>
+														router.push(
+															visualEditorHrefForKey(row.key)
+														),
 												},
-												{ label: "Edit with Legacy Editor", execute: () => {} },
+												{
+													label: "Edit with Legacy Editor",
+													execute: () => {},
+												},
 											]}
 										>
 											<MenuTrigger asChild>
@@ -537,16 +609,16 @@ export default function OptimizationExperimentPage() {
 										</Menu>
 										<Menu
 											options={[
-												{ label: "Rename", execute: () => {} },
-												{ label: "Duplicate", execute: () => {} },
-												{ label: "Delete", execute: () => {} },
+												{label: "Rename", execute: () => {}},
+												{label: "Duplicate", execute: () => {}},
+												{label: "Delete", execute: () => {}},
 											]}
 										>
 											<MenuTrigger asChild>
 												<Button
 													appearance="subtle"
 													size="md"
-													icon={<IconDots size={16} />}
+													icon={<IconEllipsisSolid size={16} />}
 													aria-label="More actions"
 												/>
 											</MenuTrigger>
@@ -575,7 +647,8 @@ export default function OptimizationExperimentPage() {
 												height: "18px",
 												flexShrink: 0,
 												border: "2px solid var(--opal-spinner-border, var(--ax-colors-border-secondary))",
-												borderTopColor: "var(--opal-spinner-top, var(--ax-colors-fg-default))",
+												borderTopColor:
+													"var(--opal-spinner-top, var(--ax-colors-fg-default))",
 												borderRadius: "50%",
 											}}
 										/>
@@ -590,7 +663,12 @@ export default function OptimizationExperimentPage() {
 				</Table>
 
 				<Box mt="16">
-					<Button appearance="default" size="md" icon={<IconPlus size={20} stroke={2} />} iconPosition="start">
+					<Button
+						appearance="default"
+						size="md"
+						icon={<IconPlus size={20} stroke={2} />}
+						iconPosition="start"
+					>
 						Add Variation
 					</Button>
 				</Box>

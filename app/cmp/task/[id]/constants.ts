@@ -132,7 +132,7 @@ export const richTextContentStyles = `
 
 .brief-rich-content blockquote,
 .brief-editor-content blockquote {
-	border-left: 3px solid var(--ax-colors-border-accent);
+	border-left: 3px solid var(--ax-colors-border-default);
 	color: var(--ax-colors-fg-secondary);
 	padding-left: 12px;
 }
@@ -146,7 +146,7 @@ export const richTextContentStyles = `
 
 .brief-editor-content a,
 .brief-rich-content a {
-	color: var(--ax-colors-fg-accent);
+	color: var(--ax-colors-fg-default);
 	text-decoration: underline;
 }
 `;

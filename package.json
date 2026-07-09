@@ -36,7 +36,7 @@
     "@optiaxiom/globals": "3.0.0-next.2",
     "@optiaxiom/icons": "^1.1.2",
     "@optiaxiom/proteus": "^0.2.11",
-    "@optiaxiom/react": "^3",
+    "@optiaxiom/react": "^3.1.1",
     "@optimizely/axiom-icons": "file:./vendor/axiom-icons",
     "@tabler/icons-react": "^3.35.0",
     "@tanstack/react-table": "^8.21.3",

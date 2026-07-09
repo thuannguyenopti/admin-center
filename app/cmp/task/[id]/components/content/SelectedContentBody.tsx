@@ -182,7 +182,7 @@ export function SelectedContentBody({
 								</Text>
 							</Box>
 						))}
-						<Text color="fg.accent" style={{ fontSize: 12, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>
+						<Text color="fg.secondary" style={{ fontSize: 12, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>
 							+ 6
 						</Text>
 					</Box>

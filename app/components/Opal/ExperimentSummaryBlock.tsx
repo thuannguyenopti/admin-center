@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Box, Text as AxiomText } from "@optiaxiom/react";
 import { IconCircleQuestion } from "@optimizely/axiom-icons";
-import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
+import {IconChevronDown, IconChevronRight} from "@/app/lib/axiom-icons";
 import { Table, Tr, Th, Td } from "../Table";
 import { Button } from "../Button";
 import type {

@@ -1,8 +1,20 @@
 "use client";
 
 import React, {useState, useCallback} from "react";
-import {Box, Button, Checkbox, Field, Group, Input, Select, SelectContent, SelectTrigger, Text, Textarea} from "@optiaxiom/react";
-import {IconCheck, IconLoader2} from "@tabler/icons-react";
+import {
+	Box,
+	Button,
+	Checkbox,
+	Field,
+	Group,
+	Input,
+	Select,
+	SelectContent,
+	SelectTrigger,
+	Text,
+	Textarea,
+} from "@optiaxiom/react";
+import {IconCheck, IconLoader2} from "@/app/lib/axiom-icons";
 import type {AdaptiveBlockComponentProps} from "../AdaptiveBlockRegistry";
 import {AdaptiveBlock} from "../AdaptiveBlock";
 import {CAMPAIGN_METRICS} from "@/app/cmp/types/metrics";
@@ -94,18 +106,34 @@ export const BriefWizardBlock: React.FC<AdaptiveBlockComponentProps> = ({metadat
 			setResultSummary(`Generated brief and ${data.instances?.length || 0} content items.`);
 			setStep("done");
 
-			window.dispatchEvent(new CustomEvent("brief-content-generated", {
-				detail: {taskId: wizard.taskId, instances: data.instances, brief: data.brief},
-			}));
+			window.dispatchEvent(
+				new CustomEvent("brief-content-generated", {
+					detail: {taskId: wizard.taskId, instances: data.instances, brief: data.brief},
+				})
+			);
 		} catch {
-			setChecklist((prev) => prev.map((item) => ({...item, status: item.status === "running" ? "pending" : item.status})));
+			setChecklist((prev) =>
+				prev.map((item) => ({
+					...item,
+					status: item.status === "running" ? "pending" : item.status,
+				}))
+			);
 			setStep("generate");
 			opalPanelControls?.addMessage({
 				role: "assistant",
 				content: "Brief generation failed. Please try again.",
 			});
 		}
-	}, [coreMessage, valueProposition, audience, metric, selectedChannels, imageGuidelines, wizard, opalPanelControls]);
+	}, [
+		coreMessage,
+		valueProposition,
+		audience,
+		metric,
+		selectedChannels,
+		imageGuidelines,
+		wizard,
+		opalPanelControls,
+	]);
 
 	const handleCancel = useCallback(() => {
 		opalPanelControls?.removeMessage(messageId);
@@ -119,14 +147,21 @@ export const BriefWizardBlock: React.FC<AdaptiveBlockComponentProps> = ({metadat
 				subtitle="Step 1 of 3 — Foundation"
 				actions={[
 					{label: "Cancel", onClick: handleCancel, appearance: "subtle"},
-					{label: "Next", onClick: () => setStep("channels"), appearance: "primary", disabled: !canNext},
+					{
+						label: "Next",
+						onClick: () => setStep("channels"),
+						appearance: "primary",
+						disabled: !canNext,
+					},
 				]}
 			>
 				<Box display="flex" flexDirection="column" gap="12">
 					<Field label="Core Message">
 						<Textarea
 							value={coreMessage}
-							onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCoreMessage(e.target.value)}
+							onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+								setCoreMessage(e.target.value)
+							}
 							placeholder="What is the key message of this campaign?"
 							rows={2}
 						/>
@@ -139,7 +174,11 @@ export const BriefWizardBlock: React.FC<AdaptiveBlockComponentProps> = ({metadat
 						/>
 					</Field>
 					<Field label="Target Audience">
-						<Select value={audience} onValueChange={setAudience} options={audienceOptions}>
+						<Select
+							value={audience}
+							onValueChange={setAudience}
+							options={audienceOptions}
+						>
 							<SelectTrigger placeholder="Select audience" />
 							<SelectContent />
 						</Select>
@@ -163,11 +202,18 @@ export const BriefWizardBlock: React.FC<AdaptiveBlockComponentProps> = ({metadat
 				actions={[
 					{label: "Cancel", onClick: handleCancel, appearance: "subtle"},
 					{label: "Back", onClick: () => setStep("foundation"), appearance: "subtle"},
-					{label: "Next", onClick: () => setStep("generate"), appearance: "primary", disabled: selectedChannels.size === 0},
+					{
+						label: "Next",
+						onClick: () => setStep("generate"),
+						appearance: "primary",
+						disabled: selectedChannels.size === 0,
+					},
 				]}
 			>
 				<Box display="flex" flexDirection="column" gap="8">
-					<Text fontSize="sm" color="fg.secondary" mb="4">Select channels to generate content for</Text>
+					<Text fontSize="sm" color="fg.secondary" mb="4">
+						Select channels to generate content for
+					</Text>
 					{channelDefinitions.map((ch) => (
 						<Box
 							key={ch.id}
@@ -177,15 +223,24 @@ export const BriefWizardBlock: React.FC<AdaptiveBlockComponentProps> = ({metadat
 							p="8"
 							rounded="md"
 							style={{
-								border: selectedChannels.has(ch.id) ? "1px solid var(--ax-colors-border-accent)" : "1px solid var(--ax-colors-border-default)",
+								border: selectedChannels.has(ch.id)
+									? "1px solid var(--ax-colors-border-default)"
+									: "1px solid var(--ax-colors-border-secondary)",
 								cursor: "pointer",
 							}}
 							onClick={() => toggleChannel(ch.id)}
 						>
-							<Checkbox checked={selectedChannels.has(ch.id)} onCheckedChange={() => toggleChannel(ch.id)} />
+							<Checkbox
+								checked={selectedChannels.has(ch.id)}
+								onCheckedChange={() => toggleChannel(ch.id)}
+							/>
 							<Box>
-								<Text fontSize="sm" fontWeight="500">{ch.name}</Text>
-								<Text fontSize="xs" color="fg.tertiary">{ch.group}</Text>
+								<Text fontSize="sm" fontWeight="500">
+									{ch.name}
+								</Text>
+								<Text fontSize="xs" color="fg.tertiary">
+									{ch.group}
+								</Text>
 							</Box>
 						</Box>
 					))}
@@ -202,17 +257,24 @@ export const BriefWizardBlock: React.FC<AdaptiveBlockComponentProps> = ({metadat
 				actions={[
 					{label: "Cancel", onClick: handleCancel, appearance: "subtle"},
 					{label: "Back", onClick: () => setStep("channels"), appearance: "subtle"},
-					{label: "Generate Brief & Content", onClick: handleGenerate, appearance: "primary"},
+					{
+						label: "Generate Brief & Content",
+						onClick: handleGenerate,
+						appearance: "primary",
+					},
 				]}
 			>
 				<Box display="flex" flexDirection="column" gap="12">
 					<Text fontSize="sm" color="fg.secondary">
-						Ready to generate a brief and content for {selectedChannels.size} channel{selectedChannels.size !== 1 ? "s" : ""}.
+						Ready to generate a brief and content for {selectedChannels.size} channel
+						{selectedChannels.size !== 1 ? "s" : ""}.
 					</Text>
 					<Field label="Image Guidelines (optional)">
 						<Textarea
 							value={imageGuidelines}
-							onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setImageGuidelines(e.target.value)}
+							onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+								setImageGuidelines(e.target.value)
+							}
 							placeholder="Any specific guidance for AI-generated images?"
 							rows={2}
 						/>
@@ -229,13 +291,30 @@ export const BriefWizardBlock: React.FC<AdaptiveBlockComponentProps> = ({metadat
 					{checklist.map((item, i) => (
 						<Box key={i} display="flex" alignItems="center" gap="8">
 							{item.status === "done" ? (
-								<IconCheck size={16} style={{color: "var(--ax-colors-fg-success)"}} />
+								<IconCheck
+									size={16}
+									style={{color: "var(--ax-colors-fg-success)"}}
+								/>
 							) : item.status === "running" ? (
-								<IconLoader2 size={16} className="animate-spin" style={{color: "var(--ax-colors-fg-accent)"}} />
+								<IconLoader2
+									size={16}
+									className="animate-spin"
+									style={{color: "var(--ax-colors-fg-secondary)"}}
+								/>
 							) : (
-								<Box style={{width: 16, height: 16, borderRadius: "50%", border: "1px solid var(--ax-colors-border-default)"}} />
+								<Box
+									style={{
+										width: 16,
+										height: 16,
+										borderRadius: "50%",
+										border: "1px solid var(--ax-colors-border-default)",
+									}}
+								/>
 							)}
-							<Text fontSize="sm" color={item.status === "done" ? "fg.success" : "fg.default"}>
+							<Text
+								fontSize="sm"
+								color={item.status === "done" ? "fg.success" : "fg.default"}
+							>
 								{item.label}
 							</Text>
 						</Box>
@@ -248,7 +327,8 @@ export const BriefWizardBlock: React.FC<AdaptiveBlockComponentProps> = ({metadat
 	return (
 		<AdaptiveBlock title="Brief Generated" subtitle={resultSummary}>
 			<Text fontSize="sm" color="fg.success">
-				Content has been generated and added to the task. Switch to the Brief and Content tabs to view.
+				Content has been generated and added to the task. Switch to the Brief and Content
+				tabs to view.
 			</Text>
 		</AdaptiveBlock>
 	);

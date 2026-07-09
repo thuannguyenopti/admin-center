@@ -13,7 +13,7 @@ import {Flex} from "@/app/components/Flex";
 import {useState, useEffect} from "react";
 import searchResults from "@/app/db/searchResults.json";
 import {Button} from "@/app/components/Button";
-import {IconFile, IconSparkles} from "@tabler/icons-react";
+import {IconFile, IconSparkles} from "@/app/lib/axiom-icons";
 
 interface PinnedResultDialogProps {
 	open: boolean;

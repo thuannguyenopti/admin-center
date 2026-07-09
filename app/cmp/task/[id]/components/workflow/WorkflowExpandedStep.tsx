@@ -3,7 +3,7 @@
 import { Avatar, Badge, Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconCalendar, IconCheck, IconChevronDown, IconDots, IconPlus, IconX } from "@tabler/icons-react";
+import {IconCalendar, IconCheck, IconChevronDown, IconEllipsisSolid, IconPlus, IconXmark} from "@/app/lib/axiom-icons";
 import { initialUsers } from "@/app/db/initialData";
 import type { TaskWorkflowStep } from "../../workflowTypes";
 import { DashedCircle } from "../shared/DashedCircle";
@@ -101,8 +101,8 @@ export function WorkflowExpandedStep({ onSetAssignee, onToggleChecklistItem, onT
 				</Badge>
 				<Box alignItems="center" display="flex" gap="8" pt="4">
 					<Button appearance="subtle" aria-label="Comment" icon={<IconPlus size={14} />} size="sm" style={{ height: 28, width: 28 }} />
-					<Button appearance="subtle" aria-label="Delete" icon={<IconX size={14} />} size="sm" style={{ height: 28, width: 28 }} />
-					<Button appearance="subtle" aria-label="More" icon={<IconDots size={14} />} size="sm" style={{ height: 28, width: 28 }} />
+					<Button appearance="subtle" aria-label="Delete" icon={<IconXmark size={14} />} size="sm" style={{ height: 28, width: 28 }} />
+					<Button appearance="subtle" aria-label="More" icon={<IconEllipsisSolid size={14} />} size="sm" style={{ height: 28, width: 28 }} />
 				</Box>
 			</Box>
 		</Box>

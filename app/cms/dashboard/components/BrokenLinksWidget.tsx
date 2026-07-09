@@ -4,7 +4,7 @@ import { Box, Badge, Link } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import { IconDots } from "@tabler/icons-react";
+import {IconEllipsisSolid} from "@/app/lib/axiom-icons";
 import { BrokenLink } from "../types";
 import PageIcon from "@/app/assets/page-icon.svg";
 import BlockIcon from "@/app/assets/block-icon.svg";
@@ -66,7 +66,7 @@ export function BrokenLinksWidget({ items, lastUpdated = "Jan 13, 2024" }: Broke
                 <Button
                   aria-label="Actions"
                   size="md"
-                  icon={<IconDots />}
+                  icon={<IconEllipsisSolid />}
                   appearance="subtle"
                 />
               </Td>

@@ -18,7 +18,7 @@ import {
 	Text,
 } from "@optiaxiom/react";
 import {useEffect, useMemo, useRef, useState} from "react";
-import {IconCopy, IconEye, IconEyeOff, IconKey, IconLock} from "@tabler/icons-react";
+import {IconCopy, IconEye, IconEyeSlash, IconKey, IconLock} from "@/app/lib/axiom-icons";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
 import usePersistentState from "@/app/usePersistentState";
@@ -448,7 +448,7 @@ export default function DevelopmentAccountManagementPage() {
 													}
 													icon={
 														showClientSecret ? (
-															<IconEyeOff />
+															<IconEyeSlash />
 														) : (
 															<IconEye />
 														)

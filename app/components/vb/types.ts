@@ -58,6 +58,8 @@ export type DisplayTemplate = {
 	contentType?: string;  // e.g., "ct-heading", "ct-section"
 	nodeType?: "row" | "column";
 	isDefault?: boolean;
+	/** Matches the `value` in the contentType's `template` SelectOne options — used to derive the Storybook preview URL. */
+	templateValue?: string;
 	semanticTags: string[];  // For AI natural language mapping
 	defaultSettings: Record<string, string>;  // For AI default application
 	settings: Record<string, DisplayTemplateSetting>;

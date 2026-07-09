@@ -1,14 +1,6 @@
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import Item from "@/app/components/Item";
-import {
-	IconTrash,
-	IconPencil,
-	IconDots,
-	IconPlus,
-	IconPower,
-	IconFile,
-	IconPinned,
-} from "@tabler/icons-react";
+import {IconTrash, IconPen, IconEllipsisSolid, IconPlus, IconPower, IconFile, IconPinned} from "@/app/lib/axiom-icons";
 import {
 	Menu,
 	MenuTrigger,
@@ -146,7 +138,7 @@ export default function PinnedResultsTable({
 												: []),
 											{
 												label: "Edit",
-												addon: <IconPencil size={16} />,
+												addon: <IconPen size={16} />,
 												execute: () => onEdit(bet),
 											},
 											{
@@ -159,7 +151,7 @@ export default function PinnedResultsTable({
 									>
 										<MenuTrigger
 											aria-label="Actions"
-											icon={<IconDots size={16} />}
+											icon={<IconEllipsisSolid size={16} />}
 											appearance="subtle"
 											size="sm"
 										/>

@@ -2,7 +2,7 @@
 
 import { Box, Tabs, TabsList, TabsTrigger } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconChevronDown } from "@tabler/icons-react";
+import {IconChevronDown} from "@/app/lib/axiom-icons";
 import { useRouter } from "next/navigation";
 import { usePlanViewState } from "./hooks/usePlanViewState";
 import { ListView } from "./components/ListView";

@@ -1,18 +1,26 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { Badge, Box, Menu, MenuTrigger, MenuContent, toaster } from "@optiaxiom/react";
-import { Button } from "@optiaxiom/react";
-import { Text } from "@/app/components/Text";
-import { initialContentTypes, type ContentType, type Page, type Application } from "@/app/db/initialData";
-import { type ContentInstance, initialCmpContentModels } from "@/app/db/cmpInitialData";
-import { convertCmpModelToContentType, convertCmpPropertyToCms } from "@/app/lib/contentTypeMigration";
+import React, {useEffect, useMemo, useState} from "react";
+import {Badge, Box, Menu, MenuTrigger, MenuContent, toaster} from "@optiaxiom/react";
+import {Button} from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
+import {
+	initialContentTypes,
+	type ContentType,
+	type Page,
+	type Application,
+} from "@/app/db/initialData";
+import {type ContentInstance, initialCmpContentModels} from "@/app/db/cmpInitialData";
+import {
+	convertCmpModelToContentType,
+	convertCmpPropertyToCms,
+} from "@/app/lib/contentTypeMigration";
 import usePersistentState from "@/app/usePersistentState";
-import { useRouter } from "next/navigation";
-import { PropertyRenderer } from "@/app/components/property-renderers";
+import {useRouter} from "next/navigation";
+import {PropertyRenderer} from "@/app/components/property-renderers";
 import "@/app/components/property-renderers";
-import { ContentPreviewRenderer } from "./content-preview/ContentPreviewRenderer";
-import PreviewCanvas, { type Outline } from "@/app/components/vb/PreviewCanvas";
+import {ContentPreviewRenderer} from "./content-preview/ContentPreviewRenderer";
+import PreviewCanvas, {type Outline} from "@/app/components/vb/PreviewCanvas";
 import PropertyBasedPageRenderer from "@/app/site/PropertyBasedPageRenderer";
 import Grid2Icon from "@/app/cmp/assets/grid2.svg";
 import SparklesIcon from "@/app/cmp/assets/sparkles 16.svg";
@@ -20,19 +28,19 @@ import {
 	IconBroadcast,
 	IconChevronDown,
 	IconCopy,
-	IconDots,
+	IconEllipsisSolid,
 	IconEye,
-	IconFileText,
+	IconFileLines,
 	IconLink,
-	IconPencil,
-	IconPhoto,
+	IconPen,
+	IconImage,
 	IconPlus,
 	IconPuzzle,
 	IconTag,
 	IconTrash,
-} from "@tabler/icons-react";
-import type { AssetItem, TaskTab } from "../types";
-import { PageHeader } from "./PageHeader";
+} from "@/app/lib/axiom-icons";
+import type {AssetItem, TaskTab} from "../types";
+import {PageHeader} from "./PageHeader";
 
 export function ContentFilledPage({
 	activeTab,
@@ -98,7 +106,7 @@ export function ContentFilledPage({
 
 	// Filter pages that belong to this task
 	const taskPages = useMemo(() => {
-		return pages.filter(page => page.cmpTaskMetadata?.taskId === taskId);
+		return pages.filter((page) => page.cmpTaskMetadata?.taskId === taskId);
 	}, [pages, taskId]);
 
 	// Use CMP content models directly, converted to ContentType format
@@ -107,12 +115,10 @@ export function ContentFilledPage({
 		[]
 	);
 
-	const selectedTaskAsset =
-		taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? null;
+	const selectedTaskAsset = taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? null;
 	const selectedContentInstance =
 		contentInstances.find((instance) => instance.id === selectedContentInstanceId) ?? null;
-	const selectedPage =
-		pages.find((page) => page.id === selectedPageId) ?? null;
+	const selectedPage = pages.find((page) => page.id === selectedPageId) ?? null;
 
 	// Reset edit mode when switching content instances
 	useEffect(() => {
@@ -129,21 +135,30 @@ export function ContentFilledPage({
 
 		if (!status) return null;
 
-		const intent = status === "Published" ? "success" : status === "Changed" ? "warning" : "neutral";
+		const intent =
+			status === "Published" ? "success" : status === "Changed" ? "warning" : "neutral";
 
-		return <Badge intent={intent} style={{ marginRight: 4 }}>{status}</Badge>;
+		return (
+			<Badge intent={intent} style={{marginRight: 4}}>
+				{status}
+			</Badge>
+		);
 	};
 
 	return (
-		<Box pb="32" style={{ position: "relative" }}>
+		<Box pb="32" style={{position: "relative"}}>
 			<PageHeader activeTab={activeTab} onTabChange={onTabChange} />
-			<Box display="flex" flexDirection="column" style={{ gap: 18, maxWidth: 812, padding: "20px 32px 0" }}>
+			<Box
+				display="flex"
+				flexDirection="column"
+				style={{gap: 18, maxWidth: 812, padding: "20px 32px 0"}}
+			>
 				<Box alignItems="center" display="flex" justifyContent="space-between">
 					<Menu
 						options={[
 							{
 								label: "Asset",
-								addon: <IconPhoto size={20} />,
+								addon: <IconImage size={20} />,
 								description: "Add assets from recommendations",
 								execute: () => onAddContent(),
 							},
@@ -151,23 +166,29 @@ export function ContentFilledPage({
 								label: "From CMS",
 								addon: <IconBroadcast size={20} />,
 								description: "Add content from CMS",
-								execute: () => { /* TODO: Implement CMS content selection */ },
+								execute: () => {
+									/* TODO: Implement CMS content selection */
+								},
 							},
 							{
 								label: "Component",
 								addon: <IconPuzzle size={20} />,
 								description: "Add a reusable component",
-								execute: () => { /* TODO: Implement component selection */ },
+								execute: () => {
+									/* TODO: Implement component selection */
+								},
 							},
 							{
 								label: "Content Type",
-								addon: <IconFileText size={20} />,
+								addon: <IconFileLines size={20} />,
 								description: "Add content from a content model",
 								subOptions: cmpContentModels
 									.filter((model) => model.isActive !== false)
 									.map((model) => ({
 										label: model.displayName || model.name,
-										description: model.description || `Create a new ${(model.displayName || model.name).toLowerCase()}`,
+										description:
+											model.description ||
+											`Create a new ${(model.displayName || model.name).toLowerCase()}`,
 										execute: () => onAddContentFromModel(model),
 									})),
 							},
@@ -180,28 +201,88 @@ export function ContentFilledPage({
 								iconPosition="end"
 							>
 								<Box asChild display="inline-flex" alignItems="center" gap="4">
-									<span><IconPlus size={16} />Add Content</span>
+									<span>
+										<IconPlus size={16} />
+										Add Content
+									</span>
 								</Box>
 							</Button>
 						</MenuTrigger>
 						<MenuContent />
 					</Menu>
-					<Box alignItems="center" display="flex" style={{ gap: 12 }}>
-						<Box alignItems="center" display="flex" justifyContent="center" rounded="md" style={{ flexShrink: 0, height: 32, width: 32 }}>
+					<Box alignItems="center" display="flex" style={{gap: 12}}>
+						<Box
+							alignItems="center"
+							display="flex"
+							justifyContent="center"
+							rounded="md"
+							style={{flexShrink: 0, height: 32, width: 32}}
+						>
 							<IconCopy size={16} color="var(--ax-colors-fg-secondary)" />
 						</Box>
-						<Text color="fg.secondary" style={{ fontSize: 14, lineHeight: "20px", maxWidth: "none" }}>8</Text>
-						<Box alignItems="center" bg="bg.tertiary" display="flex" justifyContent="center" rounded="md" style={{ flexShrink: 0, height: 32, width: 32 }}>
-							<Box style={{ border: "1.6px solid var(--ax-colors-fg-accent)", borderRadius: 2, height: 16, width: 16 }} />
+						<Text
+							color="fg.secondary"
+							style={{fontSize: 14, lineHeight: "20px", maxWidth: "none"}}
+						>
+							8
+						</Text>
+						<Box
+							alignItems="center"
+							bg="bg.tertiary"
+							display="flex"
+							justifyContent="center"
+							rounded="md"
+							style={{flexShrink: 0, height: 32, width: 32}}
+						>
+							<Box
+								style={{
+									border: "1.6px solid var(--ax-colors-border-default)",
+									borderRadius: 2,
+									height: 16,
+									width: 16,
+								}}
+							/>
 						</Box>
-						<Box alignItems="center" display="flex" justifyContent="center" rounded="md" style={{ flexShrink: 0, height: 32, width: 32 }}>
-							<Grid2Icon aria-hidden="true" style={{ color: "var(--ax-colors-fg-tertiary)", display: "block", height: 16, width: 16 }} />
+						<Box
+							alignItems="center"
+							display="flex"
+							justifyContent="center"
+							rounded="md"
+							style={{flexShrink: 0, height: 32, width: 32}}
+						>
+							<Grid2Icon
+								aria-hidden="true"
+								style={{
+									color: "var(--ax-colors-fg-tertiary)",
+									display: "block",
+									height: 16,
+									width: 16,
+								}}
+							/>
 						</Box>
-						<Box alignItems="center" display="flex" justifyContent="center" rounded="md" style={{ flexShrink: 0, height: 32, width: 32 }}>
-							<Box display="flex" flexDirection="column" style={{ gap: 2, width: 14 }}>
-								<Box bg="bg.tertiary" rounded="full" style={{ height: 2, width: "100%" }} />
-								<Box bg="bg.tertiary" rounded="full" style={{ height: 2, width: "100%" }} />
-								<Box bg="bg.tertiary" rounded="full" style={{ height: 2, width: "100%" }} />
+						<Box
+							alignItems="center"
+							display="flex"
+							justifyContent="center"
+							rounded="md"
+							style={{flexShrink: 0, height: 32, width: 32}}
+						>
+							<Box display="flex" flexDirection="column" style={{gap: 2, width: 14}}>
+								<Box
+									bg="bg.tertiary"
+									rounded="full"
+									style={{height: 2, width: "100%"}}
+								/>
+								<Box
+									bg="bg.tertiary"
+									rounded="full"
+									style={{height: 2, width: "100%"}}
+								/>
+								<Box
+									bg="bg.tertiary"
+									rounded="full"
+									style={{height: 2, width: "100%"}}
+								/>
 							</Box>
 						</Box>
 					</Box>
@@ -211,18 +292,16 @@ export function ContentFilledPage({
 					{[null, ...contentInstances, ...taskPages, ...taskAssets].map((item, index) => {
 						// Determine button type
 						const isSuggestedTrigger = index === 0;
-						const isContentInstance = item && 'modelId' in item;
-						const isPage = item && 'contentTypeId' in item && !('modelId' in item);
+						const isContentInstance = item && "modelId" in item;
+						const isPage = item && "contentTypeId" in item && !("modelId" in item);
 						const isAsset = item && !isContentInstance && !isPage;
 
 						// Determine if this button is selected
 						const isSelected = isSuggestedTrigger
 							? false // Sparkles button is never "selected", it just toggles the panel
-							: (
-								(isContentInstance && item.id === selectedContentInstanceId) ||
+							: (isContentInstance && item.id === selectedContentInstanceId) ||
 								(isPage && item.id === selectedPageId) ||
-								(isAsset && item.id === selectedTaskAssetId)
-							);
+								(isAsset && item.id === selectedTaskAssetId);
 
 						// Handle click events
 						const handleClick = () => {
@@ -256,19 +335,15 @@ export function ContentFilledPage({
 
 						return (
 							<Box
-								key={isSuggestedTrigger ? 'suggested' : item?.id ?? index}
+								key={isSuggestedTrigger ? "suggested" : (item?.id ?? index)}
 								alignItems="center"
-								bg={isSelected ? "bg.default" : "bg.secondary"}
+								bg={isSelected ? "bg.default.pressed" : "bg.default"}
 								border="1"
-								borderColor={isSelected ? "border.accent" : "border.tertiary"}
+								borderColor={isSelected ? "border.default" : "border.tertiary"}
 								display="flex"
 								justifyContent="center"
 								rounded="md"
 								style={{
-									background: "#FFF",
-									boxShadow: isSelected
-										? "0 0 0 1px #FFF, 0 0 0 3px #2E66F7"
-										: "none",
 									flexShrink: 0,
 									height: 32,
 									minHeight: 32,
@@ -279,11 +354,15 @@ export function ContentFilledPage({
 							>
 								<button
 									aria-label={
-										isSuggestedTrigger ? "Open suggested assets" :
-										isContentInstance ? `View ${item.modelDisplayName}` :
-										isPage ? `View ${(item as Page).name}` :
-										isAsset && item && 'title' in item ? `View ${(item as { title: string }).title}` :
-										"View task item"
+										isSuggestedTrigger
+											? "Open suggested assets"
+											: isContentInstance
+												? `View ${item.modelDisplayName}`
+												: isPage
+													? `View ${(item as Page).name}`
+													: isAsset && item && "title" in item
+														? `View ${(item as {title: string}).title}`
+														: "View task item"
 									}
 									onClick={handleClick}
 									style={{
@@ -301,9 +380,16 @@ export function ContentFilledPage({
 									type="button"
 								>
 									{isSuggestedTrigger ? (
-										<SparklesIcon height={14} style={{ color: "var(--ax-colors-fg-secondary)" }} width={14} />
+										<SparklesIcon
+											height={14}
+											style={{color: "var(--ax-colors-fg-secondary)"}}
+											width={14}
+										/>
 									) : isContentInstance ? (
-										<IconFileText size={16} color="var(--ax-colors-fg-secondary)" />
+										<IconFileLines
+											size={16}
+											color="var(--ax-colors-fg-secondary)"
+										/>
 									) : isPage ? (
 										<iframe
 											src={`/cms/edit/${(item as Page).id}?preview=true`}
@@ -319,10 +405,14 @@ export function ContentFilledPage({
 											}}
 											title={`Preview of ${(item as Page).name}`}
 										/>
-									) : isAsset && item && 'src' in item ? (
+									) : isAsset && item && "src" in item ? (
 										<img
 											alt=""
-											src={('thumbnailSrc' in item ? item.thumbnailSrc : item.src) as string}
+											src={
+												("thumbnailSrc" in item
+													? item.thumbnailSrc
+													: item.src) as string
+											}
 											style={{
 												display: "block",
 												flexShrink: 0,
@@ -332,11 +422,13 @@ export function ContentFilledPage({
 											}}
 										/>
 									) : (
-										<Text fontSize="lg">{
-											isPage
+										<Text fontSize="lg">
+											{isPage
 												? ((item as Page)?.name?.charAt(0) ?? "?")
-												: ('title' in (item ?? {}) ? (item as { title: string }).title.charAt(0) : "?")
-										}</Text>
+												: "title" in (item ?? {})
+													? (item as {title: string}).title.charAt(0)
+													: "?"}
+										</Text>
 									)}
 								</button>
 							</Box>
@@ -349,21 +441,36 @@ export function ContentFilledPage({
 					border="1"
 					borderColor="border.tertiary"
 					rounded="lg"
-					style={{ overflow: "hidden" }}
+					style={{overflow: "hidden"}}
 				>
-					<Box alignItems="center" display="flex" justifyContent="space-between" style={{ padding: "18px 18px 14px" }}>
+					<Box
+						alignItems="center"
+						display="flex"
+						justifyContent="space-between"
+						style={{padding: "18px 18px 14px"}}
+					>
 						<Box alignItems="center" display="flex" gap="8">
-							<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>
+							<Text
+								color="fg.default"
+								style={{
+									fontSize: 20,
+									fontWeight: 500,
+									lineHeight: "28px",
+									maxWidth: "none",
+								}}
+							>
 								{selectedContentInstance
-									? (selectedContentInstance.fields.headline || selectedContentInstance.fields.title || selectedContentInstance.modelDisplayName)
+									? selectedContentInstance.fields.headline ||
+										selectedContentInstance.fields.title ||
+										selectedContentInstance.modelDisplayName
 									: selectedPage
-									? selectedPage.name
-									: selectedTaskAsset?.title
-									?? `Couldn't load content with id: ${selectedContentInstanceId ?? selectedPageId ?? selectedTaskAssetId ?? 'unknown'}`}
+										? selectedPage.name
+										: (selectedTaskAsset?.title ??
+											`Couldn't load content with id: ${selectedContentInstanceId ?? selectedPageId ?? selectedTaskAssetId ?? "unknown"}`)}
 							</Text>
 							{getStatusBadge()}
 						</Box>
-						<Box alignItems="center" display="flex" style={{ gap: 12 }}>
+						<Box alignItems="center" display="flex" style={{gap: 12}}>
 							<IconTag size={16} color="var(--ax-colors-fg-secondary)" />
 							<button
 								aria-label="Open suggested assets"
@@ -379,27 +486,49 @@ export function ContentFilledPage({
 								}}
 								type="button"
 							>
-								<SparklesIcon height={16} style={{ color: "var(--ax-colors-fg-secondary)" }} width={16} />
+								<SparklesIcon
+									height={16}
+									style={{color: "var(--ax-colors-fg-secondary)"}}
+									width={16}
+								/>
 							</button>
 							<IconLink size={16} color="var(--ax-colors-fg-secondary)" />
 							{selectedContentInstance && (
 								<>
-									<IconPencil
+									<IconPen
 										size={16}
-										color={isEditingContentInstance ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-secondary)"}
-										style={{ cursor: "pointer" }}
-										onClick={() => setIsEditingContentInstance(!isEditingContentInstance)}
+										color={
+											isEditingContentInstance
+												? "var(--ax-colors-fg-default)"
+												: "var(--ax-colors-fg-secondary)"
+										}
+										style={{cursor: "pointer"}}
+										onClick={() =>
+											setIsEditingContentInstance(!isEditingContentInstance)
+										}
 									/>
 									<Menu
 										options={applications.map((app: Application) => ({
 											label: app.name,
 											description: "Website",
-											execute: () => onAddToApplication(selectedContentInstance, app.name),
+											execute: () =>
+												onAddToApplication(
+													selectedContentInstance,
+													app.name
+												),
 										}))}
 									>
 										<MenuTrigger asChild>
-											<Button appearance="default" size="sm" style={{ borderRadius: 6, height: 32 }}>
-												<Box alignItems="center" display="flex" style={{ gap: 4 }}>
+											<Button
+												appearance="default"
+												size="sm"
+												style={{borderRadius: 6, height: 32}}
+											>
+												<Box
+													alignItems="center"
+													display="flex"
+													style={{gap: 4}}
+												>
 													<span>Add to CMS</span>
 													<IconChevronDown size={14} />
 												</Box>
@@ -416,7 +545,7 @@ export function ContentFilledPage({
 												// Menu options for CMS pages
 												{
 													label: "Edit in CMS",
-													addon: <IconPencil size={16} />,
+													addon: <IconPen size={16} />,
 													description: "Open page in Visual Builder",
 													execute: () => {
 														router.push(`/cms/edit/${selectedPage.id}`);
@@ -427,8 +556,12 @@ export function ContentFilledPage({
 													addon: <IconEye size={16} />,
 													description: "View page on website",
 													execute: () => {
-														const slug = selectedPage.slug || selectedPage.name.toLowerCase().replace(/\s+/g, '-');
-														window.open(`/site/${slug}`, '_blank');
+														const slug =
+															selectedPage.slug ||
+															selectedPage.name
+																.toLowerCase()
+																.replace(/\s+/g, "-");
+														window.open(`/site/${slug}`, "_blank");
 													},
 												},
 												{
@@ -438,63 +571,83 @@ export function ContentFilledPage({
 													execute: () => {
 														// Clear cmpTaskMetadata from page
 														setPages((prev: Page[]) =>
-															prev.map(p =>
+															prev.map((p) =>
 																p.id === selectedPage.id
-																	? { ...p, cmpTaskMetadata: undefined }
+																	? {
+																			...p,
+																			cmpTaskMetadata:
+																				undefined,
+																		}
 																	: p
 															)
 														);
-														toaster.create(
-															"Page removed from task",
-															{ intent: "success" },
-														);
+														toaster.create("Page removed from task", {
+															intent: "success",
+														});
 														onSelectPage(null);
 													},
 												},
 											]
 										: selectedContentInstance
-										? [
-												// Menu options for CMP content instances
-												{
-													label: "Remove from task",
-													addon: <IconTrash size={16} />,
-													description: "Remove this item from the task",
-													execute: () => {
-														const updatedInstances = contentInstances.filter(inst => inst.id !== selectedContentInstance.id);
-														setContentInstances(updatedInstances);
+											? [
+													// Menu options for CMP content instances
+													{
+														label: "Remove from task",
+														addon: <IconTrash size={16} />,
+														description:
+															"Remove this item from the task",
+														execute: () => {
+															const updatedInstances =
+																contentInstances.filter(
+																	(inst) =>
+																		inst.id !==
+																		selectedContentInstance.id
+																);
+															setContentInstances(updatedInstances);
 
-														// Check if any items remain (content instances, pages, or assets)
-														const hasRemainingItems = updatedInstances.length > 0 || taskPages.length > 0 || taskAssets.length > 0;
+															// Check if any items remain (content instances, pages, or assets)
+															const hasRemainingItems =
+																updatedInstances.length > 0 ||
+																taskPages.length > 0 ||
+																taskAssets.length > 0;
 
-														if (hasRemainingItems) {
-															// Select first remaining item
-															if (updatedInstances.length > 0) {
-																onSelectContentInstance(updatedInstances[0].id);
-															} else if (taskPages.length > 0) {
-																onSelectPage(taskPages[0].id);
-															} else if (taskAssets.length > 0) {
-																onSelectTaskAsset(taskAssets[0].id);
+															if (hasRemainingItems) {
+																// Select first remaining item
+																if (updatedInstances.length > 0) {
+																	onSelectContentInstance(
+																		updatedInstances[0].id
+																	);
+																} else if (taskPages.length > 0) {
+																	onSelectPage(taskPages[0].id);
+																} else if (taskAssets.length > 0) {
+																	onSelectTaskAsset(
+																		taskAssets[0].id
+																	);
+																}
+															} else {
+																// No items left - navigate to empty state
+																onSelectContentInstance(null);
+																onTabChange("content"); // Trigger re-evaluation of hasTaskContent
 															}
-														} else {
-															// No items left - navigate to empty state
-															onSelectContentInstance(null);
-															onTabChange('content'); // Trigger re-evaluation of hasTaskContent
-														}
+														},
 													},
-												},
-											]
-										: selectedTaskAsset
-										? [
-												{
-													label: "Remove from task",
-													addon: <IconTrash size={16} />,
-													description: "Remove this item from the task",
-													execute: () => {
-														console.log('Remove asset:', selectedTaskAsset.id);
-													},
-												},
-											]
-										: []
+												]
+											: selectedTaskAsset
+												? [
+														{
+															label: "Remove from task",
+															addon: <IconTrash size={16} />,
+															description:
+																"Remove this item from the task",
+															execute: () => {
+																console.log(
+																	"Remove asset:",
+																	selectedTaskAsset.id
+																);
+															},
+														},
+													]
+												: []
 								}
 							>
 								<MenuTrigger asChild>
@@ -510,7 +663,10 @@ export function ContentFilledPage({
 										}}
 										type="button"
 									>
-										<IconDots size={16} color="var(--ax-colors-fg-secondary)" />
+										<IconEllipsisSolid
+											size={16}
+											color="var(--ax-colors-fg-secondary)"
+										/>
 									</button>
 								</MenuTrigger>
 								<MenuContent />
@@ -520,11 +676,15 @@ export function ContentFilledPage({
 
 					{selectedContentInstance ? (
 						(() => {
-							const contentModel = cmpContentModels.find(model => model.id === selectedContentInstance.modelId);
+							const contentModel = cmpContentModels.find(
+								(model) => model.id === selectedContentInstance.modelId
+							);
 							if (!contentModel) {
 								return (
-									<Box style={{ padding: "18px" }}>
-										<Text color="fg.tertiary" fontSize="sm">Content model not found</Text>
+									<Box style={{padding: "18px"}}>
+										<Text color="fg.tertiary" fontSize="sm">
+											Content model not found
+										</Text>
 									</Box>
 								);
 							}
@@ -532,21 +692,30 @@ export function ContentFilledPage({
 							if (isEditingContentInstance) {
 								// Edit mode: PropertyRenderer with form fields
 								return (
-									<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
+									<Box
+										display="flex"
+										flexDirection="column"
+										style={{gap: 16, padding: "18px"}}
+									>
 										{contentModel.properties?.map((cmpProperty) => {
-											const fieldValue = selectedContentInstance.fields[cmpProperty.name];
-											const cmsProperty = convertCmpPropertyToCms(cmpProperty);
+											const fieldValue =
+												selectedContentInstance.fields[cmpProperty.name];
+											const cmsProperty =
+												convertCmpPropertyToCms(cmpProperty);
 
 											const handleChange = (newValue: any) => {
 												const updatedInstance = {
 													...selectedContentInstance,
 													fields: {
 														...selectedContentInstance.fields,
-														[cmpProperty.name]: newValue
-													}
+														[cmpProperty.name]: newValue,
+													},
 												};
-												const updatedInstances = contentInstances.map(inst =>
-													inst.id === selectedContentInstance.id ? updatedInstance : inst
+												const updatedInstances = contentInstances.map(
+													(inst) =>
+														inst.id === selectedContentInstance.id
+															? updatedInstance
+															: inst
 												);
 												setContentInstances(updatedInstances);
 											};
@@ -558,7 +727,7 @@ export function ContentFilledPage({
 													value={fieldValue}
 													onChange={handleChange}
 													enableAI
-													context={{ runtimeContentTypes: contentTypes }}
+													context={{runtimeContentTypes: contentTypes}}
 													mode="edit"
 												/>
 											);
@@ -577,7 +746,11 @@ export function ContentFilledPage({
 						})()
 					) : selectedPage ? (
 						previewOutlines.length > 0 ? (
-							<Box display="flex" flexDirection="column" style={{ height: "100%", overflow: "hidden" }}>
+							<Box
+								display="flex"
+								flexDirection="column"
+								style={{height: "100%", overflow: "hidden"}}
+							>
 								<PreviewCanvas
 									outlines={previewOutlines}
 									theEles={{}}
@@ -586,11 +759,15 @@ export function ContentFilledPage({
 									setCurrentEle={setPreviewCurrentEle}
 									setCurrentHoverEle={setPreviewHoverEle}
 									setOutlines={setPreviewOutlines}
-									preview={{ mode: "responsive", width: 1440, maxWidth: 1440 }}
+									preview={{mode: "responsive", width: 1440, maxWidth: 1440}}
 								/>
 							</Box>
 						) : (
-							<Box display="flex" flexDirection="column" style={{ height: "100%", overflow: "auto" }}>
+							<Box
+								display="flex"
+								flexDirection="column"
+								style={{height: "100%", overflow: "auto"}}
+							>
 								<PropertyBasedPageRenderer
 									contentTypeId={selectedPage.contentTypeId}
 									properties={selectedPage.data || {}}
@@ -599,7 +776,11 @@ export function ContentFilledPage({
 							</Box>
 						)
 					) : selectedTaskAsset ? (
-						<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
+						<Box
+							display="flex"
+							flexDirection="column"
+							style={{gap: 16, padding: "18px"}}
+						>
 							<Text color="fg.secondary" fontSize="sm">
 								Task asset selected
 							</Text>
@@ -608,7 +789,11 @@ export function ContentFilledPage({
 							</Text>
 						</Box>
 					) : (
-						<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
+						<Box
+							display="flex"
+							flexDirection="column"
+							style={{gap: 16, padding: "18px"}}
+						>
 							<Text color="fg.error" fontSize="sm">
 								No content selected
 							</Text>

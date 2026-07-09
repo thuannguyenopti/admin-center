@@ -188,9 +188,10 @@ export const DISPLAY_TEMPLATES: DisplayTemplate[] = [
 	// =========================================================================
 
 	{
-		key: "defaultHeading",
-		displayName: "Default",
+		key: "h1Heading",
+		displayName: "H1",
 		contentType: "ct-heading",
+		templateValue: "h-1",
 		isDefault: true,
 		semanticTags: ["default", "normal", "standard"],
 		defaultSettings: {
@@ -222,9 +223,10 @@ export const DISPLAY_TEMPLATES: DisplayTemplate[] = [
 	},
 
 	{
-		key: "prominentHeading",
-		displayName: "Prominent",
+		key: "h2Heading",
+		displayName: "H2",
 		contentType: "ct-heading",
+		templateValue: "h-2",
 		semanticTags: ["prominent", "large", "hero", "big", "emphasize"],
 		defaultSettings: {
 			size: "large",
@@ -253,9 +255,10 @@ export const DISPLAY_TEMPLATES: DisplayTemplate[] = [
 	},
 
 	{
-		key: "subtleHeading",
-		displayName: "Subtle",
+		key: "h3Heading",
+		displayName: "H3",
 		contentType: "ct-heading",
+		templateValue: "h-3",
 		semanticTags: ["subtle", "small", "minimal", "quiet", "de-emphasize"],
 		defaultSettings: {
 			size: "small",
@@ -283,9 +286,10 @@ export const DISPLAY_TEMPLATES: DisplayTemplate[] = [
 	},
 
 	{
-		key: "accentHeading",
-		displayName: "Accent Color",
+		key: "h4Heading",
+		displayName: "H4",
 		contentType: "ct-heading",
+		templateValue: "h-4",
 		semanticTags: ["accent", "red", "blue", "color", "highlight"],
 		defaultSettings: {
 			size: "default",
@@ -440,6 +444,7 @@ export const DISPLAY_TEMPLATES: DisplayTemplate[] = [
 		key: "primaryButton",
 		displayName: "Primary",
 		contentType: "ct-button",
+		templateValue: "primary",
 		isDefault: true,
 		semanticTags: ["primary", "main", "cta", "prominent", "important"],
 		defaultSettings: {},
@@ -447,9 +452,10 @@ export const DISPLAY_TEMPLATES: DisplayTemplate[] = [
 	},
 
 	{
-		key: "secondaryButton",
-		displayName: "Secondary",
+		key: "outlineButton",
+		displayName: "Outline",
 		contentType: "ct-button",
+		templateValue: "outline",
 		semanticTags: ["secondary", "outline", "ghost", "alternative"],
 		defaultSettings: {},
 		settings: {}
@@ -459,6 +465,7 @@ export const DISPLAY_TEMPLATES: DisplayTemplate[] = [
 		key: "subtleButton",
 		displayName: "Subtle",
 		contentType: "ct-button",
+		templateValue: "subtle",
 		semanticTags: ["subtle", "text", "link", "minimal"],
 		defaultSettings: {},
 		settings: {}
@@ -498,23 +505,31 @@ export const DISPLAY_TEMPLATES: DisplayTemplate[] = [
 		key: "defaultHero",
 		displayName: "Default",
 		contentType: "ct-hero",
+		templateValue: "default",
 		isDefault: true,
-		semanticTags: ["default", "normal", "app", "homepage"],
-		defaultSettings: {
-			layout: "default"
-		},
-		settings: {
-			layout: {
-				displayName: "Layout",
-				editor: "select",
-				sortOrder: 10,
-				choices: {
-					"default": { displayName: "Default", sortOrder: 10 },
-					"centered": { displayName: "Centered", sortOrder: 20 },
-					"event": { displayName: "Event", sortOrder: 30 }
-				}
-			}
-		}
+		semanticTags: ["default", "normal", "app", "homepage", "split"],
+		defaultSettings: {},
+		settings: {}
+	},
+
+	{
+		key: "centeredHero",
+		displayName: "Centered",
+		contentType: "ct-hero",
+		templateValue: "centered",
+		semanticTags: ["centered", "center", "symmetrical", "campaign"],
+		defaultSettings: {},
+		settings: {}
+	},
+
+	{
+		key: "eventHero",
+		displayName: "Event",
+		contentType: "ct-hero",
+		templateValue: "event",
+		semanticTags: ["event", "dark", "full-bleed", "immersive"],
+		defaultSettings: {},
+		settings: {}
 	},
 
 	// =========================================================================

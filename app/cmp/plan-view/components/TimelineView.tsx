@@ -1,6 +1,6 @@
 import { Box, Badge, Button } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
+import {IconChevronDown, IconChevronRight} from "@/app/lib/axiom-icons";
 import { parseDate, getStatusColor } from "../utils";
 import type { PlanItem } from "../types";
 

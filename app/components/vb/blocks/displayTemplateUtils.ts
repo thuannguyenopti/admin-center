@@ -130,6 +130,19 @@ export function getTemplateByKey(key: string): DisplayTemplate | undefined {
 }
 
 /**
+ * Find a template key by its templateValue (e.g. "h-2" → "h2Heading")
+ */
+export function findTemplateByValue(
+	templateValue: string,
+	filters?: { contentType?: string; baseType?: string }
+): string | undefined {
+	let templates = DISPLAY_TEMPLATES;
+	if (filters?.contentType) templates = templates.filter(t => t.contentType === filters.contentType);
+	if (filters?.baseType) templates = templates.filter(t => t.baseType === filters.baseType as any);
+	return templates.find(t => t.templateValue === templateValue)?.key;
+}
+
+/**
  * Apply default settings for a template
  *
  * For AI use: when applying a template, use its default settings

@@ -12,7 +12,7 @@ import {
 } from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import Link from "next/link";
-import {IconFolder} from "@tabler/icons-react";
+import {IconFolder} from "@/app/lib/axiom-icons";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import {reportItems} from "./mockData";
 import {DateTimeCell} from "./components/DateTimeCell";

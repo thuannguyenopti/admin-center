@@ -388,6 +388,7 @@ export type ContentType = {
 	isAvailable?: boolean;
 	availableForComposition?: boolean;
 	compositionDisplayAs?: CompositionDisplayAs[];
+	componentDocsUrl?: string;
 	// AvailableContentTypesAttribute (parent-side control)
 	availableContentTypes?: {
 		availability?: "All" | "None"; // Default behavior: All means all types allowed, None means no types allowed
@@ -650,6 +651,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Image",
 		baseType: "Block",
 		description: "An image block for page layouts",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{
 				id: "image",
@@ -688,6 +691,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Heading",
 		baseType: "Block",
 		description: "A heading block",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{ id: "text", name: "Text", displayName: "Text", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "accent", name: "Accent", displayName: "Accent Text", type: "String", required: false, groupName: "Content", order: 2, description: "Optional rotated accent text displayed above the heading" },
@@ -714,13 +719,12 @@ export const initialContentTypes: ContentType[] = [
 				type: "SelectOne",
 				groupName: "Appearance",
 				options: [
-					{ label: "Default", value: "default" },
-					{ label: "Prominent", value: "prominent" },
-					{ label: "Subtle", value: "subtle" },
-					{ label: "Red Accent", value: "accent-red" },
-					{ label: "Blue Accent", value: "accent-blue" }
+					{ label: "H1", value: "h-1" },
+					{ label: "H2", value: "h-2" },
+					{ label: "H3", value: "h-3" },
+					{ label: "H4", value: "h-4" }
 				],
-				defaultValue: "default"
+				defaultValue: "h-1"
 			}
 		],
 	},
@@ -730,6 +734,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Number Line",
 		baseType: "Block",
 		description: "A number badge with horizontal line separator",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{ id: "number", name: "Number", displayName: "Number", type: "String", required: false, groupName: "Content", order: 1, description: "Number to display (e.g., '01', '02'). Leave empty for line only." }
 		],
@@ -740,6 +746,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Text",
 		baseType: "Block",
 		description: "A text block",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{ id: "text", name: "Text", displayName: "Text", type: "LongString", required: true, groupName: "Content", order: 1 },
 			{
@@ -763,6 +771,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Rich Text",
 		baseType: "Block",
 		description: "A rich text block supporting simple markup",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [{ id: "richtext", name: "Rich Text", displayName: "Rich Text", type: "XhtmlString", required: true, groupName: "Content", order: 1 }],
 	},
 	{
@@ -771,6 +781,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Button",
 		baseType: "Block",
 		description: "A button block",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{ id: "label", name: "Label", displayName: "Label", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "url", name: "URL", displayName: "URL", type: "Url", groupName: "Content", order: 2 },
@@ -782,7 +794,7 @@ export const initialContentTypes: ContentType[] = [
 				groupName: "Appearance",
 				options: [
 					{ label: "Primary", value: "primary" },
-					{ label: "Secondary", value: "secondary" },
+					{ label: "Outline", value: "outline" },
 					{ label: "Subtle", value: "subtle" }
 				],
 				defaultValue: "primary"
@@ -843,6 +855,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Hero Section",
 		baseType: "Block",
 		description: "A full-width hero section with heading, subheading, buttons, and optional app mockup",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{
 				id: "badge",
@@ -1176,6 +1190,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Input",
 		baseType: "Block",
 		description: "An input block",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{ id: "label", name: "Label", displayName: "Label", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "placeholder", name: "Placeholder", displayName: "Placeholder", type: "String", groupName: "Content", order: 2 },
@@ -1444,6 +1460,7 @@ export type Application = {
 	name: string;
 	appId: string;
 	url?: string;
+	componentDocsUrl?: string;
 	startPageId?: string;
 	modifiedAt?: string;
 	modifiedBy?: string;
@@ -1844,7 +1861,7 @@ export const initialPages: Page[] = [
 									text: "One home for every training block",
 									accent: "01Why Stride",
 									level: "h2",
-									displayTemplateKey: "prominentHeading",
+									displayTemplateKey: "h2Heading",
 					displaySettings: [
 						{ key: "size", value: "large" },
 						{ key: "emphasis", value: "bold" },
@@ -1975,7 +1992,7 @@ export const initialPages: Page[] = [
 									text: "Coaches get clarity fast",
 									accent: "02Live context",
 									level: "h2",
-									displayTemplateKey: "prominentHeading",
+									displayTemplateKey: "h2Heading",
 									displaySettings: [
 										{ key: "size", value: "large" },
 										{ key: "emphasis", value: "bold" },
@@ -2007,7 +2024,7 @@ export const initialPages: Page[] = [
 									text: "Features that keep crews aligned",
 									accent: "03Crew rituals",
 									level: "h2",
-									displayTemplateKey: "prominentHeading",
+									displayTemplateKey: "h2Heading",
 									displaySettings: [
 										{ key: "size", value: "large" },
 										{ key: "emphasis", value: "bold" },
@@ -2045,7 +2062,7 @@ export const initialPages: Page[] = [
 									text: "Let athletes stay in flow",
 									accent: "04Flow state",
 									level: "h2",
-									displayTemplateKey: "prominentHeading",
+									displayTemplateKey: "h2Heading",
 									displaySettings: [
 										{ key: "size", value: "large" },
 										{ key: "emphasis", value: "bold" },
@@ -2176,7 +2193,7 @@ export const initialPages: Page[] = [
 							},
 						],
 						elements: {
-							"ele-about-h1": { type: "ct-heading", properties: { text: "About us", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+							"ele-about-h1": { type: "ct-heading", properties: { text: "About us", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 							"ele-about-intro-text": { type: "ct-text", properties: { text: "Stride was founded on a simple belief: that everyone has an athlete inside them, waiting to break free. We build tools that help you visualize your progress, connect with others, and reach your full potential.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "large" }] } },
 							"ele-about-mission-h2": { type: "ct-heading", properties: { text: "Our Mission", level: "h2" } },
 							"ele-about-mission-text": { type: "ct-text", properties: { text: "We're dedicated to making professional-grade training tools accessible to everyone. Whether you're training for your first 5k or your fiftieth marathon, Stride is with you every step of the way.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
@@ -2238,16 +2255,16 @@ export const initialPages: Page[] = [
 				] }] },
 				{ id: "sec-ne-events-btn", name: "Events Button", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-ne-events-btn", open: true, children: [{ id: "col-ne-events-btn", open: true, elements: [{ id: "ele-ne-all-events-btn" }] }] }] },
 			], elements: {
-				"ele-ne-h1": { type: "ct-heading", properties: { text: "News & Events", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-ne-h1": { type: "ct-heading", properties: { text: "News & Events", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-ne-news-h2": { type: "ct-heading", properties: { text: "Latest News", level: "h2" } },
 				"ele-ne-news-1": { type: "ct-news-item", properties: { title: "Stride raises Series B to expand global fitness community", date: "2026-02-01", image: "/sports-1.jpg", summary: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more." } },
 				"ele-ne-news-2": { type: "ct-news-item", properties: { title: "Introducing Stride Stats 2.0 with AI coaching", date: "2026-01-15", image: "/sports-2.jpg", summary: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing." } },
 				"ele-ne-news-3": { type: "ct-news-item", properties: { title: "Stride named Top 10 Fitness App of 2025", date: "2025-12-10", image: "/sports-3.jpg", summary: "FitTech Magazine has recognized Stride as a leading solution for endurance athletes in their annual awards." } },
-				"ele-ne-all-news-btn": { type: "ct-button", properties: { label: "ALL NEWS", displayTemplateKey: "secondaryButton" } },
+				"ele-ne-all-news-btn": { type: "ct-button", properties: { label: "ALL NEWS", displayTemplateKey: "outlineButton" } },
 				"ele-ne-events-h2": { type: "ct-heading", properties: { text: "Upcoming Events", level: "h2" } },
 				"ele-ne-event-1": { type: "ct-event-card", properties: { title: "Global Running Summit 2026", date: "2026-04-20", location: "San Francisco, CA", description: "Join us for a day of keynotes and workshops on the future of endurance sports and wearable technology." } },
 				"ele-ne-event-2": { type: "ct-event-card", properties: { title: "Stride Community Marathon", date: "2026-06-15", location: "London, UK", description: "Connect with other Stride athletes, break your personal bests, and celebrate with the community." } },
-				"ele-ne-all-events-btn": { type: "ct-button", properties: { label: "ALL EVENTS", displayTemplateKey: "secondaryButton" } },
+				"ele-ne-all-events-btn": { type: "ct-button", properties: { label: "ALL EVENTS", displayTemplateKey: "outlineButton" } },
 			}},
 			{ id: "ol-ne-sidebar", title: "Sidebar", tree: [{ id: "sec-ne-nav", name: "Nav", open: true, children: [{ id: "row-ne-nav", open: true, children: [{ id: "col-ne-nav", open: true, elements: [{ id: "ele-ne-nav-1" }, { id: "ele-ne-nav-1a" }, { id: "ele-ne-nav-1b" }, { id: "ele-ne-nav-2" }, { id: "ele-ne-nav-3" }, { id: "ele-ne-nav-4" }] }] }] }], elements: {
 				"ele-ne-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
@@ -2273,7 +2290,7 @@ export const initialPages: Page[] = [
 			{ id: "ol-news-main", title: "Main", tree: [
 				{ id: "sec-news-list", name: "News", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-news-list", open: true, children: [{ id: "col-news-list", open: true, elements: [{ id: "ele-news-h1" }, { id: "ele-news-item-1" }, { id: "ele-news-item-2" }, { id: "ele-news-item-3" }] }] }] },
 			], elements: {
-				"ele-news-h1": { type: "ct-heading", properties: { text: "News", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-news-h1": { type: "ct-heading", properties: { text: "News", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-news-item-1": { type: "ct-news-item", properties: { title: "Stride raises Series B to expand global fitness community", date: "2026-02-01", image: "/sports-1.jpg", summary: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more." } },
 				"ele-news-item-2": { type: "ct-news-item", properties: { title: "Introducing Stride Stats 2.0 with AI coaching", date: "2026-01-15", image: "/sports-2.jpg", summary: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing." } },
 				"ele-news-item-3": { type: "ct-news-item", properties: { title: "Stride named Top 10 Fitness App of 2025", date: "2025-12-10", image: "/sports-3.jpg", summary: "FitTech Magazine has recognized Stride as a leading solution for endurance athletes in their annual awards." } },
@@ -2306,7 +2323,7 @@ export const initialPages: Page[] = [
 					{ id: "col-ev-2", open: true, elements: [{ id: "ele-ev-item-2" }] },
 				] }] },
 			], elements: {
-				"ele-ev-h1": { type: "ct-heading", properties: { text: "Events", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-ev-h1": { type: "ct-heading", properties: { text: "Events", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-ev-item-1": { type: "ct-event-card", properties: { title: "Global Running Summit 2026", date: "2026-04-20", location: "San Francisco, CA", description: "Join us for a day of keynotes and workshops on the future of endurance sports and wearable technology." } },
 				"ele-ev-item-2": { type: "ct-event-card", properties: { title: "Stride Community Marathon", date: "2026-06-15", location: "London, UK", description: "Connect with other Stride athletes, break your personal bests, and celebrate with the community." } },
 			}},
@@ -2341,7 +2358,7 @@ export const initialPages: Page[] = [
 					{ id: "col-mgmt-4", open: true, elements: [{ id: "ele-mgmt-card-4" }] },
 				] }] },
 			], elements: {
-				"ele-mgmt-h1": { type: "ct-heading", properties: { text: "Management", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-mgmt-h1": { type: "ct-heading", properties: { text: "Management", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-mgmt-intro": { type: "ct-text", properties: { text: "Our experienced and dedicated managers are committed to improving the effectiveness of project teams everywhere. Meet them here:", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
 				"ele-mgmt-card-1": { type: "ct-card", properties: { backgroundImage: "/sports-1.jpg", label: "Robert Carlsson — CEO", description: "Robert is Stride's CEO and visionary leader. Robert has led product development for major sports brands for over 20 years. robert.carlsson@stride.com | +46 8 123 456", displaySettings: [{ key: "style", value: "simple" }] } },
 				"ele-mgmt-card-2": { type: "ct-card", properties: { backgroundImage: "/sports-2.jpg", label: "Michelle Hernandez — CFO", description: "Michelle brings more than 10 years of finance and operational management experience to Stride. michelle.hernandez@stride.com | +46 8 123 458", displaySettings: [{ key: "style", value: "simple" }] } },
@@ -2372,7 +2389,7 @@ export const initialPages: Page[] = [
 			{ id: "ol-ct-main", title: "Main", tree: [
 				{ id: "sec-ct-content", name: "Contact", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-ct-content", open: true, children: [{ id: "col-ct-content", open: true, elements: [{ id: "ele-ct-h1" }, { id: "ele-ct-intro" }, { id: "ele-ct-body" }, { id: "ele-ct-support" }, { id: "ele-ct-press" }, { id: "ele-ct-phone" }] }] }] },
 			], elements: {
-				"ele-ct-h1": { type: "ct-heading", properties: { text: "Contact Us", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-ct-h1": { type: "ct-heading", properties: { text: "Contact Us", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-ct-intro": { type: "ct-text", properties: { text: "We'd love to hear from you.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "large" }] } },
 				"ele-ct-body": { type: "ct-text", properties: { text: "Get in touch with our team for support, partnership inquiries, or general questions.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
 				"ele-ct-support": { type: "ct-text", properties: { text: "Support: support@stride.com", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
@@ -2403,10 +2420,10 @@ export const initialPages: Page[] = [
 			{ id: "ol-coach-main", title: "Main", tree: [
 				{ id: "sec-coach-content", name: "Coaches", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-coach-content", open: true, children: [{ id: "col-coach-content", open: true, elements: [{ id: "ele-coach-h1" }, { id: "ele-coach-intro" }, { id: "ele-coach-body" }, { id: "ele-coach-apply-btn" }] }] }] },
 			], elements: {
-				"ele-coach-h1": { type: "ct-heading", properties: { text: "Become a Coach", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-coach-h1": { type: "ct-heading", properties: { text: "Become a Coach", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-coach-intro": { type: "ct-text", properties: { text: "Partner with us to bring professional training to everyone.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "large" }] } },
 				"ele-coach-body": { type: "ct-text", properties: { text: "Join our network of certified coaches and help athletes across the globe reach their peak performance.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
-				"ele-coach-apply-btn": { type: "ct-button", properties: { label: "APPLY NOW", displayTemplateKey: "secondaryButton" } },
+				"ele-coach-apply-btn": { type: "ct-button", properties: { label: "APPLY NOW", displayTemplateKey: "outlineButton" } },
 			}},
 			{ id: "ol-coach-sidebar", title: "Sidebar", tree: [{ id: "sec-coach-nav", name: "Nav", open: true, children: [{ id: "row-coach-nav", open: true, children: [{ id: "col-coach-nav", open: true, elements: [{ id: "ele-co-nav-1" }, { id: "ele-co-nav-1a" }, { id: "ele-co-nav-1b" }, { id: "ele-co-nav-2" }, { id: "ele-co-nav-3" }, { id: "ele-co-nav-4" }] }] }] }], elements: {
 				"ele-co-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
@@ -2432,10 +2449,10 @@ export const initialPages: Page[] = [
 			{ id: "ol-reseller-main", title: "Main", tree: [
 				{ id: "sec-reseller-content", name: "Reseller", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-reseller-content", open: true, children: [{ id: "col-reseller-content", open: true, elements: [{ id: "ele-reseller-h1" }, { id: "ele-reseller-intro" }, { id: "ele-reseller-body" }, { id: "ele-reseller-apply-btn" }] }] }] },
 			], elements: {
-				"ele-reseller-h1": { type: "ct-heading", properties: { text: "Become a Reseller", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-reseller-h1": { type: "ct-heading", properties: { text: "Become a Reseller", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-reseller-intro": { type: "ct-text", properties: { text: "Stock Stride hardware, apparel, and subscriptions at your retail location or online shop.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "large" }] } },
 				"ele-reseller-body": { type: "ct-text", properties: { text: "Our reseller program gives you access to wholesale pricing, co-branded marketing assets, and priority support. Whether you run a specialty running store or an online fitness marketplace, we make onboarding seamless.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
-				"ele-reseller-apply-btn": { type: "ct-button", properties: { label: "BECOME A RESELLER", displayTemplateKey: "secondaryButton" } },
+				"ele-reseller-apply-btn": { type: "ct-button", properties: { label: "BECOME A RESELLER", displayTemplateKey: "outlineButton" } },
 			}},
 			{ id: "ol-reseller-sidebar", title: "Sidebar", tree: [{ id: "sec-reseller-nav", name: "Nav", open: true, children: [{ id: "row-reseller-nav", open: true, children: [{ id: "col-reseller-nav", open: true, elements: [{ id: "ele-rs-nav-1" }, { id: "ele-rs-nav-1a" }, { id: "ele-rs-nav-1b" }, { id: "ele-rs-nav-2" }, { id: "ele-rs-nav-3" }, { id: "ele-rs-nav-4" }] }] }] }], elements: {
 				"ele-rs-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
@@ -3240,7 +3257,7 @@ export const initialPages: Page[] = [
 								type: "ct-button",
 								properties: {
 									label: "ALL NEWS & EVENTS",
-									displayTemplateKey: "secondaryButton",
+									displayTemplateKey: "outlineButton",
 					displaySettings: [],
 								},
 							},
@@ -5918,7 +5935,7 @@ export const initialPages: Page[] = [
 							"ele-ch-news-label": { type: "ct-text", properties: { text: "NEWS", displayTemplateKey: "accentText", displaySettings: [{ key: "color", value: "blue" }] } },
 							"ele-ch-news-1": { type: "ct-sidebar-item", properties: { title: "Stride raises Series B to expand global fitness community", description: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more." } },
 							"ele-ch-news-2": { type: "ct-sidebar-item", properties: { title: "Introducing Stride Stats 2.0 with AI coaching", description: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing." } },
-							"ele-ch-news-btn": { type: "ct-button", properties: { label: "ALL NEWS & EVENTS", displayTemplateKey: "secondaryButton" } },
+							"ele-ch-news-btn": { type: "ct-button", properties: { label: "ALL NEWS & EVENTS", displayTemplateKey: "outlineButton" } },
 						},
 					},
 				],
@@ -6035,7 +6052,7 @@ export const initialPages: Page[] = [
 							"ele-sub-news-label": { type: "ct-text", properties: { text: "NEWS", displayTemplateKey: "accentText", displaySettings: [{ key: "color", value: "blue" }] } },
 							"ele-sub-news-1": { type: "ct-sidebar-item", properties: { title: "Stride raises Series B to expand global fitness community", description: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more." } },
 							"ele-sub-news-2": { type: "ct-sidebar-item", properties: { title: "Introducing Stride Stats 2.0 with AI coaching", description: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing." } },
-							"ele-sub-news-btn": { type: "ct-button", properties: { label: "ALL NEWS & EVENTS", displayTemplateKey: "secondaryButton" } },
+							"ele-sub-news-btn": { type: "ct-button", properties: { label: "ALL NEWS & EVENTS", displayTemplateKey: "outlineButton" } },
 						},
 					},
 				],

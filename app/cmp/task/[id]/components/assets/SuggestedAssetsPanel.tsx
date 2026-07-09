@@ -3,7 +3,7 @@
 import { Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconChevronDown, IconPencil, IconX } from "@tabler/icons-react";
+import {IconChevronDown, IconPen, IconXmark} from "@/app/lib/axiom-icons";
 import { useEffect, useMemo, useState } from "react";
 import type { AssetItem } from "../../types";
 import { PanelAssetCard } from "./PanelAssetCard";
@@ -72,7 +72,7 @@ export function SuggestedAssetsPanel({
 						Based on your brief
 					</Text>
 				</Box>
-				<Button appearance="subtle" aria-label="Close" icon={<IconX size={18} />} onClick={onClose} size="sm" />
+				<Button appearance="subtle" aria-label="Close" icon={<IconXmark size={18} />} onClick={onClose} size="sm" />
 			</Box>
 
 			{selectedAssetsCount > 0 && (
@@ -94,7 +94,7 @@ export function SuggestedAssetsPanel({
 						<Button
 							appearance="subtle"
 							aria-label="Clear selected assets"
-							icon={<IconX size={16} />}
+							icon={<IconXmark size={16} />}
 							onClick={onClearSelection}
 							size="sm"
 						/>
@@ -137,7 +137,7 @@ export function SuggestedAssetsPanel({
 					)}
 				</Box>
 				<Box alignItems="center" display="flex" gap="8">
-					<Button appearance="subtle" icon={<IconPencil size={16} />} onClick={onEditSearch} size="sm">
+					<Button appearance="subtle" icon={<IconPen size={16} />} onClick={onEditSearch} size="sm">
 						Edit Search
 					</Button>
 				</Box>

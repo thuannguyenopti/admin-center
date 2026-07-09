@@ -9,7 +9,7 @@ import StrideHeaderContent from "../../site/StrideHeaderContent";
 import StrideHeaderWrapper from "../../site/StrideHeaderWrapper";
 import StrideFooter from "../../site/StrideFooter";
 import StrideColumnGrid from "../../site/StrideColumnGrid";
-import {IconMenu2, IconX} from "@tabler/icons-react";
+import {IconBars, IconXmark} from "@/app/lib/axiom-icons";
 
 const MOBILE_BP = 1024;
 
@@ -77,8 +77,8 @@ export default function PropertyBasedPreview({
 					<StrideHeaderWrapper positioning="absolute" useMaxWidth={true}>
 						<StrideHeaderContent
 							isMobile={isMobileViewport}
-							menuIcon={<IconMenu2 size={24} />}
-							closeIcon={<IconX size={24} />}
+							menuIcon={<IconBars size={24} />}
+							closeIcon={<IconXmark size={24} />}
 						/>
 					</StrideHeaderWrapper>
 

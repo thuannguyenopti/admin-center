@@ -28,6 +28,7 @@ export const webExperimentationNav = [
 		url: "/web-experimentation/optimizations",
 		highlight: "/web-experimentation/optimizations",
 		icon: <IconFlask />,
+		instantShell: true,
 		children: [
 			{
 				label: "Optimization Details",

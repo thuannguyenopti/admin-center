@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Badge, Box, Button, Select, Text, Textarea } from "@optiaxiom/react";
+import { Alert, Badge, Box, Button, Select, Text, Textarea } from "@optiaxiom/react";
 import { IconArrowUpRightFromSquare, IconDownload, IconPlus } from "@optimizely/axiom-icons";
 import type { BrandAsset, BrandPack } from "../../types";
 
@@ -210,25 +210,9 @@ export function ImagesTab({ pack }: ImagesTabProps) {
 				</Box>
 			</Box>
 
-			<Box
-				alignItems="center"
-				bg="bg.secondary"
-				borderColor="border.tertiary"
-				display="flex"
-				gap="8"
-				p="12"
-				rounded="lg"
-			>
-				<Box
-					bg="bg.accent.subtle"
-					display="flex"
-					rounded="full"
-					style={{ flexShrink: 0, height: 6, width: 6 }}
-				/>
-				<Text color="fg.secondary" fontSize="xs">
-					Classify every asset where it appears. Use <strong>Style reference</strong> for mood/composition and <strong>Logo</strong> only for marks Opal may place. Add constraints when an image should be resized or referenced, not recreated.
-				</Text>
-			</Box>
+			<Alert intent="information">
+				Classify every asset where it appears. Use <strong>Style reference</strong> for mood/composition and <strong>Logo</strong> only for marks Opal may place. Add constraints when an image should be resized or referenced, not recreated.
+			</Alert>
 
 			{filtered.length > 0 ? (
 				<Box

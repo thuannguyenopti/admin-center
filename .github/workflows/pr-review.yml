@@ -1,0 +1,116 @@
+name: AI PR Review
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Review PR with GitHub Models
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          git fetch origin main --depth=50
+
+          # Truncate at the source: a huge diff must never exhaust memory or
+          # SIGPIPE the pipeline (this is what broke the review on large PRs).
+          DIFF=$(git diff origin/main...HEAD 2>/dev/null | head -c 60000)
+          if [ -z "$DIFF" ]; then
+            echo "Empty diff — nothing to review"
+            exit 0
+          fi
+
+          CLAUDE_MD=$(cat CLAUDE.md 2>/dev/null | head -c 8000 || true)
+
+          PROMPT="You are a code reviewer for the axiom-play repository (a Next.js multi-product UI prototype using the Optimizely Axiom design system).
+
+          ## Repository conventions (CLAUDE.md excerpt)
+          \`\`\`
+          ${CLAUDE_MD}
+          \`\`\`
+
+          ## PR: ${PR_TITLE}
+
+          ## Diff
+          \`\`\`diff
+          ${DIFF}
+          \`\`\`
+
+          Review this diff carefully. Look for:
+          - **Correctness bugs**: null/undefined deref, wrong conditions, missing await, off-by-one, swallowed errors, copy-paste mistakes
+          - **Removed behavior**: guards, validations, or error paths deleted without replacement
+          - **Cross-file breakage**: callers of changed functions that may now receive a different shape
+          - **Convention violations**: clear violations of the CLAUDE.md rules (quote the rule)
+          - **Unnecessary complexity**: redundant state, dead code, things that duplicate existing helpers
+
+          Format your response as a markdown PR review comment:
+          - Start with a one-line summary (e.g. \"2 issues found\" or \"Looks good\")
+          - List each finding as a bullet: \`**file:line** — description\`
+          - Keep it concise and actionable
+          - If nothing is wrong, say so briefly
+
+          Do not nitpick style or formatting. Prioritize correctness bugs."
+
+          PROMPT_JSON=$(printf '%s' "$PROMPT" | python3 -c "
+          import sys, json
+          print(json.dumps(sys.stdin.read()))
+          ")
+
+          RESPONSE=$(curl -sf https://models.github.com/inference/chat/completions \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"model\": \"gpt-4o\",
+              \"max_tokens\": 2048,
+              \"messages\": [{\"role\": \"user\", \"content\": $PROMPT_JSON}]
+            }")
+
+          # Advisory bot: never fail the job on an API hiccup — just skip the comment.
+          if [ $? -ne 0 ] || [ -z "$RESPONSE" ]; then
+            echo "GitHub Models API call failed or returned empty — skipping review comment"
+            exit 0
+          fi
+
+          COMMENT=$(echo "$RESPONSE" | python3 -c "
+          import sys, json
+          try:
+              data = json.load(sys.stdin)
+              print(data['choices'][0]['message']['content'])
+          except Exception:
+              print('')
+          ")
+
+          if [ -z "$COMMENT" ]; then
+            echo "No review content returned — skipping comment"
+            exit 0
+          fi
+
+          BODY="<!-- ai-review-bot -->
+
+          **AI Code Review**
+
+          ${COMMENT}"
+
+          EXISTING=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
+            --jq '.[] | select(.body | startswith("<!-- ai-review-bot -->")) | .id' \
+            2>/dev/null | head -1)
+
+          if [ -n "$EXISTING" ]; then
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/issues/comments/$EXISTING" 2>/dev/null || true
+          fi
+
+          gh pr comment "$PR_NUMBER" --body "$BODY"

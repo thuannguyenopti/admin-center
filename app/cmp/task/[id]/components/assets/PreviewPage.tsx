@@ -3,15 +3,7 @@
 import { Badge, Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import {
-	IconCopy,
-	IconEye,
-	IconLink,
-	IconMaximize,
-	IconSearch,
-	IconUpload,
-	IconChevronRight,
-} from "@tabler/icons-react";
+import {IconCopy, IconEye, IconLink, IconMaximize, IconSearch, IconUpload, IconChevronRight} from "@/app/lib/axiom-icons";
 import type { AssetItem } from "../../types";
 
 type PreviewPageProps = {

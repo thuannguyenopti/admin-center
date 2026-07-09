@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Field, Card, CardPreview, CardImage, CardHeader, Button, Menu, MenuTrigger, MenuContent, EllipsisMenuButton, Input } from "@optiaxiom/react";
-import { IconPencil, IconTrash, IconPhoto } from "@tabler/icons-react";
+import {IconPen, IconTrash, IconImage} from "@/app/lib/axiom-icons";
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import AbstractDialog from "@/app/components/AbstractDialog";
@@ -212,8 +212,8 @@ export const MediaImageRenderer: React.FC<MediaImageRendererProps> = ({
 									addonAfter={
 										<Menu
 											options={[
-												{ addon: <IconPhoto />, label: "Select from Library", execute: handleEditImage },
-												{ addon: <IconPencil />, label: "Enter URL", execute: handleEnterUrl },
+												{ addon: <IconImage />, label: "Select from Library", execute: handleEditImage },
+												{ addon: <IconPen />, label: "Enter URL", execute: handleEnterUrl },
 												{ addon: <IconTrash />, intent: "danger", label: "Remove", execute: handleRemoveImage },
 											]}
 										>

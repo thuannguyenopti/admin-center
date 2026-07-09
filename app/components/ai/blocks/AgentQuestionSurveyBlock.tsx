@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Box, Button, Group, Heading, Text } from "@optiaxiom/react";
-import { IconX } from "@tabler/icons-react";
+import {IconXmark} from "@/app/lib/axiom-icons";
 import { AdaptiveBlockComponentProps } from "../AdaptiveBlockRegistry";
 
 export type AgentSurveyOption = {
@@ -59,7 +59,7 @@ export const AgentQuestionSurveyBlock: React.FC<AdaptiveBlockComponentProps> = (
               onClick={survey.onDismiss}
               aria-label="Close survey"
             >
-              <IconX size={14} />
+              <IconXmark size={14} />
             </Button>
           ) : null}
         </Group>

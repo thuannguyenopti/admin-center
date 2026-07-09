@@ -17,7 +17,7 @@ import {
 	IconChevronDown,
 	IconFile,
 	IconPlus,
-	IconPencil,
+	IconPen,
 	IconFolderPlus,
 	IconFilePlus,
 	IconCut,
@@ -27,7 +27,7 @@ import {
 	IconArrowDown,
 	IconTrash,
 	IconHome,
-} from "@tabler/icons-react";
+} from "@/app/lib/axiom-icons";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import {Flex} from "@/app/components/Flex";
@@ -201,7 +201,7 @@ const PageRow = ({
 							router.push("/cms/settings/applications/mosey-bank/settings"),
 					},
 					{
-						addon: <IconPencil size={16} />,
+						addon: <IconPen size={16} />,
 						label: "Rename",
 						execute: () => console.log("Rename", node.id),
 					},
@@ -213,7 +213,7 @@ const PageRow = ({
 				]
 			: [
 					{
-						addon: <IconPencil size={16} />,
+						addon: <IconPen size={16} />,
 						label: "Rename",
 						execute: () => console.log("Rename", node.id),
 					},
@@ -360,8 +360,8 @@ const PageRow = ({
 				const badge = document.createElement("div");
 				badge.style.marginTop = "8px";
 				badge.style.padding = "4px 8px";
-				badge.style.backgroundColor = "var(--ax-colors-bg-accent-subtle)";
-				badge.style.color = "var(--ax-colors-fg-accent)";
+				badge.style.backgroundColor = "var(--ax-colors-bg-secondary)";
+				badge.style.color = "var(--ax-colors-fg-default)";
 				badge.style.borderRadius = "4px";
 				badge.style.fontSize = "12px";
 				badge.style.fontWeight = "500";
@@ -458,17 +458,17 @@ const PageRow = ({
 				style={{
 					opacity: isInClipboard && clipboard?.operation === "cut" ? 0.5 : 1,
 					backgroundColor: isSelected
-						? "var(--ax-colors-bg-accent-subtle)"
+						? "var(--ax-colors-bg-default-pressed)"
 						: dropPosition === "inside"
-							? "var(--ax-colors-bg-accent-subtle)"
+							? "var(--ax-colors-bg-default-pressed)"
 							: undefined,
 					borderTop:
 						dropPosition === "before"
-							? "2px solid var(--ax-colors-border-accent)"
+							? "2px solid var(--ax-colors-border-default)"
 							: undefined,
 					borderBottom:
 						dropPosition === "after"
-							? "2px solid var(--ax-colors-border-accent)"
+							? "2px solid var(--ax-colors-border-default)"
 							: undefined,
 				}}
 			>

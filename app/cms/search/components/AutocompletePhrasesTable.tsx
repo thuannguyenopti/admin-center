@@ -1,6 +1,6 @@
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import Item from "@/app/components/Item";
-import {IconTrash, IconPencil, IconDots, IconAbc} from "@tabler/icons-react";
+import {IconTrash, IconPen, IconEllipsisSolid, IconAbc} from "@/app/lib/axiom-icons";
 import {Menu, MenuTrigger, MenuContent, Box, Pagination} from "@optiaxiom/react";
 import {AutocompletePhrase} from "@/app/db/initialData";
 
@@ -46,7 +46,7 @@ export default function AutocompletePhrasesTable({
 										options={[
 											{
 												label: "Edit",
-												addon: <IconPencil size={16} />,
+												addon: <IconPen size={16} />,
 												execute: () => onEdit(phrase),
 											},
 											{
@@ -59,7 +59,7 @@ export default function AutocompletePhrasesTable({
 									>
 										<MenuTrigger
 											aria-label="Actions"
-											icon={<IconDots size={16} />}
+											icon={<IconEllipsisSolid size={16} />}
 											appearance="subtle"
 											size="md"
 										/>

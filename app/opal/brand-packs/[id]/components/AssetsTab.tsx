@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Box, Button, Text } from "@optiaxiom/react";
-import { IconArrowUpRightFromSquare, IconCopy, IconDownload } from "@optimizely/axiom-icons";
-import type { BrandPack, BrandAsset } from "../../types";
+import {useState} from "react";
+import {Box, Button, Text} from "@optiaxiom/react";
+import {IconArrowUpRightFromSquare, IconCopy, IconDownload} from "@optimizely/axiom-icons";
+import type {BrandPack, BrandAsset} from "../../types";
 
 type AssetsTabProps = {
 	pack: BrandPack;
@@ -16,14 +16,14 @@ const assetTypeLabel: Record<BrandAsset["type"], string> = {
 	illustration: "Illustration",
 };
 
-const assetTypeColor: Record<BrandAsset["type"], { bg: string; text: string }> = {
-	logo: { bg: "var(--ax-colors-bg-accent-subtle)", text: "var(--ax-colors-fg-accent)" },
-	photo: { bg: "#E3F2FD", text: "#0D47A1" },
-	icon: { bg: "#EDE7F6", text: "#4527A0" },
-	illustration: { bg: "#FFF3E0", text: "#E65100" },
+const assetTypeColor: Record<BrandAsset["type"], {bg: string; text: string}> = {
+	logo: {bg: "var(--ax-colors-bg-secondary)", text: "var(--ax-colors-fg-default)"},
+	photo: {bg: "#E3F2FD", text: "#0D47A1"},
+	icon: {bg: "#EDE7F6", text: "#4527A0"},
+	illustration: {bg: "#FFF3E0", text: "#E65100"},
 };
 
-function AssetTypeBadge({ type }: { type: BrandAsset["type"] }) {
+function AssetTypeBadge({type}: {type: BrandAsset["type"]}) {
 	const colors = assetTypeColor[type];
 	return (
 		<Box
@@ -42,7 +42,7 @@ function AssetTypeBadge({ type }: { type: BrandAsset["type"] }) {
 	);
 }
 
-function AssetCard({ asset }: { asset: BrandAsset }) {
+function AssetCard({asset}: {asset: BrandAsset}) {
 	const [hovered, setHovered] = useState(false);
 
 	return (
@@ -70,7 +70,7 @@ function AssetCard({ asset }: { asset: BrandAsset }) {
 				display="flex"
 				justifyContent="center"
 				overflow="hidden"
-				style={{ height: 120, position: "relative" }}
+				style={{height: 120, position: "relative"}}
 			>
 				<img
 					alt={asset.name}
@@ -111,7 +111,7 @@ function AssetCard({ asset }: { asset: BrandAsset }) {
 							icon={<IconDownload />}
 							aria-label="Download"
 							onClick={(e) => e.stopPropagation()}
-							style={{ background: "rgba(255,255,255,0.15)", color: "#fff" }}
+							style={{background: "rgba(255,255,255,0.15)", color: "#fff"}}
 						/>
 					</Box>
 				)}
@@ -119,35 +119,49 @@ function AssetCard({ asset }: { asset: BrandAsset }) {
 
 			{/* Info */}
 			<Box display="flex" flexDirection="column" gap="4" p="12">
-				<Text fontWeight="500" style={{ fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+				<Text
+					fontWeight="500"
+					style={{
+						fontSize: 13,
+						overflow: "hidden",
+						textOverflow: "ellipsis",
+						whiteSpace: "nowrap",
+					}}
+				>
 					{asset.name}
 				</Text>
 				<Box alignItems="center" display="flex" gap="6">
 					<AssetTypeBadge type={asset.type} />
-					<Text color="fg.tertiary" fontSize="xs">{asset.format}</Text>
+					<Text color="fg.tertiary" fontSize="xs">
+						{asset.format}
+					</Text>
 				</Box>
 			</Box>
 		</Box>
 	);
 }
 
-export function AssetsTab({ pack }: AssetsTabProps) {
+export function AssetsTab({pack}: AssetsTabProps) {
 	const [activeType, setActiveType] = useState<BrandAsset["type"] | "all">("all");
 
 	const assetTypes = Array.from(new Set(pack.assets.map((a) => a.type))) as BrandAsset["type"][];
-	const filters: Array<{ label: string; value: BrandAsset["type"] | "all" }> = [
-		{ label: "All", value: "all" },
-		...assetTypes.map((t) => ({ label: assetTypeLabel[t], value: t })),
+	const filters: Array<{label: string; value: BrandAsset["type"] | "all"}> = [
+		{label: "All", value: "all"},
+		...assetTypes.map((t) => ({label: assetTypeLabel[t], value: t})),
 	];
 
-	const filtered = activeType === "all"
-		? pack.assets
-		: pack.assets.filter((a) => a.type === activeType);
+	const filtered =
+		activeType === "all" ? pack.assets : pack.assets.filter((a) => a.type === activeType);
 
 	return (
 		<Box display="flex" flexDirection="column" gap="20">
 			{/* Header row */}
-			<Box alignItems="center" display="flex" justifyContent="space-between" style={{ flexWrap: "wrap", gap: 12 }}>
+			<Box
+				alignItems="center"
+				display="flex"
+				justifyContent="space-between"
+				style={{flexWrap: "wrap", gap: 12}}
+			>
 				{/* Filter pills */}
 				<Box
 					alignItems="center"
@@ -163,10 +177,16 @@ export function AssetsTab({ pack }: AssetsTabProps) {
 							type="button"
 							onClick={() => setActiveType(f.value)}
 							style={{
-								background: activeType === f.value ? "var(--ax-colors-bg-default)" : "transparent",
+								background:
+									activeType === f.value
+										? "var(--ax-colors-bg-default)"
+										: "transparent",
 								border: 0,
 								borderRadius: 999,
-								color: activeType === f.value ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)",
+								color:
+									activeType === f.value
+										? "var(--ax-colors-fg-default)"
+										: "var(--ax-colors-fg-secondary)",
 								cursor: "pointer",
 								fontSize: 13,
 								fontWeight: activeType === f.value ? 600 : 400,
@@ -194,7 +214,7 @@ export function AssetsTab({ pack }: AssetsTabProps) {
 				<Box
 					display="grid"
 					gap="12"
-					style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}
+					style={{gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))"}}
 				>
 					{filtered.map((asset) => (
 						<AssetCard key={asset.id} asset={asset} />
@@ -212,7 +232,9 @@ export function AssetsTab({ pack }: AssetsTabProps) {
 					rounded="xl"
 				>
 					<Text fontWeight="500">No assets yet</Text>
-					<Text color="fg.secondary" fontSize="sm">Upload logos, photos, and illustrations to this brand pack</Text>
+					<Text color="fg.secondary" fontSize="sm">
+						Upload logos, photos, and illustrations to this brand pack
+					</Text>
 				</Box>
 			)}
 		</Box>

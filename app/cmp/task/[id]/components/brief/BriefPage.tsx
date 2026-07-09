@@ -3,7 +3,7 @@
 import { Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconDots } from "@tabler/icons-react";
+import {IconEllipsisSolid} from "@/app/lib/axiom-icons";
 import { IconBolt } from "@/app/lib/axiom-icons";
 import type { TaskTab } from "../../types";
 import { BriefBody } from "./BriefBody";
@@ -26,7 +26,7 @@ export function BriefPage({ activeTab, briefContent, onOpenEdit, onTabChange, ta
 					<Text color="fg.default" fontSize="xl" fontWeight="500" style={{ maxWidth: "none" }}>
 						Brief - {taskTitle}
 					</Text>
-					<Button appearance="subtle" aria-label="More" icon={<IconDots size={18} />} size="sm" />
+					<Button appearance="subtle" aria-label="More" icon={<IconEllipsisSolid size={18} />} size="sm" />
 				</Box>
 
 				<Box

@@ -10,7 +10,7 @@ import type {
 	PreflightAuditIssue,
 } from "./PreflightAuditTypes";
 import {SeverityIntent, AuditTypeLabels} from "./PreflightAuditTypes";
-import {IconCheck} from "@tabler/icons-react";
+import {IconCheck} from "@/app/lib/axiom-icons";
 import {AdaptiveBlock} from "./AdaptiveBlock";
 import {CmsIcon} from "@/app/components/icons/CmsIcon";
 

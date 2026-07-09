@@ -3,14 +3,14 @@ import {ReactNode} from "react";
 import {Box, Menu, MenuTrigger, MenuContent, Text} from "@optiaxiom/react";
 import {
 	IconPlus,
-	IconDots,
+	IconEllipsisSolid,
 	IconTrash,
-	IconPencil,
-	IconSettings,
+	IconPen,
+	IconGear,
 	IconRowInsertTop,
 	IconRowInsertBottom,
 	IconPalette,
-} from "@tabler/icons-react";
+} from "@/app/lib/axiom-icons";
 import {IconSquare} from "@optiaxiom/icons";
 import styles from "../VBPrototype.module.css";
 
@@ -76,14 +76,14 @@ const Section: React.FC<{
 							<Menu
 								options={[
 									{
-										addon: <IconPencil size={16} />,
+										addon: <IconPen size={16} />,
 										label: "Edit",
 										execute: () => {
 											// removeSection();
 										},
 									},
 									{
-										addon: <IconSettings size={16} />,
+										addon: <IconGear size={16} />,
 										label: "Properties",
 										execute: () => {
 											onEditProperties?.();
@@ -107,7 +107,7 @@ const Section: React.FC<{
 								]}
 							>
 								<MenuTrigger
-									icon={<IconDots />}
+									icon={<IconEllipsisSolid />}
 									aria-label="add ele"
 									appearance="subtle"
 									size="sm"
@@ -135,7 +135,7 @@ const Section: React.FC<{
 				className={`group p-1 cursor-pointer rounded-[4px] hover:bg-[var(--ax-colors-bg-default-hovered)]  active:bg-[var(--ax-colors-bg-default-pressed)] flex gap-1 items-center w-full justify-between pr-5 ${styles.sectionWithBorder}`}
 				style={{
 					backgroundColor: isSelected
-						? "var(--ax-colors-bg-accent-subtle)"
+						? "var(--ax-colors-bg-default-pressed)"
 						: menuOpen
 							? "var(--ax-colors-bg-default-hovered)"
 							: undefined,
@@ -186,7 +186,7 @@ const Section: React.FC<{
 								selected: false,
 							},
 							{
-								addon: <IconSettings size={16} />,
+								addon: <IconGear size={16} />,
 								label: "Properties",
 								execute: () => {
 									onEditProperties?.();
@@ -228,7 +228,7 @@ const Section: React.FC<{
 						]}
 					>
 						<MenuTrigger
-							icon={<IconDots />}
+							icon={<IconEllipsisSolid />}
 							aria-label="add ele"
 							appearance="subtle"
 							size="sm"
@@ -244,7 +244,7 @@ const Section: React.FC<{
 			<div
 				style={{
 					display: section.open ? "block" : "none",
-					backgroundColor: isSelected ? "var(--ax-colors-bg-accent-subtle)" : undefined,
+					backgroundColor: isSelected ? "var(--ax-colors-bg-default-pressed)" : undefined,
 				}}
 			>
 				{children}

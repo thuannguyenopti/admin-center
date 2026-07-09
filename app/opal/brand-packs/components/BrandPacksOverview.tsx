@@ -5,11 +5,9 @@ import { useRouter } from "next/navigation";
 import {
 	Box,
 	Button,
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
+	Menu,
+	MenuContent,
+	MenuTrigger,
 	SearchInput,
 	Text,
 } from "@optiaxiom/react";
@@ -77,8 +75,27 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 					</Box>
 
 					{/* Dropdown — chevron now means dropdown, not modal */}
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
+					<Menu
+						options={[
+							{
+								label: "Create with Opal",
+								description: "AI-powered brand generation",
+								execute: () => router.push("/opal/brand-packs/new/opal"),
+							},
+							{
+								label: "Import from Figma",
+								description: "Sync a Figma design library",
+								execute: () => router.push("/opal/brand-packs/new/figma"),
+							},
+							{
+								label: "Manual setup",
+								description: "Upload assets and configure manually",
+								group: { label: "", hidden: true, separator: true },
+								execute: () => router.push("/opal/brand-packs/new/manual"),
+							},
+						]}
+					>
+						<MenuTrigger asChild>
 							<Button
 								appearance="primary"
 								size="md"
@@ -87,29 +104,9 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 							>
 								New Brand Pack
 							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuItem onClick={() => router.push("/opal/brand-packs/new/opal")}>
-								<Box display="flex" flexDirection="column" gap="2" style={{ alignItems: "flex-start" }}>
-									<Text fontSize="sm" fontWeight="500">Create with Opal</Text>
-									<Text fontSize="xs" color="fg.tertiary">AI-powered brand generation</Text>
-								</Box>
-							</DropdownMenuItem>
-							<DropdownMenuItem onClick={() => router.push("/opal/brand-packs/new/figma")}>
-								<Box display="flex" flexDirection="column" gap="2" style={{ alignItems: "flex-start" }}>
-									<Text fontSize="sm" fontWeight="500">Import from Figma</Text>
-									<Text fontSize="xs" color="fg.tertiary">Sync a Figma design library</Text>
-								</Box>
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem onClick={() => router.push("/opal/brand-packs/new/manual")}>
-								<Box display="flex" flexDirection="column" gap="2" style={{ alignItems: "flex-start" }}>
-									<Text fontSize="sm" fontWeight="500">Manual setup</Text>
-									<Text fontSize="xs" color="fg.tertiary">Upload assets and configure manually</Text>
-								</Box>
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+						</MenuTrigger>
+						<MenuContent align="end" />
+					</Menu>
 				</Box>
 
 				{activePack && <BrandPackHero pack={activePack} />}

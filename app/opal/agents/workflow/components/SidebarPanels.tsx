@@ -2,6 +2,7 @@
 
 import {
     Box,
+    Badge,
     Heading,
     Text,
     Button,
@@ -912,7 +913,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                                         <Text fontSize="sm" color="fg.secondary">what the email is about</Text>
                                     </Box>
                                     <Box display="flex" gap="8" alignItems="center">
-                                        <Box bg="bg.accent.subtle" px="8" py="2" rounded="full"><Text fontSize="xs" color="fg.accent">Required</Text></Box>
+                                        <Badge>Required</Badge>
                                         <Text fontSize="sm" color="fg.secondary">String</Text>
                                     </Box>
                                 </Box>
@@ -922,7 +923,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                                         <Text fontSize="sm" color="fg.secondary">target audience of the email</Text>
                                     </Box>
                                     <Box display="flex" gap="8" alignItems="center">
-                                        <Box bg="bg.accent.subtle" px="8" py="2" rounded="full"><Text fontSize="xs" color="fg.accent">Required</Text></Box>
+                                        <Badge>Required</Badge>
                                         <Text fontSize="sm" color="fg.secondary">String</Text>
                                     </Box>
                                 </Box>

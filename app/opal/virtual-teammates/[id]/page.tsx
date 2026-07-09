@@ -818,7 +818,7 @@ export default function VAUDetailPage() {
 														color: tool.color,
 													}}
 												>
-													{tool.iconLg ?? tool.icon ?? (
+													{tool.icon ?? (
 														<span style={{ fontSize: 10, fontWeight: 700, color: tool.color }}>{tool.textLabel}</span>
 													)}
 												</Box>
