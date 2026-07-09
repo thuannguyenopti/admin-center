@@ -15,7 +15,7 @@ import {
 	Text,
 	toaster,
 } from "@optiaxiom/react";
-import {IconChevronDown} from "@tabler/icons-react";
+import {IconChevronDown} from "@/app/lib/axiom-icons";
 import usePersistentState from "@/app/usePersistentState";
 import {initialCmpTasks, initialCmpCampaigns, avatarImages} from "@/app/db/cmpInitialData";
 import type {CmpTask} from "@/app/db/cmpInitialData";

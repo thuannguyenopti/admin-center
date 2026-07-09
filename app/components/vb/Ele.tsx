@@ -1,16 +1,7 @@
 import {Box, Text, Input as Input2, Menu, MenuContent, MenuTrigger} from "@optiaxiom/react";
 
 import React, {useState} from "react";
-import {
-	IconHeading,
-	IconPilcrow,
-	IconForms,
-	IconRectangle,
-	IconPhoto,
-	IconTrash,
-	IconDots,
-	IconPalette,
-} from "@tabler/icons-react";
+import {IconHeading, IconPilcrow, IconForms, IconRectangle, IconImage, IconTrash, IconEllipsisSolid, IconPalette} from "@/app/lib/axiom-icons";
 import styles from "../VBPrototype.module.css";
 import {IconSquare} from "@optiaxiom/icons";
 
@@ -80,7 +71,7 @@ const Ele: React.FC<{
 									return <IconRectangle size={16} />;
 								case "ct-image":
 								case "ct-image-block":
-									return <IconPhoto size={16} />;
+									return <IconImage size={16} />;
 								default:
 									return <IconSquare size={16} />;
 							}
@@ -135,7 +126,7 @@ const Ele: React.FC<{
 								e.stopPropagation();
 								setMenuOpen(true);
 							}}
-							icon={<IconDots />}
+							icon={<IconEllipsisSolid />}
 							aria-label="add ele"
 							appearance="subtle"
 							size="sm"

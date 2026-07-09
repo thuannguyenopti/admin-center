@@ -1,8 +1,8 @@
 import * as TablerIcons from "@tabler/icons-react";
 import Head from "next/head";
-import type { ComponentType, SVGProps } from "react";
+import type {ComponentType, SVGProps} from "react";
 
-type CompatIconProps = SVGProps<SVGSVGElement> & {
+type CompatIconProps = Omit<SVGProps<SVGSVGElement>, "stroke"> & {
 	size?: number | string;
 	stroke?: number | string;
 };
@@ -10,7 +10,15 @@ type CompatIconProps = SVGProps<SVGSVGElement> & {
 const fallbackIcon = TablerIcons.IconCircle;
 
 // Custom SVG component matching the real @optimizely/axiom-icons IconAgent
-function AxiomIconAgent({ size = 16, width, height, style, className, ...rest }: CompatIconProps) {
+function AxiomIconAgent({
+	size = 16,
+	width,
+	height,
+	style,
+	className,
+	stroke: _stroke,
+	...rest
+}: CompatIconProps) {
 	const w = width ?? size;
 	const h = height ?? size;
 	return (
@@ -149,9 +157,9 @@ function resolveIcon(name: string): ComponentType<CompatIconProps> {
 	const candidates = iconMap[name] ?? [];
 
 	for (const candidate of candidates) {
-		const component = (TablerIcons as unknown as Record<string, ComponentType<CompatIconProps> | undefined>)[
-			candidate
-		];
+		const component = (
+			TablerIcons as unknown as Record<string, ComponentType<CompatIconProps> | undefined>
+		)[candidate];
 		if (component) {
 			return component;
 		}
@@ -288,17 +296,18 @@ export const IconUsers = createIcon("IconUsers");
 export const IconXmark = createIcon("IconXmark");
 
 // Icons not yet in Axiom package — Tabler fallbacks
-export { IconPlug, IconTicket, IconMicrophone } from "@tabler/icons-react";
+export {IconPlug, IconTicket, IconMicrophone} from "@tabler/icons-react";
 
 // Additional Axiom icons — Tabler fallback mappings
-export { IconUpload, IconDownload, IconSearch, IconChevronUp } from "@tabler/icons-react";
-export { IconGrid3x3 as IconGrid2 } from "@tabler/icons-react";
-export { IconArrowsLeftRight as IconArrowRightArrowLeft } from "@tabler/icons-react";
-export { IconCircleCheckFilled as IconCircleCheckSolid } from "@tabler/icons-react";
-export { IconTool as IconScrewdriverWrench } from "@tabler/icons-react";
-export { IconUser as IconCircleUser } from "@tabler/icons-react";
-export { IconFile as IconFileZipper } from "@tabler/icons-react";
-export { IconBuilding } from "@tabler/icons-react";
+export {IconUpload, IconDownload, IconSearch, IconChevronUp} from "@tabler/icons-react";
+export {IconGrid3x3 as IconGrid2} from "@tabler/icons-react";
+export {IconArrowsLeftRight as IconArrowRightArrowLeft} from "@tabler/icons-react";
+export {IconCircleCheckFilled as IconCircleCheckSolid} from "@tabler/icons-react";
+export {IconTool as IconScrewdriverWrench} from "@tabler/icons-react";
+export {IconUser as IconCircleUser} from "@tabler/icons-react";
+export {IconFile as IconFileZipper} from "@tabler/icons-react";
+export {IconBuilding} from "@tabler/icons-react";
+export {IconAt} from "@tabler/icons-react";
 
 // Brand icons — Tabler fallbacks (Axiom package only ships IconGoogle)
 export {
@@ -312,9 +321,131 @@ export {
 } from "@tabler/icons-react";
 
 // Axiom rename aliases (icon exists under a different name)
-export { IconSunBright as IconSunFilled } from "@optimizely/axiom-icons";
-export { IconDesktop as IconDeviceDesktop } from "@optimizely/axiom-icons";
-export { IconCodeBranch as IconGitBranch } from "@optimizely/axiom-icons";
-export { IconTrashCan as IconTrash } from "@optimizely/axiom-icons";
-export { IconShareNodes as IconShare } from "@optimizely/axiom-icons";
-export { IconEnvelope as IconMail } from "@optimizely/axiom-icons";
+export {IconSunBright as IconSunFilled} from "@optimizely/axiom-icons";
+export {IconDesktop as IconDeviceDesktop} from "@optimizely/axiom-icons";
+export {IconCodeBranch as IconGitBranch} from "@optimizely/axiom-icons";
+export {IconTrashCan as IconTrash} from "@optimizely/axiom-icons";
+export {IconShareNodes as IconShare} from "@optimizely/axiom-icons";
+export {IconEnvelope as IconMail} from "@optimizely/axiom-icons";
+
+// Tabler passthroughs — icons with no curated Axiom mapping yet. Kept under
+// Tabler names so callers stay working; map each to an @optimizely/axiom-icons
+// equivalent above as the design system catches up.
+export {
+	IconAbc,
+	IconActivity,
+	IconAdjustmentsHorizontal,
+	IconAnalyze,
+	IconApi,
+	IconApps,
+	IconArchive,
+	IconArrowBackUp,
+	IconArrowBarBoth,
+	IconArrowDown,
+	IconArrowForwardUp,
+	IconArrowRight,
+	IconArrowsExchange,
+	IconArrowsSort,
+	IconArticle,
+	IconBlocks,
+	IconBox,
+	IconBrain,
+	IconBrandFacebook,
+	IconBrandProducthunt,
+	IconBrandTwitter,
+	IconBrandWordpress,
+	IconBrandYoutube,
+	IconBroadcast,
+	IconBulb,
+	IconCalendarBolt,
+	IconCalendarCheck,
+	IconCalendarX,
+	IconCategory,
+	IconChecklist,
+	IconChecks,
+	IconCircle,
+	IconClipboard,
+	IconCloud,
+	IconCloudDownload,
+	IconCongruentTo,
+	IconCursorText,
+	IconCut,
+	IconEdit,
+	IconFileCheck,
+	IconFileDownload,
+	IconFilePlus,
+	IconFileTypeCsv,
+	IconFilter,
+	IconFlask,
+	IconFolderPlus,
+	IconForms,
+	IconGitFork,
+	IconGlobe,
+	IconGlobeFilled,
+	IconHeading,
+	IconHelp,
+	IconHome,
+	IconKey,
+	IconLayout,
+	IconLayout2,
+	IconLayoutGrid,
+	IconLayoutList,
+	IconLayoutNavbar,
+	IconListDetails,
+	IconListTree,
+	IconLoader2,
+	IconMaximize,
+	IconMessage,
+	IconMinus,
+	IconMoon,
+	IconNews,
+	IconPackage,
+	IconPalette,
+	IconPhotoPin,
+	IconPilcrow,
+	IconPinEnd,
+	IconPinInvoke,
+	IconPinned,
+	IconPlugConnected,
+	IconPower,
+	IconPuzzle,
+	IconQuote,
+	IconRectangle,
+	IconReport,
+	IconReportSearch,
+	IconRestore,
+	IconRocket,
+	IconRowInsertBottom,
+	IconRowInsertTop,
+	IconSection,
+	IconSend2,
+	IconSendOff,
+	IconServer,
+	IconSettingsAutomation,
+	IconSettingsSearch,
+	IconShare2,
+	IconShare3,
+	IconShieldOff,
+	IconShieldPlus,
+	IconShoppingBag,
+	IconShoppingCart,
+	IconSquare,
+	IconStack2,
+	IconStar,
+	IconTarget,
+	IconTemplate,
+	IconTrendingDown,
+	IconTrendingUp,
+	IconUserPlus,
+	IconVersions,
+	IconVideo,
+	IconWand,
+	IconWebhook,
+	IconWifi,
+	IconWifiOff,
+	IconWorld,
+	IconWorldBolt,
+	IconWorldCheck,
+	IconWorldOff,
+	IconWorldX,
+} from "@tabler/icons-react";

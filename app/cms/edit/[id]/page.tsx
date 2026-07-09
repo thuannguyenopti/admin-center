@@ -6,7 +6,16 @@ import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {initialPages, Page, initialContentTypes, ContentType} from "@/app/db/initialData";
 import {useEffect, useState, useCallback} from "react";
-import {Alert, Badge, Box, Heading, Spinner, Text, toaster} from "@optiaxiom/react";
+import {
+	Alert,
+	Badge,
+	Box,
+	Heading,
+	Spinner,
+	Text,
+	toaster,
+	Link as AxiomLink,
+} from "@optiaxiom/react";
 import Link from "next/link";
 import {buildPageSlug} from "@/app/site/resolveSlug";
 import {useVersionHistory} from "@/app/hooks/useVersionHistory";
@@ -454,16 +463,11 @@ export default function EditPageDetail() {
 						>
 							<Text>
 								Part of task:{" "}
-								<Link
-									href={`/cmp/task/${page.cmpTaskMetadata.taskId}`}
-									style={{
-										color: "var(--ax-colors-fg-accent)",
-										textDecoration: "underline",
-										fontWeight: 600,
-									}}
-								>
-									{page.cmpTaskMetadata.taskName}
-								</Link>
+								<AxiomLink asChild fontWeight="600">
+									<Link href={`/cmp/task/${page.cmpTaskMetadata.taskId}`}>
+										{page.cmpTaskMetadata.taskName}
+									</Link>
+								</AxiomLink>
 							</Text>
 							{page.cmpConnection && <Badge intent="success">Connected to CMP</Badge>}
 						</Box>

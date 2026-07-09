@@ -4,16 +4,7 @@ import React, {useEffect, useRef, useState, useMemo, useCallback} from "react";
 import PreviewWrapper from "./PreviewWrapper";
 import type {PreviewSettings} from "./PreviewSettings"; // adjust path
 import {siteConfig} from "../../db/initialData";
-import {
-	IconPilcrow,
-	IconForms,
-	IconRectangle,
-	IconHeading,
-	IconBrackets,
-	IconPhoto,
-	IconMenu2,
-	IconX,
-} from "@tabler/icons-react";
+import {IconPilcrow, IconForms, IconRectangle, IconHeading, IconBracketsSquare, IconImage, IconBars, IconXmark} from "@/app/lib/axiom-icons";
 
 import styles from "../VBPrototype.module.css";
 import {BlockRegistry} from "./blocks";
@@ -922,7 +913,7 @@ export default function PreviewCanvas({
 																					case "ct-image":
 																					case "ct-image-block":
 																						return (
-																							<IconPhoto
+																							<IconImage
 																								size={
 																									12
 																								}
@@ -930,7 +921,7 @@ export default function PreviewCanvas({
 																						);
 																					default:
 																						return (
-																							<IconBrackets
+																							<IconBracketsSquare
 																								size={
 																									12
 																								}
@@ -1127,8 +1118,8 @@ export default function PreviewCanvas({
 					<StrideHeaderWrapper positioning="absolute" useMaxWidth={true}>
 						<StrideHeaderContent
 							isMobile={isMobileViewport}
-							menuIcon={<IconMenu2 size={24} />}
-							closeIcon={<IconX size={24} />}
+							menuIcon={<IconBars size={24} />}
+							closeIcon={<IconXmark size={24} />}
 						/>
 					</StrideHeaderWrapper>
 
@@ -1310,7 +1301,7 @@ export default function PreviewCanvas({
 																								case "ct-image":
 																								case "ct-image-block":
 																									return (
-																										<IconPhoto
+																										<IconImage
 																											size={
 																												12
 																											}
@@ -1318,7 +1309,7 @@ export default function PreviewCanvas({
 																									);
 																								default:
 																									return (
-																										<IconBrackets
+																										<IconBracketsSquare
 																											size={
 																												12
 																											}

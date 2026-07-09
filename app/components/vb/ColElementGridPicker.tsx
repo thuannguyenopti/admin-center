@@ -3,7 +3,7 @@ import {createPortal} from "react-dom";
 import * as RawPopover from "@radix-ui/react-popover";
 import {Box, Popover, PopoverContent, PopoverTrigger, SearchInput, Text} from "@optiaxiom/react";
 import {HoverCard, HoverCardContent, HoverCardTrigger} from "@optiaxiom/react/unstable";
-import {IconBook, IconPaint, IconX, IconCheck} from "@tabler/icons-react";
+import {IconBook, IconPaintRoller, IconXmark, IconCheck} from "@/app/lib/axiom-icons";
 import {PreviewCard, iframeStyleForTileSize} from "@/app/components/PreviewCard";
 import {STORY_SIZES} from "./storySizes";
 import {Button} from "../Button";
@@ -386,7 +386,7 @@ const ColElementGridPicker: React.FC<ColElementGridPickerProps> = ({
 																<Button
 																	size="sm"
 																	appearance="subtle"
-																	icon={<IconPaint />}
+																	icon={<IconPaintRoller />}
 																	aria-label="Select template"
 																	className="bottom-1 right-1"
 																	style={{position: "absolute"}}
@@ -535,7 +535,7 @@ const ColElementGridPicker: React.FC<ColElementGridPickerProps> = ({
 									boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
 								}}
 							>
-								<IconX size={16} />
+								<IconXmark size={16} />
 							</button>
 							{fullPreviewStoryUrl ? (
 								<iframe

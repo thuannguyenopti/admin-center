@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Flex, Button, Badge, Disclosure, DisclosureTrigger, DisclosureContent } from "@optiaxiom/react";
-import { IconX, IconGripVertical, IconChevronRight, IconPlus } from "@tabler/icons-react";
+import {IconXmark, IconGripVertical, IconChevronRight, IconPlus} from "@/app/lib/axiom-icons";
 import { Text } from "@/app/components/Text";
 import { ContentType, Property, PropertyType } from "@/app/db/initialData";
 
@@ -103,7 +103,7 @@ export default function ContentTypeDetailsPane({
 				</Box>
 				<Button
 					appearance="subtle"
-					icon={<IconX size={18} />}
+					icon={<IconXmark size={18} />}
 					onClick={onClose}
 					aria-label="Close"
 					size="sm"

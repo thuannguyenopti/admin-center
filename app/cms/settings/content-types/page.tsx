@@ -36,15 +36,7 @@ import {
 	MediaType,
 } from "@/app/db/initialData";
 import {useRouter} from "next/navigation";
-import {
-	IconChevronDown,
-	IconBox,
-	IconUpload,
-	IconBlocks,
-	IconSection,
-	IconCloudDownload,
-	IconPlus,
-} from "@tabler/icons-react";
+import {IconChevronDown, IconBox, IconUpload, IconBlocks, IconSection, IconCloudDownload, IconPlus} from "@/app/lib/axiom-icons";
 import {IconFile, IconImage, IconColumns3, IconPaintRoller} from "@optimizely/axiom-icons";
 
 const MEDIA_TYPE_OPTIONS: {label: MediaType; extensions: string}[] = [

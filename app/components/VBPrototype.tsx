@@ -25,11 +25,11 @@ import {
 	IconSparkles,
 	IconSquare,
 	IconSection,
-	IconDots,
-	IconSettings,
+	IconEllipsisSolid,
+	IconGear,
 	IconChevronLeft,
 	IconCopy,
-} from "@tabler/icons-react";
+} from "@/app/lib/axiom-icons";
 
 import {EleMap} from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
@@ -1030,7 +1030,7 @@ export default function VBPrototype({
 				<Menu
 					options={[
 						{
-							addon: <IconSettings size={16} />,
+							addon: <IconGear size={16} />,
 							label: "Properties",
 							execute: () => {
 								setSidebarTab("properties");
@@ -1051,7 +1051,7 @@ export default function VBPrototype({
 					]}
 				>
 					<MenuTrigger
-						icon={<IconDots size={16} />}
+						icon={<IconEllipsisSolid size={16} />}
 						aria-label="more"
 						appearance="subtle"
 						size="sm"
@@ -1760,7 +1760,7 @@ export default function VBPrototype({
 													<Menu
 														options={[
 															{
-																addon: <IconSettings size={16} />,
+																addon: <IconGear size={16} />,
 																label: "Properties",
 																execute: () => {
 																	setSidebarTab("properties");
@@ -1770,7 +1770,7 @@ export default function VBPrototype({
 														]}
 													>
 														<MenuTrigger
-															icon={<IconDots size={16} />}
+															icon={<IconEllipsisSolid size={16} />}
 															aria-label="more"
 															appearance="subtle"
 															size="sm"
@@ -2116,7 +2116,7 @@ export default function VBPrototype({
 													<Text
 														fontSize="sm"
 														fontWeight="400"
-														color="fg.accent"
+														color="fg.default"
 														className="cursor-pointer absolute top-0 left-0"
 														onClick={() => {
 															setActivePropertiesSection("menu");
@@ -2137,7 +2137,7 @@ export default function VBPrototype({
 													<Text
 														fontSize="sm"
 														fontWeight="400"
-														color="fg.accent"
+														color="fg.default"
 														className="cursor-pointer absolute top-0 left-0"
 														onClick={() => {
 															setSidebarTab("outline");

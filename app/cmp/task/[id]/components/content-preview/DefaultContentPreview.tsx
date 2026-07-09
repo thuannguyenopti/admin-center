@@ -2,7 +2,7 @@
 
 import { Badge, Box, Card, CardHeader, CardImage, CardPreview } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconCalendar } from "@tabler/icons-react";
+import {IconCalendar} from "@/app/lib/axiom-icons";
 import Image from "next/image";
 import type { ContentPreviewProps } from "./ContentPreviewRenderer";
 import { MetadataRow } from "./MetadataRow";

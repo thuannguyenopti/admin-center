@@ -63,7 +63,6 @@ function toStoryContext(storybookPath: string) {
 	};
 }
 
-
 type Props = {
 	phase: DSPhase;
 	storybookPath: string;
@@ -145,7 +144,7 @@ function EmptyState({phase}: {phase: DSPhase}) {
 						width: 64,
 						height: 64,
 						borderRadius: "50%",
-						background: "var(--ax-colors-bg-accent-subtle)",
+						background: "var(--ax-colors-bg-secondary)",
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
@@ -195,7 +194,6 @@ export function CanvasPanel({
 		onStoryContextDetected(toStoryContext(storybookPath));
 	}, [storybookPath, onStoryContextDetected]);
 
-
 	const tabPillStyle = (active: boolean): React.CSSProperties => ({
 		padding: "3px 10px",
 		borderRadius: 4,
@@ -237,10 +235,16 @@ export function CanvasPanel({
 							borderRadius: 6,
 						}}
 					>
-						<button style={tabPillStyle(canvasTab === "registry")} onClick={() => onCanvasTabChange?.("registry")}>
+						<button
+							style={tabPillStyle(canvasTab === "registry")}
+							onClick={() => onCanvasTabChange?.("registry")}
+						>
 							Registry
 						</button>
-						<button style={tabPillStyle(canvasTab === "page")} onClick={() => onCanvasTabChange?.("page")}>
+						<button
+							style={tabPillStyle(canvasTab === "page")}
+							onClick={() => onCanvasTabChange?.("page")}
+						>
 							Landing Page
 						</button>
 					</Box>

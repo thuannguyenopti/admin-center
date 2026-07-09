@@ -75,7 +75,7 @@ export function ThreadReplyPill({
           <IconComment size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
         )}
       </Box>
-      <Text fontSize="sm" fontWeight="500" color="fg.accent">
+      <Text fontSize="sm" fontWeight="500" color="fg.secondary">
         {replyCount} {replyCount === 1 ? "reply" : "replies"}
       </Text>
       {lastReplyAt && (

@@ -1,20 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Box, Button, Text } from "@optiaxiom/react";
-import {
-	IconEllipsisStroke as IconEllipsis,
-	IconPaintRoller,
-} from "@optimizely/axiom-icons";
-import { StatusBadge } from "./StatusBadge";
-import type { BrandPack } from "../types";
+import {useState} from "react";
+import {useRouter} from "next/navigation";
+import {Box, Button, Text} from "@optiaxiom/react";
+import {IconEllipsisStroke as IconEllipsis, IconPaintRoller} from "@optimizely/axiom-icons";
+import {StatusBadge} from "./StatusBadge";
+import type {BrandPack} from "../types";
 
 type BrandPackCardProps = {
 	pack: BrandPack;
 };
 
-export function BrandPackCard({ pack }: BrandPackCardProps) {
+export function BrandPackCard({pack}: BrandPackCardProps) {
 	const router = useRouter();
 	const [hovered, setHovered] = useState(false);
 
@@ -47,10 +44,7 @@ export function BrandPackCard({ pack }: BrandPackCardProps) {
 		>
 			{/* Image — single, clean, fixed height */}
 			{heroThumb ? (
-				<Box
-					overflow="hidden"
-					style={{ height: 160, flexShrink: 0 }}
-				>
+				<Box overflow="hidden" style={{height: 160, flexShrink: 0}}>
 					<img
 						alt={heroThumb.name}
 						src={heroThumb.thumb}
@@ -69,9 +63,9 @@ export function BrandPackCard({ pack }: BrandPackCardProps) {
 					bg="bg.secondary"
 					display="flex"
 					justifyContent="center"
-					style={{ height: 160, flexShrink: 0 }}
+					style={{height: 160, flexShrink: 0}}
 				>
-					<IconPaintRoller style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+					<IconPaintRoller style={{color: "var(--ax-colors-fg-tertiary)"}} />
 				</Box>
 			)}
 
@@ -99,31 +93,31 @@ export function BrandPackCard({ pack }: BrandPackCardProps) {
 						icon={<IconEllipsis />}
 						onClick={(e) => e.stopPropagation()}
 						size="sm"
-						style={{ flexShrink: 0 }}
+						style={{flexShrink: 0}}
 						title={`More actions for ${pack.name}`}
 					/>
 				</Box>
 
 				{/* Template count + date — light, not bold */}
 				<Box display="flex" flexDirection="column" gap="4">
-					<Text color="fg.tertiary" style={{ fontSize: 12 }}>
+					<Text color="fg.tertiary" style={{fontSize: 12}}>
 						{pack.templateCount} templates
 					</Text>
-					<Text color="fg.tertiary" style={{ fontSize: 12 }}>
+					<Text color="fg.tertiary" style={{fontSize: 12}}>
 						Updated {updatedLabel}
 					</Text>
 				</Box>
 
 				{/* Channel tags */}
-				<Box display="flex" gap="4" style={{ flexWrap: "wrap" }}>
+				<Box display="flex" gap="4" style={{flexWrap: "wrap"}}>
 					{pack.channels.map((ch) => (
 						<Box
 							key={ch}
 							bg="bg.secondary"
 							rounded="full"
-							style={{ padding: "3px 10px" }}
+							style={{padding: "3px 10px"}}
 						>
-							<Text color="fg.secondary" style={{ fontSize: 12 }}>
+							<Text color="fg.secondary" style={{fontSize: 12}}>
 								{ch}
 							</Text>
 						</Box>
@@ -134,7 +128,7 @@ export function BrandPackCard({ pack }: BrandPackCardProps) {
 	);
 }
 
-export function NewBrandPackCard({ onClick }: { onClick: () => void }) {
+export function NewBrandPackCard({onClick}: {onClick: () => void}) {
 	const [hovered, setHovered] = useState(false);
 
 	return (
@@ -162,7 +156,7 @@ export function NewBrandPackCard({ onClick }: { onClick: () => void }) {
 		>
 			<Box
 				alignItems="center"
-				bg={hovered ? "bg.accent.subtle" : "bg.secondary"}
+				bg={hovered ? "bg.default.hovered" : "bg.secondary"}
 				display="flex"
 				justifyContent="center"
 				rounded="xl"
@@ -175,13 +169,13 @@ export function NewBrandPackCard({ onClick }: { onClick: () => void }) {
 				<IconPaintRoller
 					style={{
 						color: hovered
-							? "var(--ax-colors-fg-accent)"
+							? "var(--ax-colors-fg-default)"
 							: "var(--ax-colors-fg-secondary)",
 					}}
 				/>
 			</Box>
-			<Box display="flex" flexDirection="column" gap="4" style={{ textAlign: "center" }}>
-				<Text fontWeight="600" style={{ fontSize: 14 }}>
+			<Box display="flex" flexDirection="column" gap="4" style={{textAlign: "center"}}>
+				<Text fontWeight="600" style={{fontSize: 14}}>
 					New Brand Pack
 				</Text>
 				<Text color="fg.secondary" fontSize="xs">

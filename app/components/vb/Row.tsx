@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {ReactNode} from "react";
 import {Text, Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
-import {IconPlus, IconRowInsertTop, IconTrash, IconDots} from "@tabler/icons-react";
+import {IconPlus, IconRowInsertTop, IconTrash, IconEllipsisSolid} from "@/app/lib/axiom-icons";
 
 const indentDistance = 8;
 
@@ -39,7 +39,7 @@ const Row: React.FC<{
 				style={{
 					paddingLeft: `${4 + indentDistance}px`,
 					backgroundColor: isSelected
-						? "var(--ax-colors-bg-accent-subtle)"
+						? "var(--ax-colors-bg-default-pressed)"
 						: menuOpen
 							? "var(--ax-colors-bg-default-hovered)"
 							: undefined,
@@ -115,7 +115,7 @@ const Row: React.FC<{
 						]}
 					>
 						<MenuTrigger
-							icon={<IconDots />}
+							icon={<IconEllipsisSolid />}
 							aria-label="add ele"
 							appearance="subtle"
 							size="sm"
@@ -135,7 +135,7 @@ const Row: React.FC<{
 			<div
 				style={{
 					display: row.open ? "block" : "none",
-					backgroundColor: isSelected ? "var(--ax-colors-bg-accent-subtle)" : undefined,
+					backgroundColor: isSelected ? "var(--ax-colors-bg-default-pressed)" : undefined,
 				}}
 			>
 				{children}

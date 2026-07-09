@@ -19,7 +19,12 @@ import {
 import {Flex} from "@/app/components/Flex";
 import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
-import {IconGripVertical, IconChevronDown, IconDots, IconPlus} from "@tabler/icons-react";
+import {
+	IconGripVertical,
+	IconChevronDown,
+	IconEllipsisSolid,
+	IconPlus,
+} from "@/app/lib/axiom-icons";
 import {
 	initialContentTypes,
 	initialPages,
@@ -715,11 +720,11 @@ function PropertyCard({
 				draggable
 				onDragStart={onDragStart}
 				onDragEnd={onDragEnd}
-				borderColor={isSelected ? "border.accent" : undefined}
+				borderColor={isSelected ? "border.default" : undefined}
+				bg={isSelected ? "bg.default.pressed" : undefined}
 				style={{
 					transition:
 						"border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease",
-					boxShadow: isSelected ? "0 0 0 1px var(--ax-color-border-accent)" : undefined,
 					opacity: isDragging ? 0.4 : 1,
 				}}
 			>
@@ -751,7 +756,7 @@ function PropertyCard({
 								appearance="subtle"
 								size="sm"
 								aria-label="More options"
-								icon={<IconDots size={16} />}
+								icon={<IconEllipsisSolid size={16} />}
 								onClick={(e) => e.stopPropagation()}
 							/>
 						</MenuTrigger>

@@ -600,7 +600,7 @@ function TeamThreadPanel({artifact}: {artifact: ArtifactViewerArtifact}) {
 					>
 						<IconCircleCheckSolid
 							size={16}
-							style={{color: "var(--ax-colors-fg-accent)", flexShrink: 0}}
+							style={{color: "var(--ax-colors-fg-success)", flexShrink: 0}}
 						/>
 						<Text fontSize="sm" fontWeight="500" color="fg.default">
 							You approved — submitting for publication.
@@ -1257,7 +1257,6 @@ export function RegistryArtifactCanvas({
 		});
 	}, [items, query]);
 
-
 	const openFullPreview = (item: RegistryPreviewItem) => {
 		setFullPreviewTitle(item.name);
 		setFullPreviewUrl(toIsolatedStoryUrl(item.storybookUrl));
@@ -1363,9 +1362,7 @@ export function RegistryArtifactCanvas({
 
 						<Tabs
 							value={activeTab}
-							onValueChange={(v) =>
-								setActiveTab(v as "components" | "context")
-							}
+							onValueChange={(v) => setActiveTab(v as "components" | "context")}
 						>
 							<Box mb="8">
 								<TabsList>
@@ -1639,10 +1636,10 @@ function AgentExecutionLog({artifact}: {artifact: ArtifactViewerArtifact}) {
 					alignItems="center"
 					justifyContent="center"
 					rounded="md"
-					bg="bg.accent.subtle"
+					bg="bg.information.subtle"
 					style={{width: 32, height: 32, flexShrink: 0}}
 				>
-					<IconAgent size={16} color="var(--ax-colors-fg-accent)" />
+					<IconAgent size={16} color="var(--ax-colors-fg-information)" />
 				</Box>
 				<Box display="flex" flexDirection="column" gap="2" style={{flex: 1, minWidth: 0}}>
 					<Text fontSize="sm" fontWeight="600">
@@ -1663,7 +1660,7 @@ function AgentExecutionLog({artifact}: {artifact: ArtifactViewerArtifact}) {
 							cursor: "pointer",
 							borderBottom:
 								i === 0
-									? "2px solid var(--ax-colors-fg-accent)"
+									? "2px solid var(--ax-colors-fg-default)"
 									: "2px solid transparent",
 						}}
 					>

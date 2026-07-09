@@ -19,7 +19,7 @@ import {
 	Card,
 	Alert,
 } from "@optiaxiom/react";
-import {IconCheck, IconAlertCircle, IconSparkles} from "@tabler/icons-react";
+import {IconCheck, IconCircleExclamation, IconSparkles} from "@/app/lib/axiom-icons";
 
 export interface BrandToneIssue {
 	fieldId?: string;
@@ -100,13 +100,15 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 	};
 
 	// Sort issues by severity (most severe first)
-	const sortedIssues = result?.issues ? [...result.issues].sort((a, b) => {
-		return getSeverityOrder(a.severity) - getSeverityOrder(b.severity);
-	}) : [];
+	const sortedIssues = result?.issues
+		? [...result.issues].sort((a, b) => {
+				return getSeverityOrder(a.severity) - getSeverityOrder(b.severity);
+			})
+		: [];
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent style={{width: '720px', maxWidth: '100%'}}>
+			<DialogContent style={{width: "720px", maxWidth: "100%"}}>
 				<DialogHeader>
 					<Box display="flex" alignItems="center" gap="8">
 						<IconSparkles size={20} />
@@ -116,7 +118,13 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 				<DialogBody>
 					{isLoading && (
 						<Box display="flex" flexDirection="column" gap="16">
-							<Box display="flex" alignItems="center" justifyContent="center" gap="12" py="24">
+							<Box
+								display="flex"
+								alignItems="center"
+								justifyContent="center"
+								gap="12"
+								py="24"
+							>
 								<Spinner />
 								<Text color="fg.secondary">Analyzing brand tone...</Text>
 							</Box>
@@ -168,9 +176,18 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 									<Heading level="4" mb="8">
 										Strengths
 									</Heading>
-									<ul style={{listStyleType: 'disc', display: 'block', paddingLeft: '20px'}}>
+									<ul
+										style={{
+											listStyleType: "disc",
+											display: "block",
+											paddingLeft: "20px",
+										}}
+									>
 										{result.strengths.map((strength, index) => (
-											<li key={index} style={{display: 'list-item', marginBottom: '4px'}}>
+											<li
+												key={index}
+												style={{display: "list-item", marginBottom: "4px"}}
+											>
 												<Text fontSize="sm">{strength}</Text>
 											</li>
 										))}
@@ -189,92 +206,138 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 											const originalIndex = result!.issues.indexOf(issue);
 											const isChecked = checkedIssues.has(originalIndex);
 											return (
-											<Card
-												key={index}
-												p="12"
-												border="1"
-												borderColor={isChecked ? "border.accent" : "border.default"}
-											>
-												<Box display="flex" alignItems="center" gap="8" mb="8">
-													{canApplyAll && (
-														<Checkbox
-															checked={isChecked}
-															onChange={(e) => {
-																const newChecked = new Set(checkedIssues);
-																if (e.currentTarget.checked) {
-																	newChecked.add(originalIndex);
-																} else {
-																	newChecked.delete(originalIndex);
-																}
-																setCheckedIssues(newChecked);
-															}}
-														/>
-													)}
-													<Badge variant="subtle" intent={getSeverityIntent(issue.severity) as any}>
-														{issue.severity}
-													</Badge>
-													<Badge variant="subtle" intent="neutral">{issue.type}</Badge>
-													{issue.fieldLabel && (
-														<Badge variant="subtle" intent="neutral">
-															{issue.fieldLabel}
+												<Card
+													key={index}
+													p="12"
+													border="1"
+													borderColor="border.default"
+													bg={
+														isChecked ? "bg.default.pressed" : undefined
+													}
+												>
+													<Box
+														display="flex"
+														alignItems="center"
+														gap="8"
+														mb="8"
+													>
+														{canApplyAll && (
+															<Checkbox
+																checked={isChecked}
+																onChange={(e) => {
+																	const newChecked = new Set(
+																		checkedIssues
+																	);
+																	if (e.currentTarget.checked) {
+																		newChecked.add(
+																			originalIndex
+																		);
+																	} else {
+																		newChecked.delete(
+																			originalIndex
+																		);
+																	}
+																	setCheckedIssues(newChecked);
+																}}
+															/>
+														)}
+														<Badge
+															variant="subtle"
+															intent={
+																getSeverityIntent(
+																	issue.severity
+																) as any
+															}
+														>
+															{issue.severity}
 														</Badge>
-													)}
-												</Box>
-												<Box mb="12">
-													<Text fontSize="sm" fontWeight="500" mb="4">
-														<IconAlertCircle
-															size={14}
-															style={{display: "inline", marginRight: "4px"}}
-														/>
-														{issue.message}
-													</Text>
-												</Box>
-												<Box display="flex" flexDirection="column" gap="8">
-													<Box>
-														<Text fontSize="xs" color="fg.secondary" mb="2">
-															Original:
-														</Text>
-														<Card
-															p="8"
-															bg="bg.error.subtle"
-															fontSize="md"
-															color="fg.default"
-														>
-															{issue.original}
-														</Card>
+														<Badge variant="subtle" intent="neutral">
+															{issue.type}
+														</Badge>
+														{issue.fieldLabel && (
+															<Badge
+																variant="subtle"
+																intent="neutral"
+															>
+																{issue.fieldLabel}
+															</Badge>
+														)}
 													</Box>
-													<Box>
-														<Text fontSize="xs" color="fg.secondary" mb="2">
-															Suggestion:
+													<Box mb="12">
+														<Text fontSize="sm" fontWeight="500" mb="4">
+															<IconCircleExclamation
+																size={14}
+																style={{
+																	display: "inline",
+																	marginRight: "4px",
+																}}
+															/>
+															{issue.message}
 														</Text>
-														<Box
-															display="flex"
-															alignItems="center"
-															justifyContent="space-between"
-															gap="8"
-														>
+													</Box>
+													<Box
+														display="flex"
+														flexDirection="column"
+														gap="8"
+													>
+														<Box>
+															<Text
+																fontSize="xs"
+																color="fg.secondary"
+																mb="2"
+															>
+																Original:
+															</Text>
 															<Card
-																flex="1"
 																p="8"
-																bg="bg.success.subtle"
+																bg="bg.error.subtle"
 																fontSize="md"
 																color="fg.default"
 															>
-																{issue.suggestion}
+																{issue.original}
 															</Card>
-															{onApply && (
-																<Button
-																	size="sm"
-																	appearance="primary"
-																	onClick={() => onApply(issue.suggestion, issue.fieldId)}
+														</Box>
+														<Box>
+															<Text
+																fontSize="xs"
+																color="fg.secondary"
+																mb="2"
+															>
+																Suggestion:
+															</Text>
+															<Box
+																display="flex"
+																alignItems="center"
+																justifyContent="space-between"
+																gap="8"
+															>
+																<Card
+																	flex="1"
+																	p="8"
+																	bg="bg.success.subtle"
+																	fontSize="md"
+																	color="fg.default"
 																>
-																	Apply
-																</Button>
-															)}
+																	{issue.suggestion}
+																</Card>
+																{onApply && (
+																	<Button
+																		size="sm"
+																		appearance="primary"
+																		onClick={() =>
+																			onApply(
+																				issue.suggestion,
+																				issue.fieldId
+																			)
+																		}
+																	>
+																		Apply
+																	</Button>
+																)}
+															</Box>
 														</Box>
 													</Box>
-												</Box>
-											</Card>
+												</Card>
 											);
 										})}
 									</Box>
@@ -292,7 +355,8 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 									<IconCheck size={48} color="var(--ax-fg-success)" />
 									<Heading level="4">Perfect Brand Alignment!</Heading>
 									<Text color="fg.secondary">
-										No issues found. Your content matches the brand voice guidelines.
+										No issues found. Your content matches the brand voice
+										guidelines.
 									</Text>
 								</Box>
 							)}
@@ -301,10 +365,7 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 				</DialogBody>
 				<DialogFooter>
 					<Box display="flex" justifyContent="flex-end" gap="8" w="full">
-						<Button
-							appearance="subtle"
-							onClick={() => onOpenChange(false)}
-						>
+						<Button appearance="subtle" onClick={() => onOpenChange(false)}>
 							Close
 						</Button>
 						{canApplyAll && (
@@ -313,7 +374,10 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 								disabled={checkedIssues.size === 0}
 								onClick={() => {
 									const changes = result!.issues
-										.filter((issue, index) => issue.fieldId && checkedIssues.has(index))
+										.filter(
+											(issue, index) =>
+												issue.fieldId && checkedIssues.has(index)
+										)
 										.map((issue) => ({
 											fieldId: issue.fieldId!,
 											suggestion: issue.suggestion,
@@ -322,7 +386,8 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 									onOpenChange(false);
 								}}
 							>
-								Apply {checkedIssues.size > 0 ? `${checkedIssues.size} ` : ""}Change{checkedIssues.size !== 1 ? "s" : ""}
+								Apply {checkedIssues.size > 0 ? `${checkedIssues.size} ` : ""}Change
+								{checkedIssues.size !== 1 ? "s" : ""}
 							</Button>
 						)}
 					</Box>

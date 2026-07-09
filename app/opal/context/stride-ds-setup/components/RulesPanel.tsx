@@ -25,7 +25,7 @@ const CATEGORY_COLORS: Record<DSRule["category"], string> = {
 	spacing: "var(--ax-colors-bg-primary-subtle)",
 	color: "var(--ax-colors-bg-warning-subtle)",
 	accessibility: "var(--ax-colors-bg-success-subtle)",
-	components: "var(--ax-colors-bg-accent-subtle)",
+	components: "var(--ax-colors-bg-information-subtle)",
 	custom: "var(--ax-colors-bg-tertiary)",
 };
 
@@ -218,8 +218,8 @@ export function RulesPanel({open, rules, onClose, onSave}: Props) {
 						<Box
 							style={{
 								marginTop: 12,
-								background: "var(--ax-colors-bg-accent-subtle)",
-								border: "1px solid var(--ax-colors-border-accent)",
+								background: "var(--ax-colors-bg-secondary)",
+								border: "1px solid var(--ax-colors-border-default)",
 								borderRadius: "8px",
 								padding: "12px",
 							}}

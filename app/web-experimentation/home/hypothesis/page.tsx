@@ -4,6 +4,7 @@ import {
 	Box,
 	Card,
 	Text as AxiomText,
+	Link as AxiomLink,
 	Field,
 	Textarea,
 	Select,
@@ -11,10 +12,10 @@ import {
 	SelectContent,
 	Button,
 } from "@optiaxiom/react";
-import { useState } from "react";
-import { Text } from "@/app/components/Text";
+import {useState} from "react";
+import {Text} from "@/app/components/Text";
 import Link from "next/link";
-import { IconArrowLeft } from "@tabler/icons-react";
+import {IconArrowLeft} from "@/app/lib/axiom-icons";
 
 export default function HypothesisBuilderPage() {
 	const [problem, setProblem] = useState("");
@@ -27,21 +28,26 @@ export default function HypothesisBuilderPage() {
 
 	return (
 		<Box display="flex" flexDirection="column" gap="24" w="full">
-			<Link
-				href="/web-experimentation/home"
-				style={{ display: "inline-flex", alignItems: "center", gap: "8", marginBottom: "8" }}
-			>
-				<IconArrowLeft size={18} />
-				<AxiomText fontSize="sm" color="fg.accent">
+			<AxiomLink asChild fontSize="sm">
+				<Link
+					href="/web-experimentation/home"
+					style={{
+						display: "inline-flex",
+						alignItems: "center",
+						gap: "8",
+						marginBottom: "8",
+					}}
+				>
+					<IconArrowLeft size={18} />
 					Back to Home
-				</AxiomText>
-			</Link>
+				</Link>
+			</AxiomLink>
 			<Text fontSize="lg" fontWeight="600">
 				Hypothesis builder
 			</Text>
 			<AxiomText fontSize="sm" color="fg.secondary" mb="8">
-				Structured hypothesis: problem, audience, proposed change, expected shift, metrics, and impact.
-				AI can improve clarity and suggest measurable framing.
+				Structured hypothesis: problem, audience, proposed change, expected shift, metrics,
+				and impact. AI can improve clarity and suggest measurable framing.
 			</AxiomText>
 			<Card p="24">
 				<Box display="flex" flexDirection="column" gap="16">
@@ -73,7 +79,9 @@ export default function HypothesisBuilderPage() {
 						<Textarea
 							placeholder="How should users behave differently?"
 							value={behavioralShift}
-							onChange={(e) => setBehavioralShift((e.target as HTMLTextAreaElement).value)}
+							onChange={(e) =>
+								setBehavioralShift((e.target as HTMLTextAreaElement).value)
+							}
 							w="full"
 						/>
 					</Field>
@@ -82,9 +90,9 @@ export default function HypothesisBuilderPage() {
 							value={primaryMetric}
 							onValueChange={setPrimaryMetric}
 							options={[
-								{ label: "Conversion rate", value: "conversion_rate" },
-								{ label: "Revenue per visit", value: "rpv" },
-								{ label: "Signup rate", value: "signup_rate" },
+								{label: "Conversion rate", value: "conversion_rate"},
+								{label: "Revenue per visit", value: "rpv"},
+								{label: "Signup rate", value: "signup_rate"},
 							]}
 						>
 							<SelectTrigger placeholder="Select metric" size="lg" w="full">
@@ -102,7 +110,9 @@ export default function HypothesisBuilderPage() {
 						<Textarea
 							placeholder="e.g. +10% conversion on signup"
 							value={predictedImpact}
-							onChange={(e) => setPredictedImpact((e.target as HTMLTextAreaElement).value)}
+							onChange={(e) =>
+								setPredictedImpact((e.target as HTMLTextAreaElement).value)
+							}
 							w="full"
 						/>
 					</Field>
@@ -111,9 +121,9 @@ export default function HypothesisBuilderPage() {
 							value={confidence}
 							onValueChange={setConfidence}
 							options={[
-								{ label: "High", value: "high" },
-								{ label: "Medium", value: "medium" },
-								{ label: "Low", value: "low" },
+								{label: "High", value: "high"},
+								{label: "Medium", value: "medium"},
+								{label: "Low", value: "low"},
 							]}
 						>
 							<SelectTrigger placeholder="Select" size="lg" w="full">

@@ -28,7 +28,8 @@ export const cmpNav = [
 	{
 		label: "Plan",
 		url: "/cmp/plan-view",
-		highlight: "/cmp/plan-view",
+		// Task detail pages highlight Plan in the sidebar
+		highlight: ["/cmp/plan-view", "/cmp/task/"],
 		icon: <IconList />,
 	},
 	{
@@ -99,5 +100,22 @@ export const cmpNav = [
 			},
 			{label: "Social Accounts", url: "/cmp/settings/social-accounts"},
 		],
+	},
+	// Hidden entries — no sidebar item, they only carry layout flags for their route
+	{
+		label: "Task Detail",
+		url: "/cmp/task/",
+		highlight: "/cmp/task/",
+		customLayout: true,
+		hidden: true,
+	},
+	{
+		label: "Opal Studio",
+		url: "/cmp/opal-studio",
+		highlight: "/cmp/opal-studio",
+		customLayout: true,
+		hideSidebar: true,
+		opalCloseReturnTo: "/cmp/library",
+		hidden: true,
 	},
 ];

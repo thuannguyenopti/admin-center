@@ -2,7 +2,7 @@
 
 import {Fragment, useEffect, useRef, useState, useMemo} from "react";
 import {Box, Text, Heading, Menu, MenuTrigger, MenuContent, Separator} from "@optiaxiom/react";
-import {IconDots, IconPalette, IconTrash} from "@tabler/icons-react";
+import {IconEllipsisSolid, IconPalette, IconTrash} from "@/app/lib/axiom-icons";
 import {initialContentTypes, ContentType} from "@/app/db/initialData";
 import {groupPropertiesByGroup} from "./utils/propertyGroups";
 import {PropertyRenderer} from "@/app/components/property-renderers";
@@ -212,7 +212,7 @@ export default function ElementEditor({
 									e.stopPropagation();
 									setMenuOpen(true);
 								}}
-								icon={<IconDots />}
+								icon={<IconEllipsisSolid />}
 								aria-label="Element options"
 								appearance="subtle"
 								size="sm"

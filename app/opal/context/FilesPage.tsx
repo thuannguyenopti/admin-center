@@ -10,11 +10,9 @@ import {
 	Progress,
 	Tooltip,
 	ToggleButton,
-	DropdownMenu,
-	DropdownMenuTrigger,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
+	Menu,
+	MenuTrigger,
+	MenuContent,
 	LabelMenuButton,
 	Checkbox,
 	Dialog,
@@ -328,47 +326,34 @@ export function FilesPage() {
 					<Box style={{flex: 1, maxWidth: 264}}>
 						<SearchInput size="lg" placeholder="Search files..." />
 					</Box>
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<LabelMenuButton label="File Type">All</LabelMenuButton>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent>
-							<DropdownMenuItem>All</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							{[
+					<Menu
+						options={[
+							{label: "All"},
+							...[
 								{label: "Documents", sub: "PDF, Word, Markdown, HTML"},
 								{label: "Spreadsheets", sub: "CSV, Excel"},
 								{label: "Media", sub: "PNG, JPEG, GIF, WebP, SVG"},
 								{label: "Code", sub: "JS, TS, HTML, CSS"},
-							].map(({label, sub}) => (
-								<DropdownMenuItem key={label}>
-									<Box
-										display="flex"
-										flexDirection="column"
-										gap="2"
-										style={{alignItems: "flex-start"}}
-									>
-										<Text fontSize="sm" fontWeight="500">
-											{label}
-										</Text>
-										<Text fontSize="xs" color="fg.tertiary">
-											{sub}
-										</Text>
-									</Box>
-								</DropdownMenuItem>
-							))}
-						</DropdownMenuContent>
-					</DropdownMenu>
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
+							].map(({label, sub}) => ({
+								label,
+								description: sub,
+								group: {label: "types", hidden: true, separator: true},
+							})),
+						]}
+					>
+						<MenuTrigger asChild>
+							<LabelMenuButton label="File Type">All</LabelMenuButton>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
+					<Menu
+						options={["Jamie Chen (You)", "Organization"].map((o) => ({label: o}))}
+					>
+						<MenuTrigger asChild>
 							<LabelMenuButton label="Owner">Jamie Chen (You)</LabelMenuButton>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent>
-							{["Jamie Chen (You)", "Organization"].map((o) => (
-								<DropdownMenuItem key={o}>{o}</DropdownMenuItem>
-							))}
-						</DropdownMenuContent>
-					</DropdownMenu>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
 					<Box style={{flex: 1}} />
 					{activeTab === "design-system" ? (
 						<Button
@@ -380,39 +365,36 @@ export function FilesPage() {
 							Edit with Opal
 						</Button>
 					) : (
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
+						<Menu
+							options={[
+								{
+									label: "Upload Files",
+									addon: <IconUpload size={14} />,
+								},
+								{
+									label: "New File",
+									addon: <IconFile size={14} />,
+									group: {label: "new", hidden: true, separator: true},
+								},
+								{
+									label: "New Folder",
+									addon: <IconFolder size={14} />,
+									group: {label: "new", hidden: true, separator: true},
+								},
+							]}
+						>
+							<MenuTrigger asChild>
 								<Button
 									appearance="primary"
 									size="lg"
 									icon={<IconPlus />}
-									addonAfter={<IconAngleDown />}
+									addonAfter={<IconAngleDown size={20} />}
 								>
 									Add
 								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
-								<DropdownMenuItem>
-									<Box display="flex" alignItems="center" gap="8">
-										<IconUpload size={14} />
-										Upload Files
-									</Box>
-								</DropdownMenuItem>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem>
-									<Box display="flex" alignItems="center" gap="8">
-										<IconFile size={14} />
-										New File
-									</Box>
-								</DropdownMenuItem>
-								<DropdownMenuItem>
-									<Box display="flex" alignItems="center" gap="8">
-										<IconFolder size={14} />
-										New Folder
-									</Box>
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
+							</MenuTrigger>
+							<MenuContent align="end" />
+						</Menu>
 					)}
 				</Box>
 			)}
@@ -1020,91 +1002,65 @@ export function FilesPage() {
 													/>
 												</span>
 											</Tooltip>
-											<DropdownMenu>
-												<DropdownMenuTrigger
-													appearance="subtle"
-													size="sm"
-													icon={<IconEllipsisSolid size={16} />}
-													aria-label="More"
-												/>
-												<DropdownMenuContent align="end">
-													<DropdownMenuItem>
-														<Box
-															display="flex"
-															alignItems="center"
-															gap="8"
-														>
-															<IconPen size={16} />
-															Rename
-														</Box>
-													</DropdownMenuItem>
-													{selectedContentType !== "image" && (
-														<DropdownMenuItem
-															onClick={() => setIsEditing(true)}
-														>
-															<Box
-																display="flex"
-																alignItems="center"
-																gap="8"
-															>
-																<IconFile size={16} />
-																Edit
-															</Box>
-														</DropdownMenuItem>
-													)}
-													<DropdownMenuItem
-														onClick={() => setShareOpen(true)}
-													>
-														<Box
-															display="flex"
-															alignItems="center"
-															gap="8"
-														>
-															<IconUserPlus size={16} />
-															Share
-														</Box>
-													</DropdownMenuItem>
-													<DropdownMenuItem>
-														<Box
-															display="flex"
-															alignItems="center"
-															gap="8"
-														>
-															<IconDownload size={16} />
-															Download
-														</Box>
-													</DropdownMenuItem>
-													<DropdownMenuSeparator />
-													<DropdownMenuItem
-														onClick={() => setDetailsOpen(true)}
-													>
-														<Box
-															display="flex"
-															alignItems="center"
-															gap="8"
-														>
-															<IconClockRotateLeft size={16} />
-															Version history
-														</Box>
-													</DropdownMenuItem>
-													<DropdownMenuSeparator />
-													<DropdownMenuItem
-														onClick={() =>
-															setDeletingFileId(selectedFileId)
-														}
-														intent="danger"
-													>
-														<Box
-															display="flex"
-															alignItems="center"
-															gap="8"
-														>
-															<IconTrashCan size={16} />
-															Delete
-														</Box>
-													</DropdownMenuItem>
-												</DropdownMenuContent>
-											</DropdownMenu>
+											<Menu
+												options={[
+													{
+														label: "Rename",
+														addon: <IconPen size={16} />,
+													},
+													...(selectedContentType !== "image"
+														? [
+																{
+																	label: "Edit",
+																	addon: <IconFile size={16} />,
+																	execute: () =>
+																		setIsEditing(true),
+																},
+															]
+														: []),
+													{
+														label: "Share",
+														addon: <IconUserPlus size={16} />,
+														execute: () => setShareOpen(true),
+													},
+													{
+														label: "Download",
+														addon: <IconDownload size={16} />,
+													},
+													{
+														label: "Version history",
+														addon: <IconClockRotateLeft size={16} />,
+														execute: () => setDetailsOpen(true),
+														group: {
+															label: "history",
+															hidden: true,
+															separator: true,
+														},
+													},
+													{
+														label: "Delete",
+														addon: <IconTrashCan size={16} />,
+														intent: "danger",
+														execute: () =>
+															setDeletingFileId(selectedFileId),
+														group: {
+															label: "danger",
+															hidden: true,
+															separator: true,
+														},
+													},
+												]}
+											>
+												<MenuTrigger asChild>
+													<Button
+														appearance="subtle"
+														size="sm"
+														icon={<IconEllipsisSolid size={16} />}
+														aria-label="More"
+													/>
+												</MenuTrigger>
+												<MenuContent align="end" />
+											</Menu>
 										</Box>
 									</Box>
 

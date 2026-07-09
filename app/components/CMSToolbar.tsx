@@ -18,15 +18,15 @@ import {
 	IconFile,
 	IconCloud,
 	IconMessage,
-	IconDevices,
+	IconLaptopMobile,
 	IconChevronDown,
-	IconDots,
+	IconEllipsisSolid,
 	IconPlus,
 	IconGlobe,
 	IconGlobeFilled,
 	IconCalendarBolt,
-	IconSettings,
-	IconSend,
+	IconGear,
+	IconPaperPlaneTop as IconSend,
 	IconSend2,
 	IconSendOff,
 	IconWorld,
@@ -39,15 +39,15 @@ import {
 	IconTrash,
 	IconVersions,
 	IconStack2,
-	IconPencil,
+	IconPen,
 	IconArrowBackUp,
 	IconArrowForwardUp,
-	IconHistory,
+	IconClockRotateLeft,
 	IconRestore,
 	IconSparkles,
-	IconExternalLink,
+	IconArrowUpRightFromSquare,
 	IconShieldPlus,
-} from "@tabler/icons-react";
+} from "@/app/lib/axiom-icons";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import {group} from "console";
 import {sep} from "path";
@@ -546,7 +546,7 @@ export default function CMSToolbar({
 						},
 						{
 							label: "Version history",
-							addon: <IconHistory size={16} />,
+							addon: <IconClockRotateLeft size={16} />,
 							execute: onShowVersionHistory || (() => {}),
 							group: {label: "history", hidden: true, separator: true},
 						},
@@ -561,7 +561,7 @@ export default function CMSToolbar({
 							rounded="sm"
 							px="4"
 							py="2"
-							className="hover:bg-[var(--ax-bg-default-hover)] transition-colors"
+							className="hover:bg-[var(--ax-colors-bg-default-hovered)] transition-colors"
 						>
 							<IconCloud size={14} style={{opacity: 0.5}} />
 							<Text fontSize="sm" color="fg.tertiary">
@@ -800,7 +800,7 @@ export default function CMSToolbar({
 									{
 										label: "View on website",
 										addon: <IconWorld size={16} />,
-										detail: <IconExternalLink size={16} />,
+										detail: <IconArrowUpRightFromSquare size={16} />,
 										execute: onViewOnWebsite,
 										group: {label: "Page", separator: true},
 									} satisfies MenuOption,
@@ -808,7 +808,7 @@ export default function CMSToolbar({
 							: []),
 						{
 							label: "Rename",
-							addon: <IconPencil size={16} />,
+							addon: <IconPen size={16} />,
 							execute: onRenamePage,
 							group: {label: "Page", separator: true},
 						},
@@ -849,7 +849,7 @@ export default function CMSToolbar({
 					<MenuTrigger
 						aria-label={"Status " + pageStatus}
 						size="lg"
-						icon={<IconDots size={16} />}
+						icon={<IconEllipsisSolid size={16} />}
 					/>
 					<MenuContent />
 				</Menu>

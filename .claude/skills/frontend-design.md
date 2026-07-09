@@ -60,12 +60,51 @@ For product UI, these are hard requirements:
 - Do not use arbitrary spacing for layout; use the repo spacing scale
 - Primary page actions use Axiom `Button appearance="primary"` with `size="md"` or `size="lg"` unless the surrounding existing pattern proves otherwise
 - Icon-only actions must use Axiom `Button` and have an accessible label or tooltip
+- Button icons go in the `icon` prop (leading) — Axiom auto-sizes it to the button. Do NOT pass icons as `Button` children or via `addonAfter` for a leading icon. Reserve `addonAfter` for a genuine *trailing* affordance only — practically just the down chevron and the external-link icon — and when you do, set the icon size manually to match the button: `20` for `size="lg"`/`"md"`, `16` for `size="sm"` (i.e. 20/20/16 across lg/md/sm)
 - Never leave dead controls in the UI, including ellipsis menus with no actions
 - Never add a Settings tab for one or two controls; move small identity/status controls into the page header or a contextual menu
 - Never create a monolithic file. New components, hooks, data, and utilities belong in separate files from the start. Files over 300 lines or with multiple concerns must be split before adding more behavior
 - Before finishing, visually verify the changed route at desktop and narrower widths
 
 If a prototype, screenshot, HTML file, or PM mock uses raw controls, tiny CTAs, hardcoded colors, or inconsistent sizing, treat those as prototype artifacts. Extract the product requirements, then rebuild with Axiom V3 components and this repo's visual system.
+
+## Common violations: detect and fix
+
+These recur across the repo. Check for them at creation time and before finishing a review. Scope greps to product routes (`app/opal/**`, `app/cmp/**`, `app/cms/**`, etc.).
+
+| Violation | Detect (regex) | Fix |
+|---|---|---|
+| Hardcoded hex/rgb in UI chrome | `#[0-9a-fA-F]{3,6}` or `rgb\(` inside `style=`/`color:`/`background`/`border` (ignore `fill=`/`stroke=` inside inline SVG illustrations) | semantic tokens: `fg.*`, `bg.*`, `border.*` |
+| Manual accent | `fg\.accent`, `bg\.accent`, `border\.accent`, `accentColor`, or the accent hex `#0037[fF]{2}` | remove; hover/selected surfaces → `bg.default.hovered` / `bg.default.pressed`; otherwise let `Button appearance="primary"`, `Link`, or the component's own state own it |
+| Arbitrary px spacing | `(padding\|margin\|gap\|top\|right\|bottom\|left):\s*'?\d+px` | spacing-scale props (`p`, `px`, `py`, `gap`, `mb`, …) |
+| Raw HTML controls | `<button\|<input\|<select\|<textarea\|<a ` in product routes | Axiom `Button`, `Input`, `Select`, `Textarea`, `Link` |
+| Button icon in wrong slot | a leading icon passed as a `Button` child (`<Button[^>]*>\s*<Icon`) or via `addonAfter` | move it to the `icon` prop (auto-sizes). Keep `addonAfter` only for a trailing down-chevron / external-link, sized 20/20/16 (lg/md/sm) |
+| Hand-rolled empty state | a centered `Box` + "No …" heading, or `EmptyList` imported but unused | `EmptyList` (`heading`, `body`, CTA as children) |
+| Dead / empty menu | `Menu` with `options={[]}` or an ellipsis trigger with no real actions | remove it, or give it a distinct purpose |
+
+Illustrative fixes:
+
+```tsx
+// ❌ hardcoded hex + arbitrary border layered onto an Axiom control
+<SearchInput style={{ width: '264px', border: '1px solid #9e9e9e', borderRadius: '4px' }} />
+// ✅ let the component own its chrome
+<SearchInput style={{ width: '264px' }} />
+
+// ❌ manual accent to "highlight" non-interactive text
+<Text style={{ color: '#0037ff' }}>Learn more</Text>
+// ✅ an interactive element that owns accent
+<Link href="...">Learn more</Link>
+
+// ❌ hand-rolled empty state with hardcoded type + color
+<Box display="flex" flexDirection="column" alignItems="center" style={{ maxWidth: '552px' }}>
+  <Heading style={{ fontSize: '28px', color: '#2e3442' }}>No categories</Heading>
+  <AppButton style={{ backgroundColor: '#0037ff', color: '#fff' }}>Create</AppButton>
+</Box>
+// ✅ the shared component
+<EmptyList heading="No categories" body="…">
+  <Button appearance="primary" size="md" onClick={handleCreateClick}>Create</Button>
+</EmptyList>
+```
 
 ## Mandatory visual QA
 
@@ -335,6 +374,37 @@ Avoid:
 - Primary buttons accidentally styled like inverse buttons
 
 The UI should primarily feel neutral, elegant, and controlled, with green as an accent.
+
+## Accent color usage
+
+Accent color is **never** applied by hand. There are effectively no valid cases for setting accent manually. Axiom components apply accent internally exactly where it belongs — primary `Button`, `Link`, focus rings, active `Tabs`/`SegmentedControl`, selectable `Card`, checked `Checkbox`/`Radio`, and `Menu` selection. Accent should only ever appear as a byproduct of using the right component. If you are setting accent yourself, you are re-implementing something a component already does, or over-emphasizing.
+
+Do not:
+- Hardcode the accent hex (`#0037ff` and similar) in any `style`, `color`, `background`, `accentColor`, `fill`, or `border` — it bypasses theming and dark mode
+- Set `color="fg.accent"`, `bg="bg.accent"`, or `border.accent` on text, icons, `Box`es, or custom controls — for any reason, including "to make it pop"
+- Set `color="fg.accent"` on a `Link` (or any component that already colors itself). The `Link` is accent by default; the explicit prop is redundant manual accent — remove it.
+- Build your own selected / active / hover / checked / focus state by putting `bg="bg.accent"`, `bg="bg.accent.subtle"`, or `borderColor="border.accent"` on a `Box` or custom control. Use the Axiom component that owns that state (`Tabs`, `SegmentedControl`, selectable `Card`, `Checkbox`, `Radio`, `Menu`, `ListboxItem`). A hand-rolled highlighted row/card/tab is a violation, not an exception.
+- Use accent as decoration, section coloring, or emphasis on content the user cannot act on
+
+Do:
+- Get accent only as a byproduct of using the right Axiom component (`Button appearance="primary"`, `Link`, active `Tabs`, checked `Checkbox`) — never by setting a color/bg/border value yourself
+- If something feels like it needs manual accent, it doesn't: either use the component that owns that state, or let the emphasis come from hierarchy (type, spacing, weight), not color
+- For non-interactive text/icons, use `fg.default` / `fg.secondary` / `fg.tertiary`; for hover/selected surfaces use `bg.default.hovered` / `bg.default.pressed`
+
+Rule of thumb: if you are typing `accent` or a blue hex into a `style`/`color`/`bg`/`border` prop — or onto a `Link` — stop. The fix is to use (or reach for) the Axiom component that already carries that state, or to drop the emphasis entirely.
+
+## Hover, selected, and pressed states
+
+
+Neutral interaction states use the default surface tokens, never accent:
+- Hover: `bg.default.hovered` (CSS var `--ax-colors-bg-default-hovered`)
+- Selected / active / pressed — rows, quick-filter chips, toggles: `bg.default.pressed` (CSS var `--ax-colors-bg-default-pressed`)
+
+Do not:
+- Use `bg.accent` / `bg.accent.subtle` to mark a hovered or selected `Box`, row, or chip — that is accent misuse. Neutral hover/pressed is the default; accent belongs to an Axiom component's own state.
+- Invent the CSS var. The tokens are `--ax-colors-bg-default-hovered` and `--ax-colors-bg-default-pressed`. Note the past-tense `hovered` — `--ax-bg-default-hover` does not exist and silently does nothing.
+
+Prefer the Axiom component that already provides these states (`Table` rows, `Menu`, `ListboxItem`, `ToggleButton`, `Tabs`). Reach for the raw tokens only when styling a custom surface no component covers.
 
 ## Button and control rules
 

@@ -4,7 +4,7 @@ import {Box, Card, Field, Heading, Spinner, Textarea, Checkbox} from "@optiaxiom
 import {Button} from "@/app/components/Button";
 import {Text} from "@/app/components/Text";
 import {useState} from "react";
-import {IconSparkles, IconX, IconArrowLeft, IconStack2} from "@tabler/icons-react";
+import {IconSparkles, IconXmark, IconArrowLeft, IconStack2} from "@/app/lib/axiom-icons";
 import Property from "@/app/components/Property";
 import {Flex} from "@/app/components/Flex";
 
@@ -270,7 +270,7 @@ ${JSON.stringify(currentVariation)}`;
 									aria-label="Close"
 									size="sm"
 									appearance="subtle"
-									icon={<IconX size={16} />}
+									icon={<IconXmark size={16} />}
 									className="!absolute right-2 top-8 z-10"
 									onClick={() => setSimple(true)}
 								/>

@@ -46,7 +46,7 @@ export function ArtifactRefCard({
 			gap="12"
 			onClick={onClick}
 			style={{
-				background: "var(--ax-colors-bg-accent-subtle)",
+				background: "var(--ax-colors-bg-information-subtle)",
 				cursor: onClick ? "pointer" : "default",
 			}}
 		>

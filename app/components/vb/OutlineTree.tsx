@@ -2,7 +2,7 @@
 
 import React, {useMemo, useState, useEffect, useRef} from "react";
 import {Box, Button, Text} from "@optiaxiom/react";
-import {IconPlus} from "@tabler/icons-react";
+import {IconPlus} from "@/app/lib/axiom-icons";
 
 import Section from "./Section";
 import Row from "./Row";
@@ -99,7 +99,7 @@ const getDraggedAlt = (dt: DataTransfer) => {
 
 const INSERT_BAR_STYLE: React.CSSProperties = {
 	height: "2px",
-	backgroundColor: "#0037FF",
+	backgroundColor: "var(--ax-colors-fg-secondary)",
 	borderRadius: "2px",
 	margin: "-1px 0",
 	pointerEvents: "none",

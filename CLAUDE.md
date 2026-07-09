@@ -68,7 +68,24 @@ There's also a legacy `app/styles/opalStyles.css` with older Opal rules — addi
 
 **`app/components/template.tsx`** renders the shell: primary sidebar (`Sidebar`/`Nav`), optional secondary sidebar (VT drill-down or Content Manager sidebar), a scrollable main content area, an optional footer bar, and the Opal slide-out panel. Pages get `px="32" py="24"` padding and an auto-generated `<Heading>` page title by default.
 
-**`customLayout: true`** on a nav item bypasses the padding and page header — required for full-bleed pages (e.g., Opal chat, CMS Edit). Full-width table pages instead use negative margins: `-m-6 -mt-[72px]`.
+**Never add route-specific logic to `template.tsx`** — no `path.startsWith(...)` checks, no per-page conditionals, no hardcoded product names or routes. All layout variation is driven by nav-item flags or context values (`useLayout`). If a new layout mode is needed, add a flag to the nav item and read it generically in the template.
+
+**Nav-item layout flags** (resolved from the deepest matching nav level upward — lvl4 → lvl3 → lvl2 → top-level item):
+
+| Flag | Effect |
+|---|---|
+| `customLayout: true` | Bypasses padding and page header — for full-bleed pages (e.g., Opal chat, CMS Edit) |
+| `fullscreen: true` | Strips the entire shell (sidebar, GlobalBar, everything); children own the viewport at 100vh×100vw — for canvas-style builders (e.g., Workflow Builder) |
+| `hideSidebar: true` | Hides primary + secondary sidebars; GlobalBar stays (e.g., Opal Studio) |
+| `chromeless: true` | Hides GlobalBar and sidebars; content spans the full grid (e.g., Opal canvas mode) |
+| `hidePageHeader: true` | Keeps padding but hides the auto-generated heading |
+| `instantShell: true` | Disables the shell slide transition for the route |
+| `hidden: true` | Item doesn't render in the sidebar — used for entries that exist only to carry layout flags for a route |
+| `badge: <n>` | Shows a danger count badge on the sidebar item while it's not active |
+| `opalCloseReturnTo: "<url>"` | Closing the Opal panel navigates to `?returnTo=` (or this fallback URL) |
+| `query: {key: "value"}` | Restricts the item's highlight match to specific search params (e.g. `{artifacts: "1"}`) |
+
+`highlight` may be a string or an array of path prefixes (e.g. Plan matches both `/cmp/plan-view` and `/cmp/task/`). Routes with no sidebar item still need a nav entry (with `hidden: true`) to carry their layout flags — see the bottom of `app/cmp/navigation.tsx` and `app/opal/navigation.tsx` for examples.
 
 **Secondary sidebar drill-down (VT)** — when a nav item has nested `children` objects with a `title` and `children` array, clicking sub-items causes `VT.tsx` to slide in a sub-panel. Up to 4 levels deep (lvl2–lvl4).
 
@@ -161,6 +178,11 @@ Before building any UI pattern (row actions, dismiss controls, empty states, mod
 ## No Monolithic Files
 
 Before writing code, check if files you're touching are monolithic (300+ lines, multiple concerns). If so, split them first.
+
+## TODO — known standards gaps
+
+- **`--opal-gradient-*` variables are not defined yet.** The Opal gradient rule references CSS custom properties that don't exist in any stylesheet, so Opal gradients are currently hardcoded hex/rgba throughout `app/opal/`. Define the variables (likely in `app/opal/styles.css`) and migrate the hardcoded gradients — the canonical values live in `app/opal/components/OpalAlert.tsx` and `app/opal/agents/page.tsx:686`.
+- **`@optiaxiom/proteus` is installed but never used.** The rule says Action Cards must use proteus, yet all action cards are custom recreations (`app/components/Opal/ApprovalActionCard.tsx`, `AskQuestionsActionCard.tsx`, `CommonActionCard` in `AgentAssistantPanel.tsx`). Migrate them to the proteus Action Card components.
 
 ## Git & Deployment
 

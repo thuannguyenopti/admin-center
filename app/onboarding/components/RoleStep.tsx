@@ -2,26 +2,19 @@
 
 import { motion } from "framer-motion";
 import { Heading, Text, Box } from "@optiaxiom/react";
-import {
-    IconSpeakerphone,
-    IconSettingsAutomation,
-    IconPencil,
-    IconCode,
-    IconBrain,
-    IconChartBar
-} from "@tabler/icons-react";
+import {IconMegaphone, IconSettingsAutomation, IconPen, IconCode, IconBrain, IconChartColumn} from "@/app/lib/axiom-icons";
 
 type RoleStepProps = {
     onSelect: (role: string) => void;
 };
 
 const roles = [
-    { id: "marketer", label: "Digital Marketer", icon: IconSpeakerphone, desc: "Campaign strategy & execution" },
+    { id: "marketer", label: "Digital Marketer", icon: IconMegaphone, desc: "Campaign strategy & execution" },
     { id: "marketing_ops", label: "Marketing Ops", icon: IconSettingsAutomation, desc: "Workflow automation & efficiency" },
-    { id: "content_creator", label: "Content Creator", icon: IconPencil, desc: "Asset creation & copywriting" },
+    { id: "content_creator", label: "Content Creator", icon: IconPen, desc: "Asset creation & copywriting" },
     { id: "developer", label: "Developer", icon: IconCode, desc: "Technical implementation & APIs" },
     { id: "ai_specialist", label: "AI Specialist", icon: IconBrain, desc: "Model tuning & governance" },
-    { id: "product_manager", label: "Product Manager", icon: IconChartBar, desc: "Strategy & experimentation" },
+    { id: "product_manager", label: "Product Manager", icon: IconChartColumn, desc: "Strategy & experimentation" },
 ];
 
 export default function RoleStep({ onSelect }: RoleStepProps) {

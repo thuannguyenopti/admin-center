@@ -384,7 +384,7 @@ function SetupProgressCard({steps}: {steps: ReturnType<typeof useStrideDSState>[
 									width: 14,
 									height: 14,
 									borderRadius: "50%",
-									border: "2px solid var(--ax-colors-fg-accent)",
+									border: "2px solid var(--ax-colors-border-default)",
 									borderTopColor: "transparent",
 									animation: "spin 0.7s linear infinite",
 								}}
@@ -791,7 +791,6 @@ export default function StrideDesignSystemPage() {
 			void runSetupSimulation();
 		}, 400);
 	}, [phase, addMessage, setPhase, runSetupSimulation]);
-
 
 	const handleSaveRules = useCallback(
 		(rules: typeof savedRules) => {

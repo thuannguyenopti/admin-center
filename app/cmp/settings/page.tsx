@@ -1,8 +1,8 @@
 "use client";
 
-import { Box, Heading } from "@optiaxiom/react";
-import { Text } from "@/app/components/Text";
-import { IconSettings } from "@tabler/icons-react";
+import {Box, Heading} from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
+import {IconGear} from "@/app/lib/axiom-icons";
 
 export default function CMPSettingsPage() {
 	return (
@@ -20,15 +20,15 @@ export default function CMPSettingsPage() {
 				display="flex"
 				alignItems="center"
 				justifyContent="center"
-				bg="bg.accent.subtle"
-				color="fg.secondary"
+				bg="bg.information.subtle"
+				color="fg.information"
 				style={{
 					width: "80px",
 					height: "80px",
 					borderRadius: "50%",
 				}}
 			>
-				<IconSettings size={40} stroke={1.5} />
+				<IconGear size={40} stroke={1.5} />
 			</Box>
 
 			<Box
@@ -37,7 +37,7 @@ export default function CMPSettingsPage() {
 				alignItems="center"
 				gap="16"
 				textAlign="center"
-				style={{ maxWidth: "552px" }}
+				style={{maxWidth: "552px"}}
 			>
 				<Heading
 					level="2"
@@ -58,7 +58,8 @@ export default function CMPSettingsPage() {
 						lineHeight: "24px",
 					}}
 				>
-					Select a setting category from the navigation to configure your Content Marketing Platform.
+					Select a setting category from the navigation to configure your Content
+					Marketing Platform.
 				</Text>
 			</Box>
 		</Box>

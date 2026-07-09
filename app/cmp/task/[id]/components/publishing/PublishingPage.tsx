@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Box, Button, Menu, MenuContent, type MenuOption, MenuTrigger } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconPlus } from "@tabler/icons-react";
+import {IconPlus} from "@/app/lib/axiom-icons";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
 import type { Page } from "@/app/db/initialData";
 import type { PublishingChannel, TaskTab } from "../../types";

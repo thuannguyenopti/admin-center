@@ -5,7 +5,7 @@ import { Badge, Box, Button } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { useLayout } from "@/app/context/LayoutContext";
 import { useTheme } from "@/app/hooks/useTheme";
-import { IconChevronLeft, IconChevronRight, IconFilter } from "@tabler/icons-react";
+import {IconChevronLeft, IconChevronRight, IconFilter} from "@/app/lib/axiom-icons";
 import type { ResourceTab, PlannerCard } from "./types";
 import { weekColumns } from "./constants";
 import {
@@ -85,9 +85,7 @@ export default function CMPResourceManagementPage() {
 						<Box alignItems="center" display="flex" gap="12" justifyContent="space-between" flexWrap="wrap">
 							<Box alignItems="center" display="flex" gap="12" flexWrap="wrap">
 								<div style={{ position: "relative" }}>
-									<Button appearance="subtle" aria-label="Filter workload" size="md">
-										<IconFilter size={16} />
-									</Button>
+									<Button appearance="subtle" aria-label="Filter workload" size="md" icon={<IconFilter />} />
 									<div style={{ position: "absolute", right: -4, top: -6 }}>
 										<Badge intent="primary">2</Badge>
 									</div>
@@ -104,9 +102,8 @@ export default function CMPResourceManagementPage() {
 										disabled={plannerWeekIndex === 0}
 										onClick={() => handlePlannerWeekChange(-1)}
 										size="sm"
-									>
-										<IconChevronLeft size={16} />
-									</Button>
+										icon={<IconChevronLeft />}
+									/>
 									<Text color="fg.default" fontSize="sm" fontWeight="600" style={{ maxWidth: "none" }}>
 										Jun 1 - Aug 30 2025
 									</Text>
@@ -116,9 +113,8 @@ export default function CMPResourceManagementPage() {
 										disabled={plannerWeekIndex === weekColumns.length - 1}
 										onClick={() => handlePlannerWeekChange(1)}
 										size="sm"
-									>
-										<IconChevronRight size={16} />
-									</Button>
+										icon={<IconChevronRight />}
+									/>
 								</Box>
 							</Box>
 						</Box>
@@ -140,9 +136,7 @@ export default function CMPResourceManagementPage() {
 						<Box alignItems="center" display="flex" gap="12" justifyContent="space-between" flexWrap="wrap">
 							<Box alignItems="center" display="flex" gap="12" flexWrap="wrap">
 								<div style={{ position: "relative" }}>
-									<Button appearance="subtle" aria-label="Filter planner" size="md">
-										<IconFilter size={16} />
-									</Button>
+									<Button appearance="subtle" aria-label="Filter planner" size="md" icon={<IconFilter />} />
 									<div style={{ position: "absolute", right: -4, top: -6 }}>
 										<Badge intent="primary">2</Badge>
 									</div>
@@ -159,9 +153,8 @@ export default function CMPResourceManagementPage() {
 										disabled={plannerWeekIndex === 0}
 										onClick={() => handlePlannerWeekChange(-1)}
 										size="sm"
-									>
-										<IconChevronLeft size={16} />
-									</Button>
+										icon={<IconChevronLeft />}
+									/>
 									<Text color="fg.default" fontSize="sm" fontWeight="600" style={{ maxWidth: "none" }}>
 										{getPlannerViewportLabel(visiblePlannerWeeks)}
 									</Text>
@@ -171,9 +164,8 @@ export default function CMPResourceManagementPage() {
 										disabled={plannerWeekIndex === weekColumns.length - 1}
 										onClick={() => handlePlannerWeekChange(1)}
 										size="sm"
-									>
-										<IconChevronRight size={16} />
-									</Button>
+										icon={<IconChevronRight />}
+									/>
 								</Box>
 							</Box>
 

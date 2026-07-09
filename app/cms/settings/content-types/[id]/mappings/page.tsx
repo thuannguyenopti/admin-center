@@ -16,7 +16,7 @@ import usePersistentState from "@/app/usePersistentState";
 import { Footer } from "@/app/context/LayoutContext";
 import AbstractDialog from "@/app/components/AbstractDialog";
 import { generateSuggestedMapping, areTypesCompatible, findIncomingMappings } from "@/app/lib/contentTypeMapping";
-import { IconPlus } from "@tabler/icons-react";
+import {IconPlus} from "@/app/lib/axiom-icons";
 
 // Helper to get display name with fallback to name
 const getDisplayName = (item: { displayName?: string; name: string }): string => {

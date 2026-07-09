@@ -25,7 +25,7 @@
 }
 .vau-card:hover {
 	box-shadow: var(--ax-shadows-lg);
-	border-color: var(--ax-colors-border-accent);
+	border-color: var(--ax-colors-border-default);
 }
 
 /* Pinned artifact cards — hover reveals actions + extras footer */

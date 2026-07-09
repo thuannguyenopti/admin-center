@@ -106,9 +106,6 @@ function TemplateContent({
 	const [opalContextChip, setOpalContextChip] = useState<{label: string; content: string} | null>(
 		null
 	);
-	const isOpalStudio = path.startsWith("/cmp/opal-studio");
-	const isCanvasMode = path === "/opal" && searchParams.get("artifacts") === "1";
-
 	// Code panel state
 	const [isCodePanelOpen, setIsCodePanelOpen] = useState(false);
 	const [codePanelTarget, setCodePanelTarget] = useState<string | null>(null);
@@ -181,11 +178,15 @@ function TemplateContent({
 	}, [activeChat, isLoading, messages.length, pendingOpalPrompt, sendMessage, setInputValue]);
 
 	const closeOpalWithRouteAwareness = () => {
-		if (isOpalStudio) {
+		// `opalCloseReturnTo` is a nav-item flag (resolved below): closing the Opal
+		// panel navigates to ?returnTo= (or the flag's fallback URL) instead of
+		// staying on the page.
+		if (opalCloseReturnTo) {
 			const returnTo =
 				typeof window !== "undefined"
-					? new URLSearchParams(window.location.search).get("returnTo") || "/cmp/library"
-					: "/cmp/library";
+					? new URLSearchParams(window.location.search).get("returnTo") ||
+						opalCloseReturnTo
+					: opalCloseReturnTo;
 			closeOpal();
 			router.push(returnTo);
 			return;
@@ -281,18 +282,39 @@ function TemplateContent({
 	};
 
 	const menuItems = Array.isArray(structure) ? structure : [];
-	const highlight1 = menuItems
-		.filter(
-			(item: any) =>
-				item?.highlight != null &&
-				((item.exact ? path === item.highlight : path.includes(item.highlight)) ||
-					item.additionalHighlights?.some((h: string) => path.includes(h)))
-		)
-		.sort((a: any, b: any) => b.highlight.length - a.highlight.length)[0];
-	const isCmpTaskDetail = path.startsWith("/cmp/task/");
-	const routeHighlight = isCmpTaskDetail
-		? menuItems.find((item: any) => item.label === "Plan") || highlight1
-		: highlight1;
+	// Nav-item matching. `highlight` may be a string or an array of path prefixes.
+	// An optional `query` object further constrains a match to specific search
+	// params (e.g. {artifacts: "1"}). Returns the longest matching highlight, or
+	// null when the item doesn't match the current location.
+	const highlightMatch = (item: any): string | null => {
+		if (item?.highlight == null) return null;
+		if (
+			item.query &&
+			!Object.entries(item.query).every(([key, value]) => searchParams.get(key) === value)
+		) {
+			return null;
+		}
+		const highlights: string[] = Array.isArray(item.highlight)
+			? item.highlight
+			: [item.highlight];
+		const matched = highlights.filter((h) => (item.exact ? path === h : path.includes(h)));
+		const additional: string[] =
+			item.additionalHighlights?.filter((h: string) => path.includes(h)) ?? [];
+		return [...matched, ...additional].sort((a, b) => b.length - a.length)[0] ?? null;
+	};
+
+	// Best-matching nav item for the current route. Query-constrained matches beat
+	// plain ones, hidden entries (which exist solely to carry layout flags for a
+	// route) beat visible ones, then longest highlight wins.
+	const routeHighlight = menuItems
+		.map((item: any) => ({item, match: highlightMatch(item)}))
+		.filter((entry: any) => entry.match != null)
+		.sort(
+			(a: any, b: any) =>
+				(b.item.query ? 1 : 0) - (a.item.query ? 1 : 0) ||
+				(b.item.hidden ? 1 : 0) - (a.item.hidden ? 1 : 0) ||
+				b.match.length - a.match.length
+		)[0]?.item;
 	const lvl2 = routeHighlight?.children
 		?.filter((item: any) => (item.url ? path.includes(item.url) : false))
 		.sort((a: any, b: any) => b.url.length - a.url.length)[0];
@@ -305,15 +327,31 @@ function TemplateContent({
 
 	const heading = lvl4?.label || lvl3?.label || lvl2?.label;
 	const desc =
-		lvl4?.description || lvl3?.description || lvl2?.description || highlight1?.description;
+		lvl4?.description || lvl3?.description || lvl2?.description || routeHighlight?.description;
+
+	// Resolve a layout flag from the deepest matching nav level upward.
+	const navFlag = (name: string) =>
+		lvl4?.[name] ?? lvl3?.[name] ?? lvl2?.[name] ?? routeHighlight?.[name];
+
+	// Nav-item layout flags — see CLAUDE.md. All layout variation must be driven
+	// by these (or useLayout context), never by route checks in this file.
+	const fullscreen = !!navFlag("fullscreen"); // no shell at all, children own the viewport
+	const hideSidebar = !!navFlag("hideSidebar"); // no primary/secondary sidebar, GlobalBar stays
+	const chromeless = !!navFlag("chromeless"); // no GlobalBar and no sidebars
+	const opalCloseReturnTo = navFlag("opalCloseReturnTo") as string | undefined;
+
+	// TODO(standards): the Content Manager coupling below (CMS-specific sidebar,
+	// widths, and the FilterPanelProvider in TemplateWrapper) is the last
+	// route-specific logic in this file. It should move behind a generic
+	// secondary-sidebar mechanism (e.g. nav flag + useLayout content injection).
 	const isContentManager = path.includes("/cms/content");
 	const showVT =
 		routeHighlight?.children?.length > 1 ||
 		typeof lvl3 !== "undefined" ||
 		typeof lvl4 !== "undefined";
-	const showViaSubNavContent = !!subNavContent && !isOpalStudio;
+	const showViaSubNavContent = !!subNavContent && !hideSidebar;
 	const showSecondarySidebar =
-		!isOpalStudio && (isContentManager || showVT || showViaSubNavContent);
+		!hideSidebar && (isContentManager || showVT || showViaSubNavContent);
 	const {contentSubNavExpanded} = useContentManagerLayout();
 	// When Content Manager sub-nav is collapsed, reserve 56px; when expanded, 224px. Other secondary sidebars (VT) use 224px.
 	const secondarySidebarWidth = showViaSubNavContent
@@ -323,33 +361,24 @@ function TemplateContent({
 				? 224
 				: 56
 			: 224;
-	const customLayout =
-		lvl4?.customLayout ||
-		lvl3?.customLayout ||
-		lvl2?.customLayout ||
-		routeHighlight?.customLayout ||
-		isCmpTaskDetail ||
-		isOpalStudio;
+	const customLayout = !!navFlag("customLayout");
 	const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 
 	// Primary sidebar width: 56px collapsed, 224px expanded
-	const primarySidebarWidth = isOpalStudio ? 0 : isExpanded ? 224 : 56;
+	const primarySidebarWidth = hideSidebar || chromeless ? 0 : isExpanded ? 224 : 56;
 
 	// Calculate total left offset for footer
 	const footerLeftOffset =
 		primarySidebarWidth + (showSecondarySidebar ? secondarySidebarWidth : 0);
 
-	// Check if we're on the Workflow Builder page
-	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
-
-	const instantOptimizationsLayout = path.startsWith("/web-experimentation/optimizations");
-	const shellTransition = instantOptimizationsLayout ? "none" : ".7s cubic-bezier(0, 1, 0, 1)";
+	// `instantShell: true` on a nav item disables the shell slide transition
+	const shellTransition = navFlag("instantShell") ? "none" : ".7s cubic-bezier(0, 1, 0, 1)";
 
 	if (!isHydrated || !mounted) {
 		return <Box style={{height: "100vh"}} bg="bg.page" />;
 	}
 
-	if (isWorkflowBuilder) {
+	if (fullscreen) {
 		return (
 			<Box style={{height: "100vh", width: "100vw"}} bg="bg.default">
 				{children}
@@ -357,7 +386,7 @@ function TemplateContent({
 		);
 	}
 
-	const sidebarColWidth = isOpalStudio || isCanvasMode ? 0 : primarySidebarWidth;
+	const sidebarColWidth = primarySidebarWidth;
 	return (
 		<OpalPanelActionsProvider
 			openPanel={openOpal}
@@ -374,8 +403,8 @@ function TemplateContent({
 					}}
 					bg="bg.default"
 				>
-					{!isCanvasMode && <GlobalBar onOpalClick={toggleOpal} />}
-					{!isOpalStudio && !isCanvasMode ? (
+					{!chromeless && <GlobalBar onOpalClick={toggleOpal} />}
+					{!hideSidebar && !chromeless ? (
 						<Box display="flex" z="10" style={{minHeight: 0, height: "100%"}}>
 							<Sidebar
 								className="h-full z-10 relative"
@@ -393,84 +422,99 @@ function TemplateContent({
 								>
 									<Nav>
 										<NavBody>
-											{menuItems.map((menuItem: any) => {
-												if (menuItem.isMenuTrigger) {
-													return (
-														<React.Fragment key={menuItem.label}>
-															<Menu
-																options={menuItem.menuOptions.map(
-																	(opt: any) => ({
-																		label: opt.label,
-																		execute: () =>
-																			menuClick(opt.url),
-																	})
-																)}
+											{menuItems
+												.filter((item: any) => !item.hidden)
+												.map((menuItem: any) => {
+													if (menuItem.isMenuTrigger) {
+														return (
+															<React.Fragment key={menuItem.label}>
+																<Menu
+																	options={menuItem.menuOptions.map(
+																		(opt: any) => ({
+																			label: opt.label,
+																			execute: () =>
+																				menuClick(opt.url),
+																		})
+																	)}
+																>
+																	<MenuTrigger asChild>
+																		<NavItem
+																			aria-label={
+																				menuItem.label
+																			}
+																			icon={menuItem.icon}
+																			className="[&_svg]:w-6 [&_svg]:h-6 [&_svg]:overflow-visible"
+																		>
+																			{menuItem.label}
+																		</NavItem>
+																	</MenuTrigger>
+																	<MenuContent />
+																</Menu>
+																<Box className="h-2" />
+															</React.Fragment>
+														);
+													}
+
+													if (!menuItem.url) {
+														return (
+															<Box
+																key={menuItem.label}
+																px="16"
+																py="8"
+																mt="4"
+																borderT="1"
+																borderColor="border.tertiary"
+																onClick={(e: React.MouseEvent) =>
+																	e.stopPropagation()
+																}
 															>
-																<MenuTrigger asChild>
-																	<NavItem
-																		aria-label={menuItem.label}
-																		icon={menuItem.icon}
-																		className="[&_svg]:w-6 [&_svg]:h-6 [&_svg]:overflow-visible"
+																{isExpanded && (
+																	<Text
+																		fontSize="sm"
+																		color="fg.tertiary"
+																		mt="2"
 																	>
 																		{menuItem.label}
-																	</NavItem>
-																</MenuTrigger>
-																<MenuContent />
-															</Menu>
-															<Box className="h-2" />
-														</React.Fragment>
-													);
-												}
+																	</Text>
+																)}
+															</Box>
+														);
+													}
 
-												if (!menuItem.url) {
+													const isActive =
+														routeHighlight?.label === menuItem.label ||
+														highlightMatch(menuItem) != null;
+
+													const itemClick = (e: React.MouseEvent) =>
+														menuClick(menuItem.url, e);
+													// `badge` on a nav item shows a count badge while
+													// the item is not active
+													const showBadge =
+														menuItem.badge != null && !isActive;
+
+													// Expanded: plain NavItem with label
 													return (
-														<Box
+														<NavItem
 															key={menuItem.label}
-															px="16"
-															py="8"
-															mt="4"
-															borderT="1"
-															borderColor="border.tertiary"
-															onClick={(e: React.MouseEvent) =>
-																e.stopPropagation()
+															onClick={itemClick}
+															active={isActive}
+															aria-label={menuItem.label}
+															icon={menuItem.icon}
+															addonAfter={
+																showBadge ? (
+																	<Badge
+																		variant="strong"
+																		intent="danger"
+																	>
+																		{menuItem.badge}
+																	</Badge>
+																) : undefined
 															}
 														>
-															{isExpanded && (
-																<Text
-																	fontSize="sm"
-																	color="fg.tertiary"
-																	mt="2"
-																>
-																	{menuItem.label}
-																</Text>
-															)}
-														</Box>
+															{menuItem.label}
+														</NavItem>
 													);
-												}
-
-												const isActive =
-													routeHighlight?.label === menuItem.label ||
-													(menuItem.exact
-														? path === menuItem.highlight
-														: path.includes(menuItem.highlight));
-
-												const icon = menuItem.icon;
-
-												const itemClick = (e: React.MouseEvent) =>
-													menuClick(menuItem.url, e);
-												// Expanded: plain NavItem with label
-												return (
-													<NavItem
-														key={menuItem.label}
-														onClick={itemClick}
-														active={isActive}
-														aria-label={menuItem.label}
-														icon={icon}
-													>
-														{menuItem.label}
-													</NavItem>
-												);
-											})}
+												})}
 										</NavBody>
 										<NavFooter>
 											<NavList>
@@ -578,7 +622,7 @@ function TemplateContent({
 						h="full"
 						style={{
 							minHeight: 0,
-							...(isCanvasMode ? {gridColumn: "1 / -1", gridRow: "1 / -1"} : {}),
+							...(chromeless ? {gridColumn: "1 / -1", gridRow: "1 / -1"} : {}),
 						}}
 					>
 						<Box

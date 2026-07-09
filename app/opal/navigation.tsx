@@ -30,7 +30,7 @@ export function useOpalNav() {
 
 	return [
 		{
-			label: isCompactIm ? "Chats" : "Opal Chats",
+			label: isCompactIm ? "Chat" : "Chat",
 			url: "/opal",
 			highlight: "/opal",
 			icon: isCompactIm ? (
@@ -66,10 +66,10 @@ export function useOpalNav() {
 			customLayout: true,
 		},
 		{
-			label: imLayout === "B" ? "Messages" : imLayout === "C" ? "Spaces" : "Threads",
-			url: `/opal/im?layout=${imLayout}`,
-			highlight: "/opal/im",
-			icon: isCompactIm ? <IconUserGroup /> : <IconComments />,
+			label: "Team Messages",
+			url: "/opal/messages",
+			highlight: "/opal/messages",
+			icon: <IconComments />,
 			customLayout: true,
 		},
 		{
@@ -81,7 +81,7 @@ export function useOpalNav() {
 			hidePageHeader: true,
 		},
 		{
-			label: "Activities",
+			label: "Notifications",
 			url: "/opal/notifications",
 			highlight: "/opal/notifications",
 			icon: <IconBell />,
@@ -96,6 +96,7 @@ export function useOpalNav() {
 			description:
 				"Tailor Opal's output for yourself or your organization by providing specific context and guidance in the form of files, skills, memory, and RAG.",
 			icon: <IconFolderBookmark />,
+
 		},
 		{
 			label: "Virtual Teammates",
@@ -126,18 +127,6 @@ export function useOpalNav() {
 		},
 		{label: "Labs"},
 		{
-			label: "Mobile Preview",
-			url: "/opal/mobile",
-			highlight: "/opal/mobile",
-			customLayout: true,
-			icon: (
-				<svg width={20} height={20} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<rect x={5} y={1} width={10} height={18} rx={2.5} stroke="currentColor" strokeWidth={1.6} />
-					<rect x={8.5} y={15.5} width={3} height={1.5} rx={0.75} fill="currentColor" />
-				</svg>
-			),
-		},
-		{
 			label: "Design System Setup",
 			url: "/opal/context/stride-ds-setup",
 			highlight: "/opal/context/stride-ds-setup",
@@ -147,6 +136,24 @@ export function useOpalNav() {
 					<path d="M1 1.75C1 1.34375 1.3125 1 1.75 1H6.25C6.65625 1 7 1.34375 7 1.75V6.25C7 6.6875 6.65625 7 6.25 7H1.75C1.3125 7 1 6.6875 1 6.25V1.75ZM2.5 2.5V5.5H5.5V2.5H2.5ZM9 1.75C9 1.34375 9.3125 1 9.75 1H14.25C14.6562 1 15 1.34375 15 1.75V6.25C15 6.6875 14.6562 7 14.25 7H9.75C9.3125 7 9 6.6875 9 6.25V1.75ZM10.5 2.5V5.5H13.5V2.5H10.5ZM1 9.75C1 9.34375 1.3125 9 1.75 9H6.25C6.65625 9 7 9.34375 7 9.75V14.25C7 14.6875 6.65625 15 6.25 15H1.75C1.3125 15 1 14.6875 1 14.25V9.75ZM2.5 10.5V13.5H5.5V10.5H2.5ZM12 9C12.4062 9 12.75 9.34375 12.75 9.75V11.25H14.25C14.6562 11.25 15 11.5938 15 12C15 12.4375 14.6562 12.75 14.25 12.75H12.75V14.25C12.75 14.6875 12.4062 15 12 15C11.5625 15 11.25 14.6875 11.25 14.25V12.75H9.75C9.3125 12.75 9 12.4375 9 12C9 11.5938 9.3125 11.25 9.75 11.25H11.25V9.75C11.25 9.34375 11.5625 9 12 9Z" />
 				</svg>
 			),
+		},
+		// Hidden entries — no sidebar item, they only carry layout flags for their route
+		{
+			label: "Workflow Builder",
+			url: "/opal/agents/workflow",
+			highlight: "/opal/agents/workflow",
+			fullscreen: true,
+			hidden: true,
+		},
+		{
+			label: "Opal Canvas",
+			url: "/opal",
+			highlight: "/opal",
+			exact: true,
+			query: {artifacts: "1"},
+			customLayout: true,
+			chromeless: true,
+			hidden: true,
 		},
 	];
 }

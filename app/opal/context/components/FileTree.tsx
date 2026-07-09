@@ -1,14 +1,7 @@
 "use client";
 
 import {useState, useRef} from "react";
-import {Box, Text, Checkbox} from "@optiaxiom/react";
-import {
-	DropdownMenu,
-	DropdownMenuTrigger,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-} from "@optiaxiom/react";
+import {Box, Text, Checkbox, Button, Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
 import {
 	IconAngleDown,
 	IconFile,
@@ -152,59 +145,55 @@ export function FileTree({
 								>
 									{node.label}
 								</Text>
-								<DropdownMenu>
-									<DropdownMenuTrigger
-										onClick={(e) => e.stopPropagation()}
-										appearance="subtle"
-										size="sm"
-										icon={<IconEllipsisSolid size={16} />}
-										aria-label="Folder actions"
-									/>
-									<DropdownMenuContent align="end">
-										<DropdownMenuItem>
-											<Box display="flex" alignItems="center" gap="8">
-												<IconFile size={16} />
-												Add File
-											</Box>
-										</DropdownMenuItem>
-										<DropdownMenuItem>
-											<Box display="flex" alignItems="center" gap="8">
-												<IconFolder size={16} />
-												Add Folder
-											</Box>
-										</DropdownMenuItem>
-										<DropdownMenuSeparator />
-										<DropdownMenuItem>
-											<Box display="flex" alignItems="center" gap="8">
-												<IconPen size={16} />
-												Rename
-											</Box>
-										</DropdownMenuItem>
-										<DropdownMenuItem>
-											<Box display="flex" alignItems="center" gap="8">
-												<IconDownload size={16} />
-												Download
-											</Box>
-										</DropdownMenuItem>
-										<DropdownMenuSeparator />
-										<DropdownMenuItem>
-											<Box display="flex" alignItems="center" gap="8">
-												<IconLock size={16} />
-												Manage Permissions
-											</Box>
-										</DropdownMenuItem>
-										<DropdownMenuSeparator />
-										<DropdownMenuItem
-											onClick={() => onDeleteFile(node.id)}
-											intent="danger"
-										>
-											<Box display="flex" alignItems="center" gap="8">
-												<IconTrashCan size={16} />
-												Delete
-											</Box>
-										</DropdownMenuItem>
-									</DropdownMenuContent>
-								</DropdownMenu>
+								<Menu
+									options={[
+										{
+											label: "Add File",
+											addon: <IconFile size={16} />,
+										},
+										{
+											label: "Add Folder",
+											addon: <IconFolder size={16} />,
+										},
+										{
+											label: "Rename",
+											addon: <IconPen size={16} />,
+											group: {label: "edit", hidden: true, separator: true},
+										},
+										{
+											label: "Download",
+											addon: <IconDownload size={16} />,
+											group: {label: "edit", hidden: true, separator: true},
+										},
+										{
+											label: "Manage Permissions",
+											addon: <IconLock size={16} />,
+											group: {
+												label: "permissions",
+												hidden: true,
+												separator: true,
+											},
+										},
+										{
+											label: "Delete",
+											addon: <IconTrashCan size={16} />,
+											intent: "danger",
+											execute: () => onDeleteFile(node.id),
+											group: {label: "danger", hidden: true, separator: true},
+										},
+									]}
+								>
+									<MenuTrigger asChild>
+										<Button
+											onClick={(e) => e.stopPropagation()}
+											appearance="subtle"
+											size="sm"
+											icon={<IconEllipsisSolid size={16} />}
+											aria-label="Folder actions"
+										/>
+									</MenuTrigger>
+									<MenuContent align="end" />
+								</Menu>
 							</Box>
 
 							{/* Child file rows */}

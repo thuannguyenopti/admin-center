@@ -151,8 +151,8 @@ export function DSTokensPanel() {
 									style={{
 										width: px * 1.8,
 										height: 18,
-										background: "var(--ax-colors-bg-accent-subtle)",
-										border: "1px solid var(--ax-colors-border-accent)",
+										background: "var(--ax-colors-bg-secondary)",
+										border: "1px solid var(--ax-colors-border-default)",
 										borderRadius: 3,
 										flexShrink: 0,
 									}}
@@ -177,8 +177,8 @@ export function DSTokensPanel() {
 									style={{
 										width: 48,
 										height: 48,
-										background: "var(--ax-colors-bg-accent-subtle)",
-										border: "1px solid var(--ax-colors-border-accent)",
+										background: "var(--ax-colors-bg-secondary)",
+										border: "1px solid var(--ax-colors-border-default)",
 										borderRadius: t.value,
 										flexShrink: 0,
 									}}

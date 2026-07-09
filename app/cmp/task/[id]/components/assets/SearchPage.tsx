@@ -7,7 +7,7 @@ import Grid1Icon from "@/app/cmp/assets/Grid1.svg";
 import Grid2Icon from "@/app/cmp/assets/grid2.svg";
 import Grid3Icon from "@/app/cmp/assets/grid3.svg";
 import Grid4Icon from "@/app/cmp/assets/grid4.svg";
-import { IconChevronLeft } from "@tabler/icons-react";
+import {IconChevronLeft} from "@/app/lib/axiom-icons";
 import { useState } from "react";
 import type { AssetItem, SearchAssetItem } from "../../types";
 import { FooterViewButton } from "../shared/FooterViewButton";

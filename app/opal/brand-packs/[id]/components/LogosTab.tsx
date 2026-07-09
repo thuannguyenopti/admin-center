@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Badge, Box, Button, Select, Text } from "@optiaxiom/react";
-import { IconArrowUpRightFromSquare, IconDownload, IconPlus } from "@optimizely/axiom-icons";
-import type { BrandPack } from "../../types";
+import {useState} from "react";
+import {Badge, Box, Button, Select, Text} from "@optiaxiom/react";
+import {IconArrowUpRightFromSquare, IconDownload, IconPlus} from "@optimizely/axiom-icons";
+import type {BrandPack} from "../../types";
 
 type LogosTabProps = {
 	pack: BrandPack;
@@ -12,8 +12,8 @@ type LogosTabProps = {
 type Classification = "logo" | "style-ref";
 
 const CLASSIFICATION_OPTIONS = [
-	{ label: "Logo", value: "logo" },
-	{ label: "Style reference", value: "style-ref" },
+	{label: "Logo", value: "logo"},
+	{label: "Style reference", value: "style-ref"},
 ];
 
 function logoPreviewStyle(asset: BrandPack["assets"][0]) {
@@ -24,7 +24,7 @@ function logoPreviewStyle(asset: BrandPack["assets"][0]) {
 	};
 }
 
-function LogoCard({ asset }: { asset: BrandPack["assets"][0] }) {
+function LogoCard({asset}: {asset: BrandPack["assets"][0]}) {
 	const [classification, setClassification] = useState<Classification>("logo");
 	const preview = logoPreviewStyle(asset);
 
@@ -48,7 +48,7 @@ function LogoCard({ asset }: { asset: BrandPack["assets"][0] }) {
 				display="flex"
 				justifyContent="center"
 				overflow="hidden"
-				style={{ background: preview.background, height: 144, padding: 24 }}
+				style={{background: preview.background, height: 144, padding: 24}}
 			>
 				<img
 					alt={asset.name}
@@ -76,8 +76,13 @@ function LogoCard({ asset }: { asset: BrandPack["assets"][0] }) {
 					{asset.name}
 				</Text>
 				<Box alignItems="center" display="flex" gap="6">
-					<Badge intent="neutral" variant="subtle">{asset.format}</Badge>
-					<Badge intent={classification === "logo" ? "success" : "neutral"} variant="subtle">
+					<Badge intent="neutral" variant="subtle">
+						{asset.format}
+					</Badge>
+					<Badge
+						intent={classification === "logo" ? "success" : "neutral"}
+						variant="subtle"
+					>
 						{classification === "logo" ? "Logo" : "Style reference"}
 					</Badge>
 				</Box>
@@ -87,8 +92,18 @@ function LogoCard({ asset }: { asset: BrandPack["assets"][0] }) {
 					options={CLASSIFICATION_OPTIONS}
 				/>
 				<Box alignItems="center" display="flex" gap="6">
-					<Button appearance="subtle" aria-label={`View ${asset.name}`} icon={<IconArrowUpRightFromSquare />} size="sm" />
-					<Button appearance="subtle" aria-label={`Download ${asset.name}`} icon={<IconDownload />} size="sm" />
+					<Button
+						appearance="subtle"
+						aria-label={`View ${asset.name}`}
+						icon={<IconArrowUpRightFromSquare />}
+						size="sm"
+					/>
+					<Button
+						appearance="subtle"
+						aria-label={`Download ${asset.name}`}
+						icon={<IconDownload />}
+						size="sm"
+					/>
 				</Box>
 			</Box>
 		</Box>
@@ -107,36 +122,42 @@ function UploadZone() {
 			justifyContent="center"
 			rounded="xl"
 			style={{
-				border: `1.5px dashed ${dragOver ? "var(--ax-colors-border-accent)" : "var(--ax-colors-border-default)"}`,
+				border: `1.5px dashed ${dragOver ? "var(--ax-colors-border-focus)" : "var(--ax-colors-border-default)"}`,
 				cursor: "pointer",
 				minHeight: 120,
 				padding: "24px 16px",
 				transition: "border-color 0.15s, background 0.15s",
-				background: dragOver ? "var(--ax-colors-bg-accent-subtle)" : "transparent",
+				background: dragOver ? "var(--ax-colors-bg-secondary)" : "transparent",
 			}}
-			onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+			onDragOver={(e) => {
+				e.preventDefault();
+				setDragOver(true);
+			}}
 			onDragLeave={() => setDragOver(false)}
-			onDrop={(e) => { e.preventDefault(); setDragOver(false); }}
+			onDrop={(e) => {
+				e.preventDefault();
+				setDragOver(false);
+			}}
 		>
 			<Text
 				color={dragOver ? "fg.accent" : "fg.secondary"}
 				fontSize="sm"
 				fontWeight="500"
-				style={{ transition: "color 0.15s" }}
+				style={{transition: "color 0.15s"}}
 			>
 				Drop logo files here
 			</Text>
 			<Text color="fg.tertiary" fontSize="xs">
 				SVG, PNG, or WebP. Classify questionable artwork after upload.
 			</Text>
-			<Button appearance="default" size="md" style={{ marginTop: 4 }}>
+			<Button appearance="default" size="md" style={{marginTop: 4}}>
 				Browse files
 			</Button>
 		</Box>
 	);
 }
 
-export function LogosTab({ pack }: LogosTabProps) {
+export function LogosTab({pack}: LogosTabProps) {
 	const logos = pack.assets.filter((a) => a.type === "logo");
 
 	return (
@@ -154,7 +175,7 @@ export function LogosTab({ pack }: LogosTabProps) {
 				<Box
 					display="grid"
 					gap="12"
-					style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}
+					style={{gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))"}}
 				>
 					{logos.map((asset) => (
 						<LogoCard key={asset.id} asset={asset} />
@@ -171,7 +192,7 @@ export function LogosTab({ pack }: LogosTabProps) {
 					flexDirection="column"
 					gap="4"
 					justifyContent="center"
-					style={{ marginTop: -8 }}
+					style={{marginTop: -8}}
 				>
 					<Text color="fg.tertiary" fontSize="xs">
 						Logos are used by Opal for documents, email headers, and on-brand assets

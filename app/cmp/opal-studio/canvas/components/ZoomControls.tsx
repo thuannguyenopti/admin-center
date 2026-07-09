@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Button, Text } from "@optiaxiom/react";
-import { IconMinus, IconPlus, IconMaximize } from "@tabler/icons-react";
+import {IconMinus, IconPlus, IconMaximize} from "@/app/lib/axiom-icons";
 
 export function ZoomControls({
 	zoom,

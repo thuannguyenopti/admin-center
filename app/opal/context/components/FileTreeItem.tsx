@@ -1,13 +1,6 @@
 "use client";
 
-import {Box, Text, Checkbox} from "@optiaxiom/react";
-import {
-	DropdownMenu,
-	DropdownMenuTrigger,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-} from "@optiaxiom/react";
+import {Box, Text, Checkbox, Button, Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
 import {
 	IconEllipsisSolid,
 	IconPen,
@@ -122,56 +115,53 @@ export function FileTreeItem({
 					/>
 				)}
 			</Box>
-			<DropdownMenu>
-				<DropdownMenuTrigger
-					className="ft-menu-btn"
-					onClick={(e) => e.stopPropagation()}
-					appearance="subtle"
-					size="sm"
-					icon={<IconEllipsisSolid size={16} />}
-					aria-label="File actions"
-					style={{
-						width: 22,
-						height: 22,
-						minWidth: 22,
-						padding: 0,
-					}}
-				/>
-				<DropdownMenuContent align="end">
-					<DropdownMenuItem>
-						<Box display="flex" alignItems="center" gap="8">
-							<IconPen size={16} />
-							Rename
-						</Box>
-					</DropdownMenuItem>
-					<DropdownMenuItem onClick={() => onEditFile(child.id)}>
-						<Box display="flex" alignItems="center" gap="8">
-							<IconFile size={16} />
-							Edit
-						</Box>
-					</DropdownMenuItem>
-					<DropdownMenuItem>
-						<Box display="flex" alignItems="center" gap="8">
-							<IconDownload size={16} />
-							Download
-						</Box>
-					</DropdownMenuItem>
-					<DropdownMenuSeparator />
-					<DropdownMenuItem>
-						<Box display="flex" alignItems="center" gap="8">
-							<IconLock size={16} />
-							Manage Permissions
-						</Box>
-					</DropdownMenuItem>
-					<DropdownMenuSeparator />
-					<DropdownMenuItem onClick={() => onDeleteFile(child.id)} intent="danger">
-						<Box display="flex" alignItems="center" gap="8">
-							<IconTrashCan size={16} />
-							Delete
-						</Box>
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
+			<Menu
+				options={[
+					{
+						label: "Rename",
+						addon: <IconPen size={16} />,
+					},
+					{
+						label: "Edit",
+						addon: <IconFile size={16} />,
+						execute: () => onEditFile(child.id),
+					},
+					{
+						label: "Download",
+						addon: <IconDownload size={16} />,
+					},
+					{
+						label: "Manage Permissions",
+						addon: <IconLock size={16} />,
+						group: {label: "permissions", hidden: true, separator: true},
+					},
+					{
+						label: "Delete",
+						addon: <IconTrashCan size={16} />,
+						intent: "danger",
+						execute: () => onDeleteFile(child.id),
+						group: {label: "danger", hidden: true, separator: true},
+					},
+				]}
+			>
+				<MenuTrigger asChild>
+					<Button
+						className="ft-menu-btn"
+						onClick={(e) => e.stopPropagation()}
+						appearance="subtle"
+						size="sm"
+						icon={<IconEllipsisSolid size={16} />}
+						aria-label="File actions"
+						style={{
+							width: 22,
+							height: 22,
+							minWidth: 22,
+							padding: 0,
+						}}
+					/>
+				</MenuTrigger>
+				<MenuContent align="end" />
+			</Menu>
 		</Box>
 	);
 }

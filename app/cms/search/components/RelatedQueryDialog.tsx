@@ -4,7 +4,7 @@ import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
 import {useState, useEffect} from "react";
 import {Button} from "@/app/components/Button";
-import {IconSparkles, IconSettings} from "@tabler/icons-react";
+import {IconSparkles, IconGear} from "@/app/lib/axiom-icons";
 
 interface RelatedQueryDialogProps {
 	open: boolean;

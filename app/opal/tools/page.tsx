@@ -1,51 +1,47 @@
 "use client";
 
-import React, { Fragment, useState, useEffect, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import React, {Fragment, useState, useEffect, useMemo} from "react";
+import {usePathname, useRouter, useSearchParams} from "next/navigation";
 import {
-    Box,
-    Text,
-    Button,
-    Badge,
-    Heading,
-    Switch,
-    Tabs,
-    TabsContent,
-    Checkbox,
-    DropdownMenu,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    LabelMenuButton,
-    SearchInput,
-    Tooltip,
-    Field,
-    toaster,
+	Box,
+	Text,
+	Button,
+	Badge,
+	Heading,
+	Switch,
+	Tabs,
+	TabsContent,
+	Menu,
+	MenuTrigger,
+	MenuContent,
+	LabelMenuButton,
+	toaster,
 } from "@optiaxiom/react";
 import {
-    IconGear,
-    IconChevronDown,
-    IconChevronRight,
-    IconPlus,
-    IconShieldCheck,
-    IconScrewdriverWrench,
-    IconEllipsisSolid,
-    IconSearch,
-    IconSliders,
-    IconCircleInfo,
-    IconArrowsRotate,
+	IconGear,
+	IconChevronDown,
+	IconChevronRight,
+	IconPlus,
+	IconShieldCheck,
+	IconScrewdriverWrench,
+	IconEllipsisSolid,
+	IconSearch,
+	IconArrowsRotate,
 } from "@optiaxiom/icons";
-import { Table, Tr, Th, Td } from "@/app/components/Table";
-import { Input } from "@/app/components/Input";
-import { AddConnectorModal, type ConnectedConnector } from "./components/AddConnectorModal";
-import { ConnectorAvatar } from "./components/ConnectorAvatar";
-import { OCPConfigPanel } from "./components/OCPConfigPanel";
-import { OCPConfigModal } from "./components/OCPConfigModal";
-import { ConfigureStepperPanel } from "./components/ConfigureStepperPanel";
-import { AddAuthProviderModal, type AuthProviderDraft } from "./components/AddAuthProviderModal";
-import { RegisterRemoteMcpProviderModal, type RemoteMcpProviderDraft } from "./components/RegisterRemoteMcpProviderModal";
-import { CONNECTORS, type Connector } from "./data/connectors";
-import { requiresDeferredUserConnect, usesDirectUserConnect } from "./lib/connectorAuth";
+import {Table, Tr, Th, Td} from "@/app/components/Table";
+import {Input} from "@/app/components/Input";
+import {AddConnectorModal, type ConnectedConnector} from "./components/AddConnectorModal";
+import {ConnectorAvatar} from "./components/ConnectorAvatar";
+import {OCPConfigPanel} from "./components/OCPConfigPanel";
+import {OCPConfigModal} from "./components/OCPConfigModal";
+import {ConfigureStepperPanel} from "./components/ConfigureStepperPanel";
+import {AddAuthProviderModal, type AuthProviderDraft} from "./components/AddAuthProviderModal";
+import {
+	RegisterRemoteMcpProviderModal,
+	type RemoteMcpProviderDraft,
+} from "./components/RegisterRemoteMcpProviderModal";
+import {CONNECTORS, type Connector} from "./data/connectors";
+import {requiresDeferredUserConnect, usesDirectUserConnect} from "./lib/connectorAuth";
 import usePersistentState from "@/app/usePersistentState";
 
 const STORAGE_KEY = "opal_connected_connectors";
@@ -55,1188 +51,1627 @@ type ToolsTabValue = (typeof TAB_VALUES)[number];
 // ── Static Auth Provider mock data (from OCP) ─────────────────────────────────
 type AuthScope = "Instance" | "System";
 interface AuthProvider {
-    id: string;
-    name: string;
-    description: string;
-    authType: string;
-    scope: AuthScope;
-    isRemoteMcp: boolean;
-    isActive: boolean;
-    bundles: number;
-    created: string;
+	id: string;
+	name: string;
+	description: string;
+	authType: string;
+	scope: AuthScope;
+	isRemoteMcp: boolean;
+	isActive: boolean;
+	bundles: number;
+	created: string;
 }
 
 const DEFAULT_AUTH_PROVIDERS: AuthProvider[] = [
-    { id: "notion-mcp", name: "notion-mcp", description: "OAuth provider for notion-mcp Remote MCP integration", authType: "oauth2", scope: "Instance", isRemoteMcp: true, isActive: true, bundles: 1, created: "4/6/2026" },
-    { id: "local-atlassian", name: "Local-Atlassian", description: "OAuth provider for Local-Atlassian Remote MCP integration · https://mcp.atlassian.com/v1/mcp", authType: "oauth2", scope: "Instance", isRemoteMcp: true, isActive: true, bundles: 1, created: "2/9/2026" },
-    { id: "oksana-google", name: "OksanaGoogle", description: "Oksana Google ads Test", authType: "oauth2", scope: "System", isRemoteMcp: false, isActive: false, bundles: 1, created: "3/6/2026" },
-    { id: "slack-auth", name: "Slack", description: "OAuth provider for Slack Remote MCP integration", authType: "oauth2", scope: "System", isRemoteMcp: true, isActive: true, bundles: 1, created: "3/31/2026" },
-    { id: "microsoft-auth", name: "Microsoft", description: "ocp_microsoft_graph_opal_tool · Onedrive & Sharepoint", authType: "oauth2", scope: "System", isRemoteMcp: false, isActive: false, bundles: 2, created: "4/2/2026" },
-    { id: "clickup-auth", name: "ClickUp", description: "OAuth provider for ClickUp Remote MCP integration", authType: "oauth2", scope: "System", isRemoteMcp: true, isActive: true, bundles: 1, created: "3/31/2026" },
-    { id: "zoom-auth", name: "Zoom", description: "Zoom OAuth provider", authType: "oauth2", scope: "System", isRemoteMcp: false, isActive: false, bundles: 1, created: "2/6/2026" },
-    { id: "sentry-auth", name: "Sentry", description: "OAuth provider for Sentry Remote MCP integration", authType: "oauth2", scope: "System", isRemoteMcp: true, isActive: true, bundles: 1, created: "2/2/2026" },
-    { id: "salesforce-auth", name: "Salesforce", description: "Salesforce One Sandbox QA", authType: "oauth2", scope: "System", isRemoteMcp: false, isActive: false, bundles: 1, created: "3/20/2026" },
-    { id: "wordpress-auth", name: "Wordpress", description: "Wordpress OAuth provider", authType: "oauth2", scope: "System", isRemoteMcp: false, isActive: false, bundles: 1, created: "2/20/2026" },
-    { id: "figma-auth", name: "Figma", description: "OAuth provider for Figma", authType: "oauth2", scope: "System", isRemoteMcp: false, isActive: false, bundles: 1, created: "3/19/2026" },
-    { id: "amplitude-auth", name: "Amplitude MCP", description: "OAuth provider for Amplitude MCP Remote MCP integration", authType: "oauth2", scope: "System", isRemoteMcp: true, isActive: true, bundles: 1, created: "3/8/2026" },
-    { id: "coda-auth", name: "Coda", description: "OAuth provider for Coda Remote MCP integration", authType: "oauth2", scope: "System", isRemoteMcp: true, isActive: true, bundles: 1, created: "4/3/2026" },
-    { id: "github-auth", name: "Github", description: "OAuth provider for Github Remote MCP integration", authType: "oauth2", scope: "System", isRemoteMcp: true, isActive: true, bundles: 1, created: "2/2/2026" },
-    { id: "adobe-auth", name: "Adobe", description: "Adobe OAuth provider", authType: "oauth2", scope: "System", isRemoteMcp: false, isActive: false, bundles: 1, created: "1/29/2026" },
-    { id: "atlassian-auth", name: "Atlassian", description: "OAuth provider for Atlassian Remote MCP integration", authType: "oauth2", scope: "System", isRemoteMcp: true, isActive: true, bundles: 1, created: "4/6/2026" },
-    { id: "notion-auth", name: "Notion", description: "OAuth provider for Notion Remote MCP integration", authType: "oauth2", scope: "System", isRemoteMcp: true, isActive: true, bundles: 1, created: "4/3/2026" },
+	{
+		id: "notion-mcp",
+		name: "notion-mcp",
+		description: "OAuth provider for notion-mcp Remote MCP integration",
+		authType: "oauth2",
+		scope: "Instance",
+		isRemoteMcp: true,
+		isActive: true,
+		bundles: 1,
+		created: "4/6/2026",
+	},
+	{
+		id: "local-atlassian",
+		name: "Local-Atlassian",
+		description:
+			"OAuth provider for Local-Atlassian Remote MCP integration · https://mcp.atlassian.com/v1/mcp",
+		authType: "oauth2",
+		scope: "Instance",
+		isRemoteMcp: true,
+		isActive: true,
+		bundles: 1,
+		created: "2/9/2026",
+	},
+	{
+		id: "oksana-google",
+		name: "OksanaGoogle",
+		description: "Oksana Google ads Test",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: false,
+		isActive: false,
+		bundles: 1,
+		created: "3/6/2026",
+	},
+	{
+		id: "slack-auth",
+		name: "Slack",
+		description: "OAuth provider for Slack Remote MCP integration",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: true,
+		isActive: true,
+		bundles: 1,
+		created: "3/31/2026",
+	},
+	{
+		id: "microsoft-auth",
+		name: "Microsoft",
+		description: "ocp_microsoft_graph_opal_tool · Onedrive & Sharepoint",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: false,
+		isActive: false,
+		bundles: 2,
+		created: "4/2/2026",
+	},
+	{
+		id: "clickup-auth",
+		name: "ClickUp",
+		description: "OAuth provider for ClickUp Remote MCP integration",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: true,
+		isActive: true,
+		bundles: 1,
+		created: "3/31/2026",
+	},
+	{
+		id: "zoom-auth",
+		name: "Zoom",
+		description: "Zoom OAuth provider",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: false,
+		isActive: false,
+		bundles: 1,
+		created: "2/6/2026",
+	},
+	{
+		id: "sentry-auth",
+		name: "Sentry",
+		description: "OAuth provider for Sentry Remote MCP integration",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: true,
+		isActive: true,
+		bundles: 1,
+		created: "2/2/2026",
+	},
+	{
+		id: "salesforce-auth",
+		name: "Salesforce",
+		description: "Salesforce One Sandbox QA",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: false,
+		isActive: false,
+		bundles: 1,
+		created: "3/20/2026",
+	},
+	{
+		id: "wordpress-auth",
+		name: "Wordpress",
+		description: "Wordpress OAuth provider",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: false,
+		isActive: false,
+		bundles: 1,
+		created: "2/20/2026",
+	},
+	{
+		id: "figma-auth",
+		name: "Figma",
+		description: "OAuth provider for Figma",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: false,
+		isActive: false,
+		bundles: 1,
+		created: "3/19/2026",
+	},
+	{
+		id: "amplitude-auth",
+		name: "Amplitude MCP",
+		description: "OAuth provider for Amplitude MCP Remote MCP integration",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: true,
+		isActive: true,
+		bundles: 1,
+		created: "3/8/2026",
+	},
+	{
+		id: "coda-auth",
+		name: "Coda",
+		description: "OAuth provider for Coda Remote MCP integration",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: true,
+		isActive: true,
+		bundles: 1,
+		created: "4/3/2026",
+	},
+	{
+		id: "github-auth",
+		name: "Github",
+		description: "OAuth provider for Github Remote MCP integration",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: true,
+		isActive: true,
+		bundles: 1,
+		created: "2/2/2026",
+	},
+	{
+		id: "adobe-auth",
+		name: "Adobe",
+		description: "Adobe OAuth provider",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: false,
+		isActive: false,
+		bundles: 1,
+		created: "1/29/2026",
+	},
+	{
+		id: "atlassian-auth",
+		name: "Atlassian",
+		description: "OAuth provider for Atlassian Remote MCP integration",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: true,
+		isActive: true,
+		bundles: 1,
+		created: "4/6/2026",
+	},
+	{
+		id: "notion-auth",
+		name: "Notion",
+		description: "OAuth provider for Notion Remote MCP integration",
+		authType: "oauth2",
+		scope: "System",
+		isRemoteMcp: true,
+		isActive: true,
+		bundles: 1,
+		created: "4/3/2026",
+	},
 ];
 
 export default function ToolsPage() {
-    const pathname = usePathname();
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const [connectedConnectors, setConnectedConnectors] = useState<ConnectedConnector[]>([]);
-    const [authProviders, setAuthProviders] = useState<AuthProvider[]>(DEFAULT_AUTH_PROVIDERS);
+	const pathname = usePathname();
+	const router = useRouter();
+	const searchParams = useSearchParams();
+	const [connectedConnectors, setConnectedConnectors] = useState<ConnectedConnector[]>([]);
+	const [authProviders, setAuthProviders] = useState<AuthProvider[]>(DEFAULT_AUTH_PROVIDERS);
 
-    // OCP config panel state
-    const [ocpConnector, setOcpConnector] = useState<Connector | null>(null);
-    const [ocpModalOpen, setOcpModalOpen] = useState(false);
+	// OCP config panel state
+	const [ocpConnector, setOcpConnector] = useState<Connector | null>(null);
+	const [ocpModalOpen, setOcpModalOpen] = useState(false);
 
-    const [stepperPanelConnector, setStepperPanelConnector] = useState<Connector | null>(null);
+	const [stepperPanelConnector, setStepperPanelConnector] = useState<Connector | null>(null);
 
-    // Feedback toggle
-    const [ocpAsPanel, setOcpAsPanel] = useState(false);
-    const [userView, setUserView] = useState(false);
-    const [ctaButtonMode, setCtaButtonMode, ctaButtonModeHydrated] = usePersistentState("opal-connectors-cta-button-mode", false) as [boolean, (v: boolean) => void, boolean];
+	// Feedback toggle
+	const [ocpAsPanel, setOcpAsPanel] = useState(false);
+	const [userView, setUserView] = useState(false);
+	const [ctaButtonMode, setCtaButtonMode, ctaButtonModeHydrated] = usePersistentState(
+		"opal-connectors-cta-button-mode",
+		false
+	) as [boolean, (v: boolean) => void, boolean];
 
-    // Modal state — which connector (if any) and which screen to open to
-    const [modalOpen, setModalOpen] = useState(false);
-    const [modalInitialConnector, setModalInitialConnector] = useState<Connector | null>(null);
-    const [modalInitialScreen, setModalInitialScreen] = useState<"browse" | "detail" | "configure">("browse");
-    const [modalInitialStep, setModalInitialStep] = useState<0 | 1 | 2>(0);
-    const [modalInitialToolsDisclosureOpen, setModalInitialToolsDisclosureOpen] = useState(false);
-    const [addAuthProviderOpen, setAddAuthProviderOpen] = useState(false);
-    const [remoteMcpInitialStep, setRemoteMcpInitialStep] = useState<0 | 1 | 2>(0);
-    const [registerRemoteMcpOpen, setRegisterRemoteMcpOpen] = useState(false);
+	// Modal state — which connector (if any) and which screen to open to
+	const [modalOpen, setModalOpen] = useState(false);
+	const [modalInitialConnector, setModalInitialConnector] = useState<Connector | null>(null);
+	const [modalInitialScreen, setModalInitialScreen] = useState<"browse" | "detail" | "configure">(
+		"browse"
+	);
+	const [modalInitialStep, setModalInitialStep] = useState<0 | 1 | 2>(0);
+	const [modalInitialToolsDisclosureOpen, setModalInitialToolsDisclosureOpen] = useState(false);
+	const [addAuthProviderOpen, setAddAuthProviderOpen] = useState(false);
+	const [remoteMcpInitialStep, setRemoteMcpInitialStep] = useState<0 | 1 | 2>(0);
+	const [registerRemoteMcpOpen, setRegisterRemoteMcpOpen] = useState(false);
 
-    // Connector tab filters
-    const [search, setSearch] = useState("");
-    const [categoryFilter, setCategoryFilter] = useState("All");
-    const [connectorStatusFilter, setConnectorStatusFilter] = useState("All");
+	// Connector tab filters
+	const [search, setSearch] = useState("");
+	const [categoryFilter, setCategoryFilter] = useState("All");
+	const [connectorStatusFilter, setConnectorStatusFilter] = useState("All");
 
-    // Auth providers tab filters
-    const [authSearch, setAuthSearch] = useState("");
-    const [statusFilter, setStatusFilter] = useState("All");
-    const [expandedAuthProviderId, setExpandedAuthProviderId] = useState<string | null>(null);
+	// Auth providers tab filters
+	const [authSearch, setAuthSearch] = useState("");
+	const [statusFilter, setStatusFilter] = useState("All");
+	const [expandedAuthProviderId, setExpandedAuthProviderId] = useState<string | null>(null);
 
-    // Hydrate from localStorage
-    useEffect(() => {
-        try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) setConnectedConnectors(JSON.parse(raw));
-        } catch { /* ignore */ }
-    }, []);
+	// Hydrate from localStorage
+	useEffect(() => {
+		try {
+			const raw = localStorage.getItem(STORAGE_KEY);
+			if (raw) setConnectedConnectors(JSON.parse(raw));
+		} catch {
+			/* ignore */
+		}
+	}, []);
 
-    const handleConnectorAdded = (connector: ConnectedConnector) => {
-        setConnectedConnectors(prev => {
-            const next = prev.some(c => c.id === connector.id)
-                ? prev.map(c => c.id === connector.id ? connector : c)
-                : [...prev, connector];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-            return next;
-        });
-    };
+	const handleConnectorAdded = (connector: ConnectedConnector) => {
+		setConnectedConnectors((prev) => {
+			const next = prev.some((c) => c.id === connector.id)
+				? prev.map((c) => (c.id === connector.id ? connector : c))
+				: [...prev, connector];
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+			return next;
+		});
+	};
 
-    const handleDisconnect = (id: string) => {
-        setConnectedConnectors(prev => {
-            const next = prev.filter(c => c.id !== id);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-            return next;
-        });
-        toaster.create("Connector disconnected", { intent: "information" });
-    };
+	const handleDisconnect = (id: string) => {
+		setConnectedConnectors((prev) => {
+			const next = prev.filter((c) => c.id !== id);
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+			return next;
+		});
+		toaster.create("Connector disconnected", {intent: "information"});
+	};
 
-    const handleDirectUserConnect = (connector: Connector) => {
-        handleConnectorAdded({
-            id: connector.id,
-            name: connector.name,
-            category: connector.category,
-            type: connector.type,
-            status: "connected",
-            managedBy: "User",
-            toolCount: connector.tools.length,
-            access: "All users",
-            addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-            toolIds: connector.tools.map(tool => tool.id),
-        });
-        toaster.create(`${connector.name} successfully connected`, { intent: "success" });
-    };
+	const handleDirectUserConnect = (connector: Connector) => {
+		handleConnectorAdded({
+			id: connector.id,
+			name: connector.name,
+			category: connector.category,
+			type: connector.type,
+			status: "connected",
+			managedBy: "User",
+			toolCount: connector.tools.length,
+			access: "All users",
+			addedOn: new Date().toLocaleDateString("en-US", {
+				month: "short",
+				day: "numeric",
+				year: "numeric",
+			}),
+			toolIds: connector.tools.map((tool) => tool.id),
+		});
+		toaster.create(`${connector.name} successfully connected`, {intent: "success"});
+	};
 
-    const openConfigure = (connector: Connector) => {
-        if (ocpAsPanel) {
-            setStepperPanelConnector(connector);
-            return;
-        }
-        setModalInitialConnector(connector);
-        setModalInitialScreen("configure");
-        setModalOpen(true);
-    };
+	const openConfigure = (connector: Connector) => {
+		if (ocpAsPanel) {
+			setStepperPanelConnector(connector);
+			return;
+		}
+		setModalInitialConnector(connector);
+		setModalInitialScreen("configure");
+		setModalOpen(true);
+	};
 
-    const openDetails = (connector: Connector) => {
-        setModalInitialConnector(connector);
-        setModalInitialScreen("detail");
-        setModalOpen(true);
-    };
+	const openDetails = (connector: Connector) => {
+		setModalInitialConnector(connector);
+		setModalInitialScreen("detail");
+		setModalOpen(true);
+	};
 
-    const openOCP = (connector: Connector) => {
-        setOcpConnector(connector);
-        if (!ocpAsPanel) setOcpModalOpen(true);
-    };
-    const openAddRemoteMcpConnector = () => setRegisterRemoteMcpOpen(true);
-    const openAddAuthProvider = () => setAddAuthProviderOpen(true);
-    const openRegisterRemoteMcp = () => setRegisterRemoteMcpOpen(true);
-    const connectedIds = connectedConnectors.filter(c => c.status === "connected").map(c => c.id);
-    const configuredIds = connectedConnectors.filter(c => c.status === "configured").map(c => c.id);
+	const openOCP = (connector: Connector) => {
+		setOcpConnector(connector);
+		if (!ocpAsPanel) setOcpModalOpen(true);
+	};
+	const openAddRemoteMcpConnector = () => setRegisterRemoteMcpOpen(true);
+	const openAddAuthProvider = () => setAddAuthProviderOpen(true);
+	const openRegisterRemoteMcp = () => setRegisterRemoteMcpOpen(true);
+	const connectedIds = connectedConnectors
+		.filter((c) => c.status === "connected")
+		.map((c) => c.id);
+	const configuredIds = connectedConnectors
+		.filter((c) => c.status === "configured")
+		.map((c) => c.id);
 
-    const renderConnectorStatusOption = (status: string) => {
-        if (status === "All") {
-            return "All";
-        }
+	const renderConnectorStatusOption = (status: string) => {
+		if (status === "All") {
+			return "All";
+		}
 
-        const dotColor = status === "Connected"
-            ? "var(--ax-colors-fg-success)"
-            : "var(--ax-colors-border-secondary)";
+		const dotColor =
+			status === "Connected"
+				? "var(--ax-colors-fg-success)"
+				: "var(--ax-colors-border-secondary)";
 
-        return (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <span
-                    style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "999px",
-                        background: dotColor,
-                        flexShrink: 0,
-                    }}
-                />
-                <span>{status}</span>
-            </span>
-        );
-    };
+		return (
+			<span style={{display: "inline-flex", alignItems: "center", gap: 8}}>
+				<span
+					style={{
+						width: 8,
+						height: 8,
+						borderRadius: "999px",
+						background: dotColor,
+						flexShrink: 0,
+					}}
+				/>
+				<span>{status}</span>
+			</span>
+		);
+	};
 
-    // Categories for filter
-    const categories = useMemo(() => {
-        const cats = Array.from(new Set(CONNECTORS.map(c => c.category)));
-        return ["All", ...cats];
-    }, []);
+	// Categories for filter
+	const categories = useMemo(() => {
+		const cats = Array.from(new Set(CONNECTORS.map((c) => c.category)));
+		return ["All", ...cats];
+	}, []);
 
-    // Filtered connector tiles
-    const filteredTiles = useMemo(() => {
-        return CONNECTORS
-            .filter(c => {
-                const matchesSearch = !search.trim() ||
-                    c.name.toLowerCase().includes(search.toLowerCase()) ||
-                    c.category.toLowerCase().includes(search.toLowerCase()) ||
-                    c.description.toLowerCase().includes(search.toLowerCase());
-                const matchesCategory = categoryFilter === "All" || c.category === categoryFilter;
-                const isConnected = connectedIds.includes(c.id);
-                const matchesStatus = connectorStatusFilter === "All" ||
-                    (connectorStatusFilter === "Connected" && isConnected) ||
-                    (connectorStatusFilter === "Not connected" && !isConnected);
-                return matchesSearch && matchesCategory && matchesStatus;
-            })
-            .sort((a, b) => {
-                if (a.id === "custom-mcp") return 1;
-                if (b.id === "custom-mcp") return -1;
-                return a.name.localeCompare(b.name);
-            });
-    }, [search, categoryFilter, connectorStatusFilter, connectedIds]);
+	// Filtered connector tiles
+	const filteredTiles = useMemo(() => {
+		return CONNECTORS.filter((c) => {
+			const matchesSearch =
+				!search.trim() ||
+				c.name.toLowerCase().includes(search.toLowerCase()) ||
+				c.category.toLowerCase().includes(search.toLowerCase()) ||
+				c.description.toLowerCase().includes(search.toLowerCase());
+			const matchesCategory = categoryFilter === "All" || c.category === categoryFilter;
+			const isConnected = connectedIds.includes(c.id);
+			const matchesStatus =
+				connectorStatusFilter === "All" ||
+				(connectorStatusFilter === "Connected" && isConnected) ||
+				(connectorStatusFilter === "Not connected" && !isConnected);
+			return matchesSearch && matchesCategory && matchesStatus;
+		}).sort((a, b) => {
+			if (a.id === "custom-mcp") return 1;
+			if (b.id === "custom-mcp") return -1;
+			return a.name.localeCompare(b.name);
+		});
+	}, [search, categoryFilter, connectorStatusFilter, connectedIds]);
 
-    // Filtered auth providers table
-    const filteredAuth = useMemo(() => {
-        return authProviders.filter(c => {
-            const matchesSearch = !authSearch.trim() ||
-                c.name.toLowerCase().includes(authSearch.toLowerCase()) ||
-                c.description.toLowerCase().includes(authSearch.toLowerCase());
-            const matchesStatus = statusFilter === "All" ||
-                (statusFilter === "Active" && c.isActive) ||
-                (statusFilter === "Inactive" && !c.isActive);
-            return matchesSearch && matchesStatus;
-        });
-    }, [authProviders, authSearch, statusFilter]);
+	// Filtered auth providers table
+	const filteredAuth = useMemo(() => {
+		return authProviders.filter((c) => {
+			const matchesSearch =
+				!authSearch.trim() ||
+				c.name.toLowerCase().includes(authSearch.toLowerCase()) ||
+				c.description.toLowerCase().includes(authSearch.toLowerCase());
+			const matchesStatus =
+				statusFilter === "All" ||
+				(statusFilter === "Active" && c.isActive) ||
+				(statusFilter === "Inactive" && !c.isActive);
+			return matchesSearch && matchesStatus;
+		});
+	}, [authProviders, authSearch, statusFilter]);
 
-    const handleRemoteMcpProviderRegistered = (draft: RemoteMcpProviderDraft) => {
-        const nextProvider: AuthProvider = {
-            id: `remote-mcp-${Date.now()}`,
-            name: draft.name,
-            description: draft.description || `OAuth provider for ${draft.name} Remote MCP integration`,
-            authType: "oauth2",
-            scope: "Instance",
-            isRemoteMcp: true,
-            isActive: false,
-            bundles: 1,
-            created: new Date().toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" }),
-        };
+	const handleRemoteMcpProviderRegistered = (draft: RemoteMcpProviderDraft) => {
+		const nextProvider: AuthProvider = {
+			id: `remote-mcp-${Date.now()}`,
+			name: draft.name,
+			description:
+				draft.description || `OAuth provider for ${draft.name} Remote MCP integration`,
+			authType: "oauth2",
+			scope: "Instance",
+			isRemoteMcp: true,
+			isActive: false,
+			bundles: 1,
+			created: new Date().toLocaleDateString("en-US", {
+				month: "numeric",
+				day: "numeric",
+				year: "numeric",
+			}),
+		};
 
-        setAuthProviders(prev => [nextProvider, ...prev]);
-    };
+		setAuthProviders((prev) => [nextProvider, ...prev]);
+	};
 
-    const handleAuthProviderAdded = (draft: AuthProviderDraft) => {
-        const nextProvider: AuthProvider = {
-            id: draft.providerId,
-            name: draft.name,
-            description: draft.description,
-            authType: draft.authType,
-            scope: "System",
-            isRemoteMcp: false,
-            isActive: false,
-            bundles: 1,
-            created: new Date().toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" }),
-        };
+	const handleAuthProviderAdded = (draft: AuthProviderDraft) => {
+		const nextProvider: AuthProvider = {
+			id: draft.providerId,
+			name: draft.name,
+			description: draft.description,
+			authType: draft.authType,
+			scope: "System",
+			isRemoteMcp: false,
+			isActive: false,
+			bundles: 1,
+			created: new Date().toLocaleDateString("en-US", {
+				month: "numeric",
+				day: "numeric",
+				year: "numeric",
+			}),
+		};
 
-        setAuthProviders(prev => [nextProvider, ...prev]);
-    };
+		setAuthProviders((prev) => [nextProvider, ...prev]);
+	};
 
-    const activeTab = useMemo<ToolsTabValue>(() => {
-        const tab = searchParams.get("tab");
-        return TAB_VALUES.includes(tab as ToolsTabValue) ? (tab as ToolsTabValue) : "connectors";
-    }, [searchParams]);
+	const activeTab = useMemo<ToolsTabValue>(() => {
+		const tab = searchParams.get("tab");
+		return TAB_VALUES.includes(tab as ToolsTabValue) ? (tab as ToolsTabValue) : "connectors";
+	}, [searchParams]);
 
-    useEffect(() => {
-        const panelId = searchParams.get("panel");
+	useEffect(() => {
+		const panelId = searchParams.get("panel");
 
-        if (!panelId) {
-            setOcpConnector(null);
-            return;
-        }
+		if (!panelId) {
+			setOcpConnector(null);
+			return;
+		}
 
-        const panelConnector = CONNECTORS.find(connector => connector.id === panelId && connector.usesOCP) ?? null;
-        setOcpConnector(panelConnector);
-    }, [searchParams]);
+		const panelConnector =
+			CONNECTORS.find((connector) => connector.id === panelId && connector.usesOCP) ?? null;
+		setOcpConnector(panelConnector);
+	}, [searchParams]);
 
-    useEffect(() => {
-        const modalType = searchParams.get("modal");
+	useEffect(() => {
+		const modalType = searchParams.get("modal");
 
-        if (modalType === "connector") {
-            const connectorId = searchParams.get("connector");
-            const screen = searchParams.get("screen");
-            const connector = connectorId ? CONNECTORS.find(item => item.id === connectorId) ?? null : null;
-            const initialScreen = screen === "detail" || screen === "configure" || screen === "browse" ? screen : "browse";
-            const parsedStep = Number(searchParams.get("step") ?? "0");
-            const initialStep = parsedStep === 1 || parsedStep === 2 ? parsedStep : 0;
-            const initialToolsDisclosureOpen = searchParams.get("tools") === "expanded";
+		if (modalType === "connector") {
+			const connectorId = searchParams.get("connector");
+			const screen = searchParams.get("screen");
+			const connector = connectorId
+				? (CONNECTORS.find((item) => item.id === connectorId) ?? null)
+				: null;
+			const initialScreen =
+				screen === "detail" || screen === "configure" || screen === "browse"
+					? screen
+					: "browse";
+			const parsedStep = Number(searchParams.get("step") ?? "0");
+			const initialStep = parsedStep === 1 || parsedStep === 2 ? parsedStep : 0;
+			const initialToolsDisclosureOpen = searchParams.get("tools") === "expanded";
 
-            setModalInitialConnector(connector);
-            setModalInitialScreen(initialScreen);
-            setModalInitialStep(initialStep);
-            setModalInitialToolsDisclosureOpen(initialToolsDisclosureOpen);
-            setModalOpen(true);
-            return;
-        }
+			setModalInitialConnector(connector);
+			setModalInitialScreen(initialScreen);
+			setModalInitialStep(initialStep);
+			setModalInitialToolsDisclosureOpen(initialToolsDisclosureOpen);
+			setModalOpen(true);
+			return;
+		}
 
-        setModalInitialToolsDisclosureOpen(false);
-        setModalOpen(false);
-    }, [searchParams]);
+		setModalInitialToolsDisclosureOpen(false);
+		setModalOpen(false);
+	}, [searchParams]);
 
-    useEffect(() => {
-        const modalType = searchParams.get("modal");
+	useEffect(() => {
+		const modalType = searchParams.get("modal");
 
-        if (modalType === "remote-mcp") {
-            const parsedStep = Number(searchParams.get("step") ?? "0");
-            const initialStep = parsedStep === 1 || parsedStep === 2 ? parsedStep : 0;
-            setRemoteMcpInitialStep(initialStep);
-            setRegisterRemoteMcpOpen(true);
-            return;
-        }
+		if (modalType === "remote-mcp") {
+			const parsedStep = Number(searchParams.get("step") ?? "0");
+			const initialStep = parsedStep === 1 || parsedStep === 2 ? parsedStep : 0;
+			setRemoteMcpInitialStep(initialStep);
+			setRegisterRemoteMcpOpen(true);
+			return;
+		}
 
-        setRegisterRemoteMcpOpen(false);
-    }, [searchParams]);
+		setRegisterRemoteMcpOpen(false);
+	}, [searchParams]);
 
-    const handleTabChange = (tab: string) => {
-        if (!TAB_VALUES.includes(tab as ToolsTabValue)) return;
+	const handleTabChange = (tab: string) => {
+		if (!TAB_VALUES.includes(tab as ToolsTabValue)) return;
 
-        const nextParams = new URLSearchParams(searchParams.toString());
-        nextParams.set("tab", tab);
-        router.replace(`${pathname}?${nextParams.toString()}`, { scroll: false });
-    };
+		const nextParams = new URLSearchParams(searchParams.toString());
+		nextParams.set("tab", tab);
+		router.replace(`${pathname}?${nextParams.toString()}`, {scroll: false});
+	};
 
-    return (
-        <>
-            <AddConnectorModal
-                open={modalOpen}
-                onOpenChange={setModalOpen}
-                onConnectorAdded={handleConnectorAdded}
-                onDisconnect={handleDisconnect}
-                existingConnectors={connectedConnectors}
-                connectedIds={connectedIds}
-                isUserView={userView}
-                initialConnector={modalInitialConnector}
-                initialScreen={modalInitialScreen}
-                initialStep={modalInitialStep}
-                initialToolsDisclosureOpen={modalInitialToolsDisclosureOpen}
-                onConfigureInPanel={ocpAsPanel ? (c) => setStepperPanelConnector(c) : undefined}
-            />
-            <RegisterRemoteMcpProviderModal
-                open={registerRemoteMcpOpen}
-                onOpenChange={setRegisterRemoteMcpOpen}
-                onRegistered={handleRemoteMcpProviderRegistered}
-                initialStep={remoteMcpInitialStep}
-            />
-            <AddAuthProviderModal
-                open={addAuthProviderOpen}
-                onOpenChange={setAddAuthProviderOpen}
-                onSaved={handleAuthProviderAdded}
-            />
+	return (
+		<>
+			<AddConnectorModal
+				open={modalOpen}
+				onOpenChange={setModalOpen}
+				onConnectorAdded={handleConnectorAdded}
+				onDisconnect={handleDisconnect}
+				existingConnectors={connectedConnectors}
+				connectedIds={connectedIds}
+				isUserView={userView}
+				initialConnector={modalInitialConnector}
+				initialScreen={modalInitialScreen}
+				initialStep={modalInitialStep}
+				initialToolsDisclosureOpen={modalInitialToolsDisclosureOpen}
+				onConfigureInPanel={ocpAsPanel ? (c) => setStepperPanelConnector(c) : undefined}
+			/>
+			<RegisterRemoteMcpProviderModal
+				open={registerRemoteMcpOpen}
+				onOpenChange={setRegisterRemoteMcpOpen}
+				onRegistered={handleRemoteMcpProviderRegistered}
+				initialStep={remoteMcpInitialStep}
+			/>
+			<AddAuthProviderModal
+				open={addAuthProviderOpen}
+				onOpenChange={setAddAuthProviderOpen}
+				onSaved={handleAuthProviderAdded}
+			/>
 
-            {/* OCP config modal (feedback: toggle 1) */}
-            {!ocpAsPanel && ocpConnector && (
-                <OCPConfigModal
-                    connector={ocpConnector}
-                    isInstalled={connectedIds.includes(ocpConnector.id)}
-                    open={ocpModalOpen}
-                    onOpenChange={(open) => { setOcpModalOpen(open); if (!open) setOcpConnector(null); }}
-                    onInstall={() => handleConnectorAdded({ id: ocpConnector.id, name: ocpConnector.name, category: ocpConnector.category, type: ocpConnector.type, status: "connected", managedBy: "Admin", toolCount: ocpConnector.tools.length, access: "All users", addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), toolIds: ocpConnector.tools.map(tool => tool.id) })}
-                    onUninstall={() => handleDisconnect(ocpConnector.id)}
-                />
-            )}
+			{/* OCP config modal (feedback: toggle 1) */}
+			{!ocpAsPanel && ocpConnector && (
+				<OCPConfigModal
+					connector={ocpConnector}
+					isInstalled={connectedIds.includes(ocpConnector.id)}
+					open={ocpModalOpen}
+					onOpenChange={(open) => {
+						setOcpModalOpen(open);
+						if (!open) setOcpConnector(null);
+					}}
+					onInstall={() =>
+						handleConnectorAdded({
+							id: ocpConnector.id,
+							name: ocpConnector.name,
+							category: ocpConnector.category,
+							type: ocpConnector.type,
+							status: "connected",
+							managedBy: "Admin",
+							toolCount: ocpConnector.tools.length,
+							access: "All users",
+							addedOn: new Date().toLocaleDateString("en-US", {
+								month: "short",
+								day: "numeric",
+								year: "numeric",
+							}),
+							toolIds: ocpConnector.tools.map((tool) => tool.id),
+						})
+					}
+					onUninstall={() => handleDisconnect(ocpConnector.id)}
+				/>
+			)}
 
-            {/* OCP config side panel (feedback: toggle 1 off) */}
-            {ocpAsPanel && ocpConnector && (
-                <OCPConfigPanel
-                    connector={ocpConnector}
-                    isInstalled={connectedIds.includes(ocpConnector.id)}
-                    onClose={() => setOcpConnector(null)}
-                    onInstall={() => handleConnectorAdded({ id: ocpConnector.id, name: ocpConnector.name, category: ocpConnector.category, type: ocpConnector.type, status: "connected", managedBy: "Admin", toolCount: ocpConnector.tools.length, access: "All users", addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), toolIds: ocpConnector.tools.map(tool => tool.id) })}
-                    onUninstall={() => handleDisconnect(ocpConnector.id)}
-                />
-            )}
+			{/* OCP config side panel (feedback: toggle 1 off) */}
+			{ocpAsPanel && ocpConnector && (
+				<OCPConfigPanel
+					connector={ocpConnector}
+					isInstalled={connectedIds.includes(ocpConnector.id)}
+					onClose={() => setOcpConnector(null)}
+					onInstall={() =>
+						handleConnectorAdded({
+							id: ocpConnector.id,
+							name: ocpConnector.name,
+							category: ocpConnector.category,
+							type: ocpConnector.type,
+							status: "connected",
+							managedBy: "Admin",
+							toolCount: ocpConnector.tools.length,
+							access: "All users",
+							addedOn: new Date().toLocaleDateString("en-US", {
+								month: "short",
+								day: "numeric",
+								year: "numeric",
+							}),
+							toolIds: ocpConnector.tools.map((tool) => tool.id),
+						})
+					}
+					onUninstall={() => handleDisconnect(ocpConnector.id)}
+				/>
+			)}
 
-            {/* Configure stepper panel (feedback: toggle 2 on) */}
-            {ocpAsPanel && stepperPanelConnector && (
-                <ConfigureStepperPanel
-                    connector={stepperPanelConnector}
-                    onClose={() => setStepperPanelConnector(null)}
-                    onSave={handleConnectorAdded}
-                />
-            )}
+			{/* Configure stepper panel (feedback: toggle 2 on) */}
+			{ocpAsPanel && stepperPanelConnector && (
+				<ConfigureStepperPanel
+					connector={stepperPanelConnector}
+					onClose={() => setStepperPanelConnector(null)}
+					onSave={handleConnectorAdded}
+				/>
+			)}
 
-            <Box display="flex" flexDirection="column" gap="24">
-                {/* ── Page header + feedback toggle ───────────────────────── */}
-                <Box display="flex" alignItems="center" justifyContent="space-between" gap="16">
-                    <Box display="flex" flexDirection="column" gap="8">
-                        <Heading level="1">Connectors</Heading>
-                        <Text color="fg.secondary">Enable connectors and tools your agents will use.</Text>
-                    </Box>
-                    <Box
-                        display="flex"
-                        alignItems="center"
-                        gap="16"
-                        px="12"
-                        py="8"
-                        rounded="md"
-                        style={{
-                            flexShrink: 0,
-                            background: "var(--ax-colors-bg-secondary)",
-                            border: "1px dashed var(--ax-colors-border-secondary)",
-                        }}
-                    >
-                        <Text fontSize="xs" fontWeight="500" color="fg.tertiary" style={{ textTransform: "uppercase", letterSpacing: "0.06em", flexShrink: 0 }}>
-                            Feedback
-                        </Text>
-                        <Box display="flex" alignItems="center" gap="8">
-                            <Switch checked={ocpAsPanel} onCheckedChange={setOcpAsPanel} />
-                            <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>OCP as Panel</Text>
-                        </Box>
-                        <Box display="flex" alignItems="center" gap="8">
-                            <Switch checked={userView} onCheckedChange={setUserView} />
-                            <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>User view</Text>
-                        </Box>
-                        <Box display="flex" alignItems="center" gap="8">
-                            <Switch checked={ctaButtonModeHydrated ? ctaButtonMode : false} onCheckedChange={setCtaButtonMode} />
-                            <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>CTA Button</Text>
-                        </Box>
-                    </Box>
-                </Box>
+			<Box display="flex" flexDirection="column" gap="24">
+				{/* ── Page header + feedback toggle ───────────────────────── */}
+				<Box display="flex" alignItems="center" justifyContent="space-between" gap="16">
+					<Box display="flex" flexDirection="column" gap="8">
+						<Heading level="1">Connectors</Heading>
+						<Text color="fg.secondary">
+							Enable connectors and tools your agents will use.
+						</Text>
+					</Box>
+					<Box
+						display="flex"
+						alignItems="center"
+						gap="16"
+						px="12"
+						py="8"
+						rounded="md"
+						style={{
+							flexShrink: 0,
+							background: "var(--ax-colors-bg-secondary)",
+							border: "1px dashed var(--ax-colors-border-secondary)",
+						}}
+					>
+						<Text
+							fontSize="xs"
+							fontWeight="500"
+							color="fg.tertiary"
+							style={{
+								textTransform: "uppercase",
+								letterSpacing: "0.06em",
+								flexShrink: 0,
+							}}
+						>
+							Feedback
+						</Text>
+						<Box display="flex" alignItems="center" gap="8">
+							<Switch checked={ocpAsPanel} onCheckedChange={setOcpAsPanel} />
+							<Text fontSize="sm" color="fg.secondary" style={{whiteSpace: "nowrap"}}>
+								OCP as Panel
+							</Text>
+						</Box>
+						<Box display="flex" alignItems="center" gap="8">
+							<Switch checked={userView} onCheckedChange={setUserView} />
+							<Text fontSize="sm" color="fg.secondary" style={{whiteSpace: "nowrap"}}>
+								User view
+							</Text>
+						</Box>
+						<Box display="flex" alignItems="center" gap="8">
+							<Switch
+								checked={ctaButtonModeHydrated ? ctaButtonMode : false}
+								onCheckedChange={setCtaButtonMode}
+							/>
+							<Text fontSize="sm" color="fg.secondary" style={{whiteSpace: "nowrap"}}>
+								CTA Button
+							</Text>
+						</Box>
+					</Box>
+				</Box>
 
-                {/* ── Tabs ─────────────────────────────────────────────────── */}
-                <Tabs value={activeTab} onValueChange={handleTabChange}>
-                    <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">
-                        {(["connectors", "tools", "registries", "auth-providers"] as const).map((tab) => (
-                            <Box
-                                key={tab}
-                                pb="12"
-                                cursor="pointer"
-                                borderB={activeTab === tab ? "2" : "0"}
-                                onClick={() => handleTabChange(tab)}
-                                style={activeTab === tab ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
-                            >
-                                <Text
-                                    fontWeight={activeTab === tab ? "500" : "400"}
-                                    color={activeTab === tab ? "fg.default" : "fg.secondary"}
-                                >
-                                    {tab === "connectors" ? "Connectors" : tab === "tools" ? "Tools" : tab === "registries" ? "Registries" : "Auth Providers"}
-                                </Text>
-                            </Box>
-                        ))}
-                    </Box>
+				{/* ── Tabs ─────────────────────────────────────────────────── */}
+				<Tabs value={activeTab} onValueChange={handleTabChange}>
+					<Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">
+						{(["connectors", "tools", "registries", "auth-providers"] as const).map(
+							(tab) => (
+								<Box
+									key={tab}
+									pb="12"
+									cursor="pointer"
+									borderB={activeTab === tab ? "2" : "0"}
+									onClick={() => handleTabChange(tab)}
+									style={
+										activeTab === tab
+											? {borderBottomColor: "var(--ax-colors-fg-default)"}
+											: {}
+									}
+								>
+									<Text
+										fontWeight={activeTab === tab ? "500" : "400"}
+										color={activeTab === tab ? "fg.default" : "fg.secondary"}
+									>
+										{tab === "connectors"
+											? "Connectors"
+											: tab === "tools"
+												? "Tools"
+												: tab === "registries"
+													? "Registries"
+													: "Auth Providers"}
+									</Text>
+								</Box>
+							)
+						)}
+					</Box>
 
-                    {/* ── Connectors tab: all 33 tiles ─────────────────────── */}
-                    <TabsContent value="connectors">
-                        <Box display="flex" flexDirection="column" gap="16" pt="16">
-                            {/* Filters */}
-                            <Box display="flex" gap="12" alignItems="center">
-                                <Box style={{ width: 280 }}>
-                                    <Input
-                                        placeholder="Search connectors..."
-                                        value={search}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-                                        addonBefore={<IconSearch size={16} />}
-                                    />
-                                </Box>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <LabelMenuButton label="Category">
-                                            {categoryFilter}
-                                        </LabelMenuButton>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        {categories.map(cat => (
-                                            <DropdownMenuItem key={cat} onClick={() => setCategoryFilter(cat)}>
-                                                {cat}
-                                            </DropdownMenuItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <LabelMenuButton label="Status">
-                                            {renderConnectorStatusOption(connectorStatusFilter)}
-                                        </LabelMenuButton>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        {["All", "Connected", "Not connected"].map(status => (
-                                            <DropdownMenuItem key={status} onClick={() => setConnectorStatusFilter(status)}>
-                                                {renderConnectorStatusOption(status)}
-                                            </DropdownMenuItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button appearance="primary" style={{ marginLeft: "auto" }} icon={<IconPlus />}>
-                                            Add Connector
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" style={{ minWidth: 260 }}>
-                                        <DropdownMenuItem onClick={openAddRemoteMcpConnector}>
-                                            <IconScrewdriverWrench size={14} />
-                                            Remote MCP Connector
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </Box>
+					{/* ── Connectors tab: all 33 tiles ─────────────────────── */}
+					<TabsContent value="connectors">
+						<Box display="flex" flexDirection="column" gap="16" pt="16">
+							{/* Filters */}
+							<Box display="flex" gap="12" alignItems="center">
+								<Box style={{width: 280}}>
+									<Input
+										placeholder="Search connectors..."
+										value={search}
+										onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+											setSearch(e.target.value)
+										}
+										addonBefore={<IconSearch size={16} />}
+									/>
+								</Box>
+								<Menu
+									options={categories.map((cat) => ({
+										label: cat,
+										execute: () => setCategoryFilter(cat),
+									}))}
+								>
+									<MenuTrigger asChild>
+										<LabelMenuButton label="Category">
+											{categoryFilter}
+										</LabelMenuButton>
+									</MenuTrigger>
+									<MenuContent />
+								</Menu>
+								<Menu
+									options={["All", "Connected", "Not connected"].map(
+										(status) => ({
+											label: status,
+											addon:
+												status !== "All" ? (
+													<span
+														style={{
+															width: 8,
+															height: 8,
+															borderRadius: "999px",
+															background:
+																status === "Connected"
+																	? "var(--ax-colors-fg-success)"
+																	: "var(--ax-colors-border-secondary)",
+															flexShrink: 0,
+														}}
+													/>
+												) : undefined,
+											execute: () => setConnectorStatusFilter(status),
+										})
+									)}
+								>
+									<MenuTrigger asChild>
+										<LabelMenuButton label="Status">
+											{renderConnectorStatusOption(connectorStatusFilter)}
+										</LabelMenuButton>
+									</MenuTrigger>
+									<MenuContent />
+								</Menu>
+								<Menu
+									options={[
+										{
+											label: "Remote MCP Connector",
+											addon: <IconScrewdriverWrench size={14} />,
+											execute: openAddRemoteMcpConnector,
+										},
+									]}
+								>
+									<MenuTrigger asChild>
+										<Button
+											appearance="primary"
+											style={{marginLeft: "auto"}}
+											icon={<IconPlus />}
+										>
+											Add Connector
+										</Button>
+									</MenuTrigger>
+									<MenuContent align="end" style={{minWidth: 260}} />
+								</Menu>
+							</Box>
 
-                            {/* Tile grid */}
-                            {filteredTiles.length === 0 ? (
-                                <Box display="flex" justifyContent="center" py="48">
-                                    <Text color="fg.tertiary">No connectors match your search.</Text>
-                                </Box>
-                            ) : (
-                                <Box
-                                    style={{
-                                        display: "grid",
-                                        gridTemplateColumns: "repeat(4, 1fr)",
-                                        gap: "16px",
-                                        gridAutoRows: "1fr",
-                                    }}
-                                >
-                                    {filteredTiles.map(connector => (
-                                        <ConnectorCard
-                                            key={connector.id}
-                                            connector={connector}
-                                            isConnected={connectedIds.includes(connector.id)}
-                                            isConfigured={configuredIds.includes(connector.id)}
-                                            isUserView={userView}
-                                            ctaButtonMode={ctaButtonModeHydrated ? ctaButtonMode : false}
-                                            onConnect={() => {
-                                                if (connector.usesOCP) {
-                                                    openOCP(connector);
-                                                    return;
-                                                }
+							{/* Tile grid */}
+							{filteredTiles.length === 0 ? (
+								<Box display="flex" justifyContent="center" py="48">
+									<Text color="fg.tertiary">
+										No connectors match your search.
+									</Text>
+								</Box>
+							) : (
+								<Box
+									style={{
+										display: "grid",
+										gridTemplateColumns: "repeat(4, 1fr)",
+										gap: "16px",
+										gridAutoRows: "1fr",
+									}}
+								>
+									{filteredTiles.map((connector) => (
+										<ConnectorCard
+											key={connector.id}
+											connector={connector}
+											isConnected={connectedIds.includes(connector.id)}
+											isConfigured={configuredIds.includes(connector.id)}
+											isUserView={userView}
+											ctaButtonMode={
+												ctaButtonModeHydrated ? ctaButtonMode : false
+											}
+											onConnect={() => {
+												if (connector.usesOCP) {
+													openOCP(connector);
+													return;
+												}
 
-                                                if (connectedIds.includes(connector.id)) {
-                                                    openDetails(connector);
-                                                    return;
-                                                }
+												if (connectedIds.includes(connector.id)) {
+													openDetails(connector);
+													return;
+												}
 
-                                                if (usesDirectUserConnect(connector)) {
-                                                    handleDirectUserConnect(connector);
-                                                    return;
-                                                }
+												if (usesDirectUserConnect(connector)) {
+													handleDirectUserConnect(connector);
+													return;
+												}
 
-                                                if (requiresDeferredUserConnect(connector) && configuredIds.includes(connector.id)) {
-                                                    openDetails(connector);
-                                                    return;
-                                                }
+												if (
+													requiresDeferredUserConnect(connector) &&
+													configuredIds.includes(connector.id)
+												) {
+													openDetails(connector);
+													return;
+												}
 
-                                                openConfigure(connector);
-                                            }}
-                                            onDetails={() => connector.usesOCP ? openOCP(connector) : openDetails(connector)}
-                                        />
-                                    ))}
-                                </Box>
-                            )}
-                        </Box>
-                    </TabsContent>
+												openConfigure(connector);
+											}}
+											onDetails={() =>
+												connector.usesOCP
+													? openOCP(connector)
+													: openDetails(connector)
+											}
+										/>
+									))}
+								</Box>
+							)}
+						</Box>
+					</TabsContent>
 
-                    {/* ── Tools tab ────────────────────────────────────────── */}
-                    <TabsContent value="tools">
-                        <Box pt="16">
-                            <ToolsTab />
-                        </Box>
-                    </TabsContent>
+					{/* ── Tools tab ────────────────────────────────────────── */}
+					<TabsContent value="tools">
+						<Box pt="16">
+							<ToolsTab />
+						</Box>
+					</TabsContent>
 
-                    {/* ── Registries tab ───────────────────────────────────── */}
-                    <TabsContent value="registries">
-                        <Box pt="16">
-                            <RegistriesTab />
-                        </Box>
-                    </TabsContent>
+					{/* ── Registries tab ───────────────────────────────────── */}
+					<TabsContent value="registries">
+						<Box pt="16">
+							<RegistriesTab />
+						</Box>
+					</TabsContent>
 
-                    {/* ── Auth Providers tab ───────────────────────────────── */}
-                    <TabsContent value="auth-providers">
-                        <Box display="flex" flexDirection="column" gap="16" pt="16">
-                            {/* Filters */}
-                            <Box display="flex" gap="12" alignItems="center">
-                                <Box style={{ width: 280 }}>
-                                    <Input
-                                        placeholder="Search providers..."
-                                        value={authSearch}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAuthSearch(e.target.value)}
-                                        addonBefore={<IconSearch size={16} />}
-                                    />
-                                </Box>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <LabelMenuButton label="Status">
-                                            {statusFilter}
-                                        </LabelMenuButton>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        {["All", "Active", "Inactive"].map(s => (
-                                            <DropdownMenuItem key={s} onClick={() => setStatusFilter(s)}>
-                                                {s}
-                                            </DropdownMenuItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button appearance="primary" style={{ marginLeft: "auto" }} icon={<IconChevronDown />} iconPosition="end">
-                                            Add Auth Provider
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" style={{ minWidth: 260 }}>
-                                        <DropdownMenuItem onClick={openAddAuthProvider}>
-                                            <IconShieldCheck size={14} />
-                                            Authentication Provider
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={openRegisterRemoteMcp}>
-                                            <IconScrewdriverWrench size={14} />
-                                            Remote MCP Auth Provider
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </Box>
+					{/* ── Auth Providers tab ───────────────────────────────── */}
+					<TabsContent value="auth-providers">
+						<Box display="flex" flexDirection="column" gap="16" pt="16">
+							{/* Filters */}
+							<Box display="flex" gap="12" alignItems="center">
+								<Box style={{width: 280}}>
+									<Input
+										placeholder="Search providers..."
+										value={authSearch}
+										onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+											setAuthSearch(e.target.value)
+										}
+										addonBefore={<IconSearch size={16} />}
+									/>
+								</Box>
+								<Menu
+									options={["All", "Active", "Inactive"].map((s) => ({
+										label: s,
+										execute: () => setStatusFilter(s),
+									}))}
+								>
+									<MenuTrigger asChild>
+										<LabelMenuButton label="Status">
+											{statusFilter}
+										</LabelMenuButton>
+									</MenuTrigger>
+									<MenuContent />
+								</Menu>
+								<Menu
+									options={[
+										{
+											label: "Authentication Provider",
+											addon: <IconShieldCheck size={14} />,
+											execute: () => openAddAuthProvider(),
+										},
+										{
+											label: "Remote MCP Auth Provider",
+											addon: <IconScrewdriverWrench size={14} />,
+											execute: () => openRegisterRemoteMcp(),
+										},
+									]}
+								>
+									<MenuTrigger asChild>
+										<Button
+											appearance="primary"
+											style={{marginLeft: "auto"}}
+											icon={<IconChevronDown />}
+											iconPosition="end"
+										>
+											Add Auth Provider
+										</Button>
+									</MenuTrigger>
+									<MenuContent align="end" style={{minWidth: 260}} />
+								</Menu>
+							</Box>
 
-                            {filteredAuth.length === 0 ? (
-                                <Box display="flex" justifyContent="center" py="48">
-                                    <Text color="fg.tertiary">No auth providers match your search.</Text>
-                                </Box>
-                            ) : (
-                                <Table>
-                                    <thead>
-                                        <Tr>
-                                            <Th style={{ width: 48 }}></Th>
-                                            <Th>Name</Th>
-                                            <Th>Auth Type</Th>
-                                            <Th>Status</Th>
-                                            <Th>Bundles</Th>
-                                            <Th>Created</Th>
-                                            <Th style={{ width: 56 }}></Th>
-                                        </Tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredAuth.map(provider => {
-                                            const isExpanded = expandedAuthProviderId === provider.id;
+							{filteredAuth.length === 0 ? (
+								<Box display="flex" justifyContent="center" py="48">
+									<Text color="fg.tertiary">
+										No auth providers match your search.
+									</Text>
+								</Box>
+							) : (
+								<Table>
+									<thead>
+										<Tr>
+											<Th style={{width: 48}}></Th>
+											<Th>Name</Th>
+											<Th>Auth Type</Th>
+											<Th>Status</Th>
+											<Th>Bundles</Th>
+											<Th>Created</Th>
+											<Th style={{width: 56}}></Th>
+										</Tr>
+									</thead>
+									<tbody>
+										{filteredAuth.map((provider) => {
+											const isExpanded =
+												expandedAuthProviderId === provider.id;
 
-                                            return (
-                                                <Fragment key={provider.id}>
-                                                    <Tr>
-                                                        <Td type="button">
-                                                            <Button
-                                                                appearance="subtle"
-                                                                icon={isExpanded ? <IconChevronDown /> : <IconChevronRight />}
-                                                                aria-label={isExpanded ? "Collapse row" : "Expand row"}
-                                                                onClick={() => setExpandedAuthProviderId(prev => prev === provider.id ? null : provider.id)}
-                                                            />
-                                                        </Td>
-                                                        <Td type="header">{provider.name}</Td>
-                                                        <Td>
-                                                            <Box display="flex" alignItems="center" gap="6" flexWrap="wrap">
-                                                                <Badge intent="neutral">{provider.authType}</Badge>
-                                                                <Badge intent="neutral">{provider.scope}</Badge>
-                                                                {provider.isRemoteMcp ? <Badge intent="information">Remote MCP</Badge> : null}
-                                                            </Box>
-                                                        </Td>
-                                                        <Td>
-                                                            <Badge intent={provider.isActive ? "success" : "neutral"}>
-                                                                {provider.isActive ? "Active" : "Inactive"}
-                                                            </Badge>
-                                                        </Td>
-                                                        <Td>
-                                                            <Text fontSize="sm" color="fg.accent">
-                                                                {provider.bundles} {provider.bundles === 1 ? "bundle" : "bundles"}
-                                                            </Text>
-                                                        </Td>
-                                                        <Td>
-                                                            <Text fontSize="sm" color="fg.secondary">{provider.created}</Text>
-                                                        </Td>
-                                                        <Td type="button">
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <Button
-                                                                        appearance="subtle"
-                                                                        icon={<IconEllipsisSolid />}
-                                                                        aria-label="Actions"
-                                                                    />
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end">
-                                                                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                                                                    <DropdownMenuItem>Add Bundle</DropdownMenuItem>
-                                                                    <DropdownMenuItem style={{ color: "var(--ax-colors-fg-danger)" }}>
-                                                                        Delete
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
-                                                        </Td>
-                                                    </Tr>
-                                                    {isExpanded ? (
-                                                        <Tr>
-                                                            <td
-                                                                colSpan={7}
-                                                                style={{
-                                                                    padding: "16px 16px 16px 80px",
-                                                                    borderTop: "1px solid var(--ax-colors-border-tertiary)",
-                                                                }}
-                                                            >
-                                                                <Box display="flex" flexDirection="column" gap="12">
-                                                                    <Box>
-                                                                        <Text fontSize="sm" fontWeight="500" color="fg.default">Description</Text>
-                                                                        <Text fontSize="sm" color="fg.secondary" mt="4">
-                                                                            {provider.description}
-                                                                        </Text>
-                                                                    </Box>
-                                                                    <Box display="flex" alignItems="center" gap="8" flexWrap="wrap">
-                                                                        <Badge intent="neutral">Scope: {provider.scope}</Badge>
-                                                                        {provider.isRemoteMcp ? <Badge intent="information">Remote MCP</Badge> : null}
-                                                                    </Box>
-                                                                </Box>
-                                                            </td>
-                                                        </Tr>
-                                                    ) : null}
-                                                </Fragment>
-                                            );
-                                        })}
-                                    </tbody>
-                                </Table>
-                            )}
-                        </Box>
-                    </TabsContent>
-                </Tabs>
-            </Box>
-        </>
-    );
+											return (
+												<Fragment key={provider.id}>
+													<Tr>
+														<Td type="button">
+															<Button
+																appearance="subtle"
+																icon={
+																	isExpanded ? (
+																		<IconChevronDown />
+																	) : (
+																		<IconChevronRight />
+																	)
+																}
+																aria-label={
+																	isExpanded
+																		? "Collapse row"
+																		: "Expand row"
+																}
+																onClick={() =>
+																	setExpandedAuthProviderId(
+																		(prev) =>
+																			prev === provider.id
+																				? null
+																				: provider.id
+																	)
+																}
+															/>
+														</Td>
+														<Td type="header">{provider.name}</Td>
+														<Td>
+															<Box
+																display="flex"
+																alignItems="center"
+																gap="6"
+																flexWrap="wrap"
+															>
+																<Badge intent="neutral">
+																	{provider.authType}
+																</Badge>
+																<Badge intent="neutral">
+																	{provider.scope}
+																</Badge>
+																{provider.isRemoteMcp ? (
+																	<Badge intent="information">
+																		Remote MCP
+																	</Badge>
+																) : null}
+															</Box>
+														</Td>
+														<Td>
+															<Badge
+																intent={
+																	provider.isActive
+																		? "success"
+																		: "neutral"
+																}
+															>
+																{provider.isActive
+																	? "Active"
+																	: "Inactive"}
+															</Badge>
+														</Td>
+														<Td>
+															<Text fontSize="sm" color="fg.default">
+																{provider.bundles}{" "}
+																{provider.bundles === 1
+																	? "bundle"
+																	: "bundles"}
+															</Text>
+														</Td>
+														<Td>
+															<Text
+																fontSize="sm"
+																color="fg.secondary"
+															>
+																{provider.created}
+															</Text>
+														</Td>
+														<Td type="button">
+															<Menu
+																options={[
+																	{label: "Edit"},
+																	{label: "Add Bundle"},
+																	{
+																		label: "Delete",
+																		intent: "danger",
+																	},
+																]}
+															>
+																<MenuTrigger asChild>
+																	<Button
+																		appearance="subtle"
+																		icon={<IconEllipsisSolid />}
+																		aria-label="Actions"
+																	/>
+																</MenuTrigger>
+																<MenuContent align="end" />
+															</Menu>
+														</Td>
+													</Tr>
+													{isExpanded ? (
+														<Tr>
+															<td
+																colSpan={7}
+																style={{
+																	padding: "16px 16px 16px 80px",
+																	borderTop:
+																		"1px solid var(--ax-colors-border-tertiary)",
+																}}
+															>
+																<Box
+																	display="flex"
+																	flexDirection="column"
+																	gap="12"
+																>
+																	<Box>
+																		<Text
+																			fontSize="sm"
+																			fontWeight="500"
+																			color="fg.default"
+																		>
+																			Description
+																		</Text>
+																		<Text
+																			fontSize="sm"
+																			color="fg.secondary"
+																			mt="4"
+																		>
+																			{provider.description}
+																		</Text>
+																	</Box>
+																	<Box
+																		display="flex"
+																		alignItems="center"
+																		gap="8"
+																		flexWrap="wrap"
+																	>
+																		<Badge intent="neutral">
+																			Scope: {provider.scope}
+																		</Badge>
+																		{provider.isRemoteMcp ? (
+																			<Badge intent="information">
+																				Remote MCP
+																			</Badge>
+																		) : null}
+																	</Box>
+																</Box>
+															</td>
+														</Tr>
+													) : null}
+												</Fragment>
+											);
+										})}
+									</tbody>
+								</Table>
+							)}
+						</Box>
+					</TabsContent>
+				</Tabs>
+			</Box>
+		</>
+	);
 }
 
 // ── ConnectorCard ─────────────────────────────────────────────────────────────
 
 function ConnectorCard({
-    connector,
-    isConnected,
-    isConfigured,
-    isUserView,
-    ctaButtonMode,
-    onConnect,
-    onDetails,
+	connector,
+	isConnected,
+	isConfigured,
+	isUserView,
+	ctaButtonMode,
+	onConnect,
+	onDetails,
 }: {
-    connector: Connector;
-    isConnected: boolean;
-    isConfigured: boolean;
-    isUserView: boolean;
-    ctaButtonMode: boolean;
-    onConnect: () => void;
-    onDetails: () => void;
+	connector: Connector;
+	isConnected: boolean;
+	isConfigured: boolean;
+	isUserView: boolean;
+	ctaButtonMode: boolean;
+	onConnect: () => void;
+	onDetails: () => void;
 }) {
-    const showsConnectAction = usesDirectUserConnect(connector) || (requiresDeferredUserConnect(connector) && isConfigured);
-    const canShowUserAction = !isUserView || isConnected || usesDirectUserConnect(connector);
+	const showsConnectAction =
+		usesDirectUserConnect(connector) ||
+		(requiresDeferredUserConnect(connector) && isConfigured);
+	const canShowUserAction = !isUserView || isConnected || usesDirectUserConnect(connector);
 
-    if (ctaButtonMode) {
-        // ── CTA Button layout (Figma variant) ─────────────────────────────────
-        // Footer states:
-        //   not connected + admin  → Configure button
-        //   not connected + user   → Connect button
-        //   connected   + admin    → gear icon in header only (no footer button)
-        //   connected   + user     → Open button (left) + green dot + "Connected" (right)
-        const showGearInHeader = isConnected && !isUserView;
-        const showFooter = !(isConnected && !isUserView);
+	if (ctaButtonMode) {
+		// ── CTA Button layout (Figma variant) ─────────────────────────────────
+		// Footer states:
+		//   not connected + admin  → Configure button
+		//   not connected + user   → Connect button
+		//   connected   + admin    → gear icon in header only (no footer button)
+		//   connected   + user     → Open button (left) + green dot + "Connected" (right)
+		const showGearInHeader = isConnected && !isUserView;
+		const showFooter = !(isConnected && !isUserView);
 
-        let footerContent: React.ReactNode = null;
-        if (isConnected && isUserView) {
-            // connected + user: Open button left, Connected indicator right
-            footerContent = (
-                <Box display="flex" alignItems="center" justifyContent="space-between" pt="4">
-                    <Button
-                        appearance="default"
-                        size="sm"
-                        onClick={e => { e.stopPropagation(); onConnect(); }}
-                    >
-                        Open
-                    </Button>
-                    <Box display="flex" alignItems="center" gap="8">
-                        <Box
-                            rounded="full"
-                            style={{
-                                width: 8,
-                                height: 8,
-                                background: "var(--ax-colors-fg-success-strong)",
-                                flexShrink: 0,
-                            }}
-                        />
-                        <Text fontSize="sm" fontWeight="500" color="fg.success">
-                            Connected
-                        </Text>
-                    </Box>
-                </Box>
-            );
-        } else if (!isConnected && canShowUserAction) {
-            // not connected + action available: label mirrors the icon aria-label
-            footerContent = (
-                <Box pt="4">
-                    <Button
-                        appearance="default"
-                        size="sm"
-                        onClick={e => { e.stopPropagation(); onConnect(); }}
-                    >
-                        {showsConnectAction ? "Connect" : "Configure"}
-                    </Button>
-                </Box>
-            );
-        } else if (!isConnected && !canShowUserAction) {
-            // user view, admin hasn't configured → passive CTA
-            footerContent = (
-                <Box pt="4">
-                    <Button
-                        appearance="default"
-                        size="sm"
-                        onClick={e => { e.stopPropagation(); onDetails(); }}
-                    >
-                        Preview
-                    </Button>
-                </Box>
-            );
-        }
+		let footerContent: React.ReactNode = null;
+		if (isConnected && isUserView) {
+			// connected + user: Open button left, Connected indicator right
+			footerContent = (
+				<Box display="flex" alignItems="center" justifyContent="space-between" pt="4">
+					<Button
+						appearance="default"
+						size="sm"
+						onClick={(e) => {
+							e.stopPropagation();
+							onConnect();
+						}}
+					>
+						Open
+					</Button>
+					<Box display="flex" alignItems="center" gap="8">
+						<Box
+							rounded="full"
+							style={{
+								width: 8,
+								height: 8,
+								background: "var(--ax-colors-fg-success-strong)",
+								flexShrink: 0,
+							}}
+						/>
+						<Text fontSize="sm" fontWeight="500" color="fg.success">
+							Connected
+						</Text>
+					</Box>
+				</Box>
+			);
+		} else if (!isConnected && canShowUserAction) {
+			// not connected + action available: label mirrors the icon aria-label
+			footerContent = (
+				<Box pt="4">
+					<Button
+						appearance="default"
+						size="sm"
+						onClick={(e) => {
+							e.stopPropagation();
+							onConnect();
+						}}
+					>
+						{showsConnectAction ? "Connect" : "Configure"}
+					</Button>
+				</Box>
+			);
+		} else if (!isConnected && !canShowUserAction) {
+			// user view, admin hasn't configured → passive CTA
+			footerContent = (
+				<Box pt="4">
+					<Button
+						appearance="default"
+						size="sm"
+						onClick={(e) => {
+							e.stopPropagation();
+							onDetails();
+						}}
+					>
+						Preview
+					</Button>
+				</Box>
+			);
+		}
 
-        return (
-            <Box
-                border="1"
-                borderColor="border.tertiary"
-                rounded="lg"
-                pt="16"
-                px="16"
-                pb="16"
-                display="flex"
-                flexDirection="column"
-                gap="12"
-                onClick={onDetails}
-                style={{
-                    background: "var(--ax-colors-bg-default)",
-                    cursor: "pointer",
-                    transition: "border-color 0.15s",
-                    minHeight: 152,
-                    height: "100%",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--ax-colors-border-secondary)")}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--ax-colors-border-tertiary)")}
-            >
-                {/* Top row: name (left) + avatar (right) */}
-                <Box display="flex" alignItems="center" gap="12">
-                    <Text fontWeight="500" style={{ flex: 1 }}>
-                        {connector.name}
-                    </Text>
-                    <ConnectorAvatar connector={connector} size={40} />
-                    {showGearInHeader && (
-                        <Button
-                            appearance="subtle"
-                            size="md"
-                            icon={<IconGear />}
-                            onClick={e => { e.stopPropagation(); onConnect(); }}
-                            aria-label="Configure"
-                        />
-                    )}
-                </Box>
+		return (
+			<Box
+				border="1"
+				borderColor="border.tertiary"
+				rounded="lg"
+				pt="16"
+				px="16"
+				pb="16"
+				display="flex"
+				flexDirection="column"
+				gap="12"
+				onClick={onDetails}
+				style={{
+					background: "var(--ax-colors-bg-default)",
+					cursor: "pointer",
+					transition: "border-color 0.15s",
+					minHeight: 152,
+					height: "100%",
+				}}
+				onMouseEnter={(e) =>
+					(e.currentTarget.style.borderColor = "var(--ax-colors-border-secondary)")
+				}
+				onMouseLeave={(e) =>
+					(e.currentTarget.style.borderColor = "var(--ax-colors-border-tertiary)")
+				}
+			>
+				{/* Top row: name (left) + avatar (right) */}
+				<Box display="flex" alignItems="center" gap="12">
+					<Text fontWeight="500" style={{flex: 1}}>
+						{connector.name}
+					</Text>
+					<ConnectorAvatar connector={connector} size={40} />
+					{showGearInHeader && (
+						<Button
+							appearance="subtle"
+							size="md"
+							icon={<IconGear />}
+							onClick={(e) => {
+								e.stopPropagation();
+								onConnect();
+							}}
+							aria-label="Configure"
+						/>
+					)}
+				</Box>
 
-                {/* Description */}
-                <Text
-                    fontSize="sm"
-                    color="fg.secondary"
-                    style={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                        lineHeight: "1.4",
-                        minHeight: "2.8em",
-                        flex: 1,
-                    }}
-                >
-                    {connector.description}
-                </Text>
+				{/* Description */}
+				<Text
+					fontSize="sm"
+					color="fg.secondary"
+					style={{
+						display: "-webkit-box",
+						WebkitLineClamp: 2,
+						WebkitBoxOrient: "vertical",
+						overflow: "hidden",
+						lineHeight: "1.4",
+						minHeight: "2.8em",
+						flex: 1,
+					}}
+				>
+					{connector.description}
+				</Text>
 
-                {/* Footer CTA */}
-                {showFooter && footerContent}
-            </Box>
-        );
-    }
+				{/* Footer CTA */}
+				{showFooter && footerContent}
+			</Box>
+		);
+	}
 
-    // ── Default layout (existing) ──────────────────────────────────────────────
-    return (
-        <Box
-            border="1"
-            borderColor="border.tertiary"
-            rounded="lg"
-            pt="16"
-            px="16"
-            pb={isConnected ? "8" : "16"}
-            display="flex"
-            flexDirection="column"
-            gap="12"
-            onClick={onDetails}
-            style={{
-                background: "var(--ax-colors-bg-default)",
-                cursor: "pointer",
-                transition: "border-color 0.15s",
-                minHeight: 152,
-                height: "100%",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--ax-colors-border-secondary)")}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--ax-colors-border-tertiary)")}
-        >
-            {/* Top row: icon + name + action button */}
-            <Box display="flex" alignItems="center" gap="12">
-                <ConnectorAvatar connector={connector} size={40} />
-                <Text fontWeight="500" style={{ flex: 1 }}>
-                    {connector.name}
-                </Text>
-                {canShowUserAction ? (
-                    <Button
-                        appearance="subtle"
-                        size="md"
-                        icon={isConnected ? <IconGear /> : <IconPlus />}
-                        onClick={e => { e.stopPropagation(); onConnect(); }}
-                        aria-label={isConnected ? "Configure" : showsConnectAction ? "Connect" : "Configure"}
-                    />
-                ) : null}
-            </Box>
+	// ── Default layout (existing) ──────────────────────────────────────────────
+	return (
+		<Box
+			border="1"
+			borderColor="border.tertiary"
+			rounded="lg"
+			pt="16"
+			px="16"
+			pb={isConnected ? "8" : "16"}
+			display="flex"
+			flexDirection="column"
+			gap="12"
+			onClick={onDetails}
+			style={{
+				background: "var(--ax-colors-bg-default)",
+				cursor: "pointer",
+				transition: "border-color 0.15s",
+				minHeight: 152,
+				height: "100%",
+			}}
+			onMouseEnter={(e) =>
+				(e.currentTarget.style.borderColor = "var(--ax-colors-border-secondary)")
+			}
+			onMouseLeave={(e) =>
+				(e.currentTarget.style.borderColor = "var(--ax-colors-border-tertiary)")
+			}
+		>
+			{/* Top row: icon + name + action button */}
+			<Box display="flex" alignItems="center" gap="12">
+				<ConnectorAvatar connector={connector} size={40} />
+				<Text fontWeight="500" style={{flex: 1}}>
+					{connector.name}
+				</Text>
+				{canShowUserAction ? (
+					<Button
+						appearance="subtle"
+						size="md"
+						icon={isConnected ? <IconGear /> : <IconPlus />}
+						onClick={(e) => {
+							e.stopPropagation();
+							onConnect();
+						}}
+						aria-label={
+							isConnected ? "Configure" : showsConnectAction ? "Connect" : "Configure"
+						}
+					/>
+				) : null}
+			</Box>
 
-            {/* Description */}
-            <Text
-                fontSize="sm"
-                color="fg.secondary"
-                style={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    lineHeight: "1.4",
-                    minHeight: "2.8em",
-                }}
-            >
-                {connector.description}
-            </Text>
+			{/* Description */}
+			<Text
+				fontSize="sm"
+				color="fg.secondary"
+				style={{
+					display: "-webkit-box",
+					WebkitLineClamp: 2,
+					WebkitBoxOrient: "vertical",
+					overflow: "hidden",
+					lineHeight: "1.4",
+					minHeight: "2.8em",
+				}}
+			>
+				{connector.description}
+			</Text>
 
-            {isConnected && (
-                <Box
-                    display="flex"
-                    alignItems="center"
-                    gap="8"
-                    pt="10"
-                >
-                    <Box
-                        rounded="full"
-                        style={{
-                            width: 8,
-                            height: 8,
-                            background: "var(--ax-colors-fg-success)",
-                            flexShrink: 0,
-                        }}
-                    />
-                    <Text fontSize="sm" fontWeight="500" color="fg.success">
-                        Connected
-                    </Text>
-                </Box>
-            )}
-        </Box>
-    );
+			{isConnected && (
+				<Box display="flex" alignItems="center" gap="8" pt="10">
+					<Box
+						rounded="full"
+						style={{
+							width: 8,
+							height: 8,
+							background: "var(--ax-colors-fg-success)",
+							flexShrink: 0,
+						}}
+					/>
+					<Text fontSize="sm" fontWeight="500" color="fg.success">
+						Connected
+					</Text>
+				</Box>
+			)}
+		</Box>
+	);
 }
 
 // ── Tools tab ─────────────────────────────────────────────────────────────────
 
 interface ToolBundle {
-    id: string;
-    name: string;
-    isOptimizely: boolean;
-    toolCount: number;
-    externalCount?: number;
-    isActive: boolean;
-    enabledInChat: boolean;
-    enabledForYou: boolean;
-    provider: "Optimizely" | "External" | "Remote MCP";
-    toolType: "Standard" | "Remote MCP";
+	id: string;
+	name: string;
+	isOptimizely: boolean;
+	toolCount: number;
+	externalCount?: number;
+	isActive: boolean;
+	enabledInChat: boolean;
+	enabledForYou: boolean;
+	provider: "Optimizely" | "External" | "Remote MCP";
+	toolType: "Standard" | "Remote MCP";
 }
 
 const TOOL_BUNDLES: ToolBundle[] = [
-    { id: "campaign", name: "Campaign Tools", isOptimizely: true, toolCount: 16, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
-    { id: "cmp", name: "CMP Tools", isOptimizely: true, toolCount: 60, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
-    { id: "cms-saas", name: "CMS SaaS Tools", isOptimizely: true, toolCount: 19, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
-    { id: "configured-commerce", name: "Configured Commerce Tools", isOptimizely: true, toolCount: 6, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
-    { id: "connectors-helper", name: "Connectors Helper Tools", isOptimizely: true, toolCount: 1, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
-    { id: "content-recs", name: "Content Recommendations Tools", isOptimizely: true, toolCount: 3, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
-    { id: "experimentation", name: "Experimentation Tools", isOptimizely: true, toolCount: 30, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
-    { id: "graph", name: "Graph Tools", isOptimizely: true, toolCount: 3, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
-    { id: "ip-portco", name: "IP_PortCo_IY_Test", isOptimizely: false, toolCount: 4, isActive: true, enabledInChat: false, enabledForYou: false, provider: "External", toolType: "Standard" },
-    { id: "local-exp", name: "Local exp tools", isOptimizely: false, toolCount: 1, isActive: true, enabledInChat: true, enabledForYou: true, provider: "External", toolType: "Standard" },
-    { id: "ms365", name: "Microsoft 365 Opal Tools (hosted in DN45NvXhlicsCGNDZ0vPhg OCP account)", isOptimizely: false, toolCount: 67, externalCount: 67, isActive: true, enabledInChat: true, enabledForYou: true, provider: "Remote MCP", toolType: "Remote MCP" },
-    { id: "odp", name: "ODP Tools", isOptimizely: true, toolCount: 9, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard" },
-    { id: "gws", name: "Opal Tool Google Workspace (hosted in DN45NvXhlicsCGNDZ0vPhg OCP account)", isOptimizely: false, toolCount: 63, externalCount: 63, isActive: true, enabledInChat: true, enabledForYou: true, provider: "Remote MCP", toolType: "Remote MCP" },
-    { id: "sfdc", name: "Opal Tool Salesforce CRM (hosted in DN45NvXhlicsCGNDZ0vPhg OCP account)", isOptimizely: false, toolCount: 14, externalCount: 14, isActive: true, enabledInChat: false, enabledForYou: false, provider: "Remote MCP", toolType: "Remote MCP" },
+	{id: "campaign", name: "Campaign Tools", isOptimizely: true, toolCount: 16, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard"},
+	{id: "cmp", name: "CMP Tools", isOptimizely: true, toolCount: 60, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard"},
+	{id: "cms-saas", name: "CMS SaaS Tools", isOptimizely: true, toolCount: 19, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard"},
+	{id: "configured-commerce", name: "Configured Commerce Tools", isOptimizely: true, toolCount: 6, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard"},
+	{id: "connectors-helper", name: "Connectors Helper Tools", isOptimizely: true, toolCount: 1, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard"},
+	{id: "content-recs", name: "Content Recommendations Tools", isOptimizely: true, toolCount: 3, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard"},
+	{id: "experimentation", name: "Experimentation Tools", isOptimizely: true, toolCount: 30, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard"},
+	{id: "graph", name: "Graph Tools", isOptimizely: true, toolCount: 3, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard"},
+	{id: "ip-portco", name: "IP_PortCo_IY_Test", isOptimizely: false, toolCount: 4, isActive: true, enabledInChat: false, enabledForYou: false, provider: "External", toolType: "Standard"},
+	{id: "local-exp", name: "Local exp tools", isOptimizely: false, toolCount: 1, isActive: true, enabledInChat: true, enabledForYou: true, provider: "External", toolType: "Standard"},
+	{id: "ms365", name: "Microsoft 365 Opal Tools (hosted in DN45NvXhlicsCGNDZ0vPhg OCP account)", isOptimizely: false, toolCount: 67, externalCount: 67, isActive: true, enabledInChat: true, enabledForYou: true, provider: "Remote MCP", toolType: "Remote MCP"},
+	{id: "odp", name: "ODP Tools", isOptimizely: true, toolCount: 9, isActive: false, enabledInChat: false, enabledForYou: false, provider: "Optimizely", toolType: "Standard"},
+	{id: "gws", name: "Opal Tool Google Workspace (hosted in DN45NvXhlicsCGNDZ0vPhg OCP account)", isOptimizely: false, toolCount: 63, externalCount: 63, isActive: true, enabledInChat: true, enabledForYou: true, provider: "Remote MCP", toolType: "Remote MCP"},
+	{id: "sfdc", name: "Opal Tool Salesforce CRM (hosted in DN45NvXhlicsCGNDZ0vPhg OCP account)", isOptimizely: false, toolCount: 14, externalCount: 14, isActive: true, enabledInChat: false, enabledForYou: false, provider: "Remote MCP", toolType: "Remote MCP"},
 ];
 
 function ToolsTab() {
-    const [search, setSearch] = useState("");
-    const [filterOpen, setFilterOpen] = useState(false);
-    const [providerFilter, setProviderFilter] = useState("All");
-    const [activeStatusFilter, setActiveStatusFilter] = useState("All");
-    const [enabledInChatFilter, setEnabledInChatFilter] = useState("All");
-    const [toolTypeFilter, setToolTypeFilter] = useState("All");
-    const [expandedId, setExpandedId] = useState<string | null>(null);
-    const [bundles, setBundles] = useState<ToolBundle[]>(TOOL_BUNDLES);
+	const [search, setSearch] = useState("");
+	const [providerFilter, setProviderFilter] = useState("All");
+	const [activeStatusFilter, setActiveStatusFilter] = useState("All");
+	const [enabledInChatFilter, setEnabledInChatFilter] = useState("All");
+	const [toolTypeFilter, setToolTypeFilter] = useState("All");
+	const [expandedId, setExpandedId] = useState<string | null>(null);
+	const [bundles, setBundles] = useState<ToolBundle[]>(TOOL_BUNDLES);
 
-    const totalEnabledInChat = bundles.filter(b => b.enabledInChat).reduce((sum, b) => sum + b.toolCount, 0);
+	const totalEnabledInChat = bundles
+		.filter((b) => b.enabledInChat)
+		.reduce((sum, b) => sum + b.toolCount, 0);
 
-    const filtered = useMemo(() => bundles.filter(b => {
-        const q = search.toLowerCase();
-        if (q && !b.name.toLowerCase().includes(q)) return false;
-        if (providerFilter !== "All" && b.provider !== providerFilter) return false;
-        if (activeStatusFilter !== "All") {
-            if (activeStatusFilter === "Active" && !b.isActive) return false;
-            if (activeStatusFilter === "Inactive" && b.isActive) return false;
-        }
-        if (enabledInChatFilter !== "All") {
-            if (enabledInChatFilter === "Enabled" && !b.enabledInChat) return false;
-            if (enabledInChatFilter === "Disabled" && b.enabledInChat) return false;
-        }
-        if (toolTypeFilter !== "All" && b.toolType !== toolTypeFilter) return false;
-        return true;
-    }), [bundles, search, providerFilter, activeStatusFilter, enabledInChatFilter, toolTypeFilter]);
+	const filtered = useMemo(
+		() =>
+			bundles.filter((b) => {
+				const q = search.toLowerCase();
+				if (q && !b.name.toLowerCase().includes(q)) return false;
+				if (providerFilter !== "All" && b.provider !== providerFilter) return false;
+				if (activeStatusFilter !== "All") {
+					if (activeStatusFilter === "Active" && !b.isActive) return false;
+					if (activeStatusFilter === "Inactive" && b.isActive) return false;
+				}
+				if (enabledInChatFilter !== "All") {
+					if (enabledInChatFilter === "Enabled" && !b.enabledInChat) return false;
+					if (enabledInChatFilter === "Disabled" && b.enabledInChat) return false;
+				}
+				if (toolTypeFilter !== "All" && b.toolType !== toolTypeFilter) return false;
+				return true;
+			}),
+		[bundles, search, providerFilter, activeStatusFilter, enabledInChatFilter, toolTypeFilter]
+	);
 
-    const hasFilters = providerFilter !== "All" || activeStatusFilter !== "All" || enabledInChatFilter !== "All" || toolTypeFilter !== "All";
+	const toggleField = (id: string, field: "isActive" | "enabledInChat" | "enabledForYou") => {
+		setBundles((prev) => prev.map((b) => (b.id === id ? {...b, [field]: !b[field]} : b)));
+	};
 
-    const toggleField = (id: string, field: "isActive" | "enabledInChat" | "enabledForYou") => {
-        setBundles(prev => prev.map(b => b.id === id ? { ...b, [field]: !b[field] } : b));
-    };
+	return (
+		<Box display="flex" flexDirection="column" gap="16" pt="16">
+			{/* Filters */}
+			<Box display="flex" gap="12" alignItems="center">
+				<Box style={{width: 280}}>
+					<Input
+						placeholder="Search tools..."
+						value={search}
+						onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+						addonBefore={<IconSearch size={16} />}
+					/>
+				</Box>
+				<Menu
+					options={["All", "Optimizely", "External", "Remote MCP"].map((v) => ({
+						label: v,
+						execute: () => setProviderFilter(v),
+					}))}
+				>
+					<MenuTrigger asChild>
+						<LabelMenuButton label="Provider">{providerFilter}</LabelMenuButton>
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
+				<Menu
+					options={["All", "Active", "Inactive"].map((v) => ({
+						label: v,
+						execute: () => setActiveStatusFilter(v),
+					}))}
+				>
+					<MenuTrigger asChild>
+						<LabelMenuButton label="Active status">{activeStatusFilter}</LabelMenuButton>
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
+				<Menu
+					options={["All", "Enabled", "Disabled"].map((v) => ({
+						label: v,
+						execute: () => setEnabledInChatFilter(v),
+					}))}
+				>
+					<MenuTrigger asChild>
+						<LabelMenuButton label="Enabled in chat">{enabledInChatFilter}</LabelMenuButton>
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
+				<Menu
+					options={["All", "Standard", "Remote MCP"].map((v) => ({
+						label: v,
+						execute: () => setToolTypeFilter(v),
+					}))}
+				>
+					<MenuTrigger asChild>
+						<LabelMenuButton label="Tool type">{toolTypeFilter}</LabelMenuButton>
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
+				<Box style={{flex: 1}} />
+				<Button appearance="primary" icon={<IconPlus />}>
+					Add tool registry
+				</Button>
+			</Box>
 
-    return (
-        <Box display="flex" flexDirection="column" gap="24">
-            {/* Toolbar row */}
-            <Box display="flex" gap="8" alignItems="center">
-                <Box style={{ width: 400 }}>
-                    <SearchInput
-                        placeholder="Search tools..."
-                        size="lg"
-                        value={search}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-                    />
-                </Box>
-                <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            appearance={hasFilters ? "primary" : "default"}
-                            size="lg"
-                            icon={<IconSliders size={16} />}
-                            aria-label="Open filters"
-                        />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" style={{ width: 320 }}>
-                        <Box px="12" py="8" display="flex" flexDirection="column" gap="24">
-                            <Text fontWeight="500" fontSize="md">Filters</Text>
-                            <Box display="flex" gap="40">
-                                <Box display="flex" flexDirection="column" gap="12">
-                                    <Text fontSize="sm" color="fg.secondary">Provider</Text>
-                                    {(["All", "Optimizely", "External", "Remote MCP"] as const).map(v => (
-                                        <Checkbox key={v} checked={providerFilter === v} onCheckedChange={() => setProviderFilter(v)}>{v}</Checkbox>
-                                    ))}
-                                </Box>
-                                <Box display="flex" flexDirection="column" gap="12">
-                                    <Text fontSize="sm" color="fg.secondary">Active Status</Text>
-                                    {(["All", "Active", "Inactive"] as const).map(v => (
-                                        <Checkbox key={v} checked={activeStatusFilter === v} onCheckedChange={() => setActiveStatusFilter(v)}>{v}</Checkbox>
-                                    ))}
-                                </Box>
-                            </Box>
-                            <Box display="flex" gap="40">
-                                <Box display="flex" flexDirection="column" gap="12">
-                                    <Text fontSize="sm" color="fg.secondary">Enabled in Chat</Text>
-                                    {(["All", "Enabled", "Disabled"] as const).map(v => (
-                                        <Checkbox key={v} checked={enabledInChatFilter === v} onCheckedChange={() => setEnabledInChatFilter(v)}>{v}</Checkbox>
-                                    ))}
-                                </Box>
-                                <Box display="flex" flexDirection="column" gap="12">
-                                    <Text fontSize="sm" color="fg.secondary">Tool Type</Text>
-                                    {(["All", "Standard", "Remote MCP"] as const).map(v => (
-                                        <Checkbox key={v} checked={toolTypeFilter === v} onCheckedChange={() => setToolTypeFilter(v)}>{v}</Checkbox>
-                                    ))}
-                                </Box>
-                            </Box>
-                        </Box>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-                <Box style={{ flex: 1 }} />
-                <Button appearance="primary" size="lg" icon={<IconPlus size={16} />}>
-                    Add tool registry
-                </Button>
-            </Box>
-
-            {/* Table */}
-            <Table>
-                <thead>
-                    <Tr className="hover:!bg-transparent cursor-default">
-                        <th style={{ width: 40, padding: "8px 0", boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }} />
-                        <Th style={{ boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }}>Name</Th>
-                        <Th style={{ width: 160, boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }}>External Provider</Th>
-                        <Th style={{ width: 120, boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }}>
-                            <Box display="flex" alignItems="center" gap="4">
-                                Active
-                                <Tooltip content="Whether this tool bundle is active and available to agents" delayDuration={100}>
-                                    <Box style={{ display: "inline-flex", cursor: "default" }}><IconCircleInfo size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} /></Box>
-                                </Tooltip>
-                            </Box>
-                        </Th>
-                        <Th style={{ width: 180, boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }}>
-                            <Box display="flex" alignItems="center" gap="4">
-                                Enabled in Chat
-                                <Tooltip content="Tools enabled for use in Opal chat" delayDuration={100}>
-                                    <Box style={{ display: "inline-flex", cursor: "default" }}><IconCircleInfo size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} /></Box>
-                                </Tooltip>
-                                <Badge intent="neutral" variant="subtle">{totalEnabledInChat}</Badge>
-                                <Tooltip content="Refresh tool counts" delayDuration={100}>
-                                    <Button appearance="subtle" size="sm" icon={<IconArrowsRotate size={14} />} aria-label="Refresh" onClick={() => {}} />
-                                </Tooltip>
-                            </Box>
-                        </Th>
-                        <Th style={{ width: 160, boxShadow: "0 1px 0 var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }}>
-                            <Box display="flex" alignItems="center" gap="4">
-                                Enabled for You
-                                <Tooltip content="Tools enabled specifically for your account" delayDuration={100}>
-                                    <Box style={{ display: "inline-flex", cursor: "default" }}><IconCircleInfo size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} /></Box>
-                                </Tooltip>
-                            </Box>
-                        </Th>
-                    </Tr>
-                </thead>
-                <tbody>
-                    {filtered.length === 0 ? (
-                        <tr>
-                            <td colSpan={6}>
-                                <Box display="flex" justifyContent="center" py="48">
-                                    <Text color="fg.tertiary">No tools match your search.</Text>
-                                </Box>
-                            </td>
-                        </tr>
-                    ) : filtered.map(bundle => (
-                        <Fragment key={bundle.id}>
-                            <Tr>
-                                <Td type="button" style={{ width: 40 }}>
-                                    <Button
-                                        appearance="subtle"
-                                        size="sm"
-                                        icon={expandedId === bundle.id ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
-                                        aria-label={expandedId === bundle.id ? "Collapse" : "Expand"}
-                                        onClick={() => setExpandedId(prev => prev === bundle.id ? null : bundle.id)}
-                                    />
-                                </Td>
-                                <Td type="header">
-                                    <Box display="flex" alignItems="center" gap="8">
-                                        {bundle.isOptimizely && (
-                                            <Box style={{ width: 18, height: 18, flexShrink: 0 }}>
-                                                <img src="/optimizely-favicon-new.svg" alt="Optimizely" width={18} height={18} />
-                                            </Box>
-                                        )}
-                                        <Text fontWeight="500" fontSize="sm">{bundle.name}</Text>
-                                        <Badge intent="neutral" variant="subtle">{bundle.toolCount}</Badge>
-                                    </Box>
-                                </Td>
-                                <Td>
-                                    {bundle.externalCount != null ? (
-                                        <Badge intent="neutral" variant="subtle">{bundle.externalCount}</Badge>
-                                    ) : null}
-                                </Td>
-                                <Td>
-                                    <Switch
-                                        checked={bundle.isActive}
-                                        onCheckedChange={() => toggleField(bundle.id, "isActive")}
-                                        aria-label="Active"
-                                    />
-                                </Td>
-                                <Td>
-                                    <Switch
-                                        checked={bundle.enabledInChat}
-                                        onCheckedChange={() => toggleField(bundle.id, "enabledInChat")}
-                                        aria-label="Enabled in Chat"
-                                    />
-                                </Td>
-                                <Td>
-                                    <Switch
-                                        checked={bundle.enabledForYou}
-                                        onCheckedChange={() => toggleField(bundle.id, "enabledForYou")}
-                                        aria-label="Enabled for You"
-                                    />
-                                </Td>
-                            </Tr>
-                            {expandedId === bundle.id && (
-                                <tr>
-                                    <td colSpan={6} style={{ padding: 0 }}>
-                                        <Box px="48" py="12" bg="bg.page" style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
-                                            <Text fontSize="sm" color="fg.tertiary">
-                                                {bundle.toolCount} tool{bundle.toolCount !== 1 ? "s" : ""} in this bundle
-                                            </Text>
-                                        </Box>
-                                    </td>
-                                </tr>
-                            )}
-                        </Fragment>
-                    ))}
-                </tbody>
-            </Table>
-        </Box>
-    );
+			{/* Table */}
+			<Table>
+				<thead>
+					<Tr>
+						<Th style={{width: 40}} />
+						<Th>Name</Th>
+						<Th style={{width: 160}}>External Provider</Th>
+						<Th style={{width: 120}} tooltip="Whether this tool bundle is active and available to agents">
+							Active
+						</Th>
+						<Th style={{width: 220}} tooltip="Tools enabled for use in Opal chat">
+							Enabled in chat
+							<Badge intent="neutral" variant="subtle">
+								{totalEnabledInChat}
+							</Badge>
+							<Button
+								appearance="subtle"
+								size="sm"
+								icon={<IconArrowsRotate />}
+								aria-label="Refresh tool counts"
+								onClick={() => {}}
+							/>
+						</Th>
+						<Th style={{width: 160}} tooltip="Tools enabled specifically for your account">
+							Enabled for you
+						</Th>
+					</Tr>
+				</thead>
+				<tbody>
+					{filtered.length === 0 ? (
+						<Tr>
+							<Td colSpan={6}>
+								<Box display="flex" justifyContent="center" py="48">
+									<Text color="fg.tertiary">No tools match your search.</Text>
+								</Box>
+							</Td>
+						</Tr>
+					) : (
+						filtered.map((bundle) => (
+							<Fragment key={bundle.id}>
+								<Tr>
+									<Td style={{width: 40}}>
+										<Button
+											appearance="subtle"
+											size="sm"
+											icon={
+												expandedId === bundle.id ? (
+													<IconChevronDown />
+												) : (
+													<IconChevronRight />
+												)
+											}
+											aria-label={expandedId === bundle.id ? "Collapse" : "Expand"}
+											onClick={() =>
+												setExpandedId((prev) => (prev === bundle.id ? null : bundle.id))
+											}
+										/>
+									</Td>
+									<Td>
+										<Box display="flex" alignItems="center" gap="8">
+											{bundle.isOptimizely && (
+												<Box style={{width: 18, height: 18, flexShrink: 0}}>
+													<img
+														src="/optimizely-favicon-new.svg"
+														alt="Optimizely"
+														width={18}
+														height={18}
+													/>
+												</Box>
+											)}
+											<Text fontWeight="500" fontSize="sm">
+												{bundle.name}
+											</Text>
+											<Badge intent="neutral" variant="subtle">
+												{bundle.toolCount}
+											</Badge>
+										</Box>
+									</Td>
+									<Td>
+										{bundle.externalCount != null ? (
+											<Badge intent="neutral" variant="subtle">
+												{bundle.externalCount}
+											</Badge>
+										) : null}
+									</Td>
+									<Td>
+										<Switch
+											checked={bundle.isActive}
+											onCheckedChange={() => toggleField(bundle.id, "isActive")}
+											aria-label="Active"
+										/>
+									</Td>
+									<Td>
+										<Switch
+											checked={bundle.enabledInChat}
+											onCheckedChange={() => toggleField(bundle.id, "enabledInChat")}
+											aria-label="Enabled in chat"
+										/>
+									</Td>
+									<Td>
+										<Switch
+											checked={bundle.enabledForYou}
+											onCheckedChange={() => toggleField(bundle.id, "enabledForYou")}
+											aria-label="Enabled for you"
+										/>
+									</Td>
+								</Tr>
+								{expandedId === bundle.id && (
+									<Tr>
+										<Td colSpan={6} style={{padding: 0}}>
+											<Box
+												px="48"
+												py="12"
+												bg="bg.secondary"
+												style={{borderBottom: "1px solid var(--ax-colors-border-tertiary)"}}
+											>
+												<Text fontSize="sm" color="fg.tertiary">
+													{bundle.toolCount} tool{bundle.toolCount !== 1 ? "s" : ""} in this bundle
+												</Text>
+											</Box>
+										</Td>
+									</Tr>
+								)}
+							</Fragment>
+						))
+					)}
+				</tbody>
+			</Table>
+		</Box>
+	);
 }
 
 function RegistriesTab() {
-    return (
-        <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            py="48"
-            rounded="md"
-            style={{ border: "1px solid var(--ax-colors-border-tertiary)" }}
-        >
-            <Text color="fg.tertiary">Registries content coming soon.</Text>
-        </Box>
-    );
+	return (
+		<Box
+			display="flex"
+			justifyContent="center"
+			alignItems="center"
+			py="48"
+			rounded="md"
+			style={{border: "1px solid var(--ax-colors-border-tertiary)"}}
+		>
+			<Text color="fg.tertiary">Registries content coming soon.</Text>
+		</Box>
+	);
 }

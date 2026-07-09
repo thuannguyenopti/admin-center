@@ -278,9 +278,9 @@ function VersionCard({
 		<Card
 			cursor="pointer"
 			onClick={onSelect}
-			borderColor={isSelected ? "border.accent" : "border.tertiary"}
-			bg={isSelected ? "bg.information.subtle" : "bg.default"}
-			className="hover:bg-[var(--ax-bg-default-hover)] transition-colors"
+			borderColor={isSelected ? "border.default" : "border.tertiary"}
+			bg={isSelected ? "bg.default.pressed" : "bg.default"}
+			className="hover:bg-[var(--ax-colors-bg-default-hovered)] transition-colors"
 		>
 			<CardHeader
 				description={version.customName ? `${version.label} • ${version.author}` : version.author}

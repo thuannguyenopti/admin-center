@@ -4,17 +4,18 @@ import {
 	Box,
 	Card,
 	Text as AxiomText,
+	Link as AxiomLink,
 	Field,
 	Select,
 	SelectTrigger,
 	SelectContent,
 	Button,
 } from "@optiaxiom/react";
-import { useState } from "react";
-import { Text } from "@/app/components/Text";
-import { Input } from "@/app/components/Input";
+import {useState} from "react";
+import {Text} from "@/app/components/Text";
+import {Input} from "@/app/components/Input";
 import Link from "next/link";
-import { IconArrowLeft } from "@tabler/icons-react";
+import {IconArrowLeft} from "@/app/lib/axiom-icons";
 
 export default function SuccessMetricsPage() {
 	const [primaryMetric, setPrimaryMetric] = useState("");
@@ -24,21 +25,27 @@ export default function SuccessMetricsPage() {
 
 	return (
 		<Box display="flex" flexDirection="column" gap="24" w="full">
-			<Link
-				href="/web-experimentation/home"
-				style={{ display: "inline-flex", alignItems: "center", gap: "8", marginBottom: "8" }}
-			>
-				<IconArrowLeft size={18} />
-				<AxiomText fontSize="sm" color="fg.accent">
+			<AxiomLink asChild fontSize="sm">
+				<Link
+					href="/web-experimentation/home"
+					style={{
+						display: "inline-flex",
+						alignItems: "center",
+						gap: "8",
+						marginBottom: "8",
+					}}
+				>
+					<IconArrowLeft size={18} />
 					Back to Home
-				</AxiomText>
-			</Link>
+				</Link>
+			</AxiomLink>
 			<Text fontSize="lg" fontWeight="600">
 				Success metrics assistant
 			</Text>
 			<AxiomText fontSize="sm" color="fg.secondary" mb="8">
-				Select primary metric, define guardrails, add supporting metrics, estimate sample size, and
-				choose segment cuts. Explanations show why recommended metrics align with your hypothesis.
+				Select primary metric, define guardrails, add supporting metrics, estimate sample
+				size, and choose segment cuts. Explanations show why recommended metrics align with
+				your hypothesis.
 			</AxiomText>
 			<Card p="24">
 				<Box display="flex" flexDirection="column" gap="16">
@@ -47,9 +54,9 @@ export default function SuccessMetricsPage() {
 							value={primaryMetric}
 							onValueChange={setPrimaryMetric}
 							options={[
-								{ label: "Conversion rate", value: "conversion_rate" },
-								{ label: "Revenue per visit", value: "rpv" },
-								{ label: "Signup rate", value: "signup_rate" },
+								{label: "Conversion rate", value: "conversion_rate"},
+								{label: "Revenue per visit", value: "rpv"},
+								{label: "Signup rate", value: "signup_rate"},
 							]}
 						>
 							<SelectTrigger placeholder="Select primary metric" size="lg" w="full">
@@ -58,7 +65,8 @@ export default function SuccessMetricsPage() {
 							<SelectContent />
 						</Select>
 						<AxiomText fontSize="xs" color="fg.tertiary" mt="4" display="block">
-							Why: Primary metric should directly reflect the expected behavioral shift.
+							Why: Primary metric should directly reflect the expected behavioral
+							shift.
 						</AxiomText>
 					</Field>
 					<Field label="Guardrail metrics">

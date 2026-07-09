@@ -8,7 +8,7 @@ import { initialContentTypes, type ContentType } from "@/app/db/initialData";
 import { initialCmpContentModels } from "@/app/db/cmpInitialData";
 import { convertCmpModelToContentType } from "@/app/lib/contentTypeMigration";
 import usePersistentState from "@/app/usePersistentState";
-import { IconBroadcast, IconChevronDown, IconFileText, IconPhoto, IconPlus, IconPuzzle } from "@tabler/icons-react";
+import {IconBroadcast, IconChevronDown, IconFileLines, IconImage, IconPlus, IconPuzzle} from "@/app/lib/axiom-icons";
 import type { TaskTab } from "../types";
 import { figmaAssets } from "../data/assets";
 import { PageHeader } from "./PageHeader";
@@ -64,7 +64,7 @@ export function ContentEmptyPage({
 						options={[
 							{
 								label: "Asset",
-								addon: <IconPhoto size={20} />,
+								addon: <IconImage size={20} />,
 								description: "Add assets from recommendations",
 								execute: () => onAddContent(),
 							},
@@ -82,7 +82,7 @@ export function ContentEmptyPage({
 							},
 							{
 								label: "Content Type",
-								addon: <IconFileText size={20} />,
+								addon: <IconFileLines size={20} />,
 								description: "Add content from a content model",
 								subOptions: cmpContentModels
 									.filter((model) => model.isActive !== false)

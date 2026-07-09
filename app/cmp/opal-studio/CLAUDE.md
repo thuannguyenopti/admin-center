@@ -86,7 +86,7 @@ When image exists:
 
 **Spacing Scale:** 0, 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48
 **Color Tokens:** bg.*, fg.*, border.*
-**Icons:** @tabler/icons-react only
+**Icons:** `@optimizely/axiom-icons` (or the bridge shim `app/lib/axiom-icons.tsx` for missing icons) — never import `@tabler/icons-react` directly, per the root CLAUDE.md icon rules
 
 ## 🔄 Data Flow
 

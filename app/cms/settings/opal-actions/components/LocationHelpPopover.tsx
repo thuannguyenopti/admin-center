@@ -2,7 +2,7 @@
 
 import React from "react";
 import {Box, Text, Button, Popover, PopoverTrigger, PopoverContent, Badge} from "@optiaxiom/react";
-import {IconHelp} from "@tabler/icons-react";
+import {IconHelp} from "@/app/lib/axiom-icons";
 import {LocationId} from "../types";
 
 interface LocationHelpPopoverProps {
@@ -11,7 +11,9 @@ interface LocationHelpPopoverProps {
 
 export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locationId}) => {
 	// Determine which area should be highlighted based on location
-	const isToolbarLocation = ["toolbar-improve", "toolbar-page", "toolbar-context"].includes(locationId);
+	const isToolbarLocation = ["toolbar-improve", "toolbar-page", "toolbar-context"].includes(
+		locationId
+	);
 	const isOutlineLocation = locationId === "outline-section";
 	const isPropertyLocation = [
 		"property-text",
@@ -27,7 +29,10 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 	const getLocationInfo = () => {
 		switch (locationId) {
 			case "toolbar-improve":
-				return {name: "Toolbar Improve Button", description: "Actions in the Improve dropdown menu"};
+				return {
+					name: "Toolbar Improve Button",
+					description: "Actions in the Improve dropdown menu",
+				};
 			case "toolbar-page":
 				return {name: "Page", description: "Page-level context menu actions"};
 			case "toolbar-context":
@@ -45,7 +50,10 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 			case "property-reference":
 				return {name: "Reference", description: "Reference property editor actions"};
 			case "property-editor":
-				return {name: "Property Editor", description: "Generic actions for text/longstring/xhtmlstring properties"};
+				return {
+					name: "Property Editor",
+					description: "Generic actions for text/longstring/xhtmlstring properties",
+				};
 			case "asset-panel":
 				return {name: "Asset Panel", description: "Asset management context menu"};
 			default:
@@ -58,10 +66,18 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
-				<Button appearance="subtle" size="sm" icon={<IconHelp size={14} />} aria-label="Location help" />
+				<Button
+					appearance="subtle"
+					size="sm"
+					icon={<IconHelp size={14} />}
+					aria-label="Location help"
+				/>
 			</PopoverTrigger>
 
-			<PopoverContent align="start" style={{width: "540px", maxHeight: "500px", overflow: "auto"}}>
+			<PopoverContent
+				align="start"
+				style={{width: "540px", maxHeight: "500px", overflow: "auto"}}
+			>
 				<Box p="16" display="flex" flexDirection="column" gap="16">
 					{/* Header */}
 					<Box>
@@ -94,7 +110,14 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 								display="flex"
 								alignItems="start"
 							>
-								<Text fontSize="xs" color="fg.secondary" style={{writingMode: "vertical-rl", transform: "rotate(180deg)"}}>
+								<Text
+									fontSize="xs"
+									color="fg.secondary"
+									style={{
+										writingMode: "vertical-rl",
+										transform: "rotate(180deg)",
+									}}
+								>
 									Nav
 								</Text>
 							</Box>
@@ -110,14 +133,25 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 									display="flex"
 									alignItems="center"
 									justifyContent="space-between"
-									style={isToolbarLocation ? {boxShadow: "inset 0 0 0 2px var(--ax-colors-border-accent)"} : {}}
+									style={
+										isToolbarLocation
+											? {
+													boxShadow:
+														"inset 0 0 0 2px var(--ax-colors-fg-information)",
+												}
+											: {}
+									}
 								>
 									<Text fontSize="xs" color="fg.secondary">
 										Toolbar
 									</Text>
 									{isToolbarLocation && (
 										<Box
-											style={{width: "12px", height: "12px", borderRadius: "50%"}}
+											style={{
+												width: "12px",
+												height: "12px",
+												borderRadius: "50%",
+											}}
 											bg="bg.accent"
 										/>
 									)}
@@ -131,9 +165,18 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 											flexBasis: "60px",
 											flexGrow: 0,
 											flexShrink: 0,
-											...((isOutlineLocation || isPropertyLocation) ? {boxShadow: "inset 0 0 0 2px var(--ax-colors-border-accent)"} : {}),
+											...(isOutlineLocation || isPropertyLocation
+												? {
+														boxShadow:
+															"inset 0 0 0 2px var(--ax-colors-fg-information)",
+													}
+												: {}),
 										}}
-										bg={(isOutlineLocation || isPropertyLocation) ? "bg.accent.subtle" : "bg.secondary"}
+										bg={
+											isOutlineLocation || isPropertyLocation
+												? "bg.accent.subtle"
+												: "bg.secondary"
+										}
 										borderR="1"
 										borderColor="border.secondary"
 										p="6"
@@ -143,14 +186,24 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 									>
 										{(isOutlineLocation || isPropertyLocation) && (
 											<Box
-												style={{width: "12px", height: "12px", borderRadius: "50%"}}
+												style={{
+													width: "12px",
+													height: "12px",
+													borderRadius: "50%",
+												}}
 												bg="bg.accent"
 											/>
 										)}
 									</Box>
 
 									{/* Main Content Area */}
-									<Box flex="1" bg="bg.page" p="6" display="flex" alignItems="start">
+									<Box
+										flex="1"
+										bg="bg.page"
+										p="6"
+										display="flex"
+										alignItems="start"
+									>
 										<Text fontSize="xs" color="fg.secondary">
 											Content
 										</Text>
@@ -164,7 +217,12 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 									flexBasis: "50px",
 									flexGrow: 0,
 									flexShrink: 0,
-									...(isAssetLocation ? {boxShadow: "inset 0 0 0 2px var(--ax-colors-border-accent)"} : {}),
+									...(isAssetLocation
+										? {
+												boxShadow:
+													"inset 0 0 0 2px var(--ax-colors-fg-information)",
+											}
+										: {}),
 								}}
 								borderL="1"
 								borderColor="border.secondary"
