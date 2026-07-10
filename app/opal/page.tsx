@@ -4,6 +4,7 @@ import { Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconAgent } from "@optimizely/axiom-icons";
+import { HintBannerWithToggle } from "./components/HintBanner";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useOpalContext } from "@/app/context/OpalContext";
@@ -565,7 +566,7 @@ export default function OpalPage() {
     <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0, backgroundColor: 'var(--opal-bg-page)' }}>
       {modalElement}
       <OpalLanding
-        topSlot={null}
+        topSlot={<HintBannerWithToggle onAddToPrompt={setInputValue} />}
         inputSlot={
           <OpalInput
             value={inputValue}
