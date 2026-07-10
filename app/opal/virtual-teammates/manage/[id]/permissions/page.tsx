@@ -22,10 +22,9 @@ import {
 	TabsList,
 	TabsTrigger,
 	Text,
-	Textarea,
 	Tooltip,
 } from "@optiaxiom/react";
-import { IconCircleCheckSolid, IconGear, IconGlobe, IconPen, IconPlus, IconSearch, IconUser, IconUserGroup, IconUsers } from "@optiaxiom/icons";
+import { IconAngleDown, IconCircleCheckSolid, IconGear, IconGlobe, IconPen, IconSearch, IconUser, IconUserGroup, IconUsers } from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import Image from "next/image";
 import { VAUS } from "@/app/opal/data/vaus";
@@ -265,201 +264,294 @@ const TIER_TAGS: Record<"principal" | "team" | "org" | "public", GuardrailTag[]>
 };
 
 type TierId = "principal" | "team" | "org" | "public";
-type TierState = { rules: string; tags: string[] };
+type TierState = { rules: string[]; tags: string[] };
 
 type TierConfig = {
 	id: TierId;
 	label: string;
-	accessLabel: string;
-	bodyText?: string;
 	readOnly: boolean;
 	icon: React.ReactNode;
 };
 
 const TIER_CONFIGS: TierConfig[] = [
-	{
-		id: "principal",
-		label: "Primary user",
-		accessLabel: "Full access — no overrides",
-		bodyText: "Randy shares everything with principals. No blocked topics.",
-		readOnly: true,
-		icon: <IconUser style={{ width: 16, height: 16, flexShrink: 0 }} />,
-	},
-	{ id: "team",   label: "Team member", accessLabel: "Filtered",       readOnly: false, icon: <IconUserGroup style={{ width: 16, height: 16, flexShrink: 0 }} /> },
-	{ id: "org",    label: "Org member",  accessLabel: "Restricted",     readOnly: false, icon: <IconUsers     style={{ width: 16, height: 16, flexShrink: 0 }} /> },
-	{ id: "public", label: "Public",      accessLabel: "Most restricted", readOnly: false, icon: <IconGlobe     style={{ width: 16, height: 16, flexShrink: 0 }} /> },
+	{ id: "principal", label: "Primary user", readOnly: true,  icon: <IconUser      style={{ width: 16, height: 16, flexShrink: 0 }} /> },
+	{ id: "team",      label: "Team member",  readOnly: false, icon: <IconUserGroup style={{ width: 16, height: 16, flexShrink: 0 }} /> },
+	{ id: "org",       label: "Org member",   readOnly: false, icon: <IconUsers     style={{ width: 16, height: 16, flexShrink: 0 }} /> },
+	{ id: "public",    label: "Public",       readOnly: false, icon: <IconGlobe     style={{ width: 16, height: 16, flexShrink: 0 }} /> },
 ];
 
 const INITIAL_TIER_STATES: Record<TierId, TierState> = {
-	principal: { rules: "", tags: [] },
+	principal: { rules: [], tags: [] },
 	team: {
 		tags: ["Finances & salary", "Private convos", "Emails"],
-		rules: "Do not discuss personal finances, salary, compensation details, or any private financial information.\nDo not share private conversations, personal notes, or confidential 1:1 content.\nDo not draft, send, or access email content without explicit approval from the user.",
+		rules: [
+			"Do not discuss personal finances, salary, compensation details, or any private financial information.",
+			"Do not share private conversations, personal notes, or confidential 1:1 content.",
+			"Do not draft, send, or access email content without explicit approval from the user.",
+		],
 	},
 	org: {
 		tags: ["Internal info", "Team convos", "Projects"],
-		rules: "Do not share internal company information, strategies, financial data, or internal communications.\nDo not share team meeting notes, internal discussions, or project communications.\nDo not share project details, roadmaps, timelines, or work-in-progress information.\n\nI can only share publicly available project information.",
+		rules: [
+			"Do not share internal company information, strategies, financial data, or internal communications.",
+			"Do not share team meeting notes, internal discussions, or project communications.",
+			"Do not share project details, roadmaps, timelines, or work-in-progress information.",
+			"I can only share publicly available project information.",
+		],
 	},
 	public: {
 		tags: ["Internal info"],
-		rules: "Do not share any internal company information. Limit all responses to publicly available information only.",
+		rules: [
+			"Do not share any internal company information. Limit all responses to publicly available information only.",
+		],
 	},
 };
 
-function GuardrailsSection({ name }: { name: string }) {
+const CHIP_LABEL: React.CSSProperties = {
+	fontFamily: "Roboto Mono, monospace",
+	fontSize: 10,
+	fontWeight: 400,
+	letterSpacing: "0.08em",
+	textTransform: "uppercase" as const,
+};
+
+type CustomGuardrail = {
+	id: string;
+	text: string;
+	appliesTo: TierId | "all";
+	category: string | null;
+};
+
+const TIER_LABEL: Record<TierId | "all", string> = {
+	all: "All tiers",
+	principal: "Primary user",
+	team: "Team member",
+	org: "Org member",
+	public: "Public",
+};
+
+const QUICK_ADD_SUGGESTIONS = [
+	"Never disclose ongoing legal disputes or litigation",
+	"Don't share salary, equity, or compensation details",
+	"Don't reveal unannounced product features or roadmap",
+	"Avoid sharing internal headcount or org change plans",
+	"Never reference customer data or account details",
+	"Don't discuss acquisition or partnership plans",
+	"Don't share performance review content or ratings",
+];
+
+const CATEGORY_OPTIONS = ["Finance", "Legal", "HR & Personnel", "Strategic", "Confidential", "Behavioral"];
+
+function inferCategory(text: string): string | null {
+	const t = text.toLowerCase();
+	if (/salary|equity|compensation|financial|finance|budget|revenue|cost/.test(t)) return "Finance";
+	if (/legal|litigation|dispute|lawsuit|contract/.test(t)) return "Legal";
+	if (/headcount|org change|performance review|hr|personnel|hiring/.test(t)) return "HR & Personnel";
+	if (/acquisition|partnership|roadmap|product feature|unannounced|strategic/.test(t)) return "Strategic";
+	if (/customer data|account detail|confidential|private/.test(t)) return "Confidential";
+	return null;
+}
+
+const APPLIES_TO_OPTIONS: { value: TierId | "all"; label: string }[] = [
+	{ value: "all",       label: "All tiers" },
+	{ value: "team",      label: "Team member" },
+	{ value: "org",       label: "Org member" },
+	{ value: "public",    label: "Public" },
+];
+
+function GuardrailsSection({ name, customGuardrails = [], onRemoveCustom, onAddCustom }: { name: string; customGuardrails?: CustomGuardrail[]; onRemoveCustom?: (id: string) => void; onAddCustom?: (text: string, appliesTo: TierId, category: string | null) => void }) {
 	const [savedStates, setSavedStates] = useState<Record<TierId, TierState>>(INITIAL_TIER_STATES);
+	const [expandedTier, setExpandedTier] = useState<TierId | null>(null);
 	const [editingTier, setEditingTier] = useState<TierId | null>(null);
-	const [draft, setDraft] = useState<TierState | null>(null);
-	const [showConflict, setShowConflict] = useState(false);
+	const [inputValue, setInputValue] = useState("");
 
-	const isDirty =
-		editingTier !== null &&
-		draft !== null &&
-		(draft.rules !== savedStates[editingTier].rules ||
-			JSON.stringify(draft.tags) !== JSON.stringify(savedStates[editingTier].tags));
+	const toggleExpand = (tierId: TierId) => {
+		setExpandedTier((prev) => {
+			if (prev === tierId) { setEditingTier(null); return null; }
+			return tierId;
+		});
+	};
 
-	const startEdit = (tierId: TierId) => {
-		if (editingTier !== null && isDirty) {
-			setShowConflict(true);
-			return;
-		}
+	const startEditing = (tierId: TierId, e: React.MouseEvent) => {
+		e.stopPropagation();
+		setExpandedTier(tierId);
 		setEditingTier(tierId);
-		setDraft({ ...savedStates[tierId] });
-		setShowConflict(false);
+		setInputValue(savedStates[tierId].rules.join("\n\n"));
 	};
 
-	const cancelEdit = () => {
+	const commitEdit = (tierId: TierId) => {
+		const rules = inputValue.split("\n").map((l) => l.trim()).filter(Boolean);
+		setSavedStates((prev) => ({ ...prev, [tierId]: { ...prev[tierId], rules } }));
 		setEditingTier(null);
-		setDraft(null);
-		setShowConflict(false);
+		setInputValue("");
 	};
 
-	const saveEdit = () => {
-		if (!editingTier || !draft) return;
-		setSavedStates((prev) => ({ ...prev, [editingTier]: { ...draft } }));
-		setEditingTier(null);
-		setDraft(null);
-		setShowConflict(false);
-	};
+	const accordionTiers = TIER_CONFIGS.filter((t) => !t.readOnly);
 
 	return (
 		<Box style={CARD}>
-			<Box mb="20">
-				<Text style={SECTION_HEADING} mb="4">Guardrails</Text>
-				<Text fontSize="sm" color="fg.secondary">
-					{"Lines " + name + " never crosses. Changes kick in right away."}
-				</Text>
+			{/* Primary user — flat, no accordion, distinct background */}
+			<Box
+				bg="bg.secondary"
+				display="flex"
+				alignItems="start"
+				gap="10"
+				style={{ padding: "12px 16px", borderRadius: 6, margin: "-4px -4px 12px -4px" }}
+			>
+				<Box style={{ color: "var(--ax-colors-fg-secondary)", marginTop: 2, flexShrink: 0 }}>
+					<IconUser style={{ width: 16, height: 16 }} />
+				</Box>
+				<Box>
+					<Text fontSize="md" color="fg.default" style={{ fontWeight: 500, display: "block", marginBottom: 4 }}>Primary user</Text>
+					<Text fontSize="sm" color="fg.tertiary">{name} shares everything with principals. No blocked topics.</Text>
+				</Box>
 			</Box>
 
-			{showConflict && (
-				<Box
-					bg="bg.secondary"
-					mb="16"
-					style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 6, padding: "8px 12px" }}
-				>
-					<Text fontSize="sm" color="fg.secondary">
-						You have unsaved changes. Save or cancel before editing another tier.
-					</Text>
-				</Box>
+			{/* Custom guardrails added by the user */}
+			{customGuardrails.length > 0 && (
+				<>
+					<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)" }} />
+					<Box style={{ padding: "14px 0" }}>
+						<Box style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+							{customGuardrails.map((g) => (
+								<Box key={g.id} display="flex" alignItems="start" justifyContent="space-between" gap="8">
+									<Box display="flex" alignItems="start" gap="8" style={{ flex: 1, minWidth: 0 }}>
+										<Box style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--ax-colors-fg-tertiary)", flexShrink: 0, marginTop: 7 }} />
+										<Box>
+											<Text fontSize="sm" color="fg.secondary" style={{ display: "block" }}>{g.text}</Text>
+											<Box display="flex" gap="4" style={{ marginTop: 5 }}>
+												{g.appliesTo !== "all" && (
+													<Badge variant="subtle" intent="information" style={CHIP_LABEL}>{TIER_LABEL[g.appliesTo]}</Badge>
+												)}
+												{g.category && (
+													<Badge variant="subtle" style={CHIP_LABEL}>{g.category}</Badge>
+												)}
+											</Box>
+										</Box>
+									</Box>
+									<button
+										onClick={() => onRemoveCustom?.(g.id)}
+										style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--ax-colors-fg-tertiary)", display: "flex", alignItems: "center", flexShrink: 0, marginTop: 2 }}
+										aria-label="Remove guardrail"
+									>
+										<svg width="10" height="10" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+									</button>
+								</Box>
+							))}
+						</Box>
+					</Box>
+				</>
 			)}
 
-			{TIER_CONFIGS.map((tier, i) => {
-				const isEditing = editingTier === tier.id;
-				const state = isEditing && draft ? draft : savedStates[tier.id];
+			<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)" }} />
+
+			{/* Accordion tiers: Team member, Org member, Public */}
+			{accordionTiers.map((tier, i) => {
+				const isExpanded = expandedTier === tier.id;
 
 				return (
 					<Fragment key={tier.id}>
-						{i > 0 && (
-							<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "16px 0" }} />
-						)}
-						<Box>
-							<Box display="flex" alignItems="center" justifyContent="space-between" mb="10">
-								<Box display="flex" alignItems="center" gap="4">
-									<Box style={{ color: "var(--ax-colors-fg-secondary)" }}>{tier.icon}</Box>
-									<Text fontSize="md" color="fg.default" style={{ fontWeight: 500 }}>{tier.label}</Text>
+						{i > 0 && <Box style={{ height: 1, background: "var(--ax-colors-border-secondary)" }} />}
+
+						{/* Accordion header row */}
+						<Box
+							display="flex"
+							alignItems="start"
+							onClick={() => toggleExpand(tier.id)}
+							style={{ padding: "14px 0", cursor: "pointer", userSelect: "none" as const }}
+						>
+							{/* Left: icon */}
+							<Box style={{ color: "var(--ax-colors-fg-secondary)", flexShrink: 0, marginRight: 10, marginTop: 2 }}>
+								{tier.icon}
+							</Box>
+							{/* Middle: label + chips on separate line */}
+							<Box style={{ flex: 1, minWidth: 0 }}>
+								<Text fontSize="md" color="fg.default" style={{ fontWeight: 500, display: "block", marginBottom: 6 }}>{tier.label}</Text>
+								<Box display="flex" flexWrap="wrap" gap="4">
+									{savedStates[tier.id].tags.map((tag) => (
+										<Badge key={tag} intent="information" variant="subtle" style={CHIP_LABEL}>{tag}</Badge>
+									))}
 								</Box>
-								{!tier.readOnly && (
-									isEditing && TIER_TAGS[tier.id].filter((t) => !(draft?.tags ?? []).includes(t.label)).length > 0 ? (
-										<Menu
-											options={TIER_TAGS[tier.id]
-												.filter((t) => !(draft?.tags ?? []).includes(t.label))
-												.map((tag) => ({
-													label: tag.label,
-													execute: () => setDraft((prev) => prev ? {
-														...prev,
-														tags: [...prev.tags, tag.label],
-														rules: prev.rules ? prev.rules.trim() + "\n" + tag.snippet : tag.snippet,
-													} : prev),
-												}))}
-										>
-											<MenuTrigger asChild>
-												<Button appearance="subtle" size="sm" icon={<IconPlus />}>Add restriction</Button>
-											</MenuTrigger>
-											<MenuContent />
-										</Menu>
-									) : !isEditing ? (
-										<Button
-											appearance="subtle"
-											size="sm"
-											icon={<IconPen />}
-											aria-label={`Edit ${tier.label} guardrails`}
-											onClick={() => startEdit(tier.id)}
+							</Box>
+							{/* Right: edit + chevron */}
+							<Box style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 8 }}>
+								<button
+									onClick={(e) => startEditing(tier.id, e)}
+									style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "var(--ax-colors-fg-tertiary)", display: "flex", alignItems: "center", borderRadius: 4 }}
+									aria-label="Edit"
+								>
+									<IconPen style={{ width: 13, height: 13 }} />
+								</button>
+								<Box style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ax-colors-fg-default)", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 200ms ease", width: 20, height: 20 }}>
+									<IconAngleDown style={{ width: 14, height: 14 }} />
+								</Box>
+							</Box>
+						</Box>
+
+						{/* Expandable content */}
+						<Box
+							style={{
+								overflow: "hidden",
+								maxHeight: isExpanded ? 800 : 0,
+								opacity: isExpanded ? 1 : 0,
+								transition: "max-height 220ms ease, opacity 180ms ease",
+							}}
+						>
+							<Box style={{ paddingBottom: 20 }}>
+								{editingTier === tier.id ? (
+									<Box>
+										<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+											{QUICK_ADD_SUGGESTIONS.slice(0, 4).map((s) => (
+												<button
+													key={s}
+													onClick={() => setInputValue((v) => v ? v + "\n" + s : s)}
+													style={{
+														display: "inline-flex", alignItems: "center", gap: 4,
+														padding: "4px 10px", borderRadius: 99,
+														background: "transparent",
+														border: "1px solid var(--ax-colors-border-default)",
+														cursor: "pointer", fontSize: 12,
+														color: "var(--ax-colors-fg-secondary)", fontFamily: "inherit",
+													}}
+													onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--ax-colors-bg-secondary)"; }}
+													onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+												>
+													+ {s}
+												</button>
+											))}
+										</Box>
+										<textarea
+											autoFocus
+											value={inputValue}
+											onChange={(e) => setInputValue(e.target.value)}
+											onKeyDown={(e) => {
+												if (e.key === "Escape") { setEditingTier(null); setInputValue(""); }
+											}}
+											style={{
+												width: "100%", minHeight: 120, padding: "10px 12px",
+												border: "1px solid var(--ax-colors-border-default)",
+												borderRadius: 6, background: "var(--ax-colors-bg-input)",
+												fontSize: 14, color: "var(--ax-colors-fg-default)",
+												fontFamily: "inherit", outline: "none", resize: "vertical",
+												lineHeight: 1.6, boxSizing: "border-box" as const,
+											}}
 										/>
-									) : null
+										<Box display="flex" gap="8" style={{ marginTop: 10 }}>
+											<Button appearance="primary" size="sm" onClick={() => commitEdit(tier.id)}>Save</Button>
+											<Button appearance="subtle" size="sm" onClick={() => { setEditingTier(null); setInputValue(""); }}>Cancel</Button>
+										</Box>
+									</Box>
+								) : (
+									<Box style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+										{savedStates[tier.id].rules.map((rule, rIdx) => (
+											<Box key={rIdx} display="flex" alignItems="start" gap="8">
+												<Box style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--ax-colors-fg-tertiary)", flexShrink: 0, marginTop: 6 }} />
+												<Text fontSize="sm" color="fg.secondary">{rule}</Text>
+											</Box>
+										))}
+									</Box>
 								)}
 							</Box>
-
-							{tier.bodyText ? (
-								<Text fontSize="sm" color="fg.tertiary">{tier.bodyText}</Text>
-							) : isEditing ? (
-								<>
-									{(draft?.tags ?? []).length > 0 && (
-										<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
-											{(draft?.tags ?? []).map((label) => (
-												<Badge key={label} intent="information" variant="subtle" style={{ display: "inline-flex", alignItems: "center", gap: 5, paddingRight: 6 }}>
-													{label}
-													<span
-														onClick={() => setDraft((prev) => prev ? { ...prev, tags: prev.tags.filter((t) => t !== label) } : prev)}
-														style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", opacity: 0.6, lineHeight: 0 }}
-													>
-														<svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-													</span>
-												</Badge>
-											))}
-										</Box>
-									)}
-									<Textarea
-										value={draft?.rules ?? ""}
-										onChange={(e) => setDraft((prev) => prev ? { ...prev, rules: e.target.value } : prev)}
-										rows={4}
-										style={{ width: "100%", lineHeight: 1.6 }}
-									/>
-									<Box display="flex" alignItems="center" justifyContent="flex-end" gap="8" mt="12">
-										<Button appearance="subtle" size="sm" onClick={cancelEdit}>Cancel</Button>
-										<Button appearance="primary" size="sm" onClick={saveEdit}>Save changes</Button>
-									</Box>
-								</>
-							) : (
-								<>
-									{state.tags.length > 0 && (
-										<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: state.rules ? 10 : 0 }}>
-											{state.tags.map((label) => (
-												<Badge key={label} intent="information" variant="subtle">{label}</Badge>
-											))}
-										</Box>
-									)}
-									{state.rules && (
-										<Box style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-											{state.rules.split("\n").filter(Boolean).map((line, i) => (
-												<Box key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-													<Box style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--ax-colors-fg-tertiary)", flexShrink: 0, marginTop: 6 }} />
-													<Text fontSize="sm" color="fg.secondary">{line}</Text>
-												</Box>
-											))}
-										</Box>
-									)}
-								</>
-							)}
 						</Box>
 					</Fragment>
 				);
@@ -577,6 +669,8 @@ export default function VATPermissionsPage() {
 	const [reportsTo, setReportsTo] = useState(INITIAL_REPORTS_TO);
 	const [worksWith, setWorksWith] = useState(INITIAL_WORKS_WITH);
 
+	const [customGuardrails, setCustomGuardrails] = useState<CustomGuardrail[]>([]);
+
 	const [query, setQuery] = useState("");
 	const [filter, setFilter] = useState("All");
 	const [sort, setSort] = useState("All");
@@ -618,24 +712,28 @@ export default function VATPermissionsPage() {
 
 				{/* ── Access tab ── */}
 				<TabsContent value="access">
+					{/* People section header */}
+					<Box display="flex" alignItems="start" justifyContent="space-between" mb="12">
+						<Box>
+							<Text style={SECTION_HEADING}>{name}&apos;s team</Text>
+							<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 4 }}>Full access to direct, review, and approve {name}&apos;s work.</Text>
+						</Box>
+						<AddUserPopover
+							reportsTo={reportsTo}
+							worksWith={worksWith}
+							onAdd={(u, section) => {
+								if (section === "reports-to") setReportsTo((prev) => [...prev, u]);
+								else setWorksWith((prev) => [...prev, u]);
+							}}
+						/>
+					</Box>
+
 					{/* People card */}
 					<Box style={CARD}>
 						<Box mb="20">
-							<Box display="flex" alignItems="start" justifyContent="space-between" mb="12">
-								<Box>
-									<Text style={SECTION_HEADING} mb="4">{name} reports to</Text>
-									<Text fontSize="sm" color="fg.secondary">People who can direct {name}&apos;s priorities, review outputs, and approve work before it ships.</Text>
-								</Box>
-								<AddUserPopover
-									reportsTo={reportsTo}
-									worksWith={worksWith}
-									onAdd={(u, section) => {
-										if (section === "reports-to") setReportsTo((prev) => [...prev, u]);
-										else setWorksWith((prev) => [...prev, u]);
-									}}
-								/>
-							</Box>
-							<Box display="flex" alignItems="center" gap="8" style={{ flexWrap: "wrap" }}>
+							<Text fontSize="md" color="fg.default" style={{ fontWeight: 500, display: "block", marginBottom: 4 }}>Managed by</Text>
+							<Text fontSize="sm" color="fg.tertiary">People who can direct, review, and approve {name}&apos;s work.</Text>
+							<Box display="flex" alignItems="center" gap="8" style={{ flexWrap: "wrap", marginTop: 12 }}>
 								{reportsTo.map((u) => (
 									<UserChip key={u.name} user={u} onRemove={() => setReportsTo((prev) => prev.filter((x) => x.name !== u.name))} />
 								))}
@@ -645,11 +743,9 @@ export default function VATPermissionsPage() {
 						<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "0 0 20px" }} />
 
 						<Box>
-							<Box mb="12">
-								<Text style={SECTION_HEADING} mb="4">{name} works with</Text>
-								<Text fontSize="sm" color="fg.secondary">Teammates {name} collaborates with, shares updates to, and can receive requests from.</Text>
-							</Box>
-							<Box display="flex" alignItems="center" gap="8" style={{ flexWrap: "wrap" }}>
+							<Text fontSize="md" color="fg.default" style={{ fontWeight: 500, display: "block", marginBottom: 4 }}>Collaborates with</Text>
+							<Text fontSize="sm" color="fg.tertiary">Teammates {name} can message, share updates with, and receive requests from.</Text>
+							<Box display="flex" alignItems="center" gap="8" style={{ flexWrap: "wrap", marginTop: 12 }}>
 								{worksWith.map((u) => (
 									<UserChip key={u.name} user={u} onRemove={() => setWorksWith((prev) => prev.filter((x) => x.name !== u.name))} />
 								))}
@@ -657,8 +753,21 @@ export default function VATPermissionsPage() {
 						</Box>
 					</Box>
 
-					{/* Guardrails */}
-					<GuardrailsSection name={name} />
+					{/* Conversation guardrails */}
+					<Box mt="24">
+						<Box mb="12">
+							<Text style={SECTION_HEADING}>Conversation guardrails</Text>
+							<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 4 }}>
+								{name}&apos;s hard lines — set by the company handbook. Can&apos;t be overridden, but you can add your own on top.
+							</Text>
+						</Box>
+						<GuardrailsSection
+							name={name}
+							customGuardrails={customGuardrails}
+							onRemoveCustom={(id) => setCustomGuardrails((p) => p.filter((g) => g.id !== id))}
+							onAddCustom={(text, appliesTo, category) => setCustomGuardrails((p) => [...p, { id: String(Date.now()), text, appliesTo, category }])}
+						/>
+					</Box>
 				</TabsContent>
 
 				{/* ── Connectors tab ── */}

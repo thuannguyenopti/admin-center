@@ -133,19 +133,18 @@ export default function ResponsibilitiesPage() {
 	const vau = VAUS.find((v) => v.id === id);
 	const name = vau?.characterName ?? vau?.name ?? "Randy";
 
-	const [workflows, setWorkflows] = useState<Responsibility[]>(DEFAULT_RESPONSIBILITIES);
+	const [jobs, setJobs] = useState<Responsibility[]>(DEFAULT_RESPONSIBILITIES);
 	const [dragId, setDragId] = useState<string | null>(null);
 	const [dragOverId, setDragOverId] = useState<string | null>(null);
 	const [interactions, setInteractions] = useState<Interaction[]>(DEFAULT_INTERACTIONS);
-	const [instructions, setInstructions] = useState<string[]>([
+	const [rules, setRules] = useState<string[]>([
 		"Surface blockers before they become fires",
 		"Make sure nothing falls through the cracks",
 		"Keep you one step ahead",
 		"Keep meetings worth attending",
 		"Draft first passes so you're editing, not starting from zero",
 	]);
-	const [showAddInstruction, setShowAddInstruction] = useState(false);
-	const [newInstruction, setNewInstruction] = useState("");
+	const [newRule, setNewRule] = useState("");
 
 	return (
 		<Box style={{ padding: "32px 40px" }}>
@@ -154,24 +153,24 @@ export default function ResponsibilitiesPage() {
 				How {name} works and when they kick into action.
 			</Text>
 
-			<Tabs defaultValue="workflows">
+			<Tabs defaultValue="jobs">
 				<TabsList mb="24">
-					<TabsTrigger value="workflows">Workflows</TabsTrigger>
+					<TabsTrigger value="jobs">Jobs</TabsTrigger>
 					<TabsTrigger value="interactions">Interactions</TabsTrigger>
-					<TabsTrigger value="instructions">Instructions</TabsTrigger>
+					<TabsTrigger value="rules">Rules</TabsTrigger>
 				</TabsList>
 
-				{/* ── Workflows tab ── */}
-				<TabsContent value="workflows">
+				{/* ── Jobs tab ── */}
+				<TabsContent value="jobs">
 					<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
 						<Box>
-							<Text fontSize="md" color="fg.default" fontWeight="600">Workflows</Text>
+							<Text fontSize="md" color="fg.default" fontWeight="600">Jobs</Text>
 							<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 2 }}>Scheduled tasks {name} runs automatically</Text>
 						</Box>
-						<Menu options={[{ label: "Create workflow" }, { label: "Install from catalog" }]}>
+						<Menu options={[{ label: "Create job" }, { label: "Install from catalog" }]}>
 							<MenuTrigger asChild>
 								<Button appearance="default" size="md" addonAfter={<IconAngleDown />}>
-									Add workflow
+									Add job
 								</Button>
 							</MenuTrigger>
 							<MenuContent />
@@ -183,13 +182,13 @@ export default function ResponsibilitiesPage() {
 							<thead>
 								<tr style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
 									<th style={{ ...TH, width: 32, padding: "8px 4px 8px 12px" }}></th>
-									{["Workflow", "Trigger", "Target agent", "Scheduled", "Approval mode", ""].map((col, i) => (
+									{["Job", "Trigger", "Target agent", "Scheduled", "Approval mode", ""].map((col, i) => (
 										<th key={i} style={{ ...TH, width: i === 5 ? 48 : undefined }}>{col}</th>
 									))}
 								</tr>
 							</thead>
 							<tbody>
-								{workflows.map((row, rowIdx) => {
+								{jobs.map((row, rowIdx) => {
 									const isDragging = dragId === row.id;
 									const isOver = dragOverId === row.id && dragId !== row.id;
 									return (
@@ -201,7 +200,7 @@ export default function ResponsibilitiesPage() {
 											onDragOver={(e) => { e.preventDefault(); setDragOverId(row.id); }}
 											onDrop={() => {
 												if (!dragId || dragId === row.id) return;
-												setWorkflows((prev) => {
+												setJobs((prev) => {
 													const from = prev.findIndex((r) => r.id === dragId);
 													const to = prev.findIndex((r) => r.id === row.id);
 													const next = [...prev];
@@ -213,7 +212,7 @@ export default function ResponsibilitiesPage() {
 												setDragOverId(null);
 											}}
 											style={{
-												borderBottom: rowIdx < workflows.length - 1 ? "1px solid var(--ax-colors-border-tertiary)" : undefined,
+												borderBottom: rowIdx < jobs.length - 1 ? "1px solid var(--ax-colors-border-tertiary)" : undefined,
 												borderTop: isOver ? "2px solid #197A94" : undefined,
 												opacity: isDragging ? 0.4 : 1,
 												transition: "opacity 0.15s",
@@ -318,30 +317,49 @@ export default function ResponsibilitiesPage() {
 					</div>
 				</TabsContent>
 
-				{/* ── Instructions tab ── */}
-				<TabsContent value="instructions">
+				{/* ── Rules tab ── */}
+				<TabsContent value="rules">
+					<Box mb="16">
+						<Text fontSize="md" color="fg.default" fontWeight="600">Rules</Text>
+						<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 2 }}>Instructions your teammate follows — things like how to respond, what to prioritize, or what to avoid.</Text>
+					</Box>
+
 					<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px" }}>
-						<Box display="flex" justifyContent="space-between" style={{ alignItems: "flex-start", marginBottom: 16 }}>
-							<Box>
-								<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, display: "block", marginBottom: 2 }}>Instructions</Text>
-								<Text fontSize="sm" color="fg.secondary">What should {name} focus on? Describe it or pick below.</Text>
-							</Box>
-							<Button appearance="default" size="md" onClick={() => setShowAddInstruction(true)}>
-								Add an instruction
-							</Button>
+						<Box display="flex" gap="8" mb="12">
+							<input
+								value={newRule}
+								onChange={(e) => setNewRule(e.target.value)}
+								placeholder="Create a rule..."
+								onKeyDown={(e) => {
+									if (e.key === "Enter" && newRule.trim()) {
+										setRules((p) => [...p, newRule.trim()]);
+										setNewRule("");
+									}
+								}}
+								style={{
+									flex: 1, height: 36, padding: "0 12px",
+									border: "1px solid var(--ax-colors-border-default)",
+									borderRadius: 6, background: "var(--ax-colors-bg-input)",
+									fontSize: 14, color: "var(--ax-colors-fg-default)",
+									fontFamily: "inherit", outline: "none",
+								}}
+							/>
+							<Button size="md" style={{ height: 36, flexShrink: 0 }} onClick={() => {
+								if (newRule.trim()) { setRules((p) => [...p, newRule.trim()]); setNewRule(""); }
+							}}>Add</Button>
 						</Box>
 
-						<Box display="flex" flexDirection="column" gap="6" mb="12">
-							{instructions.map((instr) => (
-								<Box key={instr} style={{
+						<Box display="flex" flexDirection="column" gap="6" mb="16">
+							{rules.map((rule) => (
+								<Box key={rule} style={{
 									display: "flex", alignItems: "center", justifyContent: "space-between",
 									padding: "10px 14px",
 									background: "#EFF5EB",
 									borderRadius: 8,
 								}}>
-									<Text fontSize="md" color="fg.default">{instr}</Text>
+									<Text fontSize="md" color="fg.default">{rule}</Text>
 									<button
-										onClick={() => setInstructions((p) => p.filter((x) => x !== instr))}
+										onClick={() => setRules((p) => p.filter((x) => x !== rule))}
 										style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--ax-colors-fg-tertiary)", display: "flex", alignItems: "center", flexShrink: 0 }}
 									>
 										<IconXmark size={14} />
@@ -349,36 +367,6 @@ export default function ResponsibilitiesPage() {
 								</Box>
 							))}
 						</Box>
-
-						{showAddInstruction && (
-							<Box display="flex" gap="8" mb="12">
-								<input
-									autoFocus
-									value={newInstruction}
-									onChange={(e) => setNewInstruction(e.target.value)}
-									placeholder="Add an instruction..."
-									onKeyDown={(e) => {
-										if (e.key === "Enter" && newInstruction.trim()) {
-											setInstructions((p) => [...p, newInstruction.trim()]);
-											setNewInstruction(""); setShowAddInstruction(false);
-										}
-										if (e.key === "Escape") { setNewInstruction(""); setShowAddInstruction(false); }
-									}}
-									style={{
-										flex: 1, height: 36, padding: "0 12px",
-										border: "1px solid var(--ax-colors-border-default)",
-										borderRadius: 6, background: "var(--ax-colors-bg-input)",
-										fontSize: 14, color: "var(--ax-colors-fg-default)",
-										fontFamily: "inherit", outline: "none",
-									}}
-								/>
-								<Button size="md" style={{ height: 36, flexShrink: 0 }} onClick={() => {
-									if (newInstruction.trim()) setInstructions((p) => [...p, newInstruction.trim()]);
-									setNewInstruction(""); setShowAddInstruction(false);
-								}}>Save</Button>
-								<Button size="md" appearance="subtle" style={{ height: 36, flexShrink: 0 }} onClick={() => { setNewInstruction(""); setShowAddInstruction(false); }}>Cancel</Button>
-							</Box>
-						)}
 
 						<Box>
 							<span style={{
@@ -393,11 +381,11 @@ export default function ResponsibilitiesPage() {
 									"Draft first passes",
 									"Keep calendar clean",
 									"Celebrate wins",
-								].filter((v) => !instructions.includes(v)).map((v) => (
+								].filter((v) => !rules.includes(v)).map((v) => (
 									<button
 										key={v}
 										className="trait-pill-suggest"
-										onClick={() => setInstructions((p) => [...p, v])}
+										onClick={() => setRules((p) => [...p, v])}
 										style={{
 											display: "inline-flex", alignItems: "center", gap: 4,
 											padding: "5px 10px", borderRadius: 99,

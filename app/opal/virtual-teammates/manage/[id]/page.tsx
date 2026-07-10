@@ -369,14 +369,17 @@ export default function VATWorkPage() {
 					<Heading level="2" mb="4">{name}&apos;s work</Heading>
 					<Text color="fg.secondary" fontSize="md">What {name}&apos;s been up to and where he still needs your help.</Text>
 				</Box>
-				<Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
-					<Button appearance="default" size="md" addonBefore={<IconPause />} onClick={() => setShowBreakDialog(true)}>
-						Give {name} a break
-					</Button>
-					<Button appearance="primary" size="md" addonBefore={<IconComments />} onClick={() => router.push("/opal/messages?conversation=bubs")}>
-						Chat with {name}
-					</Button>
-				</Box>
+				<Menu
+					options={[
+						{ label: "Chat", execute: () => router.push("/opal/messages?conversation=bubs") },
+						{ label: "Pause", execute: () => setShowBreakDialog(true) },
+					]}
+				>
+					<MenuTrigger asChild>
+						<Button appearance="subtle" size="md" icon={<IconEllipsisSolid />} aria-label="Options" />
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
 			</Box>
 			<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", marginBottom: 32 }} />
 
