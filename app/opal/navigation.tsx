@@ -1,5 +1,4 @@
 "use client";
-import {useState, useEffect} from "react";
 import {
 	IconComments,
 	IconBooks,
@@ -9,33 +8,15 @@ import {
 	IconAgent,
 	IconPuzzlePiece,
 	IconGear,
-	IconUserGroup,
 } from "@optiaxiom/icons";
 
 export function useOpalNav() {
-	const [imLayout, setImLayout] = useState<string>("A");
-	useEffect(() => {
-		try {
-			const stored = localStorage.getItem("im-layout");
-			if (stored) setImLayout(JSON.parse(stored));
-		} catch {
-			/* ignore */
-		}
-		const handler = (e: Event) => setImLayout((e as CustomEvent<string>).detail);
-		window.addEventListener("im-layout-change", handler);
-		return () => window.removeEventListener("im-layout-change", handler);
-	}, []);
-
-	const isCompactIm = imLayout === "B" || imLayout === "C";
-
 	return [
 		{
-			label: isCompactIm ? "Chat" : "Chat",
+			label: "Chat",
 			url: "/opal",
 			highlight: "/opal",
-			icon: isCompactIm ? (
-				<IconComments />
-			) : (
+			icon: (
 				<span
 					style={{
 						display: "inline-flex",
