@@ -7948,15 +7948,6 @@ function IMMain({
 					<Text fontSize="lg" fontWeight="500" color="fg.default">
 						{meta?.label}
 					</Text>
-					<Box style={{marginLeft: "auto"}}>
-						<Button
-							appearance="subtle"
-							size="sm"
-							icon={<IconXmark size={14} />}
-							onClick={onQuickViewDismiss}
-							aria-label="Close"
-						/>
-					</Box>
 				</Box>
 
 				<Box
