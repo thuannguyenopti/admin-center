@@ -47,6 +47,7 @@ import {useState, useEffect} from "react";
 import {IconComments, IconMessages} from "@optiaxiom/icons";
 import {createPortal} from "react-dom";
 import {VAUS, type VAU} from "@/app/opal/data/vaus";
+import { DemoResetButton } from "@/app/opal/components/DemoResetButton";
 
 type GlobalBarProps = {
 	onOpalClick?: () => void;
@@ -444,6 +445,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 				</Box>
 
 				<Box display="flex" alignItems="center" gap="4">
+					<DemoResetButton />
 					{isOpalRoute ? (
 						<>
 							<Button
