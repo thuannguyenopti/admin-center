@@ -74,7 +74,7 @@ export function OpalPanel({
   agentBar,
   inputAgentCtx,
 }: OpalPanelProps) {
-  const { setOpalPanelWidth } = useLayout();
+  const { setOpalPanelWidth, opalActionCard } = useLayout();
   const pathname = usePathname();
   const [customWidth, setCustomWidth] = useState<number | null>(null);
   const [isResizing, setIsResizing] = useState(false);
@@ -220,7 +220,7 @@ export function OpalPanel({
           threadKey={activeChat}
           onRegenerate={regenerate}
           contextChip={contextChip}
-          contextualActionCard={atlassianActionCard}
+          contextualActionCard={opalActionCard ?? atlassianActionCard}
         />
         <div style={{ flexShrink: 0 }}>
           <OpalInput

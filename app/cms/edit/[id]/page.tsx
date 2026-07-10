@@ -243,10 +243,43 @@ export default function EditPageDetail() {
 			properties: JSON.parse(JSON.stringify(properties)), // Deep clone
 		});
 
-		// Update page status
+		// Update page status and clear any scheduled date
 		const updatedPages = pages.map((p) => {
 			if (p.id === id) {
-				return {...p, status: "Published"};
+				return {...p, status: "Published" as const, scheduledDate: undefined};
+			}
+			return p;
+		});
+		setPages(updatedPages);
+	};
+
+	const handleSchedule = (date: string) => {
+		if (!page) return;
+		const updatedPages = pages.map((p) => {
+			if (p.id === id) {
+				return {...p, status: "Scheduled" as const, scheduledDate: date};
+			}
+			return p;
+		});
+		setPages(updatedPages);
+	};
+
+	const handleCancelSchedule = () => {
+		if (!page) return;
+		const updatedPages = pages.map((p) => {
+			if (p.id === id) {
+				return {...p, status: "Draft" as const, scheduledDate: undefined};
+			}
+			return p;
+		});
+		setPages(updatedPages);
+	};
+
+	const handleUnpublish = () => {
+		if (!page) return;
+		const updatedPages = pages.map((p) => {
+			if (p.id === id) {
+				return {...p, status: "Draft" as const, scheduledDate: undefined};
 			}
 			return p;
 		});
@@ -481,6 +514,10 @@ export default function EditPageDetail() {
 				contentType={contentType}
 				onSave={handleSave}
 				onPublish={handlePublish}
+				onUnpublish={handleUnpublish}
+				onSchedule={handleSchedule}
+				onCancelSchedule={handleCancelSchedule}
+				scheduledDate={page.scheduledDate}
 				pageName={page.name}
 				pageId={page.id}
 				pageStatus={page.status}

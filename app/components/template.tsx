@@ -622,6 +622,8 @@ function TemplateContent({
 						h="full"
 						style={{
 							minHeight: 0,
+							marginRight: opalPanelWidth > 0 ? `${opalPanelWidth}px` : undefined,
+							transition: "margin-right 0.3s cubic-bezier(0, 1, 0, 1)",
 							...(chromeless ? {gridColumn: "1 / -1", gridRow: "1 / -1"} : {}),
 						}}
 					>

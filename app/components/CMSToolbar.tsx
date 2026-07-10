@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, {useState, useEffect} from "react";
 import {
 	Box,
 	Text,
@@ -10,6 +10,15 @@ import {
 	MenuTrigger,
 	MenuContent,
 	LabelMenuButton,
+	Popover,
+	PopoverTrigger,
+	PopoverContent,
+	Radio,
+	RadioGroup,
+	Checkbox,
+	Separator,
+	Field,
+	Alert,
 	toaster,
 } from "@optiaxiom/react";
 import type {MenuOption} from "@optiaxiom/react";
@@ -32,8 +41,6 @@ import {
 	IconWorld,
 	IconWorldOff,
 	IconWorldBolt,
-	IconWorldCheck,
-	IconCalendarCheck,
 	IconWorldX,
 	IconCalendarX,
 	IconTrash,
@@ -47,10 +54,12 @@ import {
 	IconSparkles,
 	IconArrowUpRightFromSquare,
 	IconShieldPlus,
+	IconEye,
+	IconWorldCheck,
+	IconCalendarCheck,
+	IconClock,
 } from "@/app/lib/axiom-icons";
 import {PreviewSettings} from "./vb/PreviewSettings";
-import {group} from "console";
-import {sep} from "path";
 import {IconCalendar, IconPaperPlaneTop, IconTrashCan} from "@optimizely/axiom-icons";
 import Link from "next/link";
 import usePersistentState from "@/app/usePersistentState";
@@ -58,6 +67,7 @@ import {availableAgents, defaultOpalConfiguration} from "@/app/cms/settings/opal
 import {OpalConfiguration} from "@/app/cms/settings/opal-actions/types";
 import {getLocationMenu, getEnabledGroups} from "@/app/cms/settings/opal-actions/helpers";
 import {useBrandTone} from "@/app/components/ai/BrandToneProvider";
+import {DEFAULT_REVIEWERS} from "@/app/cms/data/approval-workflow";
 import {useLayout} from "@/app/context/LayoutContext";
 import {usePreflightContext} from "@/app/components/ai/PreflightContext";
 import type {PageField} from "@/app/components/ai/PreflightAuditTypes";
@@ -71,8 +81,15 @@ interface CMSToolbarProps {
 	pageId?: string;
 	lastSaved?: Date | null;
 	pageStatus?: string;
-	onPublish?: () => void;
+	onPublishConfirm?: (options: { scheduledAt: string | null; runPreflight: boolean }) => void;
+	onUnpublish?: () => void;
 	onViewOnWebsite?: () => void;
+	preflightStatus?: "idle" | "running" | "done" | null;
+	preflightRanRecently?: boolean;
+	scheduledDate?: string;
+	onCancelSchedule?: () => void;
+	lastPublishedAt?: string | null;
+	lastPublishedBy?: string | null;
 
 	languageOptions?: Array<{label: string; value: string}>;
 	variationOptions?: Array<{label: string; value: string}>;
@@ -137,12 +154,377 @@ const getStatusIntent = (
 	}
 };
 
+function MenuRow({icon, label, onClick, intent}: {icon: React.ReactNode; label: string; onClick?: () => void; intent?: "danger"}) {
+	const [hovered, setHovered] = useState(false);
+	return (
+		<Box
+			display="flex"
+			alignItems="center"
+			gap="8"
+			px="8"
+			py="6"
+			rounded="md"
+			onClick={onClick}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+			style={{
+				cursor: "pointer",
+				background: hovered ? "var(--ax-colors-bg-secondary)" : "transparent",
+				transition: "background 0.1s",
+			}}
+		>
+			<Box style={{flexShrink: 0, color: intent === "danger" ? "var(--ax-colors-fg-error)" : "var(--ax-colors-fg-tertiary)"}}>
+				{icon}
+			</Box>
+			<Text fontSize="sm" color={intent === "danger" ? "fg.error" : "fg.default"}>{label}</Text>
+		</Box>
+	);
+}
+
+function PublishDropdown({
+	onConfirm,
+	onViewOnWebsite,
+	preflightRanRecently = false,
+	preflightStatus,
+	lastPublishedAt,
+	lastPublishedBy,
+}: {
+	onConfirm?: (options: { scheduledAt: string | null; runPreflight: boolean }) => void;
+	onViewOnWebsite?: () => void;
+	preflightRanRecently?: boolean;
+	preflightStatus?: "idle" | "running" | "done" | null;
+	lastPublishedAt?: string | null;
+	lastPublishedBy?: string | null;
+}) {
+	const [open, setOpen] = useState(false);
+	const [timing, setTiming] = useState<"now" | "schedule">("now");
+	const [scheduledAt, setScheduledAt] = useState("");
+	const [runPreflight, setRunPreflight] = useState(!preflightRanRecently);
+
+	useEffect(() => {
+		if (open) {
+			setRunPreflight(!preflightRanRecently);
+			setTiming("now");
+			setScheduledAt("");
+		}
+	}, [open, preflightRanRecently]);
+
+	const handleConfirm = () => {
+		onConfirm?.({
+			scheduledAt: timing === "schedule" && scheduledAt ? scheduledAt : null,
+			runPreflight,
+		});
+		setOpen(false);
+	};
+
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger
+				size="lg"
+				appearance={preflightStatus === "running" ? "default" : "primary"}
+				disabled={preflightStatus === "running"}
+			>
+				{preflightStatus === "running" ? "Preflight..." : "Publish"}
+			</PopoverTrigger>
+			<PopoverContent style={{width: 320}}>
+				<Box display="flex" flexDirection="column" p="4">
+					{/* Section 1: Info */}
+					<Box display="flex" flexDirection="column" gap="4" py="8">
+						<Text fontSize="md" fontWeight="600" color="fg.default">Publish</Text>
+						{lastPublishedAt && (
+							<Text fontSize="xs" color="fg.tertiary">
+								Last published {lastPublishedAt}{lastPublishedBy ? ` by ${lastPublishedBy}` : ""}
+							</Text>
+						)}
+						{onViewOnWebsite && lastPublishedAt && (
+							<MenuRow icon={<IconArrowUpRightFromSquare size={16} />} label="View on website" onClick={onViewOnWebsite} />
+						)}
+					</Box>
+					<Separator />
+
+					{/* Section 2: Preflight & schedule */}
+					<Box display="flex" flexDirection="column" gap="12" py="12">
+						<Box display="flex" alignItems="start" gap="8">
+							<Checkbox
+								checked={runPreflight}
+								onCheckedChange={(checked) => setRunPreflight(!!checked)}
+							/>
+							<Box
+								display="flex"
+								flexDirection="column"
+								gap="2"
+								style={{cursor: "pointer"}}
+								onClick={() => setRunPreflight(!runPreflight)}
+							>
+								<Text fontSize="md" fontWeight="500" color="fg.default">
+									Run preflight review
+								</Text>
+								<Text fontSize="sm" color="fg.tertiary">
+									{preflightRanRecently
+										? "Preflight completed recently."
+										: "VTs will review SEO, brand, and legal compliance."}
+								</Text>
+							</Box>
+						</Box>
+
+						{runPreflight && (
+							<Box display="flex" flexDirection="column" gap="4" ml="32">
+								{DEFAULT_REVIEWERS.map((r) => (
+									<Box key={r.vtId} display="flex" alignItems="center" gap="8">
+										<Box
+											style={{
+												width: 20,
+												height: 20,
+												borderRadius: "50%",
+												overflow: "hidden",
+												background: r.vtAvatarBg,
+												flexShrink: 0,
+											}}
+										>
+											<img src={r.vtAvatar} alt={r.vtName} width={20} height={20} style={{display: "block"}} />
+										</Box>
+										<Text fontSize="sm" color="fg.secondary">{r.vtName}</Text>
+										<IconSparkles style={{width: 10, height: 10, color: "var(--ax-colors-fg-tertiary)"}} />
+										<Text fontSize="sm" color="fg.tertiary">{r.role}</Text>
+									</Box>
+								))}
+							</Box>
+						)}
+
+						{!runPreflight && (
+							<>
+								<Separator />
+								<RadioGroup
+									value={timing}
+									onValueChange={(v) => setTiming(v as "now" | "schedule")}
+									name="publish-timing"
+								>
+									<Radio value="now">Now</Radio>
+									<Radio value="schedule">Schedule</Radio>
+								</RadioGroup>
+
+								{timing === "schedule" && (
+									<Field label="Date and time">
+										<input
+											type="datetime-local"
+											value={scheduledAt}
+											onChange={(e) => setScheduledAt(e.target.value)}
+											style={{
+												width: "100%",
+												padding: "8px 12px",
+												borderRadius: 8,
+												border: "1px solid var(--ax-colors-border-default)",
+												background: "var(--ax-colors-bg-default)",
+												color: "var(--ax-colors-fg-default)",
+												fontSize: 14,
+											}}
+										/>
+									</Field>
+								)}
+							</>
+						)}
+					</Box>
+
+					{/* Section 3: CTA */}
+					<Separator />
+					<Box display="flex" justifyContent="end" gap="8" pt="12">
+						<Button appearance="subtle" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
+						<Button appearance="primary" size="sm" onClick={handleConfirm}>
+							{runPreflight ? "Confirm" : timing === "schedule" ? "Schedule Publish" : "Publish"}
+						</Button>
+					</Box>
+				</Box>
+			</PopoverContent>
+		</Popover>
+	);
+}
+
+function UnpublishDropdown({
+	lastPublishedAt,
+	lastPublishedBy,
+	onViewOnWebsite,
+	onUnpublish,
+}: {
+	lastPublishedAt?: string | null;
+	lastPublishedBy?: string | null;
+	onViewOnWebsite?: () => void;
+	onUnpublish?: () => void;
+}) {
+	const [open, setOpen] = useState(false);
+	const [timing, setTiming] = useState<"now" | "schedule">("now");
+	const [scheduledAt, setScheduledAt] = useState("");
+
+	useEffect(() => {
+		if (open) {
+			setTiming("now");
+			setScheduledAt("");
+		}
+	}, [open]);
+
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger size="lg" appearance="default">
+				Published
+			</PopoverTrigger>
+			<PopoverContent style={{width: 300}}>
+				<Box display="flex" flexDirection="column" p="4">
+					{/* Section 1: Info */}
+					<Box display="flex" flexDirection="column" gap="4" py="8">
+						<Text fontSize="md" fontWeight="600" color="fg.default">Unpublish</Text>
+						{lastPublishedAt && (
+							<Text fontSize="xs" color="fg.tertiary">
+								Published {lastPublishedAt}{lastPublishedBy ? ` by ${lastPublishedBy}` : ""}
+							</Text>
+						)}
+						{onViewOnWebsite && (
+							<MenuRow icon={<IconArrowUpRightFromSquare size={16} />} label="View on website" onClick={onViewOnWebsite} />
+						)}
+					</Box>
+					<Separator />
+
+					{/* Section 2: Schedule */}
+					<Box display="flex" flexDirection="column" gap="12" py="12">
+						<RadioGroup
+							value={timing}
+							onValueChange={(v) => setTiming(v as "now" | "schedule")}
+							name="unpublish-timing"
+						>
+							<Radio value="now">Now</Radio>
+							<Radio value="schedule">Schedule</Radio>
+						</RadioGroup>
+
+						{timing === "schedule" && (
+							<Field label="Date and time">
+								<input
+									type="datetime-local"
+									value={scheduledAt}
+									onChange={(e) => setScheduledAt(e.target.value)}
+									style={{
+										width: "100%",
+										padding: "8px 12px",
+										borderRadius: 8,
+										border: "1px solid var(--ax-colors-border-default)",
+										background: "var(--ax-colors-bg-default)",
+										color: "var(--ax-colors-fg-default)",
+										fontSize: 14,
+									}}
+								/>
+							</Field>
+						)}
+					</Box>
+
+					{/* Section 3: CTA */}
+					<Separator />
+					<Box display="flex" justifyContent="end" gap="8" pt="12">
+						<Button appearance="subtle" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
+						<Button appearance="danger" size="sm" onClick={() => { onUnpublish?.(); setOpen(false); }}>{timing === "schedule" ? "Schedule Unpublish" : "Unpublish"}</Button>
+					</Box>
+				</Box>
+			</PopoverContent>
+		</Popover>
+	);
+}
+
+function ScheduledDropdown({
+	scheduledDate,
+	onCancelSchedule,
+	onPublishNow,
+	onReschedule,
+}: {
+	scheduledDate: string;
+	onCancelSchedule?: () => void;
+	onPublishNow?: () => void;
+	onReschedule?: (date: string) => void;
+}) {
+	const [open, setOpen] = useState(false);
+	const [mode, setMode] = useState<"main" | "reschedule">("main");
+	const [newDate, setNewDate] = useState(scheduledDate);
+
+	useEffect(() => {
+		if (open) {
+			setMode("main");
+			setNewDate(scheduledDate);
+		}
+	}, [open, scheduledDate]);
+
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger size="lg" appearance="default">
+				Scheduled
+			</PopoverTrigger>
+			<PopoverContent style={{width: 300}}>
+				<Box display="flex" flexDirection="column" p="4">
+					{/* Section 1: Schedule info */}
+					<Box display="flex" flexDirection="column" gap="4" py="8">
+						<Text fontSize="md" fontWeight="600" color="fg.default">Scheduled</Text>
+						<Text fontSize="xs" color="fg.tertiary">
+							Publishing on {new Date(scheduledDate).toLocaleString()}
+						</Text>
+					</Box>
+					<Separator />
+
+					{mode === "main" ? (
+						<>
+							{/* Section 2: Options */}
+							<Box display="flex" flexDirection="column" gap="2" py="8">
+								<MenuRow icon={<IconWorldCheck size={16} />} label="Publish now" onClick={() => { onPublishNow?.(); setOpen(false); }} />
+								<MenuRow icon={<IconClock size={16} />} label="Reschedule" onClick={() => setMode("reschedule")} />
+							</Box>
+							<Separator />
+
+							{/* Section 3: CTA */}
+							<Box py="8">
+								<MenuRow icon={<IconCalendarX size={16} />} label="Cancel schedule" onClick={() => { onCancelSchedule?.(); setOpen(false); }} intent="danger" />
+							</Box>
+						</>
+					) : (
+						<>
+							{/* Reschedule mode */}
+							<Box display="flex" flexDirection="column" gap="12" py="12">
+								<Field label="New date and time">
+									<input
+										type="datetime-local"
+										value={newDate}
+										onChange={(e) => setNewDate(e.target.value)}
+										style={{
+											width: "100%",
+											padding: "8px 12px",
+											borderRadius: 8,
+											border: "1px solid var(--ax-colors-border-default)",
+											background: "var(--ax-colors-bg-default)",
+											color: "var(--ax-colors-fg-default)",
+											fontSize: 14,
+										}}
+									/>
+								</Field>
+							</Box>
+							<Separator />
+							<Box display="flex" justifyContent="end" gap="8" pt="12">
+								<Button appearance="subtle" size="sm" onClick={() => setMode("main")}>Back</Button>
+								<Button
+									appearance="primary"
+									size="sm"
+									onClick={() => { onReschedule?.(newDate); setOpen(false); }}
+									disabled={!newDate}
+								>
+									Reschedule
+								</Button>
+							</Box>
+						</>
+					)}
+				</Box>
+			</PopoverContent>
+		</Popover>
+	);
+}
+
 export default function CMSToolbar({
 	pageName = "New Page",
 	pageId,
 	lastSaved = null,
 	pageStatus = "Draft",
-	onPublish = () => {},
+	onPublishConfirm,
+	onUnpublish,
 	onViewOnWebsite,
 
 	languageOptions = [
@@ -185,6 +567,12 @@ export default function CMSToolbar({
 	onAddToTask,
 	onRemoveFromTask,
 	currentTaskId = null,
+	preflightStatus = null,
+	preflightRanRecently = false,
+	scheduledDate,
+	onCancelSchedule,
+	lastPublishedAt = null,
+	lastPublishedBy = null,
 }: CMSToolbarProps) {
 	const currentLanguage = languageOptions.find((opt) => opt.value === selectedLanguage);
 	const currentVariation = variationOptions.find((opt) => opt.value === selectedVariation);
@@ -200,11 +588,12 @@ export default function CMSToolbar({
 		{
 			label: "Responsive (reflow)",
 			execute: () => onPreviewChange({mode: "responsive", maxWidth: 1100}),
+			selected: preview.mode === "responsive",
 		},
-		{label: "Desktop 1440", execute: () => onPreviewChange({mode: "scale", width: 1440})},
-		{label: "Desktop 1100", execute: () => onPreviewChange({mode: "scale", width: 1100})},
-		{label: "Tablet 768", execute: () => onPreviewChange({mode: "scale", width: 768})},
-		{label: "Mobile 390", execute: () => onPreviewChange({mode: "scale", width: 390})},
+		{label: "Desktop 1440", execute: () => onPreviewChange({mode: "scale", width: 1440}), selected: preview.mode === "scale" && preview.width === 1440},
+		{label: "Desktop 1100", execute: () => onPreviewChange({mode: "scale", width: 1100}), selected: preview.mode === "scale" && preview.width === 1100},
+		{label: "Tablet 768", execute: () => onPreviewChange({mode: "scale", width: 768}), selected: preview.mode === "scale" && preview.width === 768},
+		{label: "Mobile 390", execute: () => onPreviewChange({mode: "scale", width: 390}), selected: preview.mode === "scale" && preview.width === 390},
 	];
 
 	const isVariation = selectedVariation !== "original";
@@ -486,6 +875,13 @@ export default function CMSToolbar({
 		<Box
 			w="full"
 			gridColumn="2"
+			display="flex"
+			flexDirection="column"
+			borderB="1"
+			borderColor="border.tertiary"
+		>
+		<Box
+			w="full"
 			pl="24"
 			pr="12"
 			py="12"
@@ -495,8 +891,6 @@ export default function CMSToolbar({
 			justifyContent="space-between"
 			style={{minHeight: "64px"}}
 			bg="bg.default"
-			borderB="1"
-			borderColor="border.tertiary"
 		>
 			{/* Left Section */}
 			<Box display="flex" alignItems="center" gap="16">
@@ -624,11 +1018,14 @@ export default function CMSToolbar({
 					aria-label="Comments"
 				/>
 
-				{/* ✅ Preview Button -> Menu */}
+				{/* Preview Button */}
 				<Menu options={previewOptions}>
-					<MenuTrigger asChild>
-						<LabelMenuButton label="Preview">{previewLabel}</LabelMenuButton>
-					</MenuTrigger>
+					<MenuTrigger
+						appearance="default"
+						icon={<IconEye />}
+						size="lg"
+						aria-label="Preview"
+					/>
 					<MenuContent />
 				</Menu>
 
@@ -681,58 +1078,38 @@ export default function CMSToolbar({
 						<MenuTrigger
 							appearance="default"
 							icon={<IconSparkles />}
-							iconPosition="start"
-							addonAfter={<IconChevronDown size={20} />}
 							size="lg"
-						>
-							Improve
-						</MenuTrigger>
+							aria-label="Improve"
+						/>
 						<MenuContent />
 					</Menu>
 				)}
 
-				{/* Publish Button with Menu */}
-				<Menu
-					options={[
-						...(pageStatus === "Changed" || pageStatus === "Draft"
-							? [
-									{
-										label: "Publish now",
-										addon: <IconWorldCheck size={16} />,
-										execute: onPublish,
-										group: {label: "publish", hidden: true, separator: true},
-									},
-									{
-										label: "Schedule publish",
-										addon: <IconCalendarCheck size={16} />,
-										execute: () => {},
-										group: {label: "publish", hidden: true, separator: true},
-									},
-								]
-							: []),
-						{
-							label: "Unpublish",
-							addon: <IconWorldX size={16} />,
-							execute: () => {},
-						},
-						{
-							label: "Schedule Unpublish",
-							addon: <IconCalendarX size={16} />,
-							execute: () => {},
-						},
-					]}
-				>
-					<MenuTrigger
-						size="lg"
-						appearance={pageStatus === "Published" ? "default" : "primary"}
-						icon={<IconWorld />}
-						iconPosition="start"
-						addonAfter={<IconChevronDown size={20} />}
-					>
-						{pageStatus === "Published" ? "Published" : "Publish"}
-					</MenuTrigger>
-					<MenuContent />
-				</Menu>
+				{/* Publish / Unpublish / Scheduled */}
+				{pageStatus === "Published" ? (
+					<UnpublishDropdown
+						lastPublishedAt={lastPublishedAt}
+						lastPublishedBy={lastPublishedBy}
+						onViewOnWebsite={onViewOnWebsite}
+						onUnpublish={onUnpublish}
+					/>
+				) : pageStatus === "Scheduled" && scheduledDate ? (
+					<ScheduledDropdown
+						scheduledDate={scheduledDate}
+						onCancelSchedule={onCancelSchedule}
+						onPublishNow={onPublishConfirm ? () => onPublishConfirm({scheduledAt: null, runPreflight: false}) : undefined}
+						onReschedule={onPublishConfirm ? (date) => onPublishConfirm({scheduledAt: date, runPreflight: false}) : undefined}
+					/>
+				) : (
+					<PublishDropdown
+						onConfirm={onPublishConfirm}
+						onViewOnWebsite={onViewOnWebsite}
+						preflightRanRecently={preflightRanRecently}
+						preflightStatus={preflightStatus}
+						lastPublishedAt={lastPublishedAt}
+						lastPublishedBy={lastPublishedBy}
+					/>
+				)}
 
 				{/* Options */}
 				<Menu
@@ -854,6 +1231,22 @@ export default function CMSToolbar({
 					<MenuContent />
 				</Menu>
 			</Box>
+		</Box>
+		{pageStatus === "Scheduled" && scheduledDate && (
+			<Alert intent="information" py="12" px="20">
+				<Box display="flex" alignItems="center" gap="8" w="full">
+					<Text fontSize="sm">
+						Scheduled to publish on {new Date(scheduledDate).toLocaleString()}
+					</Text>
+					<Box flex="1" />
+					{onCancelSchedule && (
+						<Button appearance="subtle" size="sm" onClick={onCancelSchedule}>
+							Cancel schedule
+						</Button>
+					)}
+				</Box>
+			</Alert>
+		)}
 		</Box>
 	);
 }

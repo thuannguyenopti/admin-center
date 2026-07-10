@@ -46,6 +46,8 @@ type LayoutContextType = {
 	setTopContent: (content: ReactNode | null) => void;
 	titleActions: ReactNode | null;
 	setTitleActions: (actions: ReactNode | null) => void;
+	opalActionCard: ReactNode | null;
+	setOpalActionCard: (card: ReactNode | null) => void;
 };
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
@@ -61,6 +63,7 @@ export function LayoutProvider({children}: {children: ReactNode}) {
 	const [opalPanelWidth, setOpalPanelWidth] = useState<number>(0);
 	const [codePanelControls, setCodePanelControls] = useState<CodePanelControls | null>(null);
 	const [titleActions, setTitleActions] = useState<ReactNode | null>(null);
+	const [opalActionCard, setOpalActionCard] = useState<ReactNode | null>(null);
 
 	return (
 		<LayoutContext.Provider
@@ -85,6 +88,8 @@ export function LayoutProvider({children}: {children: ReactNode}) {
 				setCodePanelControls,
 				titleActions,
 				setTitleActions,
+				opalActionCard,
+				setOpalActionCard,
 			}}
 		>
 			{children}

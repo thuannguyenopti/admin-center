@@ -108,6 +108,25 @@ body.dark .newly-imported {
 .vb-slide-out-up   { animation: vb-slide-out-up   0.15s ease-in forwards; }
 .vb-slide-out-down { animation: vb-slide-out-down 0.15s ease-in forwards; }
 
+/* VT activity pulse — toolbar avatar ring */
+@keyframes vt-activity-pulse {
+	0%, 100% { box-shadow: 0 0 0 0 rgba(0, 55, 255, 0.4); }
+	50% { box-shadow: 0 0 0 4px rgba(0, 55, 255, 0); }
+}
+.vt-active-ring {
+	animation: vt-activity-pulse 2s ease-in-out infinite;
+	border-radius: 50%;
+}
+@keyframes vt-dot-pulse {
+	0%, 100% { opacity: 0.4; transform: scale(0.8); }
+	50% { opacity: 1; transform: scale(1); }
+}
+
+/* VT change row hover */
+.vt-change-row:hover {
+	border-color: var(--ax-colors-border-secondary) !important;
+}
+
 /* VB element picker — keep content mounted when closed so iframes stay alive */
 .vb-picker-content[data-state="closed"] {
 	visibility: hidden;
