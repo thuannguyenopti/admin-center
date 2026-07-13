@@ -108,6 +108,18 @@ export function useOpalNav() {
 		},
 		{label: "Labs"},
 		{
+			label: "Mobile Preview",
+			url: "/opal/mobile",
+			highlight: "/opal/mobile",
+			customLayout: true,
+			icon: (
+				<svg width={20} height={20} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+					<rect x="5" y="1" width="10" height="18" rx="2" />
+					<circle cx="10" cy="16" r="0.8" fill="currentColor" stroke="none" />
+				</svg>
+			),
+		},
+		{
 			label: "Design System Setup",
 			url: "/opal/context/stride-ds-setup",
 			highlight: "/opal/context/stride-ds-setup",
