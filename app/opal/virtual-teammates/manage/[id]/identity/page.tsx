@@ -5,9 +5,9 @@ import { useParams } from "next/navigation";
 import {
 	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
 	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
-	Badge, Box, Button, Heading, Select, SelectContent, SelectTrigger, Text,
+	Badge, Box, Button, Heading, Select, SelectContent, SelectTrigger, Text, Tooltip,
 } from "@optiaxiom/react";
-import { IconEye, IconPen, IconTrashCan, IconUpload, IconUserSlash, IconXmark } from "@optiaxiom/icons";
+import { IconCircleQuestion, IconEye, IconPen, IconTrashCan, IconUpload, IconUserSlash, IconXmark } from "@optiaxiom/icons";
 import Image from "next/image";
 import { Input } from "@/app/components/Input";
 import { VAUS } from "@/app/opal/data/vaus";
@@ -29,7 +29,6 @@ type TemplateData = {
 	description: string;
 	traits: string[];
 	tone: string[];
-	toneExtra?: number;
 };
 
 const TEMPLATES: TemplateData[] = [
@@ -40,8 +39,7 @@ const TEMPLATES: TemplateData[] = [
 		icon: "/vt-icon-tape.png",
 		description: "Done, done, and done. They cut through noise, skip the chit-chat, and get the job done. Always right, all the time.",
 		traits: ["DECISIVE", "GROUNDED", "NO-NONSENSE", "RELIABLE"],
-		tone: ["DIRECT", "PLAINSPOKEN", "WRY"],
-		toneExtra: 2,
+		tone: ["DIRECT", "PLAINSPOKEN", "WRY", "EFFICIENT", "MATTER-OF-FACT"],
 	},
 	{
 		id: "tastemaker",
@@ -68,8 +66,7 @@ const TEMPLATES: TemplateData[] = [
 		icon: "/vt-icon-chili.png",
 		description: "Skeptical? Always. Wrong? Rarely. They poke holes in bad ideas before they become expensive ones.",
 		traits: ["SKEPTICAL", "SHARP", "BLUNT", "CONTRARIAN"],
-		tone: ["DEADPAN", "BONE DRY", "WITTY"],
-		toneExtra: 1,
+		tone: ["DEADPAN", "BONE DRY", "WITTY", "SARCASTIC"],
 	},
 ];
 
@@ -238,18 +235,32 @@ export default function VATIdentityPage() {
 						</Select>
 					</Box>
 					<Box>
-						<Text fontSize="sm" color="fg.secondary" mb="6" style={{ fontWeight: 500 }}>Email</Text>
+						<Box display="flex" alignItems="center" gap="4" mb="6">
+							<Text fontSize="sm" color="fg.secondary" style={{ fontWeight: 500 }}>Email</Text>
+							<Tooltip content="This field is not editable" delayDuration={300}>
+								<span style={{ display: "inline-flex" }}>
+									<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
+								</span>
+							</Tooltip>
+						</Box>
 						<Box style={{
 							display: "flex", alignItems: "center",
 							height: 48, padding: "0 14px",
 							border: "1px solid var(--ax-colors-border-default)",
 							borderRadius: 6, background: "var(--ax-colors-bg-secondary)",
 						}}>
-								<Text fontSize="md" color="fg.default">{name}.VT@vau.opal.optimizely.com</Text>
-							</Box>
+							<Text fontSize="md" color="fg.default">{name}.VT@vau.opal.optimizely.com</Text>
+						</Box>
 					</Box>
 					<Box>
-						<Text fontSize="sm" color="fg.secondary" mb="6" style={{ fontWeight: 500 }}>Start date</Text>
+						<Box display="flex" alignItems="center" gap="4" mb="6">
+							<Text fontSize="sm" color="fg.secondary" style={{ fontWeight: 500 }}>Start date</Text>
+							<Tooltip content="This field is not editable" delayDuration={300}>
+								<span style={{ display: "inline-flex" }}>
+									<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
+								</span>
+							</Tooltip>
+						</Box>
 						<Box style={{
 							height: 40, padding: "0 12px",
 							background: "var(--ax-colors-bg-secondary)",
@@ -325,12 +336,16 @@ export default function VATIdentityPage() {
 								<Box>
 									<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 6 }}>TONE</span>
 									<Box style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
-										{t.tone.map((to) => (
+										{t.tone.slice(0, 3).map((to) => (
 											<Badge key={to}>{to}</Badge>
 										))}
-										{t.toneExtra ? (
-											<Text fontSize="sm" color="fg.tertiary">+{t.toneExtra}</Text>
-										) : null}
+										{t.tone.length > 3 && (
+											<Tooltip delayDuration={200} content={t.tone.slice(3).join(", ")}>
+												<span style={{ display: "inline-flex" }}>
+													<Badge variant="subtle">+{t.tone.length - 3}</Badge>
+												</span>
+											</Tooltip>
+										)}
 									</Box>
 								</Box>
 							</Box>

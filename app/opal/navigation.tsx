@@ -152,6 +152,14 @@ export function useOpalNav() {
 			),
 		},
 		// Hidden entries — no sidebar item, they only carry layout flags for their route
+		// VT detail pages need customLayout so the template doesn't wrap them in the transform Box
+		...["henry", "poppy", "jonas", "kerby", "frank", "fin", "mayling", "tony"].map((id) => ({
+			label: id,
+			url: `/opal/virtual-teammates/${id}`,
+			highlight: `/opal/virtual-teammates/${id}`,
+			customLayout: true,
+			hidden: true,
+		})),
 		{
 			label: "Workflow Builder",
 			url: "/opal/agents/workflow",

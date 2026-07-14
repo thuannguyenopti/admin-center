@@ -74,7 +74,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 
   return (
     <div
-      style={{ perspective: "1200px", width: "100%", height: 568, cursor: "pointer", flexShrink: 0 }}
+      style={{ perspective: "1200px", width: 344, flexShrink: 0, height: 568, cursor: "pointer" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => setFlipped((f) => !f)}
@@ -139,15 +139,12 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             }}
           >
             {vau.cardImage && (
-              <div style={{ position: "relative", width: "100%", height: "100%" }}>
-                <Image
-                  src={vau.cardImage}
-                  alt={vau.name}
-                  fill
-                  unoptimized
-                  style={{ objectFit: "contain" }}
-                />
-              </div>
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={vau.cardImage}
+                alt={vau.name}
+                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+              />
             )}
           </Box>
 

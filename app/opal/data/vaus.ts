@@ -227,12 +227,11 @@ export const VAUS: VAU[] = [
 		templateName: "GEO Content Strategist",
 		traits: ["Wry", "Plain-spoken", "Bias to action"],
 		email: "frank@vau.opal-localdev.inte.opal.optimizely.com",
-		avatar: "/avatars/vau-frank.png",
+		avatar: "/avatars/chair.png",
 		avatarBg: "#FAF6E8",
 		status: "active",
 		cardBg: "#91dbda",
-		cardImage: "/vau-card-chief-of-staff.png",
-		cardImagePadding: "8px 24px",
+		cardImage: "/chair.png",
 		cardCategory: "Operations & Priorities",
 		cardSkills: ["Calendar wrangling", "Inbox triage", "Weekly reports", "Cross-team updates"],
 		longDescription: "Less herding cats, more getting stuff done. Your Chief of Staff agent runs point on priorities so you can stop running on fumes. It drafts updates, preps meetings, and keeps every workstream moving — no nudging required.",
@@ -253,9 +252,9 @@ export const VAUS: VAU[] = [
 		tools: ["opti-cms", "google", "notion", "slack", "asana", "figma"],
 		personalities: [
 			{ label: "The Pragmatist", icon: "gear", description: "Done is their love language. They cut through noise, skip the theory, and get the job done.", traits: ["Straight talker", "Zero fluff", "Plainspoken", "Unfazeable"], sampleChat: "Just to be clear — we're overcomplicating this. Here's what I'd do instead: [3 bullet points, no preamble, done by Thursday]." },
-			{ label: "Tastemaker", icon: "sparkle", description: "The one with opinions before opinions are cool. They set the standard, and somehow always know what's next.", traits: ["Nonchalant", "Opinionated", "Ahead of the curve", "Standards-setter"], sampleChat: "Good morning. I've taken the liberty of restructuring your week. You're welcome." },
+			{ label: "The Tastemaker", icon: "sparkle", description: "The one with opinions before opinions are cool. They set the standard, and somehow always know what's next.", traits: ["Nonchalant", "Opinionated", "Ahead of the curve", "Standards-setter"], sampleChat: "Good morning. I've taken the liberty of restructuring your week. You're welcome." },
 			{ label: "The Hype Machine", icon: "people", description: "Enthusiasm is contagious and they're patient zero. They turn 'meh' ideas into 'wait, actually...' moments.", traits: ["High energy", "Infectious", "Rally the troops", "Possibilities thinker"], sampleChat: "🎉 OH. MY. GOODNESS. You have 847 unread emails and that means 847 OPPORTUNITIES. Let's DO this!!!" },
-			{ label: "The Spicy Realist", icon: "search", description: "Skeptical? Always. Wrong? Rarely. They poke holes in bad ideas before they become expensive ones.", traits: ["Devil's advocate", "Risk-aware", "Sharp-eyed", "Pre-mortems"], sampleChat: "Flagged: 3 commitments at risk, 1 meeting with no prep doc, and your inbox has 847 unread. We should talk." },
+			{ label: "The Stress Tester", icon: "search", description: "Skeptical? Always. Wrong? Rarely. They poke holes in bad ideas before they become expensive ones.", traits: ["Devil's advocate", "Risk-aware", "Sharp-eyed", "Pre-mortems"], sampleChat: "Flagged: 3 commitments at risk, 1 meeting with no prep doc, and your inbox has 847 unread. We should talk." },
 		],
 		pitchStats: [
 			{ label: "Works for you", value: "24/7", sub: "& has never stolen your lunch" },
@@ -272,10 +271,8 @@ export const VAUS: VAU[] = [
 		examples: [
 			{ emoji: "📅", title: "Daily briefing", frequency: "First thing in the morning", description: "I'll round up overnight changes, your day's calendar, and what needs you first — so you start the day knowing where to focus. In addition to that I can do much more!", icon: "/vau-icons/newspaper.png" },
 			{ emoji: "👋", title: "Status nudges", frequency: "Sent when things stall", description: "I'll quietly nudge when a thread goes quiet or a commitment slips — to the right person, with the right context, at exactly the right moment. In addition to that I can do much more!", icon: "/vau-icons/bell.png" },
-			{ emoji: "✅", title: "Action item tracking", frequency: "Updated in real time", description: "I'll catch commitments from meetings, emails, and chats — and keep a running list of what's owed, who owes it, and when it's due. In addition to that I can do much more!", icon: "/vau-icons/checkmark.png" },
-			{ emoji: "📊", title: "Weekly recap", frequency: "Fridays at 4pm", description: "Every Friday, I'll recap what got done, what didn't, and what's worth sharing up in your team update — so nothing gets lost between meetings. In addition to that I can do much more!", icon: "/vau-icons/file.png" },
-			{ emoji: "🗺️", title: "Stakeholder map", frequency: "Per initiative", description: "I'll map who owns what and flag who needs to be in the loop — so nothing stalls because the wrong person wasn't in the room. In addition to that I can do much more!", icon: "/vau-icons/glass.png" },
-			{ emoji: "⚡", title: "Meeting prep brief", frequency: "1 hour before", description: "I'll pull together the context, relevant docs, and open items before any important meeting — so you walk in prepared, not scrambling. In addition to that I can do much more!", icon: "/vau-icons/brief.png" },
+			{ emoji: "✅", title: "Action item tracking", frequency: "Updated in real time", description: "I'll catch commitments from meetings, emails, and chats — and keep a running list of what's owed, who owes it, and when it's due. In addition to that I can do much more!", icon: "/vau-icons/action.png" },
+			{ emoji: "📊", title: "Weekly recap", frequency: "Fridays at 4pm", description: "Every Friday, I'll recap what got done, what didn't, and what's worth sharing up in your team update — so nothing gets lost between meetings. In addition to that I can do much more!", icon: "/vau-icons/calendar.png" },
 		],
 	},
 	{
@@ -305,7 +302,7 @@ export const VAUS: VAU[] = [
 		],
 		tools: ["opti-cms", "google", "notion", "slack", "asana", "figma"],
 		candidates: [
-			{ avatar: "/avatars/vau-frank.png", avatarBg: "#FAF6E8", name: "Chief of Staff", characterName: "Randy", id: "frank" },
+			{ avatar: "/avatars/chair.png", avatarBg: "#FAF6E8", name: "Chief of Staff", characterName: "Randy", id: "frank" },
 			{ avatar: "/avatars/tat.png",       avatarBg: "#F0EBF8", name: "Chief of Staff", characterName: "Iris" },
 			{ avatar: "/avatars/bike.png",      avatarBg: "#F5EDE0", name: "Chief of Staff", characterName: "Pip" },
 		],

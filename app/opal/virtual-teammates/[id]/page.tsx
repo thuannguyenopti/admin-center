@@ -301,43 +301,40 @@ const DAILY_BRIEFING_SKILLS = [
 	"Weekly Reporting",
 ];
 
-const PANEL_CONNECTORS = ["notion", "google", "teams"] as const;
+const PANEL_CONNECTORS = [
+	{ name: "Jira",             icon: "/vau-icons/a.png" },
+	{ name: "Descript",         icon: "/vau-icons/b.png" },
+	{ name: "Figma",            icon: "/vau-icons/c.svg" },
+	{ name: "Notion",           icon: "/vau-icons/d.png" },
+	{ name: "Microsoft Teams",  icon: "/vau-icons/f.png" },
+];
 
-function PanelConnector({ toolKey }: { toolKey: string }) {
-	const tool = TOOL_ICONS[toolKey];
-	if (!tool) return null;
+function PanelConnector({ index }: { toolKey: string; index: number }) {
+	const connector = PANEL_CONNECTORS[index] ?? PANEL_CONNECTORS[PANEL_CONNECTORS.length - 1];
 	return (
-		<Box display="flex" alignItems="center" gap="4">
-			<Box
-				style={{
-					width: 24,
-					height: 24,
-					borderRadius: 12,
-					border: "1px solid var(--ax-colors-border-secondary)",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-					color: tool.color,
-					flexShrink: 0,
-				}}
-			>
-				{tool.icon}
+		<Box display="flex" alignItems="center" gap="8">
+			<Box style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "1px solid var(--ax-colors-border-secondary)", display: "flex", alignItems: "center", justifyContent: "center", background: "white" }}>
+				{/* eslint-disable-next-line @next/next/no-img-element */}
+				<img src={connector.icon} alt={connector.name} style={{ width: "80%", height: "80%", objectFit: "contain" }} />
 			</Box>
-			<Text fontSize="sm" color="fg.default">{tool.name}</Text>
+			<Text style={{ fontSize: 14 }} color="fg.default">{connector.name}</Text>
 		</Box>
 	);
 }
 
-function PanelSectionHeader({ label, count }: { label: string; count: number }) {
+function PanelSectionHeader({ label, count, info }: { label: string; count: number; info?: boolean }) {
 	return (
 		<Box display="flex" alignItems="center" gap="8">
 			<span style={{ ...CAPTION, color: "var(--ax-colors-fg-default)" }}>{label}</span>
-			<Badge intent="primary" variant="strong">{count}</Badge>
+			{info
+				? <Badge intent="information" variant="subtle">{count}</Badge>
+				: <Badge intent="primary" variant="strong">{count}</Badge>
+			}
 		</Box>
 	);
 }
 
-function PanelDivider() {
+function PanelDivider({ spacing }: { spacing?: boolean } = {}) {
 	return (
 		<Box
 			style={{
@@ -345,6 +342,7 @@ function PanelDivider() {
 				width: "100%",
 				background: "var(--ax-colors-border-secondary)",
 				flexShrink: 0,
+				...(spacing ? { margin: "16px 0" } : {}),
 			}}
 		/>
 	);
@@ -356,63 +354,67 @@ const BRIEFING_CARDS = [
 	{ emoji: "⚡", title: "2 assets overdue", body: "I nudged the team. Both confirmed EOD." },
 ];
 
-function BriefingActionCards({ animKey }: { animKey: number }) {
+function BriefingActionCards({ animKey, bg }: { animKey: number; bg?: string }) {
 	return (
-		<Box
-			style={{
-				width: "100%",
-				height: "100%",
-				backgroundImage: "url('/avatars/nature4.png')",
-			backgroundSize: "cover",
-			backgroundPosition: "center",
-				display: "flex",
-				flexDirection: "column",
-				alignItems: "center",
-				justifyContent: "center",
-				gap: 12,
-				padding: "28px 28px",
-			}}
-		>
-			{BRIEFING_CARDS.map((card, i) => (
-				<Box
-					key={`${animKey}-${i}`}
-					style={{
-						width: "100%",
-						background: "rgba(0,0,0,0.55)",
-						border: "1px solid rgba(255,255,255,0.18)",
-						borderRadius: 12,
-						padding: "14px 16px",
-						display: "flex",
-						gap: 12,
-						alignItems: "flex-start",
-						opacity: 0,
-						animation: `brief-card-in 0.4s cubic-bezier(0.34,1.56,0.64,1) ${i * 320 + 150}ms forwards`,
-					}}
-				>
-					<span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{card.emoji}</span>
-					<Box>
-						<Box style={{ fontSize: 13, fontWeight: 600, color: "#e8f5e8", lineHeight: 1.3, marginBottom: 4 }}>
-							{card.title}
-						</Box>
-						<Box style={{ fontSize: 12, color: "rgba(232,245,232,0.6)", lineHeight: 1.5 }}>
-							{card.body}
-						</Box>
-					</Box>
-				</Box>
-			))}
-			<style>{`
-				@keyframes brief-card-in {
-					from { opacity: 0; transform: translateY(10px) scale(0.96); }
-					to   { opacity: 1; transform: translateY(0)   scale(1); }
-				}
-			`}</style>
-		</Box>
+		<div key={animKey} style={{ width: "100%", height: "100%", background: bg ?? "#91dbda", display: "flex", alignItems: "center", justifyContent: "center" }}>
+			<img src="/vau-icons/newspaper.png" alt="Daily briefing" style={{ width: "70%", height: "70%", objectFit: "contain" }} />
+		</div>
 	);
 }
 
 const BRIEFING_SLIDES: { component?: boolean; src?: string; alt?: string }[] = [
 	{ component: true },
 ];
+
+function CapabilityPanel({ vau, title, onClose }: { vau: VAU; title: string; onClose: () => void }) {
+	const example = (vau.examples ?? []).find((e) => e.title === title);
+	const thirdPartyTools = vau.tools.filter((k) => !k.startsWith("opti-"));
+	const allSkills = vau.cardSkills ?? vau.tags.map((t) => t.label);
+	const visibleSkills = allSkills.slice(0, 5);
+	const extraSkills = allSkills.length - visibleSkills.length;
+	return (
+		<>
+			<Box onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(57,62,50,0.32)", zIndex: 40 }} />
+			<Box style={{ position: "fixed", top: 0, right: 0, height: "100vh", width: 513, background: "white", borderLeft: "1px solid var(--ax-colors-border-default)", zIndex: 50, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, padding: "24px 24px 40px" }}>
+				<Box display="flex" alignItems="center" justifyContent="space-between">
+					<Badge intent="primary">PREVIEW</Badge>
+					<Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} aria-label="Close panel" onClick={onClose} />
+				</Box>
+				<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "#202320" }}>
+					{title}
+				</Text>
+				{example?.description && (
+					<Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5", letterSpacing: "0.32px" }}>
+						{example.description}
+					</Text>
+				)}
+				{example?.icon && (
+					<Box style={{ position: "relative", height: 357, flexShrink: 0, borderRadius: 8, border: "1px solid var(--ax-colors-border-default)", overflow: "hidden", background: vau.cardBg ?? vau.avatarBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+						<img src={example.icon} alt={title} style={{ width: "70%", height: "70%", objectFit: "contain" }} />
+					</Box>
+				)}
+				{thirdPartyTools.length > 0 && (
+					<Box display="flex" flexDirection="column" gap="12" style={{ marginTop: 8 }}>
+						<PanelSectionHeader label="Connectors" count={thirdPartyTools.length} info />
+						<Box display="flex" flexDirection="column" gap="8">
+							{thirdPartyTools.map((toolKey, idx) => <PanelConnector key={toolKey} toolKey={toolKey} index={idx} />)}
+						</Box>
+					</Box>
+				)}
+				{thirdPartyTools.length > 0 && allSkills.length > 0 && <PanelDivider spacing />}
+				{allSkills.length > 0 && (
+					<Box display="flex" flexDirection="column" gap="12">
+						<PanelSectionHeader label="Skills" count={allSkills.length} info />
+						<Box display="flex" style={{ flexWrap: "wrap", gap: 4 }}>
+							{visibleSkills.map((skill) => <Badge key={skill} variant="subtle">{skill}</Badge>)}
+							{extraSkills > 0 && <Badge variant="subtle">+{extraSkills}</Badge>}
+						</Box>
+					</Box>
+				)}
+			</Box>
+		</>
+	);
+}
 
 function DailyBriefingPanel({ vau, onClose }: { vau: VAU; onClose: () => void }) {
 	const [slide, setSlide] = useState(0);
@@ -447,7 +449,7 @@ function DailyBriefingPanel({ vau, onClose }: { vau: VAU; onClose: () => void })
 					display: "flex",
 					flexDirection: "column",
 					gap: 12,
-					padding: "24px 24px 40px",
+					padding: "20px 20px 40px",
 				}}
 			>
 				{/* Header: PREVIEW badge + close */}
@@ -499,7 +501,7 @@ function DailyBriefingPanel({ vau, onClose }: { vau: VAU; onClose: () => void })
 					}}
 				>
 					{BRIEFING_SLIDES[slide].component
-						? <BriefingActionCards animKey={slide} />
+						? <BriefingActionCards animKey={slide} bg={vau.cardBg ?? vau.avatarBg} />
 						: <img
 							key={slide}
 							src={BRIEFING_SLIDES[slide].src}
@@ -529,50 +531,26 @@ function DailyBriefingPanel({ vau, onClose }: { vau: VAU; onClose: () => void })
 							<IconChevronLeft size={18} style={{ color: "white" }} />
 						</Box>
 					)}
-					{/* Pagination dots */}
-					<Box
-						style={{
-							position: "absolute",
-							bottom: 12,
-							left: "50%",
-							transform: "translateX(-50%)",
-							display: "flex",
-							gap: 6,
-						}}
-					>
-						{[0, 1, 2].map((i) => (
-							<Box
-								key={i}
-								style={{
-									width: i === 0 ? 20 : 6,
-									height: 6,
-									borderRadius: 3,
-									background: i === 0 ? "white" : "rgba(255,255,255,0.35)",
-									transition: "width 0.2s ease",
-								}}
-							/>
-						))}
-					</Box>
 				</Box>
 
 				{/* Connectors */}
 				{thirdPartyTools.length > 0 && (
 					<Box display="flex" flexDirection="column" gap="12" style={{ marginTop: 8 }}>
-						<PanelSectionHeader label="Connectors" count={thirdPartyTools.length} />
+						<PanelSectionHeader label="Connectors" count={thirdPartyTools.length} info />
 						<Box display="flex" flexDirection="column" gap="8">
-							{thirdPartyTools.map((toolKey) => (
-								<PanelConnector key={toolKey} toolKey={toolKey} />
+							{thirdPartyTools.map((toolKey, idx) => (
+								<PanelConnector key={toolKey} toolKey={toolKey} index={idx} />
 							))}
 						</Box>
 					</Box>
 				)}
 
-				{thirdPartyTools.length > 0 && allSkills.length > 0 && <PanelDivider />}
+				{thirdPartyTools.length > 0 && allSkills.length > 0 && <PanelDivider spacing />}
 
 				{/* Skills */}
 				{allSkills.length > 0 && (
 					<Box display="flex" flexDirection="column" gap="12">
-						<PanelSectionHeader label="Skills" count={allSkills.length} />
+						<PanelSectionHeader label="Skills" count={allSkills.length} info />
 						<Box display="flex" style={{ flexWrap: "wrap", gap: 4 }}>
 							{visibleSkills.map((skill) => (
 								<Badge key={skill} variant="subtle">{skill}</Badge>
@@ -584,17 +562,17 @@ function DailyBriefingPanel({ vau, onClose }: { vau: VAU; onClose: () => void })
 					</Box>
 				)}
 
-				{allSkills.length > 0 && vau.briefingFiles && vau.briefingFiles.length > 0 && <PanelDivider />}
+				{allSkills.length > 0 && vau.briefingFiles && vau.briefingFiles.length > 0 && <PanelDivider spacing />}
 
 				{/* Files */}
 				{vau.briefingFiles && vau.briefingFiles.length > 0 && (
 					<Box display="flex" flexDirection="column" gap="12">
-						<PanelSectionHeader label="Files" count={vau.briefingFiles.length} />
+						<PanelSectionHeader label="Files" count={vau.briefingFiles.length} info />
 						<Box display="flex" flexDirection="column" gap="8">
 							{vau.briefingFiles.map((file) => (
 								<Box key={file} display="flex" alignItems="center" gap="8">
-									<IconFolderBookmark size={16} style={{ color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }} />
-									<Text fontSize="sm" color="fg.secondary">{file}</Text>
+									<IconFolderBookmark size={24} style={{ color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }} />
+									<Text style={{ fontSize: 14 }} color="fg.secondary">{file}</Text>
 								</Box>
 							))}
 						</Box>
@@ -734,9 +712,7 @@ export default function VAUDetailPage() {
 		return (
 			<Box
 				style={{
-					position: "fixed",
-					inset: 0,
-					zIndex: 100,
+					height: "100%",
 					background: "#F9FCF8",
 					display: "flex",
 					alignItems: "center",
@@ -761,7 +737,7 @@ export default function VAUDetailPage() {
 							Day one essentials
 						</Text>
 						<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", letterSpacing: "0.32px" }}>
-							Give {displayName} access to the tools they&apos;ll use every day. You can always connect more later.
+							Give {displayName}{" "}access to the tools they&apos;ll use every day. You can always connect more later.
 						</Text>
 					</Box>
 
@@ -1293,21 +1269,22 @@ export default function VAUDetailPage() {
 				>
 					{/* Avatar with teal border + pencil edit */}
 					<Box style={{ position: "relative" }}>
-						<Box style={{ border: "3px solid #197a94", borderRadius: 14, padding: 2, display: "inline-block" }}>
+						<Box style={{ border: "3px solid #197a94", borderRadius: 14, padding: 2, display: "block" }}>
 							<Box
 								style={{
-									width: 269,
-									height: 258,
+									width: "100%",
+									aspectRatio: "1 / 1",
 									border: "1px solid var(--ax-colors-border-default)",
 									borderRadius: 10,
 									overflow: "hidden",
 									backgroundColor: vau.cardBg ?? vau.avatarBg,
+									boxSizing: "border-box",
 								}}
 							>
 								<Image
-									src={vau.cardImage ?? vau.avatar}
+									src={personalities[activePersonality]?.label === "The Tastemaker" ? "/vau-icons/T.png" : personalities[activePersonality]?.label === "The Hype Machine" ? "/vau-icons/HM.png" : personalities[activePersonality]?.label === "The Stress Tester" ? "/vau-icons/ST.png" : (vau.cardImage ?? vau.avatar)}
 									alt={vau.name}
-									width={269}
+									width={309}
 									height={258}
 									unoptimized
 									style={{ width: "100%", height: "100%", objectFit: "contain" }}
@@ -1342,7 +1319,7 @@ export default function VAUDetailPage() {
 								<>
 									<PanelDivider />
 									<Box display="flex" flexDirection="column" gap="8">
-										<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>Sample chat</span>
+										<Text fontSize="sm" color="fg.tertiary">Sample chat</Text>
 										<Box display="flex" alignItems="start" style={{ gap: 10 }}>
 											<Box
 												style={{
@@ -1356,7 +1333,7 @@ export default function VAUDetailPage() {
 												}}
 											>
 												<Image
-													src={vau.cardImage ?? vau.avatar}
+													src={personalities[activePersonality]?.label === "The Tastemaker" ? "/vau-icons/T.png" : personalities[activePersonality]?.label === "The Hype Machine" ? "/vau-icons/HM.png" : personalities[activePersonality]?.label === "The Stress Tester" ? "/vau-icons/ST.png" : (vau.cardImage ?? vau.avatar)}
 													alt=""
 													width={32}
 													height={32}
@@ -1373,7 +1350,7 @@ export default function VAUDetailPage() {
 													flex: 1,
 												}}
 											>
-												<Text fontSize="sm" color="fg.default" style={{ lineHeight: "1.5", letterSpacing: "0.24px" }}>
+												<Text fontSize="sm" fontWeight="500" color="fg.secondary" style={{ lineHeight: "1.5", letterSpacing: "0.24px" }}>
 													{personalities[activePersonality].sampleChat}
 												</Text>
 											</Box>
@@ -1390,8 +1367,8 @@ export default function VAUDetailPage() {
 							<Box display="flex" flexDirection="column" gap="12">
 								<PanelSectionHeader label="Connectors" count={thirdPartyTools.length} />
 								<Box display="flex" flexDirection="column" gap="8">
-									{thirdPartyTools.map((toolKey) => (
-										<PanelConnector key={toolKey} toolKey={toolKey} />
+									{thirdPartyTools.map((toolKey, idx) => (
+										<PanelConnector key={toolKey} toolKey={toolKey} index={idx} />
 									))}
 								</Box>
 							</Box>
@@ -1414,7 +1391,8 @@ export default function VAUDetailPage() {
 				</Box>
 
 				{/* ── RIGHT MAIN CONTENT ── */}
-				<Box style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#F9FCF8", padding: "32px 40px 64px" }}>
+				<Box style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#F9FCF8" }}>
+				<Box style={{ maxWidth: 1020, padding: "32px 40px 64px" }}>
 					{/* Breadcrumb */}
 					<Box display="flex" alignItems="center" gap="4" style={{ marginBottom: 32 }}>
 						<Text
@@ -1521,11 +1499,10 @@ export default function VAUDetailPage() {
 										</Heading>
 											{stat.showTools && vau.tools.length > 0 && (
 												<Box display="flex" alignItems="center">
-													{vau.tools.slice(0, 5).map((toolKey, idx) => {
-														const tool = TOOL_ICONS[toolKey];
-														if (!tool) return null;
+													{vau.tools.filter((k) => !k.startsWith("opti-")).slice(0, 5).map((toolKey, idx) => {
+														const connector = PANEL_CONNECTORS[idx] ?? PANEL_CONNECTORS[PANEL_CONNECTORS.length - 1];
 														return (
-															<Tooltip key={toolKey} content={tool.name} delayDuration={200}>
+															<Tooltip key={toolKey} content={connector.name} delayDuration={200}>
 																<Box
 																	style={{
 																		width: 24,
@@ -1537,19 +1514,18 @@ export default function VAUDetailPage() {
 																		alignItems: "center",
 																		justifyContent: "center",
 																		marginLeft: idx > 0 ? -6 : 0,
-																		color: tool.color,
 																		flexShrink: 0,
 																		zIndex: 10 - idx,
 																		overflow: "hidden",
 																		position: "relative",
 																	}}
 																>
-																	{tool.icon ?? <span style={{ fontSize: 8, fontWeight: 700 }}>{tool.textLabel?.slice(0, 2)}</span>}
+																	<img src={connector.icon} alt={connector.name} style={{ width: "80%", height: "80%", objectFit: "contain" }} />
 																</Box>
 															</Tooltip>
 														);
 													})}
-													{vau.tools.length > 5 && (
+													{vau.tools.filter((k) => !k.startsWith("opti-")).length > 5 && (
 														<Box
 															style={{
 																width: 24,
@@ -1568,7 +1544,7 @@ export default function VAUDetailPage() {
 																position: "relative",
 															}}
 														>
-															+{vau.tools.length - 5}
+															+{vau.tools.filter((k) => !k.startsWith("opti-")).length - 5}
 														</Box>
 													)}
 												</Box>
@@ -1619,7 +1595,7 @@ export default function VAUDetailPage() {
 						<Box
 							style={{
 								display: "grid",
-								gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+								gridTemplateColumns: "repeat(2, 462px)",
 								gap: 16,
 							}}
 						>
@@ -1633,10 +1609,14 @@ export default function VAUDetailPage() {
 						</Box>
 					</Box>
 				</Box>
+				</Box>
 			</Box>
 
 			{activeCapability === "Daily briefing" && (
 				<DailyBriefingPanel vau={vau} onClose={() => setActiveCapability(null)} />
+			)}
+			{activeCapability && activeCapability !== "Daily briefing" && (
+				<CapabilityPanel vau={vau} title={activeCapability} onClose={() => setActiveCapability(null)} />
 			)}
 			{amaOpen && (
 				<AMADrawer vau={vau} onClose={() => setAmaOpen(false)} />
