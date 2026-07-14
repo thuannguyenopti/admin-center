@@ -216,6 +216,23 @@ export default function OpalPage() {
     },
   });
 
+  const [activeTM, setActiveTM] = useState<{ name: string; avatar: string } | null>(() => {
+    try {
+      const raw = localStorage.getItem("active-vt");
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  });
+
+  // Keep activeTM in sync if another tab or the onboarding sets it
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== "active-vt") return;
+      try { setActiveTM(e.newValue ? JSON.parse(e.newValue) : null); } catch {}
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorVersion, setEditorVersion] = useState<'v1' | 'v2'>('v1');
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
@@ -631,6 +648,7 @@ export default function OpalPage() {
     <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0, backgroundColor: 'var(--opal-bg-page)' }}>
       {modalElement}
       <OpalLanding
+        activeTM={activeTM ?? undefined}
         topSlot={<HintBannerWithToggle onAddToPrompt={setInputValue} />}
         inputSlot={
           <OpalInput
