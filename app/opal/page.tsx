@@ -18,6 +18,10 @@ import { HeadlessTaskPanel, useTaskController } from "./components/HeadlessTaskP
 import { GrabHandle } from "@/app/components/Opal/OpalChatView";
 import { imToChatMessage } from "@/app/opal/im/lib/adapters";
 import type { IMMessage } from "@/app/opal/im/lib/types";
+import {
+  RESEARCH_ACTIVITY_SCRIPT,
+  IMAGE_GEN_ACTIVITY_SCRIPT,
+} from "@/app/opal/im/components/ActivityStreamBlock";
 
 // Loaded client-side only — contains @codemirror/*, @tiptap/*, yjs which are
 // browser-only and must not be included in the SSR bundle.
@@ -32,6 +36,26 @@ const OpalChatView = dynamic(
 const OpalLanding = dynamic(
   () => import("@/app/components/Opal/OpalLanding").then((mod) => mod.OpalLanding)
 );
+
+// ── Activity stream scripts ───────────────────────────────────────────────────
+
+const MOCK_RESEARCH_RESPONSE = `Virtual teammates and AI agents for marketing are specialized AI systems designed to work alongside human marketing teams. They can autonomously handle research, content creation, campaign optimization, and data analysis — functioning as always-on collaborators rather than simple tools.
+
+**Key capabilities:**
+- Research and competitive intelligence at scale
+- Content drafting, personalization, and brand alignment
+- Campaign performance analysis and optimization recommendations
+- Cross-channel workflow coordination
+
+Optimizely's approach positions Opal agents as specialized teammates with defined roles, skills, and memory — rather than generic chatbots.`;
+
+const MOCK_IMAGE_RESPONSE = `Here's your illustration! I generated a simple, flat-style image of a unicorn riding a dinosaur — bright colors, minimal details, ready to use in your campaign assets.
+
+You can request variations, change the style, or generate additional sizes.`;
+
+function activityScriptTotalMs(script: { durationMs: number }[]) {
+  return script.reduce((sum, e) => sum + e.durationMs, 0) + 800;
+}
 
 // ── Landing page flow constants ───────────────────────────────────────────────
 
@@ -350,6 +374,46 @@ export default function OpalPage() {
     setEditorOpen(true);
   }, [addMessage, updateMessage]);
 
+  // Activity streaming flow — shown for regular Opal chat prompts
+  const handleActivityStreamTrigger = useCallback(async (userPrompt: string) => {
+    const isImageRequest = /\b(generat|creat|draw|make|image|photo|picture|illustrat|render)\b/i.test(userPrompt);
+    const script = isImageRequest ? IMAGE_GEN_ACTIVITY_SCRIPT : RESEARCH_ACTIVITY_SCRIPT;
+    const mockResponse = isImageRequest ? MOCK_IMAGE_RESPONSE : MOCK_RESEARCH_RESPONSE;
+
+    addMessage({ role: 'user', content: userPrompt });
+
+    const loadingMsg = addMessage({
+      role: 'assistant',
+      content: '',
+      isLoading: true,
+      activityScript: script,
+      showOpalHeader: true,
+    } as any);
+
+    await new Promise(r => setTimeout(r, activityScriptTotalMs(script)));
+
+    // Keep activityScript so the collapsed summary bar persists above the response
+    updateMessage(loadingMsg.id, {
+      isLoading: false,
+      content: mockResponse,
+    } as any);
+  }, [addMessage, updateMessage]);
+
+  // Regenerate: re-run the activity stream for the preceding user message
+  const handleRegenerate = useCallback((assistantMessageId: string) => {
+    const idx = messages.findIndex(m => m.id === assistantMessageId);
+    if (idx < 0) return;
+    const userMsg = [...messages].slice(0, idx).reverse().find(m => m.role === 'user');
+    if (!userMsg) return;
+    const isImageRequest = /\b(generat|creat|draw|make|image|photo|picture|illustrat|render)\b/i.test(userMsg.content);
+    const script = isImageRequest ? IMAGE_GEN_ACTIVITY_SCRIPT : RESEARCH_ACTIVITY_SCRIPT;
+    const mockResponse = isImageRequest ? MOCK_IMAGE_RESPONSE : MOCK_RESEARCH_RESPONSE;
+    updateMessage(assistantMessageId, { content: '', isLoading: true, activityScript: script, timestamp: Date.now() } as any);
+    setTimeout(() => {
+      updateMessage(assistantMessageId, { isLoading: false, content: mockResponse } as any);
+    }, activityScriptTotalMs(script));
+  }, [messages, updateMessage]);
+
   // Clicking "Create a landing page" prefills the input — user fills variables, then submits
   const handleSuggestionClick = useCallback((suggestion: string) => {
     if (suggestion === '__landing_page__') {
@@ -376,8 +440,9 @@ export default function OpalPage() {
       setApprovalState('pending');
       return;
     }
-    handleSendMessage(text ?? "");
-  }, [handleLandingPageTrigger, handleSendMessage, setApprovalState, setInputValue]);
+    setInputValue('');
+    handleActivityStreamTrigger(text ?? "");
+  }, [handleLandingPageTrigger, handleSendMessage, handleActivityStreamTrigger, setApprovalState, setInputValue]);
 
   // Reset canvas state when chat is cleared (e.g. "New chat")
   // Skip initial mount — messages start empty but landingPageReady may be true from deep link
@@ -424,7 +489,7 @@ export default function OpalPage() {
           selected={editorOpen && editorVersion === 'v2'}
           onRegenerate={() => {
             const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
-            if (lastAssistant) regenerate(lastAssistant.id);
+            if (lastAssistant) handleRegenerate(lastAssistant.id);
           }}
         />
         <ApprovalActionCard
@@ -486,7 +551,7 @@ export default function OpalPage() {
           onDeleteChat={opalContext.history.deleteChat}
           onSelectChat={opalContext.history.selectChat}
           onMessageEdit={() => {}}
-          onRegenerate={regenerate}
+          onRegenerate={handleRegenerate}
           onMessageVersionChange={switchVersion}
           agentBar={agentBarElement}
           collapsedSessionIds={collapsedSessionIds}

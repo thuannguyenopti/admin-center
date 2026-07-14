@@ -3,8 +3,8 @@
 import {Box, Button, Tabs, TabsList, TabsTrigger} from "@optiaxiom/react";
 import {Text} from "../Text";
 import {InitialsAvatar, initialsFromName} from "@/app/opal/components/InitialsAvatar";
-import {IconXmark, IconBars, IconCirclePlus} from "@/app/lib/axiom-icons";
-import {IconSparkles} from "@optiaxiom/icons";
+import {IconXmark, IconBars} from "@/app/lib/axiom-icons";
+import {IconSparkles, IconPenToSquare} from "@optiaxiom/icons";
 import IconDropdown from "@/app/assets/opal/icon-dropdown.svg";
 import IconMaximize from "@/app/assets/opal/icon-maximize.svg";
 import {opalTypography} from "@/app/styles/opalTypography";
@@ -416,7 +416,7 @@ export function OpalHeader({
 							justifyContent: "center",
 						}}
 					>
-						<IconCirclePlus size={20} />
+						<IconPenToSquare size={20} />
 					</Button>
 				)}
 

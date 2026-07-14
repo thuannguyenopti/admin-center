@@ -294,12 +294,10 @@ function CompactNotificationCard({
 						notification.type === "im_mention" ||
 						notification.type === "im_thread_reply") &&
 						notification.deepLink && (
-							<Box pt="4" onClick={(e) => e.stopPropagation()}>
-								<a href={notification.deepLink} style={{textDecoration: "none"}}>
-									<Button size="sm" appearance="inverse">
-										Reply
-									</Button>
-								</a>
+							<Box pt="4" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = notification.deepLink; }}>
+								<Button size="sm" appearance="inverse">
+									Reply
+								</Button>
 							</Box>
 						)}
 

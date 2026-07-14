@@ -3,7 +3,7 @@ import {
 	IconComments,
 	IconBooks,
 	IconBell,
-	IconFolderBookmark,
+	IconFolderUser,
 	IconSquareUser,
 	IconAgent,
 	IconPuzzlePiece,
@@ -76,7 +76,7 @@ export function useOpalNav() {
 			customLayout: false,
 			description:
 				"Tailor Opal's output for yourself or your organization by providing specific context and guidance in the form of files, skills, memory, and RAG.",
-			icon: <IconFolderBookmark />,
+			icon: <IconFolderUser />,
 
 		},
 		{
