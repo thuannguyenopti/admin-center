@@ -853,7 +853,7 @@ export default function VAUDetailPage() {
 									localStorage.setItem("vau-bubs-avatar", chosenAvatar);
 									localStorage.setItem("active-vt", JSON.stringify({ name: vauName, avatar: chosenAvatar }));
 								} catch {}
-								router.push("/opal");
+								router.push("/opal/messages?conversation=bubs");
 							}}
 						>
 							Start working together
