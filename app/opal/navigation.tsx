@@ -8,6 +8,7 @@ import {
 	IconAgent,
 	IconPuzzlePiece,
 	IconGear,
+	IconStore,
 } from "@optiaxiom/icons";
 
 export function useOpalNav() {
@@ -80,12 +81,19 @@ export function useOpalNav() {
 
 		},
 		{
-			label: "Virtual Teammates",
+			label: "Directory",
 			url: "/opal/virtual-teammates",
 			highlight: "/opal/virtual-teammates",
-			icon: <IconSquareUser />,
+			icon: <IconStore />,
 			customLayout: true,
 		},
+			...["henry", "poppy", "jonas", "kerby", "frank", "fin", "mayling", "tony"].map((id) => ({
+				label: id,
+				url: `/opal/virtual-teammates/${id}`,
+				highlight: `/opal/virtual-teammates/${id}`,
+				customLayout: true,
+				hidden: true,
+			})),
 		{
 			label: "Agents",
 			url: "/opal/agents",
