@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 import { createPortal } from "react-dom";
@@ -1960,6 +1960,15 @@ function IMSidebar({
   const [dmNotif, setDmNotif] = React.useState<"all" | "mentions" | "off">("all");
   const [groupNotif, setGroupNotif] = React.useState<"all" | "mentions" | "off">("mentions");
   const [channelNotif, setChannelNotif] = React.useState<"all" | "mentions" | "off">("mentions");
+  const activeDMS = React.useMemo(() => {
+    try {
+      const raw = localStorage.getItem("active-vt");
+      if (!raw) return DMS;
+      const ov = JSON.parse(raw) as { name: string; avatar: string };
+      return DMS.map(d => d.id === "bubs" ? { ...d, name: ov.name, avatar: ov.avatar, preview: `${ov.name} is ready to start working with you` } : d);
+    } catch { return DMS; }
+  }, []);
+
   const allChannels = [...CHANNELS, ...(extraChannels ?? [])];
   const handleCreateChannel = () => {
     if (!createChannelName.trim()) return;
@@ -2016,7 +2025,7 @@ function IMSidebar({
     return () => document.removeEventListener("mousedown", onDown);
   }, [openSectionMenuId]);
 
-  const allDMs = DMS;
+  const allDMs = activeDMS;
   const allGroups = [...(extraGroups ?? []), ...GROUPS];
   const allChs = [...(extraChannels ?? []), ...CHANNELS];
   const unreadDMs = allDMs.filter(d => (d.unread ?? 0) > 0 || manualUnreadConvos?.has(d.id));
@@ -2073,7 +2082,7 @@ function IMSidebar({
           </Tooltip>
           <Box style={{ height: 1, width: 36, background: "var(--ax-colors-border-secondary, #e4f0da)", marginBottom: 4 }} />
           {/* DM avatars — unread first */}
-          {[...DMS].sort((a, b) => (b.unread ?? 0) - (a.unread ?? 0)).map((dm) => (
+          {[...activeDMS].sort((a, b) => (b.unread ?? 0) - (a.unread ?? 0)).map((dm) => (
             <Tooltip key={dm.id} content={dm.name} side="right">
               <Box
                 rounded="md"
@@ -2237,7 +2246,7 @@ function IMSidebar({
             const query = globalSearch.trim().toLowerCase();
             const results: { convId: string; convName: string; convAvatar?: string; convType: "dm" | "group" | "channel"; msg: Message }[] = [];
             Object.entries(THREADS).forEach(([convId, msgs]) => {
-              const dm = DMS.find(d => d.id === convId);
+              const dm = activeDMS.find(d => d.id === convId);
               const group = GROUPS.find(g => g.id === convId);
               const convName = dm?.name ?? group?.name ?? convId;
               const convAvatar = dm?.avatar;
@@ -2506,7 +2515,7 @@ function IMSidebar({
             </Box>
             <DisclosureContent>
               <Box display="flex" flexDirection="column" pt="4">
-                {s.id === "dms" && [...DMS].filter(dm => {
+                {s.id === "dms" && [...activeDMS].filter(dm => {
                     if (movedItems.includes(dm.id) || ARCHIVED_DM_IDS.includes(dm.id)) return false;
                     if (getSectionSettings("dms").view === "unread")
                       return (dm.unread ?? 0) > 0 || (VAU_DELIVERABLES[dm.id]?.length ?? 0) > 0 || !!manualUnreadConvos?.has(dm.id);
@@ -2695,7 +2704,7 @@ function IMSidebar({
                 {s.id !== "dms" && s.id !== "groups" && s.id !== "channels" && (() => {
                   const sectionItems = s.items ?? [];
                   const allConvos = [
-                    ...DMS.map(d => ({ id: d.id, name: d.name, avatar: d.avatar, type: "dm" as const, isVAU: d.isVAU, status: d.status })),
+                    ...activeDMS.map(d => ({ id: d.id, name: d.name, avatar: d.avatar, type: "dm" as const, isVAU: d.isVAU, status: d.status })),
                     ...GROUPS.map(g => ({ id: g.id, name: g.name, avatar: "", type: "group" as const, emoji: g.emoji })),
                     ...CHANNELS.map(ch => ({ id: ch.id, name: ch.name, avatar: "", type: "channel" as const })),
                   ];
@@ -2809,7 +2818,7 @@ function IMSidebar({
             </Box>
             <DisclosureContent>
               <Box display="flex" flexDirection="column" pt="4">
-                {DMS.filter(dm => ARCHIVED_DM_IDS.includes(dm.id)).map(dm => (
+                {activeDMS.filter(dm => ARCHIVED_DM_IDS.includes(dm.id)).map(dm => (
                   <Box
                     key={dm.id}
                     display="flex"
@@ -3476,11 +3485,20 @@ function IMMain({
   }, []);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const isVAU = !!DMS.find(d => d.id === selected)?.isVAU;
+  const activeDMS = React.useMemo(() => {
+    try {
+      const raw = localStorage.getItem("active-vt");
+      if (!raw) return DMS;
+      const ov = JSON.parse(raw) as { name: string; avatar: string };
+      return DMS.map(d => d.id === "bubs" ? { ...d, name: ov.name, avatar: ov.avatar } : d);
+    } catch { return DMS; }
+  }, []);
+  const isVAU = !!activeDMS.find(d => d.id === selected)?.isVAU;
+
   const isDeactivated = ARCHIVED_DM_IDS.includes(selected ?? "");
   const isChannel = CHANNELS.some(ch => ch.id === selected) || (extraChannels ?? []).some(ch => ch.id === selected);
   const thread = selected ? (threads[selected] ?? ARCHIVED_VAU_THREAD[selected] ?? CHANNEL_THREADS[selected] ?? []) : [];
-  const selectedDM = DMS.find(d => d.id === selected);
+  const selectedDM = activeDMS.find(d => d.id === selected);
   const selectedGroup = GROUPS.find(g => g.id === selected) ?? (extraGroups ?? []).find(g => g.id === selected);
   const selectedChannel = CHANNELS.find(ch => ch.id === selected) ?? (extraChannels ?? []).find(ch => ch.id === selected);
   const unreadCount = selectedDM?.unread ?? selectedGroup?.unread ?? selectedChannel?.unread ?? 0;
@@ -3665,7 +3683,7 @@ function IMMain({
   }, [searchOpen]);
 
   const conversationName =
-    DMS.find((d) => d.id === selected)?.name ||
+    activeDMS.find((d) => d.id === selected)?.name ||
     GROUPS.find((g) => g.id === selected)?.name ||
     (extraGroups ?? []).find((g) => g.id === selected)?.name ||
     CHANNELS.find((ch) => ch.id === selected)?.name;
@@ -3716,7 +3734,7 @@ function IMMain({
     } as const;
     const meta = QUICK_VIEW_META[quickView as keyof typeof QUICK_VIEW_META];
 
-    const unreadDMs = DMS.filter(d => (d.unread ?? 0) > 0 || manualUnreadConvos.has(d.id));
+    const unreadDMs = activeDMS.filter(d => (d.unread ?? 0) > 0 || manualUnreadConvos.has(d.id));
     const unreadGroups = GROUPS.filter(g => (g.unread ?? 0) > 0 || manualUnreadConvos.has(g.id));
     const unreadConvos: { id: string; name: string; avatar?: string; emoji?: string; isGroup?: boolean; status?: string; isVAU?: boolean }[] = [
       ...unreadDMs.map(d => ({ id: d.id, name: d.name, avatar: d.avatar, status: d.status, isVAU: d.isVAU })),
@@ -3789,7 +3807,7 @@ function IMMain({
             threadedMessages.length === 0
               ? <Box py="40" style={{ textAlign: "center" }}><Text color="fg.tertiary">No active threads yet</Text></Box>
               : threadedMessages.map((msg, i) => {
-                  const dm = DMS.find(d => d.id === msg.convId);
+                  const dm = activeDMS.find(d => d.id === msg.convId);
                   const group = GROUPS.find(g => g.id === msg.convId);
                   const convName = dm?.name ?? group?.name ?? msg.convId;
                   const senderName = msg.senderName ?? (msg.from === "user" ? "Erika" : convName);
@@ -3826,7 +3844,7 @@ function IMMain({
             mentionMessages.length === 0
               ? <Box py="40" style={{ textAlign: "center" }}><Text color="fg.tertiary">No mentions yet</Text></Box>
               : mentionMessages.map((msg, i) => {
-                  const dm = DMS.find(d => d.id === msg.convId);
+                  const dm = activeDMS.find(d => d.id === msg.convId);
                   const group = GROUPS.find(g => g.id === msg.convId);
                   const convName = dm?.name ?? group?.name ?? msg.convId;
                   const senderName = msg.senderName ?? (msg.from === "user" ? "Erika" : convName);
@@ -3860,7 +3878,7 @@ function IMMain({
             // Group all deliverables by VAU
             const grouped = new Map<string, { name: string; avatar: string; items: Array<{ id: string; title: string; type: string; convId: string }> }>();
             Object.entries(VAU_DELIVERABLES).forEach(([vauId, items]) => {
-              const dm = DMS.find(d => d.id === vauId);
+              const dm = activeDMS.find(d => d.id === vauId);
               if (!dm) return;
               const filtered = items.filter(d => !dismissedDeliverableIds.has(d.id));
               if (!filtered.length) return;
@@ -3929,7 +3947,7 @@ function IMMain({
 
       {/* ── Conversation header ── */}
       {selected && (() => {
-        const dm = DMS.find(d => d.id === selected);
+        const dm = activeDMS.find(d => d.id === selected);
         const group = selectedGroup;
         const channel = selectedChannel;
         return (
@@ -4228,7 +4246,7 @@ function IMMain({
                       <>
                         <Text fontSize="sm" color="fg.tertiary" style={{ marginBottom: 12 }}>{results.length} result{results.length !== 1 ? "s" : ""}</Text>
                         {results.map(msg => {
-                          const senderDM = DMS.find(d => d.id === msg.from);
+                          const senderDM = activeDMS.find(d => d.id === msg.from);
                           const senderName = msg.from === "user" ? "You" : (senderDM?.name ?? convName ?? msg.from);
                           const avatarSrc = senderDM?.avatar;
                           const lo = (msg.text as string).toLowerCase().indexOf(q);
@@ -4557,7 +4575,7 @@ function IMMain({
       {!searchOpen && activeTab === "messages" && (() => {
         const alwaysTyping = selected ? (TYPING_USERS[selected] ?? []) : [];
         const vauTyping = typing && isVAU
-          ? [{ name: DMS.find(d => d.id === selected)?.name ?? "VAU", avatar: DMS.find(d => d.id === selected)?.avatar ?? "" }]
+          ? [{ name: activeDMS.find(d => d.id === selected)?.name ?? "VAU", avatar: activeDMS.find(d => d.id === selected)?.avatar ?? "" }]
           : [];
         const allTyping = [...alwaysTyping, ...vauTyping];
         if (allTyping.length === 0) return null;
@@ -4582,7 +4600,7 @@ function IMMain({
       })()}
 
       {/* OOO alert banner */}
-      {DMS.find(d => d.id === selected)?.status === "ooo" && (activeTab === "messages" || activeTab === "pins") && (
+      {activeDMS.find(d => d.id === selected)?.status === "ooo" && (activeTab === "messages" || activeTab === "pins") && (
         <Box px="16" pb="8" style={{ background: "var(--ax-colors-bg-default, white)", flexShrink: 0 }}>
           <Alert intent="warning">
             <Box display="flex" alignItems="center" justifyContent="space-between" gap="12">
@@ -4597,7 +4615,7 @@ function IMMain({
       {isGroupWithVAU && selected && (GROUP_PAUSED_VAU_IDS[selected] ?? []).length > 0 && (activeTab === "messages" || activeTab === "pins") && (
         <Box px="16" pb="8" style={{ background: "var(--ax-colors-bg-default, white)", flexShrink: 0 }}>
           {(GROUP_PAUSED_VAU_IDS[selected] ?? []).map(pausedId => {
-            const vauName = DMS.find(d => d.id === pausedId)?.name ?? pausedId;
+            const vauName = activeDMS.find(d => d.id === pausedId)?.name ?? pausedId;
             return (
               <Alert key={pausedId} intent="warning">
                 <Text fontSize="md">{vauName} is paused right now — messages will be delivered but workflows won&apos;t run.</Text>
@@ -4805,7 +4823,7 @@ function IMMain({
 
       {/* ── Profile panel ────────────────────────────────────────────── */}
       {(() => {
-        const dm = DMS.find(d => d.id === selected);
+        const dm = activeDMS.find(d => d.id === selected);
         const group = selectedGroup;
         const channel = selectedChannel;
         const USER_META: Record<string, { title: string; email: string; time: string }> = {
@@ -5521,8 +5539,8 @@ function IMMain({
     {(() => {
       const group = selectedGroup;
       const q = participantSearch.trim().toLowerCase();
-      const filteredPeople = DMS.filter(d => !d.isVAU && (!q || d.name.toLowerCase().includes(q)));
-      const filteredVAUs   = DMS.filter(d =>  d.isVAU && (!q || d.name.toLowerCase().includes(q)));
+      const filteredPeople = activeDMS.filter(d => !d.isVAU && (!q || d.name.toLowerCase().includes(q)));
+      const filteredVAUs   = activeDMS.filter(d =>  d.isVAU && (!q || d.name.toLowerCase().includes(q)));
       const renderRow = (dm: DMItem) => (
         <Box key={dm.id} display="flex" alignItems="center" gap="10" px="8" py="8"
           onClick={() => setSelectedParticipants(p => p.includes(dm.id) ? p.filter(x => x !== dm.id) : [...p, dm.id])}
@@ -5677,7 +5695,7 @@ function IMMain({
             <DialogFooter>
               {(() => {
                 const vauNames = selectedParticipants
-                  .map(id => DMS.find(d => d.id === id))
+                  .map(id => activeDMS.find(d => d.id === id))
                   .filter(d => d?.isVAU)
                   .map(d => d!.name);
                 const vauLabel = vauNames.length === 1 ? vauNames[0] : vauNames.length > 1 ? vauNames.slice(0, -1).join(", ") + " and " + vauNames[vauNames.length - 1] : null;
@@ -5690,7 +5708,7 @@ function IMMain({
               })()}
               <DialogClose asChild><Button appearance="default" size="md" onClick={resetHistory}>Cancel</Button></DialogClose>
               <Button appearance="primary" size="md" onClick={() => {
-                const names = selectedParticipants.map(id => DMS.find(d => d.id === id)?.name ?? id);
+                const names = selectedParticipants.map(id => activeDMS.find(d => d.id === id)?.name ?? id);
                 const nameStr = names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
                 const sysMsg: Message = {
                   id: `sys-${Date.now()}`,
@@ -6818,8 +6836,38 @@ export default function MessagesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selected, setSelected] = useState(() => searchParams.get("conversation") ?? "bubs");
+  const [vtWelcome, setVtWelcome] = useState<{ name: string; avatar: string } | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("im-vau-welcome");
+      if (raw) {
+        const data = JSON.parse(raw) as { name: string; avatar: string };
+        sessionStorage.removeItem("im-vau-welcome");
+        setVtWelcome(data);
+      }
+    } catch {}
+  }, []);
+
+  const activeDMS = useMemo(() => {
+    if (!vtWelcome) return DMS;
+    return DMS.map(d =>
+      d.id === "bubs" ? { ...d, name: vtWelcome.name, avatar: vtWelcome.avatar, preview: `${vtWelcome.name} is ready to start working with you` } : d
+    );
+  }, [vtWelcome]);
+
   const [threads, setThreads] = useState<Record<string, Message[]>>({ ...THREADS, ...CHANNEL_THREADS });
-  useEffect(() => { setThreads({ ...THREADS, ...CHANNEL_THREADS }); }, []);
+  useEffect(() => {
+    const welcomeThread: Message[] = vtWelcome ? [{
+      id: "welcome-1",
+      from: "vau",
+      senderName: vtWelcome.name,
+      senderAvatar: vtWelcome.avatar,
+      senderColor: "var(--opal-vau-bubs)",
+      text: `Hi! I'm ${vtWelcome.name}, your new Chief of Staff. I'm here to help you stay on top of everything — from meeting prep to follow-ups and keeping things moving. What would you like to tackle first?`,
+    }] : THREADS.bubs;
+    setThreads({ ...THREADS, ...CHANNEL_THREADS, bubs: welcomeThread });
+  }, [vtWelcome]);
 
   useEffect(() => {
     const convo = searchParams.get("conversation");
