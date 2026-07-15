@@ -13,6 +13,11 @@ import {
 
 // Order and icon set match Figma "Library — Master" node 4033:31766 (Sidenav):
 // +, Home, Plan, Dashboard, Resource management, Library, Store, Work Request.
+//
+// Real CMP has no auto-generated page-title headings — every visible entry below sets
+// hidePageHeader: true (or customLayout: true, which bypasses the whole template wrapper
+// including the heading) so app/components/template.tsx doesn't render one. New entries
+// should follow the same rule.
 export const cmpNav = [
 	{
 		label: "Create",
@@ -33,6 +38,7 @@ export const cmpNav = [
 		url: "/cmp/dashboard",
 		highlight: "/cmp/dashboard",
 		icon: <IconHouse />,
+		hidePageHeader: true,
 	},
 	{
 		label: "Plan",
@@ -53,30 +59,35 @@ export const cmpNav = [
 		url: "/cmp/reports",
 		highlight: "/cmp/reports",
 		icon: <IconChartLine />,
+		hidePageHeader: true,
 	},
 	{
 		label: "Resource Management",
 		url: "/cmp/resource-management",
 		highlight: "/cmp/resource-management",
 		icon: <IconUserGroup />,
+		hidePageHeader: true,
 	},
 	{
 		label: "Library",
 		url: "/cmp/library",
 		highlight: "/cmp/library",
 		icon: <IconBook />,
+		hidePageHeader: true,
 	},
 	{
 		label: "Store",
 		url: "/cmp/stock-images",
 		highlight: "/cmp/stock-images",
 		icon: <IconStore />,
+		hidePageHeader: true,
 	},
 	{
 		label: "Work Request",
 		url: "/cmp/work-request",
 		highlight: "/cmp/work-request",
 		icon: <IconFileLines />,
+		hidePageHeader: true,
 	},
 	// Not in the Figma sidenav — kept reachable (deep links, settings sub-nav) but hidden from the rail.
 	{
@@ -85,6 +96,7 @@ export const cmpNav = [
 		highlight: "/cmp/idea-lab",
 		icon: <IconSparkles />,
 		hidden: true,
+		hidePageHeader: true,
 	},
 	// Not in the Figma sidenav — reachable only through the avatar menu (Global Bar),
 	// matching real CMP: there is no gear icon in the primary rail.
