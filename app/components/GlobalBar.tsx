@@ -449,6 +449,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 				</Box>
 
 				<Box display="flex" alignItems="center" gap="4">
+					<DemoResetButton />
 					{isOpalRoute ? (
 						<>
 							<DemoResetButton />
@@ -507,10 +508,10 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 							</Menu>
 							<Menu
 								options={[
-									...VAUS.map((vau) => ({
+									...VAUS.filter((vau) => !vau.isCandidate).map((vau) => ({
 										group: vauGroup,
-										label: vau.name,
-										description: vau.templateName,
+										label: vau.characterName ?? vau.name,
+										description: vau.name + " VT",
 										addon: (
 											<Image
 												src={vau.avatar}

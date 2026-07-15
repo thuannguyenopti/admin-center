@@ -411,6 +411,7 @@ function TemplateContent({
 								expanded={isExpanded}
 								onExpandedChange={setIsExpanded}
 								defaultExpanded={isExpanded}
+								style={{ borderRight: "1px solid var(--ax-colors-border-default)" }}
 							>
 								<Box
 									style={{

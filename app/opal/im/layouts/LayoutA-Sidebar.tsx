@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Box, Button, Text, Tooltip } from "@optiaxiom/react";
-import { IconXmark, IconCode, IconArrowsMaximize, IconArrowUpRightFromSquare } from "@optiaxiom/icons";
+import { IconXmark, IconCode, IconArrowsMaximize, IconArrowUpRightFromSquare, IconEye, IconArrowRotateLeft, IconArrowRotateRight, IconCopy } from "@optiaxiom/icons";
 import {
   groupConversationsByType,
   imToChatMessage,
@@ -246,6 +246,141 @@ function IMPreviewPanel({
 
 
 
+const BRIEF_SECTIONS = [
+  {
+    label: "TODAY'S PRIORITIES",
+    heading: "What needs your attention",
+    bullets: [
+      "Q3 campaign brief review - feedback to EOD",
+      "Sync with content team on calendar finalization",
+      "Approve 2 pending blog posts in the review queue",
+    ],
+  },
+  {
+    label: "CONTENT PIPELINE",
+    heading: "Coming due this week",
+    bullets: [
+      "Q3 campaign brief due",
+      "Finalize event merchandise for Glossier Foundation release",
+      "Approve 2 pending blog posts in the review queue",
+    ],
+  },
+  {
+    label: "UPCOMING MEETINGS",
+    heading: "On your calendar",
+    bullets: [
+      "10:00 AM — Q3 planning sync with content team",
+      "2:30 PM — Stakeholder review: Glossier campaign assets",
+      "4:00 PM — Weekly 1:1 with Jessica",
+    ],
+  },
+];
+
+function DailyBriefCanvas({ onClose }: { onClose: () => void }) {
+  return (
+    <Box
+      display="flex"
+      flexDirection="column"
+      style={{
+        flex: 1,
+        minWidth: 0,
+        height: "100%",
+        background: "var(--ax-colors-bg-default)",
+        boxShadow: "0 1px 3px rgba(16,24,40,0.1), 0 1px 2px rgba(16,24,40,0.06)",
+        borderRadius: 12,
+        overflow: "hidden",
+      }}
+    >
+      {/* Toolbar */}
+      <Box
+        display="flex"
+        alignItems="center"
+        gap="8"
+        px="24"
+        style={{
+          height: 48,
+          flexShrink: 0,
+          background: "var(--ax-colors-bg-secondary)",
+          borderBottom: "1px solid var(--ax-colors-border-default)",
+        }}
+      >
+        {/* Code / Preview toggles */}
+        <Box display="flex" alignItems="center" gap="4">
+          <Button appearance="subtle" size="sm" icon={<IconCode size={15} />} aria-label="Code" />
+          <Button appearance="subtle" size="sm" icon={<IconEye size={15} />} aria-label="Preview" />
+        </Box>
+        {/* Spacer */}
+        <Box style={{ flex: 1 }} />
+        {/* Status + actions */}
+        <Text color="fg.tertiary" style={{ fontSize: 12, whiteSpace: "nowrap" }}>Change saved.</Text>
+        <Button appearance="subtle" size="sm" icon={<IconArrowRotateLeft size={14} />} aria-label="Undo" />
+        <Button appearance="subtle" size="sm" icon={<IconArrowRotateRight size={14} />} aria-label="Redo" />
+        <Button appearance="subtle" size="sm" icon={<IconCopy size={14} />} aria-label="Copy" />
+        <Button appearance="subtle" size="sm" icon={<IconArrowsMaximize size={14} />} aria-label="Fullscreen" />
+        <Button appearance="subtle" size="sm" icon={<IconXmark size={14} />} aria-label="Close" onClick={onClose} />
+      </Box>
+
+      {/* Canvas body */}
+      <Box
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          background: "#f9fcf8",
+          borderBottomLeftRadius: 12,
+          borderBottomRightRadius: 12,
+        }}
+      >
+        {/* Hero image — clipped to center strip showing the date */}
+        <div style={{ width: "100%", height: 220, overflow: "hidden" }}>
+          <img
+            src="/avatars/june.png"
+            alt="Daily brief"
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 45%" }}
+          />
+        </div>
+
+        {/* Content */}
+        <Box style={{ padding: "32px 32px 48px" }}>
+          {/* Tagline */}
+          <Text style={{ fontSize: 16, color: "var(--ax-colors-fg-secondary)", lineHeight: "1.5", display: "block" }}>
+            Happy Wednesday, here's what's on your plate today.
+          </Text>
+
+          {BRIEF_SECTIONS.map((section, i) => (
+            <Box key={i}>
+              <Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "24px 0" }} />
+              <Text style={{ fontFamily: "Roboto Mono, monospace", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.36px", color: "var(--ax-colors-fg-secondary)", lineHeight: "1.25" }}>
+                {section.label}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "var(--ax-font-family-headings)",
+                  fontSize: 20,
+                  fontWeight: 600,
+                  lineHeight: "1.1",
+                  letterSpacing: "0.4px",
+                  color: "#202320",
+                  marginTop: 12,
+                  display: "block",
+                }}
+              >
+                {section.heading}
+              </Text>
+              <ul style={{ marginTop: 16, paddingLeft: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+                {section.bullets.map((b, j) => (
+                  <li key={j} style={{ fontSize: 16, color: "var(--ax-colors-fg-default)", lineHeight: "1.5", listStyleType: "disc" }}>
+                    {b}
+                  </li>
+                ))}
+              </ul>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
 export function LayoutASidebar() {
   const {
     conversations,
@@ -272,6 +407,67 @@ export function LayoutASidebar() {
   const [newChatMode, setNewChatMode] = useState<"dm" | "group" | "channel">("dm");
   const [quotedMsgId, setQuotedMsgId] = useState<string | null>(null);
   const [tonyCardAnswered, setTonyCardAnswered] = useState(false);
+
+  const [briefOpen, setBriefOpen] = useState(false);
+
+  // Welcome message injected when landing from the VAU hire flow
+  const [frankWelcome, setFrankWelcome] = useState<{ name: string; avatar: string } | null>(() => {
+    try {
+      const raw = sessionStorage.getItem("im-vau-welcome");
+      if (raw) { sessionStorage.removeItem("im-vau-welcome"); return JSON.parse(raw); }
+    } catch {}
+    return null;
+  });
+
+  const [suggestionSent, setSuggestionSent] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [localSuggestionMsgs, setLocalSuggestionMsgs] = useState<any[]>([]);
+
+  const sendSuggestion = useCallback((text: string, key: string) => {
+    if (suggestionSent) return;
+    setSuggestionSent(key);
+    const userMsg = {
+      id: `sugg-user-${key}`,
+      role: "user" as const,
+      content: text,
+      timestamp: Date.now(),
+      metadata: { imMode: true, authorName: "You", authorInlineAvatar: false, isVAU: false },
+    };
+    setLocalSuggestionMsgs([userMsg]);
+    const RESPONSES: Record<string, { content: string; cardKey: string }> = {
+      prioritize: {
+        content: "Here's your priority stack for today — ranked by deadlines, dependencies, and your calendar gaps.",
+        cardKey: "sugg-prioritize-card",
+      },
+      delegate: {
+        content: "What do you want off your plate? Pick one and I'll take it from here.",
+        cardKey: "sugg-delegate-card",
+      },
+      calendar: {
+        content: "Done. Here's your week blocked out — I've protected focus time and moved the non-urgent calls.",
+        cardKey: "sugg-calendar-card",
+      },
+    };
+    const r = RESPONSES[key];
+    if (!r) return;
+    setTimeout(() => {
+      const randyMsg = {
+        id: `sugg-randy-${key}`,
+        role: "assistant" as const,
+        content: r.content,
+        timestamp: Date.now() + 1,
+        cardAfterKey: r.cardKey,
+        metadata: {
+          imMode: true,
+          authorName: frankWelcome?.name ?? "Randy",
+          authorAvatar: frankWelcome?.avatar ?? "/avatars/vau-frank.png",
+          authorInlineAvatar: true,
+          isVAU: true,
+        },
+      };
+      setLocalSuggestionMsgs((prev) => [...prev, randyMsg]);
+    }, 1400);
+  }, [suggestionSent, frankWelcome]);
 
   // The Tony killswitch confirmation flow is "still pending" whenever Tony's
   // DM is in the conversation list AND the last message there is still Tony's
@@ -351,9 +547,16 @@ export function LayoutASidebar() {
           dms.unshift(item);
         }
       }
+      // Override Frank DM avatar with the custom one chosen in the onboarding picker
+      if (frankWelcome?.avatar) {
+        const frankItem = dms.find((i) => i.id === FRANK_DM_CONV_ID);
+        if (frankItem) frankItem.avatarUrl = frankWelcome.avatar;
+      }
     }
     return grouped;
-  }, [conversations, profiles, tonyFlowPending, henryFlowPending, geoQaFlowPending]);
+  }, [conversations, profiles, tonyFlowPending, henryFlowPending, geoQaFlowPending, frankWelcome]);
+
+  const showFrankWelcome = selectedId === FRANK_DM_CONV_ID;
 
   const chatMessages = useMemo(() => {
     const msgs = messages.map((m) => imToChatMessage(m, profiles));
@@ -361,8 +564,23 @@ export function LayoutASidebar() {
       const idx = msgs.findIndex((m) => m.id === GEO_QA_ARTIFACT_MSG_ID);
       if (idx !== -1) msgs[idx] = { ...msgs[idx], cardAfterKey: "geo-qa-approval" };
     }
-    return msgs;
-  }, [messages, profiles, showGeoQaCard]);
+    if (showFrankWelcome) {
+      const idx = msgs.findIndex((m) => m.id === "msg-fd1");
+      if (idx !== -1) {
+        const override = frankWelcome;
+        msgs[idx] = {
+          ...msgs[idx],
+          cardAfterKey: "frank-welcome-brief",
+          metadata: {
+            ...msgs[idx].metadata,
+            ...(override ? { authorName: override.name, authorAvatar: override.avatar } : {}),
+          },
+        };
+      }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return [...msgs, ...localSuggestionMsgs] as typeof msgs;
+  }, [messages, profiles, showGeoQaCard, showFrankWelcome, frankWelcome, localSuggestionMsgs]);
 
   // Derive IM header props from the selected conversation.
   const selectedConv = conversations.find((c) => c.conversation_id === selectedId);
@@ -372,7 +590,9 @@ export function LayoutASidebar() {
   );
   const imIsVAU = selectedItem?.isVAU ?? false;
   const imIsChannel = selectedItem?.isChannel ?? false;
-  const imThreadAvatar = selectedItem?.avatarUrl;
+  const imThreadAvatar = (showFrankWelcome && frankWelcome?.avatar)
+    ? frankWelcome.avatar
+    : selectedItem?.avatarUrl;
   const imTemplateName = selectedItem?.vauTemplateName;
   const imThreadName = selectedConv
     ? (selectedConv.name ??
@@ -548,6 +768,174 @@ export function LayoutASidebar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showGeoQaCard, previewOpen, taskOpen, geoQaApprovalState]);
 
+  const frankWelcomeCards = useMemo(() => {
+    if (selectedId !== FRANK_DM_CONV_ID) return undefined;
+
+    const SUGGESTION_CHIPS = [
+      { key: "prioritize", label: "Tell me what to prioritize first" },
+      { key: "delegate", label: "Hand some work off to me" },
+      { key: "calendar", label: "Set up my week around these priorities" },
+    ];
+
+    const PRIORITY_ITEMS = [
+      { rank: "1", color: "#E85D2F", title: "Q3 Brief — Sarah's waiting", meta: "Due today · Deadline risk" },
+      { rank: "2", color: "#E8A52F", title: "Standup prep", meta: "3 open items from last week" },
+      { rank: "3", color: "#5BA85A", title: "Campaign assets review", meta: "2 overdue · team nudged" },
+    ];
+
+    const DELEGATE_TASKS = [
+      { emoji: "📝", title: "Draft stakeholder update", due: "Due Thursday" },
+      { emoji: "📧", title: "Follow up with Sarah on Q3 brief", due: "Overdue" },
+      { emoji: "📅", title: "Prep Tuesday standup agenda", due: "Tomorrow 9 AM" },
+    ];
+
+    const CALENDAR_ROWS = [
+      { day: "Mon", label: "Focus block", type: "focus" },
+      { day: "Tue", label: "Q3 review + 1:1s", type: "busy" },
+      { day: "Wed", label: "Deep work + Glossier review", type: "mixed" },
+      { day: "Thu", label: "Light — buffer day", type: "light" },
+      { day: "Fri", label: "Weekly wrap-up", type: "focus" },
+    ];
+    const CAL_COLOR: Record<string, string> = { focus: "#D8E4CB", busy: "#FDEDB0", mixed: "#E2EEF7", light: "#F0F0F0" };
+
+    const cardStyle: React.CSSProperties = {
+      background: "var(--ax-colors-bg-default)",
+      border: "1px solid var(--ax-colors-border-default)",
+      borderRadius: 12,
+      padding: 20,
+      maxWidth: 480,
+    };
+    const monoLabel: React.CSSProperties = {
+      fontFamily: "Roboto Mono, monospace",
+      fontSize: 11,
+      textTransform: "uppercase",
+      letterSpacing: "0.36px",
+      color: "var(--ax-colors-fg-tertiary)",
+      display: "block",
+      marginBottom: 14,
+    };
+
+    return {
+      "frank-welcome-brief": (
+        <Box style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* Brief card */}
+          <Box
+            style={{
+              background: "var(--ax-colors-bg-default)",
+              border: "1px solid var(--ax-colors-border-default)",
+              borderRadius: 12,
+              padding: 20,
+            }}
+          >
+            <Box style={{ width: "100%", borderRadius: 6, overflow: "hidden", marginBottom: 16 }}>
+              <img
+                src="/avatars/daily-brief.png"
+                alt="Daily brief"
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </Box>
+            <Box display="flex" justifyContent="flex-end" gap="8">
+              <Button size="md" addonAfter={<span style={{ fontSize: 12 }}>▾</span>}>
+                Download
+              </Button>
+              <Button appearance="primary" size="md" onClick={() => setBriefOpen(true)}>
+                Open brief
+              </Button>
+            </Box>
+          </Box>
+
+          {/* Suggestion chips — hidden once a chip is clicked */}
+          {!suggestionSent && (
+            <Box style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <Text style={{ fontFamily: "Roboto Mono, monospace", fontSize: 11, textTransform: "uppercase" as const, letterSpacing: "0.36px", color: "var(--ax-colors-fg-tertiary)" }}>
+                What would you like to do next?
+              </Text>
+              {SUGGESTION_CHIPS.map((chip) => (
+                <Box
+                  key={chip.key}
+                  onClick={() => sendSuggestion(chip.label, chip.key)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "9px 14px",
+                    borderRadius: 10,
+                    border: "1px solid var(--ax-colors-border-default)",
+                    background: "var(--ax-colors-bg-default)",
+                    cursor: "pointer",
+                    fontSize: 14,
+                    color: "var(--ax-colors-fg-default)",
+                    fontWeight: 400,
+                    lineHeight: "1.5",
+                    transition: "background 0.1s ease",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "var(--ax-colors-bg-secondary)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "var(--ax-colors-bg-default)"; }}
+                >
+                  {chip.label}
+                </Box>
+              ))}
+            </Box>
+          )}
+        </Box>
+      ),
+
+      "sugg-prioritize-card": (
+        <Box style={cardStyle}>
+          <Text style={monoLabel}>TODAY'S PRIORITY STACK</Text>
+          {PRIORITY_ITEMS.map((item, i) => (
+            <Box key={item.rank} display="flex" alignItems="center" gap="12" style={{ padding: "10px 0", borderBottom: i < 2 ? "1px solid var(--ax-colors-border-secondary)" : "none" }}>
+              <Box style={{ width: 26, height: 26, borderRadius: 6, background: item.color + "22", border: `1px solid ${item.color}55`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: item.color, flexShrink: 0 }}>
+                {item.rank}
+              </Box>
+              <Box style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: 500, display: "block" }}>{item.title}</Text>
+                <Text style={{ fontSize: 12, color: "var(--ax-colors-fg-tertiary)", display: "block" }}>{item.meta}</Text>
+              </Box>
+            </Box>
+          ))}
+          <Box display="flex" justifyContent="flex-end" style={{ marginTop: 14 }}>
+            <Button appearance="primary" size="md">Start with #1</Button>
+          </Box>
+        </Box>
+      ),
+
+      "sugg-delegate-card": (
+        <Box style={cardStyle}>
+          <Text style={monoLabel}>PICK SOMETHING TO HAND OFF</Text>
+          {DELEGATE_TASKS.map((task, i) => (
+            <Box key={task.title} display="flex" alignItems="center" gap="12" style={{ padding: "10px 0", borderBottom: i < 2 ? "1px solid var(--ax-colors-border-secondary)" : "none" }}>
+              <Text style={{ fontSize: 18, flexShrink: 0, lineHeight: 1 }}>{task.emoji}</Text>
+              <Box style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: 500, display: "block" }}>{task.title}</Text>
+                <Text style={{ fontSize: 12, color: "var(--ax-colors-fg-tertiary)", display: "block" }}>{task.due}</Text>
+              </Box>
+              <Button size="sm">Assign →</Button>
+            </Box>
+          ))}
+        </Box>
+      ),
+
+      "sugg-calendar-card": (
+        <Box style={cardStyle}>
+          <Text style={monoLabel}>WEEK OF JUNE 17</Text>
+          {CALENDAR_ROWS.map((row) => (
+            <Box key={row.day} display="flex" alignItems="center" gap="12" style={{ marginBottom: 8 }}>
+              <Text style={{ fontSize: 12, fontFamily: "Roboto Mono, monospace", width: 32, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }}>{row.day}</Text>
+              <Box style={{ flex: 1, height: 28, borderRadius: 6, background: CAL_COLOR[row.type], display: "flex", alignItems: "center", padding: "0 10px" }}>
+                <Text style={{ fontSize: 13, fontWeight: 500, color: "#202320" }}>{row.label}</Text>
+              </Box>
+            </Box>
+          ))}
+          <Box display="flex" gap="8" justifyContent="flex-end" style={{ marginTop: 14 }}>
+            <Button size="md">Adjust</Button>
+            <Button appearance="primary" size="md">Looks good</Button>
+          </Box>
+        </Box>
+      ),
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, setBriefOpen, suggestionSent, sendSuggestion]);
+
   const mentionableAgents = useMemo(
     () =>
       Object.entries(profiles).map(([id, name]) => ({
@@ -609,6 +997,72 @@ export function LayoutASidebar() {
     </Box>
   ) : null;
 
+  if (briefOpen) {
+    return (
+      <>
+        <Box display="flex" h="full" style={{ minHeight: 0, gap: 0 }}>
+          {/* Daily Brief canvas — main area */}
+          <Box style={{ flex: 1, minWidth: 0, height: "100%", padding: "8px 0 8px 8px", overflow: "hidden" }}>
+            <DailyBriefCanvas onClose={() => setBriefOpen(false)} />
+          </Box>
+
+          {/* Randy IM chat — right drawer */}
+          <Box style={{ width: 360, flexShrink: 0, height: "100%", borderLeft: "1px solid var(--ax-colors-border-secondary)", overflow: "hidden" }}>
+            <OpalChatView
+              variant="home"
+              streamingMode="expanded"
+              messages={chatMessages}
+              inputValue={inputValue}
+              isLoading={false}
+              setInputValue={setInputValue}
+              onSend={handleSend}
+              onSuggestionClick={() => {}}
+              onToggleHistory={() => {}}
+              onNewChat={() => {}}
+              onCreateInSection={() => {}}
+              isHistoryVisible={false}
+              groupedHistory={{}}
+              activeChat={selectedId}
+              searchQuery=""
+              onSearchChange={() => {}}
+              onSelectChat={setSelectedId}
+              onDeleteChat={() => {}}
+              mentionableAgents={mentionableAgents}
+              onMentionSelect={(agent) => insertMention(agent.handle)}
+              canvasMode={true}
+              leftCanvas={undefined}
+              currentUserId={currentUserId}
+              messageReactions={messageReactions}
+              onToggleReaction={toggleReaction}
+              onQuoteReply={(msgId) => setQuotedMsgId(msgId)}
+              aboveInputContent={null}
+              messageCards={{ ...geoQaMessageCards, ...frankWelcomeCards }}
+              onAttachFile={attachFile}
+              headerTitle="Threads"
+              newChatLabel="New Thread"
+              imThreadName={imThreadName}
+              imIsVAU={imIsVAU}
+              imIsChannel={imIsChannel}
+              imThreadAvatar={imThreadAvatar}
+              imTemplateName={imTemplateName}
+              imSimplified={true}
+              onCloseChat={() => setBriefOpen(false)}
+            />
+          </Box>
+        </Box>
+        <NewChatDialog
+          open={newChatOpen}
+          onOpenChange={setNewChatOpen}
+          onCreated={(id) => {
+            setSelectedId(id);
+            broadcastIMEvent({ type: "conversation-created", conversationId: id });
+          }}
+          initialMode={newChatMode}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <Box display="flex" h="full" style={{ minHeight: 0 }}>
@@ -647,7 +1101,7 @@ export function LayoutASidebar() {
             aboveInputContent={quoteChip}
             inputOverride={tonyActionCard}
             disabled={tonyCardBlocking}
-            messageCards={geoQaMessageCards}
+            messageCards={{ ...geoQaMessageCards, ...frankWelcomeCards }}
             onAttachFile={attachFile}
             headerTitle="Threads"
             newChatLabel="New Thread"
