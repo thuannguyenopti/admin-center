@@ -26,7 +26,7 @@ type ListViewProps = {
 export function ListView({ data, expandedGroups, toggleGroup, onRowClick }: ListViewProps) {
 	return (
 		<Box style={{ position: "absolute", inset: 0, overflow: "auto" }}>
-			<Box bg="bg.default">
+			<Box bg="bg.default" border="1" borderColor="border.tertiary" rounded="md" style={{ overflow: "hidden", width: "fit-content" }}>
 				<Table className="[&_td]:!align-middle [&_th]:!align-middle [&_tr]:h-[52px]" style={{ minWidth: "max-content" }}>
 					<TableHeader>
 						<TableRow className="align-middle">
