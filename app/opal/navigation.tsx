@@ -180,13 +180,6 @@ export function useOpalNav() {
 			hidden: true,
 		},
 		{
-			label: "CMP Workshop",
-			url: "/opal/cmp-workshop",
-			highlight: "/opal/cmp-workshop",
-			fullscreen: true,
-			hidden: true,
-		},
-		{
 			label: "Opal Canvas",
 			url: "/opal",
 			highlight: "/opal",

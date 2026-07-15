@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Button } from "@optiaxiom/react";
 import { IconMagnifyingGlassMinus, IconMagnifyingGlassPlus } from "@optiaxiom/icons";
 import { Text } from "@/app/components/Text";
-import type { Scene } from "../../data";
 import { Toolbar } from "./Toolbar";
 
 export type ContentTab = "blog" | "social" | "email";
@@ -48,15 +47,19 @@ const canvasWorldStyle = {
 export function CanvasStage({
 	activeTab,
 	children,
-	onSceneChange,
+	onClose,
+	onOpenWorkflow,
 	onTabChange,
+	onToggleRationale,
 	showRationale,
 	showWorkflow = false,
 }: {
 	activeTab: ContentTab;
 	children: React.ReactNode;
-	onSceneChange: (scene: Scene) => void;
+	onClose: () => void;
+	onOpenWorkflow: () => void;
 	onTabChange: (tab: ContentTab) => void;
+	onToggleRationale: () => void;
 	showRationale: boolean;
 	showWorkflow?: boolean;
 }) {
@@ -224,8 +227,10 @@ export function CanvasStage({
 			`}</style>
 			<Toolbar
 				activeTab={activeTab}
-				onSceneChange={onSceneChange}
+				onClose={onClose}
+				onOpenWorkflow={onOpenWorkflow}
 				onTabChange={onTabChange}
+				onToggleRationale={onToggleRationale}
 				showRationale={showRationale}
 				showWorkflow={showWorkflow}
 			/>

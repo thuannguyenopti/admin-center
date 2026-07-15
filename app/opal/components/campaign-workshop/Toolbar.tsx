@@ -12,7 +12,6 @@ import {
 	IconXmark,
 } from "@optiaxiom/icons";
 import { Text } from "@/app/components/Text";
-import type { Scene } from "../../data";
 import type { ContentTab } from "./CanvasStage";
 
 // Canvas header chrome — matches Figma "Image Gen II - 10 Channel Pack Items"
@@ -20,24 +19,21 @@ import type { ContentTab } from "./CanvasStage";
 // workflow trigger, and version/copy/fullscreen/close icon buttons.
 export function Toolbar({
 	activeTab,
-	onSceneChange,
+	onClose,
+	onOpenWorkflow,
 	onTabChange,
+	onToggleRationale,
 	showRationale,
 	showWorkflow,
 }: {
 	activeTab: ContentTab;
-	onSceneChange: (scene: Scene) => void;
+	onClose: () => void;
+	onOpenWorkflow: () => void;
 	onTabChange: (tab: ContentTab) => void;
+	onToggleRationale: () => void;
 	showRationale: boolean;
 	showWorkflow: boolean;
 }) {
-	const selectTab = (next: string) => {
-		const tab = next as ContentTab;
-		onTabChange(tab);
-		if (tab === "blog") onSceneChange("canvas-blog");
-		if (tab === "social") onSceneChange("canvas-social");
-	};
-
 	return (
 		<Box
 			bg="bg.default"
@@ -54,7 +50,7 @@ export function Toolbar({
 			</Box>
 
 			<Box aria-label="Content type" display="flex" alignItems="center" justifyContent="center" style={{ height: 64, minWidth: 0, overflow: "hidden" }}>
-				<Tabs value={activeTab} onValueChange={selectTab}>
+				<Tabs value={activeTab} onValueChange={(next) => onTabChange(next as ContentTab)}>
 					<TabsList>
 						<TabsTrigger value="blog">Blog Post</TabsTrigger>
 						<TabsTrigger value="social">Social Posts</TabsTrigger>
@@ -71,12 +67,12 @@ export function Toolbar({
 				) : (
 					<>
 						<Box display="flex" alignItems="center" gap="8">
-							<Switch checked={showRationale} onCheckedChange={() => onSceneChange(showRationale ? "canvas-blog" : "canvas-rationale")} />
+							<Switch checked={showRationale} onCheckedChange={onToggleRationale} />
 							<Text fontSize="sm" fontWeight="700">
 								Rationale
 							</Text>
 						</Box>
-						<Button appearance="subtle" size="sm" onClick={() => onSceneChange("canvas-workflow")}>
+						<Button appearance="subtle" size="sm" onClick={onOpenWorkflow}>
 							Workflow
 						</Button>
 						<Tooltip content="Previous Version">
@@ -89,10 +85,10 @@ export function Toolbar({
 							<Button appearance="subtle" size="sm" icon={<IconCopy size={17} />} aria-label="Copy" />
 						</Tooltip>
 						<Tooltip content="Fullscreen">
-							<Button appearance="subtle" size="sm" icon={<IconArrowsMaximize size={17} />} aria-label="Fullscreen" onClick={() => onSceneChange("canvas-fullscreen")} />
+							<Button appearance="subtle" size="sm" icon={<IconArrowsMaximize size={17} />} aria-label="Fullscreen" />
 						</Tooltip>
 						<Tooltip content="Close chat window">
-							<Button appearance="subtle" size="sm" icon={<IconXmark size={17} />} aria-label="Close" onClick={() => onSceneChange("opal-chat")} />
+							<Button appearance="subtle" size="sm" icon={<IconXmark size={17} />} aria-label="Close" onClick={onClose} />
 						</Tooltip>
 					</>
 				)}
@@ -100,7 +96,7 @@ export function Toolbar({
 			<Box className="cmp-canvas-toolbar-short" display="none" alignItems="center" gap="16" justifyContent="flex-end">
 				{!showWorkflow && (
 					<Tooltip content="Close chat window">
-						<Button appearance="subtle" size="sm" icon={<IconXmark size={17} />} aria-label="Close" onClick={() => onSceneChange("opal-chat")} />
+						<Button appearance="subtle" size="sm" icon={<IconXmark size={17} />} aria-label="Close" onClick={onClose} />
 					</Tooltip>
 				)}
 				<Button appearance="subtle" size="sm" icon={<IconEllipsisStroke size={18} />} aria-label="More" />
