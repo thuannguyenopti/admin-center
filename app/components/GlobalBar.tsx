@@ -214,20 +214,154 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 							icon={<IconCircleQuestion size={20} />}
 							aria-label="Help"
 						/>
-						<Button
-							appearance="subtle"
-							size="md"
-							aria-label="Account"
-							style={{minWidth: 32, padding: 0}}
+						<Menu
+							options={[
+								{
+									group: settingsGroups.userOrg,
+									label: "Stefan Svebeck (Admin)",
+									addon: <IconUser size={16} />,
+									execute: () => router.push("/cmp/settings/profile"),
+								},
+								{
+									group: settingsGroups.userOrg,
+									label: "Organization",
+									addon: <IconBuilding size={16} />,
+									execute: () => router.push("/cmp/settings/organization"),
+								},
+								{
+									group: settingsGroups.userOrg,
+									label: "Users & Teams",
+									addon: <IconUsers size={16} />,
+									execute: () => router.push("/cmp/settings/users-teams"),
+								},
+								{
+									group: settingsGroups.ai,
+									label: "AI",
+									addon: <IconSparkles size={16} />,
+									execute: () => router.push("/cmp/settings/ai"),
+								},
+								{
+									group: settingsGroups.main,
+									label: "Assets",
+									addon: <IconFolder size={16} />,
+									execute: () => router.push("/cmp/settings/assets"),
+								},
+								{
+									group: settingsGroups.main,
+									label: "Fields",
+									addon: <IconCircleDot size={16} />,
+									execute: () => router.push("/cmp/settings/fields"),
+								},
+								{
+									group: settingsGroups.main,
+									label: "Integrations",
+									addon: <IconApps size={16} />,
+									execute: () => router.push("/cmp/settings/integrations"),
+								},
+								{
+									group: settingsGroups.main,
+									label: "Routing Rules",
+									addon: <IconGitBranch size={16} />,
+									execute: () => router.push("/cmp/settings/routing-rules"),
+								},
+								{
+									group: settingsGroups.main,
+									label: "Strategy",
+									addon: <IconTarget size={16} />,
+									execute: () => router.push("/cmp/settings/strategy"),
+								},
+								{
+									group: settingsGroups.main,
+									label: "Templates",
+									addon: <IconTemplate size={16} />,
+									execute: () => router.push("/cmp/settings/content-models"),
+								},
+								{
+									group: settingsGroups.main,
+									label: "Workflows",
+									addon: <IconList size={16} />,
+									execute: () => router.push("/cmp/settings/workflows"),
+								},
+								{
+									group: settingsGroups.management,
+									label: "Reports",
+									addon: <IconFileDownload size={16} />,
+									execute: () => router.push("/cmp/settings/reports"),
+								},
+								{
+									group: settingsGroups.management,
+									label: "Activity Log",
+									addon: <IconActivity size={16} />,
+									execute: () => router.push("/cmp/settings/activity-log"),
+								},
+								{
+									group: settingsGroups.management,
+									label: "Recycle Bin",
+									addon: <IconTrash size={16} />,
+									execute: () => router.push("/cmp/settings/recycle-bin"),
+								},
+								{
+									group: settingsGroups.integrations,
+									label: "Pitch Fields",
+									addon: <IconCircleDot size={16} />,
+									execute: () => router.push("/cmp/settings/pitch-fields"),
+								},
+								{
+									group: settingsGroups.integrations,
+									label: "Social Accounts",
+									addon: <IconShare size={16} />,
+									execute: () => router.push("/cmp/settings/social-accounts"),
+								},
+								{
+									group: settingsGroups.integrations,
+									label: "Marketo",
+									addon: <IconMail size={16} />,
+									execute: () => router.push("/cmp/settings/marketo"),
+								},
+								{
+									group: settingsGroups.integrations,
+									label: "Eloqua",
+									addon: <IconMail size={16} />,
+									execute: () => router.push("/cmp/settings/eloqua"),
+								},
+								{
+									group: settingsGroups.integrations,
+									label: "Salesforce",
+									addon: <IconCloud size={16} />,
+									execute: () => router.push("/cmp/settings/salesforce"),
+								},
+								{
+									group: settingsGroups.integrations,
+									label: "Apps & Webhooks",
+									addon: <IconWebhook size={16} />,
+									execute: () => router.push("/cmp/settings/apps-webhooks"),
+								},
+								{
+									group: settingsGroups.integrations,
+									label: "Brand Compliance",
+									addon: <IconShieldCheck size={16} />,
+									execute: () => router.push("/cmp/settings/brand-compliance"),
+								},
+							]}
 						>
-							<Image
-								src={activeVAU?.avatar ?? "/avatars/user.png"}
-								alt={activeVAU?.name ?? "Account"}
-								width={28}
-								height={28}
-								style={{borderRadius: 999}}
-							/>
-						</Button>
+							<MenuTrigger asChild>
+								<Button
+									appearance="subtle"
+									size="md"
+									aria-label="Account"
+									style={{minWidth: 32, padding: 0}}
+								>
+									<Image
+										src={activeVAU?.avatar ?? "/avatars/user.png"}
+										alt={activeVAU?.name ?? "Account"}
+										width={28}
+										height={28}
+										style={{borderRadius: 999}}
+									/>
+								</Button>
+							</MenuTrigger>
+							<MenuContent style={{minWidth: "240px"}} />
+						</Menu>
 					</Box>
 				</Box>
 			</Box>
@@ -675,112 +809,6 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 										addon: <IconUsers size={16} />,
 										execute: () => router.push("/opal/virtual-teammates"),
 									},
-									...(isCmpRoute
-										? [
-												{
-													group: settingsGroups.userOrg,
-													label: "Stefan Svebeck (Admin)",
-													addon: <IconUser size={16} />,
-												},
-												{
-													group: settingsGroups.userOrg,
-													label: "Organization",
-													addon: <IconBuilding size={16} />,
-												},
-												{
-													group: settingsGroups.userOrg,
-													label: "Users & Teams",
-													addon: <IconUsers size={16} />,
-												},
-												{
-													group: settingsGroups.ai,
-													label: "AI",
-													addon: <IconSparkles size={16} />,
-												},
-												{
-													group: settingsGroups.main,
-													label: "Assets",
-													addon: <IconFolder size={16} />,
-												},
-												{
-													group: settingsGroups.main,
-													label: "Fields",
-													addon: <IconCircleDot size={16} />,
-												},
-												{
-													group: settingsGroups.main,
-													label: "Integrations",
-													addon: <IconApps size={16} />,
-												},
-												{
-													group: settingsGroups.main,
-													label: "Routing Rules",
-													addon: <IconGitBranch size={16} />,
-												},
-												{
-													group: settingsGroups.main,
-													label: "Strategy",
-													addon: <IconTarget size={16} />,
-												},
-												{
-													group: settingsGroups.main,
-													label: "Templates",
-													addon: <IconTemplate size={16} />,
-													execute: () =>
-														router.push("/cmp/settings/content-models"),
-												},
-												{
-													group: settingsGroups.main,
-													label: "Workflows",
-													addon: <IconList size={16} />,
-												},
-												{
-													group: settingsGroups.management,
-													label: "Reports",
-													addon: <IconFileDownload size={16} />,
-												},
-												{
-													group: settingsGroups.management,
-													label: "Activity Log",
-													addon: <IconActivity size={16} />,
-												},
-												{
-													group: settingsGroups.management,
-													label: "Recycle Bin",
-													addon: <IconTrash size={16} />,
-												},
-												{
-													group: settingsGroups.integrations,
-													label: "Marketo",
-													addon: <IconMail size={16} />,
-												},
-												{
-													group: settingsGroups.integrations,
-													label: "Eloqua",
-													addon: <IconMail size={16} />,
-												},
-												{
-													group: settingsGroups.integrations,
-													label: "Salesforce",
-													addon: <IconCloud size={16} />,
-												},
-												{
-													group: settingsGroups.integrations,
-													label: "Apps & Webhooks",
-													addon: <IconWebhook size={16} />,
-												},
-												{
-													group: settingsGroups.integrations,
-													label: "Brand Compliance",
-													addon: <IconShieldCheck size={16} />,
-												},
-												{
-													group: settingsGroups.social,
-													label: "Social Accounts",
-													addon: <IconShare size={16} />,
-												},
-											]
-										: []),
 								]}
 							>
 								<MenuTrigger

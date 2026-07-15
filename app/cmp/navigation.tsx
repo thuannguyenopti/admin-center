@@ -79,14 +79,17 @@ export const cmpNav = [
 		icon: <IconSparkles />,
 		hidden: true,
 	},
+	// Not in the Figma sidenav — reachable only through the avatar menu (Global Bar),
+	// matching real CMP: there is no gear icon in the primary rail.
 	{
 		label: "Settings",
 		highlight: "cmp/settings",
 		url: "/cmp/settings",
 		icon: <IconGear />,
 		hidePageHeader: true,
+		hidden: true,
 		children: [
-			{label: "Stefan Svebeck (Admin)", url: "/cmp/settings/profile"},
+			{label: "Profile (Stefan Svebeck)", url: "/cmp/settings/profile"},
 			{label: "Organization", url: "/cmp/settings/organization"},
 			{label: "Users & Teams", url: "/cmp/settings/users-teams", separator: true},
 			{label: "AI", url: "/cmp/settings/ai", separator: true},
@@ -100,6 +103,8 @@ export const cmpNav = [
 			{label: "Reports", url: "/cmp/settings/reports"},
 			{label: "Activity Log", url: "/cmp/settings/activity-log"},
 			{label: "Recycle Bin", url: "/cmp/settings/recycle-bin", separator: true},
+			{label: "Pitch Fields", url: "/cmp/settings/pitch-fields"},
+			{label: "Social Accounts", url: "/cmp/settings/social-accounts"},
 			{label: "Marketo", url: "/cmp/settings/marketo"},
 			{label: "Eloqua", url: "/cmp/settings/eloqua"},
 			{label: "Salesforce", url: "/cmp/settings/salesforce"},
@@ -109,7 +114,6 @@ export const cmpNav = [
 				url: "/cmp/settings/brand-compliance",
 				separator: true,
 			},
-			{label: "Social Accounts", url: "/cmp/settings/social-accounts"},
 		],
 	},
 	// Hidden entries — no sidebar item, they only carry layout flags for their route
