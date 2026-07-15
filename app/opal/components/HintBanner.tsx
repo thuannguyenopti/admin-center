@@ -472,7 +472,7 @@ const OPTION_LABELS: Record<HintVariant, string> = {
 
 const DURATION_OPTIONS = [10, 15, 20, 30]; // seconds
 
-export function HintBannerWithToggle({ onAddToPrompt }: { onAddToPrompt: (t: string) => void }) {
+export function HintBannerWithToggle({ onAddToPrompt, showConfig = true }: { onAddToPrompt: (t: string) => void; showConfig?: boolean }) {
   const router = useRouter();
   const handleNavigate = useCallback((href: string) => router.push(href), [router]);
   const [variant, setVariant] = useState<HintVariant>("A");
@@ -500,7 +500,7 @@ export function HintBannerWithToggle({ onAddToPrompt }: { onAddToPrompt: (t: str
   return (
     <Box style={{ maxWidth: "768px", width: "100%", margin: "0 auto" }}>
       <HintBanner variant={variant} onAddToPrompt={onAddToPrompt} onNavigate={handleNavigate} duration={duration * 1_000} onAdvance={handleAdvance} />
-      <div
+      {showConfig && <div
         style={{
           position: "fixed",
           top: "56px",
@@ -571,7 +571,7 @@ export function HintBannerWithToggle({ onAddToPrompt }: { onAddToPrompt: (t: str
         <span style={{ fontSize: "10px", color: "var(--ax-colors-fg-tertiary)", whiteSpace: "nowrap" }}>
           {activeLabel}
         </span>
-      </div>
+      </div>}
     </Box>
   );
 }

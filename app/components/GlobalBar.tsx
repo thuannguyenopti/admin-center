@@ -4,7 +4,6 @@ import {Box, Menu, MenuContent, MenuTrigger, Button, Group} from "@optiaxiom/rea
 import {Text} from "./Text";
 import {useRouter, usePathname} from "next/navigation";
 import {
-	IconSearch,
 	IconUser,
 	IconUsers,
 	IconSparkles,
@@ -22,15 +21,12 @@ import {
 	IconApps,
 	IconBuilding,
 	IconCloud,
-	IconDeviceDesktop,
 	IconFileDownload,
 	IconGitBranch,
-	IconCircleQuestion as IconHelp,
 	IconLayout2,
 	IconMail,
 	IconMoon,
 	IconShare,
-	IconSunFilled,
 	IconTarget,
 	IconTemplate,
 	IconTrash,
@@ -42,9 +38,17 @@ import {useTheme} from "@/app/hooks/useTheme";
 import {useLayout} from "@/app/context/LayoutContext";
 import NotificationDropdown from "./NotificationDropdown";
 import OpalChatButton from "./OpalChatButton";
-import {IconXmark} from "@optimizely/axiom-icons";
+import { DemoResetButton } from "@/app/opal/components/DemoResetButton";
 import {useState, useEffect} from "react";
-import {IconComments, IconMessages} from "@optiaxiom/icons";
+import {
+	IconComments,
+	IconMessages,
+	IconSearch,
+	IconCircleQuestion,
+	IconXmark,
+	IconSunBright,
+	IconDesktop,
+} from "@optiaxiom/icons";
 import {createPortal} from "react-dom";
 import {VAUS, type VAU} from "@/app/opal/data/vaus";
 
@@ -206,7 +210,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						<Button
 							appearance="subtle"
 							size="md"
-							icon={<IconHelp size={20} />}
+							icon={<IconCircleQuestion size={20} />}
 							aria-label="Help"
 						/>
 						<Button
@@ -446,24 +450,27 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 				<Box display="flex" alignItems="center" gap="4">
 					{isOpalRoute ? (
 						<>
+							<DemoResetButton />
 							<Button
 								appearance="subtle"
 								size="md"
 								icon={<IconSearch size={20} />}
+								color="fg.secondary"
 								aria-label="Search"
 							/>
 							<NotificationDropdown />
 							<Button
 								appearance="subtle"
 								size="md"
-								icon={<IconHelp size={20} />}
+								icon={<IconCircleQuestion size={20} />}
+								color="fg.secondary"
 								aria-label="Help"
 							/>
 							<Menu
 								options={[
 									{
 										label: "Light",
-										addon: <IconSunFilled size={16} />,
+										addon: <IconSunBright size={16} />,
 										...(themePreference === "light" && {selected: true}),
 										execute: () => setThemePreference("light"),
 									},
@@ -475,7 +482,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 									},
 									{
 										label: "System",
-										addon: <IconDeviceDesktop size={16} />,
+										addon: <IconDesktop size={16} />,
 										...(themePreference === "system" && {selected: true}),
 										execute: () => setThemePreference("system"),
 									},
@@ -487,8 +494,8 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 										size="md"
 										icon={
 											{
-												system: <IconDeviceDesktop />,
-												light: <IconSunFilled />,
+												system: <IconDesktop />,
+												light: <IconSunBright />,
 												dark: <IconMoon />,
 											}[themePreference]
 										}
@@ -560,7 +567,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 								options={[
 									{
 										label: "Light",
-										addon: <IconSunFilled size={16} />,
+										addon: <IconSunBright size={16} />,
 										...(themePreference === "light" && {selected: true}),
 										execute: () => setThemePreference("light"),
 									},
@@ -572,7 +579,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 									},
 									{
 										label: "System",
-										addon: <IconDeviceDesktop size={16} />,
+										addon: <IconDesktop size={16} />,
 										...(themePreference === "system" && {selected: true}),
 										execute: () => setThemePreference("system"),
 									},
@@ -584,8 +591,8 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 										size="md"
 										icon={
 											{
-												system: <IconDeviceDesktop />,
-												light: <IconSunFilled />,
+												system: <IconDesktop />,
+												light: <IconSunBright />,
 												dark: <IconMoon />,
 											}[themePreference]
 										}
@@ -619,17 +626,20 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 									},
 								]}
 							/>
+							<DemoResetButton />
 							<Button
 								appearance="subtle"
 								size="md"
 								icon={<IconSearch size={20} />}
+								color="fg.secondary"
 								aria-label="Search"
 							/>
 							<NotificationDropdown />
 							<Button
 								appearance="subtle"
 								size="md"
-								icon={<IconHelp size={20} />}
+								icon={<IconCircleQuestion size={20} />}
+								color="fg.secondary"
 								aria-label="Help"
 							/>
 							<Button

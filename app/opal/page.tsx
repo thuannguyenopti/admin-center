@@ -14,6 +14,7 @@ import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnect
 import { useState, useCallback, useEffect, useRef } from "react";
 import { InlineEditorCard } from "@/app/components/Opal/InlineEditorCard";
 import { ApprovalActionCard } from "@/app/components/Opal/ApprovalActionCard";
+import { AskQuestionsActionCard } from "@/app/components/Opal/AskQuestionsActionCard";
 import { HeadlessTaskPanel, useTaskController } from "./components/HeadlessTaskPanel";
 import { GrabHandle } from "@/app/components/Opal/OpalChatView";
 import { imToChatMessage } from "@/app/opal/im/lib/adapters";
@@ -21,6 +22,7 @@ import type { IMMessage } from "@/app/opal/im/lib/types";
 import {
   RESEARCH_ACTIVITY_SCRIPT,
   IMAGE_GEN_ACTIVITY_SCRIPT,
+  ASK_QUESTIONS_ACTIVITY_SCRIPT,
 } from "@/app/opal/im/components/ActivityStreamBlock";
 
 // Loaded client-side only — contains @codemirror/*, @tiptap/*, yjs which are
@@ -217,6 +219,18 @@ export default function OpalPage() {
   });
 
   const [editorOpen, setEditorOpen] = useState(false);
+  const activityCallbacksRef = useRef<Map<string, () => void>>(new Map());
+
+  // Hint banner visibility — controlled by DemoResetButton toggle
+  const [showHintBanner, setShowHintBanner] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem("opal-demo-hint-banner") === "true"; } catch { return false; }
+  });
+  useEffect(() => {
+    const handler = (e: Event) => setShowHintBanner((e as CustomEvent<boolean>).detail);
+    window.addEventListener("opal-hint-banner-change", handler);
+    return () => window.removeEventListener("opal-hint-banner-change", handler);
+  }, []);
   const [editorVersion, setEditorVersion] = useState<'v1' | 'v2'>('v1');
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
   const [headlessTaskOpen, setHeadlessTaskOpen] = useState(false);
@@ -375,9 +389,50 @@ export default function OpalPage() {
   }, [addMessage, updateMessage]);
 
   // Activity streaming flow — shown for regular Opal chat prompts
-  const handleActivityStreamTrigger = useCallback(async (userPrompt: string) => {
+  const handleActivityStreamTrigger = useCallback(async (userPrompt: string, scriptOverride?: typeof RESEARCH_ACTIVITY_SCRIPT) => {
+    const isAskQuestions = /ask.*question|question.*me/i.test(userPrompt);
     const isImageRequest = /\b(generat|creat|draw|make|image|photo|picture|illustrat|render)\b/i.test(userPrompt);
-    const script = isImageRequest ? IMAGE_GEN_ACTIVITY_SCRIPT : RESEARCH_ACTIVITY_SCRIPT;
+
+    const askQuestionsScript = [
+      ...ASK_QUESTIONS_ACTIVITY_SCRIPT.slice(0, 2).map((phase, i) =>
+        i === 1
+          ? {
+              ...phase,
+              actionCard: (onContinue: () => void) => (
+                <AskQuestionsActionCard
+                  title="A few quick questions"
+                  description="Help me personalise your content before I get started."
+                  submitLabel="Let's go"
+                  questions={[
+                    {
+                      id: "tone",
+                      label: "What tone should I use?",
+                      options: [
+                        { value: "professional", label: "Professional", description: "Formal, polished, brand-safe" },
+                        { value: "conversational", label: "Conversational", description: "Friendly and approachable" },
+                        { value: "bold", label: "Bold", description: "Direct, punchy, high-impact" },
+                      ],
+                    },
+                    {
+                      id: "length",
+                      label: "How long should it be?",
+                      options: [
+                        { value: "short", label: "Short", description: "Under 150 words" },
+                        { value: "medium", label: "Medium", description: "150–300 words" },
+                        { value: "long", label: "Long", description: "300+ words" },
+                      ],
+                    },
+                  ]}
+                  onSubmit={(_answers) => onContinue()}
+                />
+              ),
+            }
+          : phase
+      ),
+      ...ASK_QUESTIONS_ACTIVITY_SCRIPT.slice(2),
+    ];
+
+    const script = scriptOverride ?? (isAskQuestions ? askQuestionsScript : isImageRequest ? IMAGE_GEN_ACTIVITY_SCRIPT : RESEARCH_ACTIVITY_SCRIPT);
     const mockResponse = isImageRequest ? MOCK_IMAGE_RESPONSE : MOCK_RESEARCH_RESPONSE;
 
     addMessage({ role: 'user', content: userPrompt });
@@ -390,14 +445,17 @@ export default function OpalPage() {
       showOpalHeader: true,
     } as any);
 
-    await new Promise(r => setTimeout(r, activityScriptTotalMs(script)));
-
-    // Keep activityScript so the collapsed summary bar persists above the response
-    updateMessage(loadingMsg.id, {
-      isLoading: false,
-      content: mockResponse,
-    } as any);
+    // Store callback — response only shown after ActivityStreamBlock calls onComplete
+    activityCallbacksRef.current.set(loadingMsg.id, () => {
+      updateMessage(loadingMsg.id, { isLoading: false, content: mockResponse } as any);
+    });
   }, [addMessage, updateMessage]);
+
+  // Called by ActivityStreamBlock via OpalMessage → OpalChat → OpalChatView when the stream finishes
+  const handleActivityComplete = useCallback((messageId: string) => {
+    const cb = activityCallbacksRef.current.get(messageId);
+    if (cb) { cb(); activityCallbacksRef.current.delete(messageId); }
+  }, []);
 
   // Regenerate: re-run the activity stream for the preceding user message
   const handleRegenerate = useCallback((assistantMessageId: string) => {
@@ -409,9 +467,9 @@ export default function OpalPage() {
     const script = isImageRequest ? IMAGE_GEN_ACTIVITY_SCRIPT : RESEARCH_ACTIVITY_SCRIPT;
     const mockResponse = isImageRequest ? MOCK_IMAGE_RESPONSE : MOCK_RESEARCH_RESPONSE;
     updateMessage(assistantMessageId, { content: '', isLoading: true, activityScript: script, timestamp: Date.now() } as any);
-    setTimeout(() => {
+    activityCallbacksRef.current.set(assistantMessageId, () => {
       updateMessage(assistantMessageId, { isLoading: false, content: mockResponse } as any);
-    }, activityScriptTotalMs(script));
+    });
   }, [messages, updateMessage]);
 
   // Clicking "Create a landing page" prefills the input — user fills variables, then submits
@@ -552,6 +610,7 @@ export default function OpalPage() {
           onSelectChat={opalContext.history.selectChat}
           onMessageEdit={() => {}}
           onRegenerate={handleRegenerate}
+          onActivityComplete={handleActivityComplete}
           onMessageVersionChange={switchVersion}
           agentBar={agentBarElement}
           collapsedSessionIds={collapsedSessionIds}
@@ -631,7 +690,7 @@ export default function OpalPage() {
     <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0, backgroundColor: 'var(--opal-bg-page)' }}>
       {modalElement}
       <OpalLanding
-        topSlot={<HintBannerWithToggle onAddToPrompt={setInputValue} />}
+        topSlot={<HintBannerWithToggle onAddToPrompt={setInputValue} showConfig={showHintBanner} />}
         inputSlot={
           <OpalInput
             value={inputValue}

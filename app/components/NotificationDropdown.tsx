@@ -5,6 +5,8 @@ import {DetailsPanel, DetailsPanelHeader, DetailsPanelBody} from "@optiaxiom/rea
 import {
 	IconBell,
 	IconXmark,
+} from "@optiaxiom/icons";
+import {
 	IconChecks,
 	IconMegaphone,
 	IconLoader2,
@@ -641,6 +643,7 @@ export default function NotificationDropdown() {
 				appearance="subtle"
 				size="md"
 				icon={<IconBell />}
+				color="fg.secondary"
 				aria-label="Notifications"
 				onClick={togglePanel}
 			/>

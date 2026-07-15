@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Box, Button, Text } from "@optiaxiom/react";
 import { Pill } from "@optiaxiom/react/unstable";
 import {
@@ -15,6 +15,7 @@ import {
   IconUser,
   IconGlobe,
   IconArrowRightToLine,
+  IconPause,
 } from "@optiaxiom/icons";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -37,6 +38,12 @@ export type ActivityPhase = {
   summary: string;
   items: ActivityPhaseItem[];
   durationMs: number;
+  /** "waiting" = standard automatic wait (no button); "paused" = needs user/system action (dark + Continue button) */
+  waitStyle?: "waiting" | "paused";
+  /** xs explainer shown below the Paused indicator */
+  explainerText?: string;
+  /** Optional card rendered below the Paused indicator; receives onContinue to advance the stream */
+  actionCard?: (onContinue: () => void) => React.ReactNode;
 };
 
 // Legacy aliases so page.tsx / useOpalState stay unchanged
@@ -72,7 +79,9 @@ export const RESEARCH_ACTIVITY_SCRIPT: ActivityPhase[] = [
   {
     summary: "Ran agent: research",
     items: [{ type: "agent-run", agentName: "research" }],
-    durationMs: 4800,
+    durationMs: 6800,
+    waitStyle: "paused",
+    explainerText: "Waiting for system execution",
   },
   {
     summary: "Searched the web",
@@ -102,6 +111,29 @@ export const IMAGE_GEN_ACTIVITY_SCRIPT: ActivityPhase[] = [
     summary: "Generated image",
     items: [{ type: "image-generate", prompt: "A simple, cute illustration of a unicorn riding a dinosaur. Flat design, bright cheerful colors…", imageUrl: "/avatars/vau-frank.png" }],
     durationMs: 5200,
+  },
+];
+
+export const ASK_QUESTIONS_ACTIVITY_SCRIPT: ActivityPhase[] = [
+  {
+    summary: "Picked up 2 skills",
+    items: [{ type: "skills", skills: [
+      { label: "CANVAS STYLE", personal: true },
+      { label: "OPTIMIZELY'S TONE AND VOICE" },
+    ] }],
+    durationMs: 3000,
+  },
+  {
+    summary: "Asking clarifying questions",
+    items: [{ type: "tool-use", icon: "💬", text: "Gathering your input to personalise the response" }],
+    durationMs: 1200,
+    waitStyle: "paused",
+    explainerText: "Waiting for your input",
+  },
+  {
+    summary: "Generating response",
+    items: [{ type: "agent-run", agentName: "content" }],
+    durationMs: 3500,
   },
 ];
 
@@ -136,7 +168,7 @@ function SearchResultCard({ result }: { result: SearchResult }) {
 
 // ── Phase item renderer ───────────────────────────────────────────────────────
 
-function PhaseItemRenderer({ item, onSkip }: { item: ActivityPhaseItem; onSkip?: () => void }) {
+function PhaseItemRenderer({ item }: { item: ActivityPhaseItem }) {
   if (item.type === "skills") {
     return (
       <Box display="flex" flexDirection="column">
@@ -145,7 +177,6 @@ function PhaseItemRenderer({ item, onSkip }: { item: ActivityPhaseItem; onSkip?:
             <IconFolder size={18} style={{ color: ICON_FG }} />
           </Box>
           <Text style={{ fontSize: 13, color: "var(--ax-colors-fg-default)", lineHeight: "20px" }}>Picked up skills</Text>
-          {onSkip && <Button appearance="subtle" size="sm" icon={<IconArrowRightToLine size={14} />} onClick={onSkip}>Skip</Button>}
         </Box>
         {/* border-left carries the line continuously through the pills area */}
         <Box
@@ -186,7 +217,6 @@ function PhaseItemRenderer({ item, onSkip }: { item: ActivityPhaseItem; onSkip?:
         <Text style={{ fontSize: 13, color: ICON_MUTED, lineHeight: "20px" }}>
           Ran agent: <span style={{ color: "var(--ax-colors-fg-secondary)" }}>{item.agentName}</span>
         </Text>
-        {onSkip && <Button appearance="subtle" size="sm" icon={<IconArrowRightToLine size={14} />} onClick={onSkip}>Skip</Button>}
       </Box>
     );
   }
@@ -200,7 +230,6 @@ function PhaseItemRenderer({ item, onSkip }: { item: ActivityPhaseItem; onSkip?:
           </Box>
           <Box display="flex" gap="8" style={{ flex: 1, minWidth: 0, alignItems: "center" }}>
             <Text style={{ fontSize: 13, color: "var(--ax-colors-fg-default)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: "20px" }}>{item.query}</Text>
-            {onSkip && <Button appearance="subtle" size="sm" icon={<IconArrowRightToLine size={14} />} onClick={onSkip}>Skip</Button>}
             <Box style={{ flex: 1 }} />
             {item.resultCount != null && <Text style={{ fontSize: 12, color: ICON_MUTED, flexShrink: 0, whiteSpace: "nowrap" }}>{item.resultCount} results</Text>}
           </Box>
@@ -223,7 +252,6 @@ function PhaseItemRenderer({ item, onSkip }: { item: ActivityPhaseItem; onSkip?:
         <Text style={{ fontSize: 13, color: ICON_MUTED, lineHeight: "20px" }}>
           Searched tools: <span style={{ color: "var(--ax-colors-fg-default)" }}>{item.toolName}</span>
         </Text>
-        {onSkip && <Button appearance="subtle" size="sm" icon={<IconArrowRightToLine size={14} />} onClick={onSkip}>Skip</Button>}
       </Box>
     );
   }
@@ -263,7 +291,7 @@ function PhaseItemRenderer({ item, onSkip }: { item: ActivityPhaseItem; onSkip?:
 
 // ── Single phase row ──────────────────────────────────────────────────────────
 
-function PhaseRow({ phase, isActive, isVisible, isDone, onSkip }: { phase: ActivityPhase; isActive: boolean; isVisible: boolean; isDone: boolean; onSkip?: () => void }) {
+function PhaseRow({ phase, isActive, isVisible, isDone, onSkip, isWaitingForUser }: { phase: ActivityPhase; isActive: boolean; isVisible: boolean; isDone: boolean; onSkip?: () => void; isWaitingForUser?: boolean }) {
   const isComplete = !isActive && isVisible;
   const [expanded, setExpanded] = useState(true);
   const [showDone, setShowDone] = useState(false);
@@ -314,7 +342,7 @@ function PhaseRow({ phase, isActive, isVisible, isDone, onSkip }: { phase: Activ
             const hasNext = i < phase.items.length - 1 || showDone || isActive;
             return (
               <React.Fragment key={i}>
-                <PhaseItemRenderer item={item} onSkip={isActive ? onSkip : undefined} />
+                <PhaseItemRenderer item={item} />
                 {hasNext && (
                   <Box style={{ width: 1, height: 8, background: LINE_COLOR, marginLeft: 9, flexShrink: 0 }} />
                 )}
@@ -322,14 +350,56 @@ function PhaseRow({ phase, isActive, isVisible, isDone, onSkip }: { phase: Activ
             );
           })}
 
-          {/* Working spinner */}
+          {/* Working / Waiting / Paused indicator */}
           {isActive && (
-            <Box display="flex" alignItems="center" gap="12" style={{ paddingTop: 2 }}>
-              <Box style={{ width: 20, flexShrink: 0, display: "flex", justifyContent: "center" }}>
-                <Box style={{ width: 18, height: 18, borderRadius: "50%", border: `2.5px solid color-mix(in srgb, ${GREEN} 22%, transparent)`, borderTopColor: GREEN, animation: "opal-spin 0.9s linear infinite", flexShrink: 0 }} />
-                <style>{`@keyframes opal-spin{to{transform:rotate(360deg)}}`}</style>
+            <Box display="flex" flexDirection="column" gap="4" style={{ paddingTop: 2 }}>
+              <style>{`@keyframes opal-wait-pulse{0%,100%{opacity:1}50%{opacity:0.35}} @keyframes opal-spin{to{transform:rotate(360deg)}}`}</style>
+              <Box display="flex" alignItems="center" gap="12">
+                <Box style={{ width: 20, flexShrink: 0, display: "flex", justifyContent: "center" }}>
+                  {!phase.waitStyle ? (
+                    /* Default: spinner */
+                    <Box style={{ width: 18, height: 18, borderRadius: "50%", border: `2.5px solid color-mix(in srgb, ${GREEN} 22%, transparent)`, borderTopColor: GREEN, animation: "opal-spin 0.9s linear infinite", flexShrink: 0 }} />
+                  ) : (
+                    /* waiting / paused: pulsing pause icon */
+                    <IconPause
+                      size={16}
+                      style={{
+                        color: phase.waitStyle === "paused" ? "var(--ax-colors-fg-default)" : GREEN,
+                        animation: "opal-wait-pulse 1.6s ease-in-out infinite",
+                      }}
+                    />
+                  )}
+                </Box>
+                <Text style={{
+                  fontSize: 13,
+                  color: phase.waitStyle === "paused" ? "var(--ax-colors-fg-default)" : GREEN,
+                  lineHeight: "20px",
+                }}>
+                  {phase.waitStyle === "paused" ? "Paused" : phase.waitStyle === "waiting" ? "Waiting" : "Working…"}
+                </Text>
+                {phase.waitStyle === "paused" && onSkip && (
+                  <Button
+                    appearance="subtle"
+                    size="sm"
+                    icon={<IconArrowRightToLine size={14} />}
+                    onClick={onSkip}
+                  >
+                    Continue
+                  </Button>
+                )}
               </Box>
-              <Text style={{ fontSize: 13, color: GREEN, lineHeight: "20px" }}>Working…</Text>
+              {phase.waitStyle === "paused" && phase.explainerText && (
+                <Box style={{ paddingLeft: 32 }}>
+                  <Text fontSize="sm" color="fg.tertiary">{phase.explainerText}</Text>
+                </Box>
+              )}
+            </Box>
+          )}
+
+          {/* Action card — rendered when this phase is paused and waiting for user */}
+          {isWaitingForUser && phase.actionCard && onSkip && (
+            <Box style={{ paddingTop: 12, minWidth: 640 }}>
+              {phase.actionCard(onSkip)}
             </Box>
           )}
 
@@ -359,29 +429,44 @@ export function ActivityStreamBlock({
 }) {
   const [currentPhase, setCurrentPhase] = useState(0);
   const [isDone, setIsDone] = useState(false);
+  const [waitingForUser, setWaitingForUser] = useState(false);
 
+  // Advance to the next phase or complete
+  const advance = useCallback(() => {
+    setWaitingForUser(false);
+    if (currentPhase < script.length - 1) {
+      setCurrentPhase(p => p + 1);
+    } else {
+      setIsDone(true);
+      setTimeout(() => onComplete?.(), 800);
+    }
+  }, [currentPhase, script.length, onComplete]);
+
+  // Per-phase timer: fires after durationMs, then either auto-advances or pauses for user
   useEffect(() => {
+    if (isDone || waitingForUser) return;
     let cancelled = false;
-    let cumulative = 0;
-    const timers: ReturnType<typeof setTimeout>[] = [];
+    const phase = script[currentPhase];
+    if (!phase) return;
 
-    script.forEach((phase, i) => {
-      cumulative += phase.durationMs;
-      const t = setTimeout(() => {
-        if (cancelled) return;
-        if (i < script.length - 1) {
-          setCurrentPhase(i + 1);
+    const t = setTimeout(() => {
+      if (cancelled) return;
+      if (phase.waitStyle === "paused") {
+        setWaitingForUser(true); // stay on this phase until user clicks Continue
+      } else {
+        // Auto-advance
+        if (currentPhase < script.length - 1) {
+          setCurrentPhase(p => p + 1);
         } else {
           setIsDone(true);
           setTimeout(() => { if (!cancelled) onComplete?.(); }, 800);
         }
-      }, cumulative);
-      timers.push(t);
-    });
+      }
+    }, phase.durationMs);
 
-    return () => { cancelled = true; timers.forEach(clearTimeout); };
+    return () => { cancelled = true; clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentPhase, isDone, waitingForUser]);
 
   return (
     <Box display="flex" flexDirection="column" gap="4">
@@ -392,14 +477,8 @@ export function ActivityStreamBlock({
           isActive={i === currentPhase && !isDone}
           isVisible={i <= currentPhase}
           isDone={isDone && i === currentPhase}
-          onSkip={() => {
-            if (i < script.length - 1) {
-              setCurrentPhase(i + 1);
-            } else {
-              setIsDone(true);
-              setTimeout(() => onComplete?.(), 800);
-            }
-          }}
+          onSkip={advance}
+          isWaitingForUser={i === currentPhase && waitingForUser}
         />
       ))}
     </Box>

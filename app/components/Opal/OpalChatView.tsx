@@ -85,6 +85,7 @@ type OpalChatViewProps = {
     onMessageEdit?: (id: string, newContent: string) => void;
     onRegenerate?: (id: string) => void;
     onMessageVersionChange?: (id: string, versionIndex: number, content: string) => void;
+    onActivityComplete?: (messageId: string) => void;
     agentBar?: ReactNode;
     collapsedSessionIds?: Set<string>;
     onExpandSession?: (sessionStartId: string) => void;
@@ -185,6 +186,7 @@ export function OpalChatView({
     onMessageEdit,
     onRegenerate,
     onMessageVersionChange,
+    onActivityComplete,
     agentBar,
     collapsedSessionIds,
     onExpandSession,
@@ -317,6 +319,7 @@ export function OpalChatView({
                             threadKey={activeChat}
                             onRegenerate={onRegenerate}
                             onVersionChange={onMessageVersionChange}
+                            onActivityComplete={onActivityComplete}
                             hideSuggestions
                             variant="assistant"
                             collapsedSessionIds={collapsedSessionIds}
@@ -498,6 +501,7 @@ export function OpalChatView({
                         threadKey={activeChat}
                         onRegenerate={onRegenerate}
                         onVersionChange={onMessageVersionChange}
+                        onActivityComplete={onActivityComplete}
                         hideSuggestions={!!emptyState}
                         variant={variant}
                         collapsedSessionIds={collapsedSessionIds}

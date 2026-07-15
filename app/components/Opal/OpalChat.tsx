@@ -18,6 +18,7 @@ type OpalChatProps = {
   isLoading?: boolean;
   onRegenerate?: (id: string) => void;
   onVersionChange?: (id: string, versionIndex: number, content: string) => void;
+  onActivityComplete?: (messageId: string) => void;
   hideSuggestions?: boolean;
   variant?: 'assistant' | 'home';
   collapsedSessionIds?: Set<string>;
@@ -47,7 +48,7 @@ type OpalChatProps = {
   onQuoteReply?: (messageId: string) => void;
 };
 
-export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamingMode = "collapsed", threadKey, isLoading, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip, contextualActionCard, messageCards, imMode, currentUserId, messageReactions, onToggleReaction, onReplyInThread, onQuoteReply }: OpalChatProps) {
+export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamingMode = "collapsed", threadKey, isLoading, onRegenerate, onVersionChange, onActivityComplete, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip, contextualActionCard, messageCards, imMode, currentUserId, messageReactions, onToggleReaction, onReplyInThread, onQuoteReply }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [streamingExpandedByThreadKey, setStreamingExpandedByThreadKey] = useState<Record<string, boolean>>({});
   let opalContext;
@@ -345,6 +346,7 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
                   showOpalHeader={showOpalHeader}
                   onRegenerate={onRegenerate}
                   onVersionChange={onVersionChange}
+                  onActivityComplete={onActivityComplete}
                   onSuggestionClick={onSuggestionClick}
                   onSubmitPrompt={onSubmitPrompt}
                   streamingMode={streamingMode}
@@ -397,6 +399,7 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
                             showOpalHeader={m.role === 'assistant'}
                             onRegenerate={onRegenerate}
                             onVersionChange={onVersionChange}
+                  onActivityComplete={onActivityComplete}
                             streamingMode={streamingMode}
                             isStreamingExpanded={isThreadStreamingExpanded}
                             onStreamingExpandedChange={(open) =>

@@ -244,6 +244,7 @@ type OpalMessageProps = {
   onStreamingExpandedChange?: (open: boolean) => void;
   isOpalLoading?: boolean;
   onEdit?: (id: string, newContent: string) => void;
+  onActivityComplete?: (messageId: string) => void;
   onRegenerate?: (id: string) => void;
   onVersionChange?: (id: string, versionIndex: number, content: string) => void;
   agentContext?: { emoji: string; name: string; avatar?: string } | null;
@@ -813,6 +814,7 @@ export function OpalMessage({
   onStreamingExpandedChange,
   isOpalLoading,
   onEdit,
+  onActivityComplete,
   onRegenerate,
   onVersionChange,
   agentContext,
@@ -1303,7 +1305,7 @@ export function OpalMessage({
             ) : (
               message.activityScript ? (
                 <Box display="flex" flexDirection="column" gap="12" w="full">
-                  <ActivityStreamBlock key={`${message.id}-${message.timestamp}`} script={message.activityScript} />
+                  <ActivityStreamBlock key={`${message.id}-${message.timestamp}`} script={message.activityScript} onComplete={() => onActivityComplete?.(message.id)} />
                   {!isLoading && message.content && (
                     <MarkdownContent content={message.content} />
                   )}
