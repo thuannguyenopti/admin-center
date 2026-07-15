@@ -132,6 +132,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 				alignItems="center"
 				justifyContent="flex-end"
 				gap="8"
+				style={{ marginTop: "auto" }}
 				onClick={(e) => e.stopPropagation()}
 			>
 				{needsReview && (
