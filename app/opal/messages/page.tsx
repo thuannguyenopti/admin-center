@@ -3485,7 +3485,6 @@ function IMMain({
   }, []);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const isVAU = !!activeDMS.find(d => d.id === selected)?.isVAU;
   const activeDMS = React.useMemo(() => {
     try {
       const raw = localStorage.getItem("active-vt");
@@ -3494,6 +3493,7 @@ function IMMain({
       return DMS.map(d => d.id === "bubs" ? { ...d, name: ov.name, avatar: ov.avatar } : d);
     } catch { return DMS; }
   }, []);
+  const isVAU = !!activeDMS.find(d => d.id === selected)?.isVAU;
 
   const isDeactivated = ARCHIVED_DM_IDS.includes(selected ?? "");
   const isChannel = CHANNELS.some(ch => ch.id === selected) || (extraChannels ?? []).some(ch => ch.id === selected);
