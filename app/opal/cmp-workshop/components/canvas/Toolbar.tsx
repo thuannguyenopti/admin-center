@@ -1,0 +1,110 @@
+"use client";
+
+import { Box, Button, Switch, Tabs, TabsList, TabsTrigger, Tooltip, ToggleButton } from "@optiaxiom/react";
+import {
+	IconArrowRotateLeft,
+	IconArrowRotateRight,
+	IconArrowsMaximize,
+	IconCode,
+	IconCopy,
+	IconEllipsisStroke,
+	IconEye,
+	IconXmark,
+} from "@optiaxiom/icons";
+import { Text } from "@/app/components/Text";
+import type { Scene } from "../../data";
+import type { ContentTab } from "./CanvasStage";
+
+// Canvas header chrome — matches Figma "Image Gen II - 10 Channel Pack Items"
+// (node 6708:90368/89886): code/preview toggle, content tabs, rationale switch,
+// workflow trigger, and version/copy/fullscreen/close icon buttons.
+export function Toolbar({
+	activeTab,
+	onSceneChange,
+	onTabChange,
+	showRationale,
+	showWorkflow,
+}: {
+	activeTab: ContentTab;
+	onSceneChange: (scene: Scene) => void;
+	onTabChange: (tab: ContentTab) => void;
+	showRationale: boolean;
+	showWorkflow: boolean;
+}) {
+	const selectTab = (next: string) => {
+		const tab = next as ContentTab;
+		onTabChange(tab);
+		if (tab === "blog") onSceneChange("canvas-blog");
+		if (tab === "social") onSceneChange("canvas-social");
+	};
+
+	return (
+		<Box
+			bg="bg.default"
+			borderB="1"
+			borderColor="border.tertiary"
+			display="grid"
+			alignItems="center"
+			px="24"
+			style={{ gridTemplateColumns: "auto minmax(320px, 1fr) auto", minHeight: 64 }}
+		>
+			<Box display="flex" alignItems="center" gap="8">
+				<ToggleButton size="sm" appearance="subtle" pressed={false} icon={<IconCode size={17} />} aria-label="Code" />
+				<ToggleButton size="sm" appearance="subtle" pressed={false} icon={<IconEye size={17} />} aria-label="Preview" />
+			</Box>
+
+			<Box aria-label="Content type" display="flex" alignItems="center" justifyContent="center" style={{ height: 64, minWidth: 0, overflow: "hidden" }}>
+				<Tabs value={activeTab} onValueChange={selectTab}>
+					<TabsList>
+						<TabsTrigger value="blog">Blog Post</TabsTrigger>
+						<TabsTrigger value="social">Social Posts</TabsTrigger>
+						<TabsTrigger value="email">Email</TabsTrigger>
+					</TabsList>
+				</Tabs>
+			</Box>
+
+			<Box className="cmp-canvas-toolbar-right" display="flex" alignItems="center" gap="16" justifyContent="flex-end">
+				{showWorkflow ? (
+					<Tooltip content="More">
+						<Button appearance="subtle" size="sm" icon={<IconEllipsisStroke size={18} />} aria-label="More" />
+					</Tooltip>
+				) : (
+					<>
+						<Box display="flex" alignItems="center" gap="8">
+							<Switch checked={showRationale} onCheckedChange={() => onSceneChange(showRationale ? "canvas-blog" : "canvas-rationale")} />
+							<Text fontSize="sm" fontWeight="700">
+								Rationale
+							</Text>
+						</Box>
+						<Button appearance="subtle" size="sm" onClick={() => onSceneChange("canvas-workflow")}>
+							Workflow
+						</Button>
+						<Tooltip content="Previous Version">
+							<Button appearance="subtle" size="sm" icon={<IconArrowRotateLeft size={17} />} aria-label="Previous Version" />
+						</Tooltip>
+						<Tooltip content="Next Version">
+							<Button appearance="subtle" size="sm" icon={<IconArrowRotateRight size={17} />} aria-label="Next Version" />
+						</Tooltip>
+						<Tooltip content="Copy">
+							<Button appearance="subtle" size="sm" icon={<IconCopy size={17} />} aria-label="Copy" />
+						</Tooltip>
+						<Tooltip content="Fullscreen">
+							<Button appearance="subtle" size="sm" icon={<IconArrowsMaximize size={17} />} aria-label="Fullscreen" onClick={() => onSceneChange("canvas-fullscreen")} />
+						</Tooltip>
+						<Tooltip content="Close chat window">
+							<Button appearance="subtle" size="sm" icon={<IconXmark size={17} />} aria-label="Close" onClick={() => onSceneChange("opal-chat")} />
+						</Tooltip>
+					</>
+				)}
+			</Box>
+			<Box className="cmp-canvas-toolbar-short" display="none" alignItems="center" gap="16" justifyContent="flex-end">
+				{!showWorkflow && (
+					<Tooltip content="Close chat window">
+						<Button appearance="subtle" size="sm" icon={<IconXmark size={17} />} aria-label="Close" onClick={() => onSceneChange("opal-chat")} />
+					</Tooltip>
+				)}
+				<Button appearance="subtle" size="sm" icon={<IconEllipsisStroke size={18} />} aria-label="More" />
+			</Box>
+		</Box>
+	);
+}
