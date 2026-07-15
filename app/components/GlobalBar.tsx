@@ -51,7 +51,6 @@ import {
 } from "@optiaxiom/icons";
 import {createPortal} from "react-dom";
 import {VAUS, type VAU} from "@/app/opal/data/vaus";
-import { DemoResetButton } from "@/app/opal/components/DemoResetButton";
 
 type GlobalBarProps = {
 	onOpalClick?: () => void;
