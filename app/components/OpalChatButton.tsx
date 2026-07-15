@@ -8,15 +8,16 @@ const GRADIENT =
 
 type Props = {
   options: MenuOption[];
+  label?: string;
 };
 
-export default function OpalChatButton({ options }: Props) {
+export default function OpalChatButton({ options, label = "Chat" }: Props) {
   return (
     <Menu options={options}>
       <MenuTrigger asChild>
         <button
           type="button"
-          aria-label="Chat"
+          aria-label={label}
           style={{
             backgroundImage: GRADIENT,
             backgroundColor: "transparent",
@@ -48,7 +49,7 @@ export default function OpalChatButton({ options }: Props) {
               <circle cx="8" cy="8" r="6.75" stroke="currentColor" strokeWidth="1.5"/>
               <path d="M8 5.5v5M5.5 8h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
-            Chat
+            {label}
           </div>
         </button>
       </MenuTrigger>

@@ -111,7 +111,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 		return (
 			<Box
 				w="full"
-				h="48"
+				h="56"
 				bg="bg.default"
 				style={{gridColumn: "1 / -1", display: "flex", alignItems: "center"}}
 				borderB="1"
@@ -124,7 +124,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					display="flex"
 					alignItems="center"
 					justifyContent="space-between"
-					style={{minHeight: 48}}
+					style={{minHeight: 56}}
 				>
 					<Box display="flex" alignItems="center" gap="16">
 						<Link href="/cmp/library" style={{display: "flex", alignItems: "center"}}>
@@ -179,6 +179,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					</Box>
 					<Box display="flex" alignItems="center" gap="8">
 						<OpalChatButton
+							label="Ask Opal"
 							options={[
 								{
 									label: "Opal",
