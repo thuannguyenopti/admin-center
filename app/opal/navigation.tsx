@@ -11,6 +11,7 @@ import {
 	IconPuzzlePiece,
 	IconGear,
 	IconImagePortrait,
+	IconMegaphone,
 } from "@optiaxiom/icons";
 
 export function useOpalNav() {
@@ -80,6 +81,13 @@ export function useOpalNav() {
 			additionalHighlights: ["/opal/messages"],
 			icon: <IconComments filled={active("/opal/messages")} />,
 			customLayout: true,
+		},
+		{
+			label: "CMP Workshop",
+			url: "/opal/cmp-workshop",
+			highlight: "/opal/cmp-workshop",
+			icon: <IconMegaphone filled={active("/opal/cmp-workshop")} />,
+			fullscreen: true,
 		},
 		{
 			label: "Virtual Teammates",
@@ -176,13 +184,6 @@ export function useOpalNav() {
 			label: "Workflow Builder",
 			url: "/opal/agents/workflow",
 			highlight: "/opal/agents/workflow",
-			fullscreen: true,
-			hidden: true,
-		},
-		{
-			label: "CMP Workshop",
-			url: "/opal/cmp-workshop",
-			highlight: "/opal/cmp-workshop",
 			fullscreen: true,
 			hidden: true,
 		},
