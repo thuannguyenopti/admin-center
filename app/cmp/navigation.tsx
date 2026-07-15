@@ -40,6 +40,13 @@ export const cmpNav = [
 		// Task detail pages highlight Plan in the sidebar
 		highlight: ["/cmp/plan-view", "/cmp/task/"],
 		icon: <IconList />,
+		// PlanViewPage is a self-contained full-bleed page (own tabs/toolbar/table/footer,
+		// own padding throughout) — it was built to bypass the standard page wrapper, but
+		// this flag was never set, so it was rendering nested inside the generated "Plan"
+		// heading + p="32" bg="bg.page" card, which produced both the oversized title and
+		// the mismatched background (the page's own white sections floating inside that
+		// wrapper's tinted padding instead of matching the live product's flush layout).
+		customLayout: true,
 	},
 	{
 		label: "Dashboard",

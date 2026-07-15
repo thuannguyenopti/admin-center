@@ -25,7 +25,7 @@ export function PlanViewPage() {
 	};
 
 	return (
-		<Box style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+		<Box style={{ height: "100%", display: "flex", flexDirection: "column" }}>
 			{/* Row 1 - Tab Navigation */}
 			<Box borderB="1" borderColor="border.tertiary" bg="bg.default" px="16" display="flex" alignItems="center">
 				<Tabs value={state.activeView} onValueChange={state.setActiveView}>
@@ -56,8 +56,9 @@ export function PlanViewPage() {
 				onShowHierarchyChange={state.setShowHierarchy}
 			/>
 
-			{/* Content */}
-			<Box bg="bg.default" style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+			{/* Content — tinted page background so the table (its own white bordered card,
+				see ListView) reads as a distinct surface, matching the live product. */}
+			<Box bg="bg.page" p="16" style={{ flex: 1, overflow: "hidden", position: "relative" }}>
 				{state.activeView === "list" && (
 					<ListView
 						data={state.paginatedItems}
