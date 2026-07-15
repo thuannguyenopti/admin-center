@@ -851,6 +851,7 @@ export default function VAUDetailPage() {
 									const chosenAvatar = customAvatar?.src ?? vau.avatar;
 									sessionStorage.setItem("im-vau-welcome", JSON.stringify({ name: vauName, avatar: chosenAvatar }));
 									localStorage.setItem("vau-bubs-avatar", chosenAvatar);
+									localStorage.setItem("active-vt", JSON.stringify({ name: vauName, avatar: chosenAvatar }));
 								} catch {}
 								router.push("/opal/messages?conversation=bubs");
 							}}

@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CollabRail } from "../../components/Opal/CollabRail";
 import { ApprovalActionCard } from "../../components/Opal/ApprovalActionCard";
+import { HITLApprovalCard } from "../../components/Opal/HITLApprovalCard";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
   Box,
@@ -32,12 +33,9 @@ import {
   Radio,
   Checkbox,
   AvatarGroup,
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
+  Menu,
+  MenuTrigger,
+  MenuContent,
   ToggleButton,
   Spinner,
   Alert,
@@ -120,7 +118,7 @@ type Reaction = { emoji: string; count: number };
 type Message = {
   id: string;
   from: "user" | "vau" | "human" | "system";
-  type?: "text" | "attachment" | "hitl" | "daily-brief";
+  type?: "text" | "attachment" | "hitl";
   senderName?: string;
   senderAvatar?: string;
   senderColor?: string;
@@ -129,13 +127,12 @@ type Message = {
   reactions?: Reaction[];
   threadCount?: number;
   agentCard?: { name: string; emoji: string; description: string; tags: string[]; connectors: string[]; workingWith: string[] };
-  quickActions?: { label: string; icon?: string }[];
 };
 
 // ── Mock data ──────────────────────────────────────────────────────────────────
 
 const PRESENCE_COLOR: Record<PresenceStatus, string> = {
-  active: "#22c55e",
+  active: "var(--ax-colors-bg-success)",
   away:   "var(--ax-colors-fg-tertiary)",
   busy:   "var(--ax-colors-fg-tertiary)",
   ooo:    "var(--ax-colors-fg-tertiary)",
@@ -167,7 +164,7 @@ const DMS: DMItem[] = [
   { id: "hw",   name: "Harry Winston-Brown",        avatar: "https://i.pravatar.cc/150?img=52", status: "busy",   preview: "Happy to help 😄 Let me know if anything else comes up!", time: "Yesterday" },
   { id: "pr",   name: "Priya Rajan",                avatar: "https://i.pravatar.cc/150?img=44", status: "away",  unread: 3, hasDraft: true, preview: "Just flagging in case you hadn't seen the calendar invite!", time: "11:45 AM" },
   { id: "ao",   name: "Amara Osei",                 avatar: "https://i.pravatar.cc/150?img=38", status: "active", preview: "You: I've put together the full Q4 content brief based on our conversation", time: "10:02 AM" },
-  { id: "bubs", name: "Randy",                       avatar: "/avatars/vau-frank.png",                    status: "active", isVAU: true, role: "Chief of Staff",              preview: "Randy sent an item that needs your approval", time: "9:54 AM" },
+  { id: "bubs", name: "Randy",                       avatar: "/vau-bubs.svg",                    status: "active", isVAU: true, role: "Chief of Staff",              preview: "Randy sent an item that needs your approval", time: "9:54 AM" },
   { id: "kara", name: "Kara",                       avatar: "/vau-kara.svg",                    status: "active", isVAU: true, role: "Content Strategy Expert",  preview: "Kara sent an item that needs your approval", time: "9:30 AM" },
   { id: "eric", name: "Eric",                       avatar: "/vau-eric.svg",                    status: "ooo",    isVAU: true, role: "Experimentation Manager",   preview: "Test is configured and ready to launch 🧪", time: "8:15 AM" },
   { id: "sage", name: "Sage",                       avatar: "",                                                   isVAU: true, isDeactivated: true, role: "Email Automation", preview: "All 8 emails are drafted and staged for review.", time: "Mon" },
@@ -187,7 +184,7 @@ const GROUPS: GroupItem[] = [
   { id: "vw", name: "VAU Working Group", members: "8 members", emoji: "🤖", preview: "Lisa: This is super helpful, bookmarking this 🙏", time: "12:34 PM",
     createdBy: "Lisa Gray", createdOn: "March 3, 2025",
     memberList: [
-      { name: "Randy",          avatar: "/avatars/vau-frank.png" },
+      { name: "Randy",          avatar: "/vau-bubs.svg" },
       { name: "Kara",          avatar: "/vau-kara.svg" },
       { name: "Eric",          avatar: "/vau-eric.svg" },
       { name: "Lisa Gray",     avatar: "https://i.pravatar.cc/150?img=5" },
@@ -215,14 +212,14 @@ const GROUPS: GroupItem[] = [
   { id: "sg", name: "Stride GEO", members: "Randy ✨ · Nadia, Jason", emoji: "🌍", unread: 2, preview: "Randy sent an item that needs your approval", time: "10:55 AM",
     createdBy: "Jason Park", createdOn: "September 22, 2025",
     memberList: [
-      { name: "Randy",        avatar: "/avatars/vau-frank.png" },
+      { name: "Randy",        avatar: "/vau-bubs.svg" },
       { name: "Nadia Flores", avatar: "https://i.pravatar.cc/150?img=29" },
       { name: "Jason Park",   avatar: "https://i.pravatar.cc/150?img=7" },
     ]},
   { id: "q4gs", name: "Q4 Growth Sprint", members: "Kara ✨ · Sarah, Jason +1", emoji: "📈", preview: "Kara: Kicking off the brief drafts now. I'll ping when the first set is ready 📝", time: "9:47 AM",
     createdBy: "Sarah Kim", createdOn: "August 5, 2025",
     memberList: [
-      { name: "Randy",        avatar: "/avatars/vau-frank.png" },
+      { name: "Randy",        avatar: "/vau-bubs.svg" },
       { name: "Kara",         avatar: "/vau-kara.svg" },
       { name: "Sarah Kim",    avatar: "https://i.pravatar.cc/150?img=39" },
       { name: "Jason Park",   avatar: "https://i.pravatar.cc/150?img=7" },
@@ -426,7 +423,7 @@ const TYPING_USERS: Record<string, { name: string; avatar: string }[]> = {
   js:   [{ name: "Jane Smith",  avatar: "https://i.pravatar.cc/150?img=47" }],
   pr:   [{ name: "Priya Rajan", avatar: "https://i.pravatar.cc/150?img=44" }],
   bf:   [{ name: "Patrick Lee", avatar: "https://i.pravatar.cc/150?img=53" }, { name: "Jason Wu", avatar: "https://i.pravatar.cc/150?img=61" }],
-  vw:   [{ name: "Randy",        avatar: "/avatars/vau-frank.png" }],
+  vw:   [{ name: "Randy",        avatar: "/vau-bubs.svg" }],
 };
 
 const GROUP_VAU_IDS: Record<string, string[]> = {
@@ -483,19 +480,19 @@ const CHANNEL_VAU_IDS: Record<string, string[]> = {
 // Prototype review items for group chats
 const GROUP_DELIVERABLES: Record<string, GroupDeliverable[]> = {
   vw: [
-    { id: "gvw1", title: "Q3 Content Strategy Draft",           type: "Blog Post",   vauId: "bubs", vauName: "Randy", vauAvatar: "/avatars/vau-frank.png" },
+    { id: "gvw1", title: "Q3 Content Strategy Draft",           type: "Blog Post",   vauId: "bubs", vauName: "Randy", vauAvatar: "/vau-bubs.svg" },
     { id: "gvw2", title: "SEO Keyword Analysis for Q4 Content", type: "SEO Article", vauId: "kara", vauName: "Kara", vauAvatar: "/vau-kara.svg" },
     { id: "gvw3", title: "Homepage CTA Multivariate Test",      type: "A/B Test",    vauId: "eric", vauName: "Eric", vauAvatar: "/vau-eric.svg" },
   ],
   sg: [
-    { id: "sg1", title: "Stride GEO: Updated Article Draft", type: "SEO Article", vauId: "bubs", vauName: "Randy", vauAvatar: "/avatars/vau-frank.png" },
+    { id: "sg1", title: "Stride GEO: Updated Article Draft", type: "SEO Article", vauId: "bubs", vauName: "Randy", vauAvatar: "/vau-bubs.svg" },
   ],
   q4gs: [],
 };
 
 const CHANNEL_DELIVERABLES: Record<string, GroupDeliverable[]> = {
   "ch-marketing": [
-    { id: "chm1", title: "Q4 Campaign Performance Report", type: "Analytics Report", vauId: "bubs", vauName: "Randy", vauAvatar: "/avatars/vau-frank.png" },
+    { id: "chm1", title: "Q4 Campaign Performance Report", type: "Analytics Report", vauId: "bubs", vauName: "Randy", vauAvatar: "/vau-bubs.svg" },
   ],
 };
 
@@ -644,7 +641,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "2", from: "vau",
-      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
       text: "Sure! I'd be happy to review. Send on over.",
       reactions: [{ emoji: "👍", count: 2 }, { emoji: "😊", count: 1 }],
     },
@@ -664,7 +661,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "5", from: "vau",
-      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
       text: "Love it! Opening it up now — give me a moment to read through.",
       reactions: [{ emoji: "❤️", count: 3 }, { emoji: "🔥", count: 2 }],
     },
@@ -1133,7 +1130,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "2", from: "vau",
-      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
       text: "On it! Here's a draft intro:\n\nAs we head into Q3, our focus shifts to deepening customer engagement and scaling what's working. Here's what's on the horizon.",
     },
     {
@@ -1143,7 +1140,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "4", from: "vau",
-      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
       text: "Q3 is here. Time to double down on what's working and move faster. Here's the plan.",
     },
     {
@@ -1153,7 +1150,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "6", from: "vau",
-      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
       text: "Sure! Here are three options:\n\n1. \"The Q3 Playbook: AI, Speed, and Content That Converts\"\n2. \"How We're Using AI to Outpace the Competition This Quarter\"\n3. \"Q3 Is Here — Here's Our Content Strategy (And Why AI Is Central to It)\"",
     },
     {
@@ -1163,13 +1160,13 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "8", from: "vau",
-      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
       text: "@Erika — great choice! It's punchy and keyword-friendly. Good luck with the post! 🚀",
       threadCount: 1,
     },
     {
       id: "9", from: "vau", type: "hitl",
-      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
       text: "",
     },
   ],
@@ -1260,7 +1257,7 @@ const THREADS: Record<string, Message[]> = {
   sg: [
     {
       id: "sg1", from: "vau",
-      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
       text: "Hey team! Just wrapped the second pass on the Stride GEO article. Incorporated all the feedback from last week's review session.",
     },
     {
@@ -1270,7 +1267,7 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "sg3", from: "vau",
-      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
       text: "Yes! Rewrote the first 3 Q&As completely in Stride's adventurous, explorer-first voice. Much stronger now.",
       reactions: [{ emoji: "👍", count: 2 }],
     },
@@ -1281,17 +1278,17 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "sg5", from: "vau",
-      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
       text: "Yes, holding that cluster. Also expanded the activities section based on SEO gap analysis — adds trail running, open-water diving, and skydiving explicitly.",
     },
     {
       id: "sg6", from: "vau",
-      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
       text: "Done — all three rounds of feedback incorporated:\n\n✓ **Activities** — Explicitly listed trail running, climbing, diving, skydiving, and multi-terrain endurance challenges\n✓ **Team use cases** — Rewired around competitive multi-sport group challenges, not generic team building\n✓ **Opening tone** — Rewrote the first 3 Q&As in Stride's adventurous, explorer-first voice\n\nThe updated article is ready for final review. See the revised artifact below.",
     },
     {
       id: "sg7", from: "vau", type: "hitl",
-      senderName: "Randy", senderAvatar: "/avatars/vau-frank.png", senderColor: "var(--opal-vau-bubs)",
+      senderName: "Randy", senderAvatar: "/vau-bubs.svg", senderColor: "var(--opal-vau-bubs)",
       text: "",
     },
   ],
@@ -1369,7 +1366,7 @@ const RESPONDERS: Record<string, Responder> = {
   vw:   { from: "human", name: "Patrick Lee",           avatar: "https://i.pravatar.cc/150?img=60" },
   cm:   { from: "human", name: "Sara Chen",             avatar: "https://i.pravatar.cc/150?img=20" },
   q4gs: { from: "human", name: "Sarah Kim",             avatar: "https://i.pravatar.cc/150?img=39" },
-  bubs: { from: "vau",   name: "Randy", avatar: "/avatars/vau-frank.png", color: "var(--opal-vau-bubs)" },
+  bubs: { from: "vau",   name: "Randy", avatar: "/vau-bubs.svg", color: "var(--opal-vau-bubs)" },
   kara: { from: "vau",   name: "Kara", avatar: "/vau-kara.svg", color: "var(--opal-vau-kara)" },
   eric: { from: "vau",   name: "Eric", avatar: "/vau-eric.svg", color: "var(--opal-vau-eric)" },
 };
@@ -1503,7 +1500,7 @@ const PROFILE_LOOKUP: Record<string, ProfileEntry> = {
   "Amara Osei":            { name: "Amara Osei",            email: "amara.osei@optimizely.com",    avatar: "https://i.pravatar.cc/150?img=38", isVAU: false },
   "Erika Schreiber":       { name: "Erika Schreiber",       email: "erika.schreiber@optimizely.com", avatar: "https://i.pravatar.cc/150?img=24", isVAU: false },
   "Me":                    { name: "Erika Schreiber",       email: "erika.schreiber@optimizely.com", avatar: "https://i.pravatar.cc/150?img=24", isVAU: false },
-  "Randy":                  { name: "Randy",                  email: "randy@opal.optimizely.com",    avatar: "/avatars/vau-frank.png",  isVAU: true, status: "Offline" },
+  "Randy":                  { name: "Randy",                  email: "randy@opal.optimizely.com",    avatar: "/vau-bubs.svg",  isVAU: true, status: "Offline" },
   "Kara":                  { name: "Kara",                  email: "kara@opal.optimizely.com",     avatar: "/vau-kara.svg",  isVAU: true, status: "Available" },
   "Eric":                  { name: "Eric",                  email: "eric@opal.optimizely.com",     avatar: "/vau-eric.svg",  isVAU: true, status: "Out of Office" },
   "Sage":                  { name: "Sage",                  email: "sage@opal.optimizely.com",     avatar: "",               isVAU: true, status: "Deactivated" },
@@ -1662,7 +1659,7 @@ function MessageBubble({ msg, time, onOpenThread, isPinned, onPin, onMarkConvoUn
             display: "inline-flex", alignItems: "center", gap: 3,
             padding: "2px 8px", cursor: "pointer",
             fontSize: 12, userSelect: "none",
-            border: r.mine ? "1.5px solid var(--ax-colors-border-accent)" : "1px solid var(--ax-colors-border-secondary)",
+            border: r.mine ? "1.5px solid var(--ax-colors-border-focus)" : "1px solid var(--ax-colors-border-secondary)",
             background: r.mine ? "var(--ax-colors-bg-default-hovered)" : "var(--ax-colors-bg-default)",
           }}
         >
@@ -1752,28 +1749,24 @@ function MessageBubble({ msg, time, onOpenThread, isPinned, onPin, onMarkConvoUn
         </Tooltip>
       )}
       {/* More options */}
-      <DropdownMenu onOpenChange={open => { setMenuOpen(open); if (!open && !hovered) { setHovered(false); } }}>
-        <DropdownMenuTrigger asChild>
+      <Menu
+        options={isUser ? [
+          { label: "Edit message", execute: handleEdit },
+          { label: "Delete message", execute: () => setDeleted(true), intent: "danger" },
+          { label: unread ? "Mark read" : "Mark unread", execute: () => { const next = !unread; setUnread(next); onMarkConvoUnread?.(next); } },
+          { label: copied ? "Copied!" : "Copy text", execute: handleCopy },
+        ] : [
+          { label: unread ? "Mark read" : "Mark unread", execute: () => { const next = !unread; setUnread(next); onMarkConvoUnread?.(next); } },
+          { label: copied ? "Copied!" : "Copy text", execute: handleCopy },
+        ]}
+        onOpenChange={(open) => { setMenuOpen(open); if (!open && !hovered) setHovered(false); }}
+      >
+        <MenuTrigger asChild>
           <Button size="sm" appearance="subtle" style={{ width: 30, height: 30, padding: 0 }}
             icon={<IconEllipsisSolid size={15} />} aria-label="More options" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          {isUser ? (
-            <>
-              <DropdownMenuItem onClick={handleEdit}>Edit message</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setDeleted(true)}>Delete message</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { const next = !unread; setUnread(next); onMarkConvoUnread?.(next); }}>{unread ? "Mark read" : "Mark unread"}</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleCopy}>{copied ? "Copied!" : "Copy text"}</DropdownMenuItem>
-            </>
-          ) : (
-            <>
-              <DropdownMenuItem onClick={() => { const next = !unread; setUnread(next); onMarkConvoUnread?.(next); }}>{unread ? "Mark read" : "Mark unread"}</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleCopy}>{copied ? "Copied!" : "Copy text"}</DropdownMenuItem>
-
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </MenuTrigger>
+        <MenuContent />
+      </Menu>
     </Box>
   ) : null;
 
@@ -1805,7 +1798,7 @@ function MessageBubble({ msg, time, onOpenThread, isPinned, onPin, onMarkConvoUn
               <Box display="flex" flexDirection="column" gap="8">
                 <textarea autoFocus value={editText} onChange={e => setEditText(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); } if (e.key === "Escape") handleCancelEdit(); }}
-                  style={{ width: "100%", border: "1px solid var(--ax-colors-border-accent)", borderRadius: 6, padding: "6px 8px", fontFamily: "inherit", fontSize: 14, resize: "none", outline: "none", background: "white", minHeight: 60 }} />
+                  style={{ width: "100%", border: "1px solid var(--ax-colors-border-focus)", borderRadius: 6, padding: "6px 8px", fontFamily: "inherit", fontSize: 14, resize: "none", outline: "none", background: "white", minHeight: 60 }} />
                 <Box display="flex" gap="8" justifyContent="flex-end">
                   <Button size="sm" appearance="default" onClick={handleCancelEdit}>Cancel</Button>
                   <Button size="sm" appearance="primary" onClick={handleSaveEdit}>Save</Button>
@@ -1871,7 +1864,7 @@ function MessageBubble({ msg, time, onOpenThread, isPinned, onPin, onMarkConvoUn
             <Box display="flex" flexDirection="column" gap="8">
               <textarea autoFocus value={editText} onChange={e => setEditText(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); } if (e.key === "Escape") handleCancelEdit(); }}
-                style={{ width: "100%", border: "1px solid var(--ax-colors-border-accent)", borderRadius: 6, padding: "6px 8px", fontFamily: "inherit", fontSize: 14, resize: "none", outline: "none", background: "var(--ax-colors-bg-default)", minHeight: 60 }} />
+                style={{ width: "100%", border: "1px solid var(--ax-colors-border-focus)", borderRadius: 6, padding: "6px 8px", fontFamily: "inherit", fontSize: 14, resize: "none", outline: "none", background: "var(--ax-colors-bg-default)", minHeight: 60 }} />
               <Box display="flex" gap="8">
                 <Button size="sm" appearance="default" onClick={handleCancelEdit}>Cancel</Button>
                 <Button size="sm" appearance="primary" onClick={handleSaveEdit}>Save</Button>
@@ -1891,33 +1884,6 @@ function MessageBubble({ msg, time, onOpenThread, isPinned, onPin, onMarkConvoUn
             </>
           )}
         </Box>
-        {msg.quickActions && msg.quickActions.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-            {msg.quickActions.map((action) => (
-              <div
-                key={action.label}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "5px 12px",
-                  borderRadius: 999,
-                  border: "1px solid var(--ax-colors-border-default)",
-                  background: "var(--ax-colors-bg-default)",
-                  fontSize: 13,
-                  color: "var(--ax-colors-fg-default)",
-                  cursor: "pointer",
-                  userSelect: "none",
-                  whiteSpace: "nowrap",
-                  transition: "background 0.1s",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "var(--ax-colors-bg-default)")}
-              >
-                {action.icon && <span style={{ fontSize: 14 }}>{action.icon}</span>}
-                {action.label}
-              </div>
-            ))}
-          </div>
-        )}
         {(msg.threadCount ?? 0) > 0 && (
           <Button size="md" appearance="subtle" icon={<IconMessageLines />} style={{ marginTop: 2 }} onClick={() => onOpenThread?.(msg)}>
             {msg.threadCount} {msg.threadCount === 1 ? "reply" : "replies"}
@@ -1994,6 +1960,15 @@ function IMSidebar({
   const [dmNotif, setDmNotif] = React.useState<"all" | "mentions" | "off">("all");
   const [groupNotif, setGroupNotif] = React.useState<"all" | "mentions" | "off">("mentions");
   const [channelNotif, setChannelNotif] = React.useState<"all" | "mentions" | "off">("mentions");
+  const activeDMS = React.useMemo(() => {
+    try {
+      const raw = localStorage.getItem("active-vt");
+      if (!raw) return DMS;
+      const ov = JSON.parse(raw) as { name: string; avatar: string };
+      return DMS.map(d => d.id === "bubs" ? { ...d, name: ov.name, avatar: ov.avatar, preview: `${ov.name} is ready to start working with you` } : d);
+    } catch { return DMS; }
+  }, []);
+
   const allChannels = [...CHANNELS, ...(extraChannels ?? [])];
   const handleCreateChannel = () => {
     if (!createChannelName.trim()) return;
@@ -2050,7 +2025,7 @@ function IMSidebar({
     return () => document.removeEventListener("mousedown", onDown);
   }, [openSectionMenuId]);
 
-  const allDMs = DMS;
+  const allDMs = activeDMS;
   const allGroups = [...(extraGroups ?? []), ...GROUPS];
   const allChs = [...(extraChannels ?? []), ...CHANNELS];
   const unreadDMs = allDMs.filter(d => (d.unread ?? 0) > 0 || manualUnreadConvos?.has(d.id));
@@ -2107,7 +2082,7 @@ function IMSidebar({
           </Tooltip>
           <Box style={{ height: 1, width: 36, background: "var(--ax-colors-border-secondary, #e4f0da)", marginBottom: 4 }} />
           {/* DM avatars — unread first */}
-          {[...DMS].sort((a, b) => (b.unread ?? 0) - (a.unread ?? 0)).map((dm) => (
+          {[...activeDMS].sort((a, b) => (b.unread ?? 0) - (a.unread ?? 0)).map((dm) => (
             <Tooltip key={dm.id} content={dm.name} side="right">
               <Box
                 rounded="md"
@@ -2271,7 +2246,7 @@ function IMSidebar({
             const query = globalSearch.trim().toLowerCase();
             const results: { convId: string; convName: string; convAvatar?: string; convType: "dm" | "group" | "channel"; msg: Message }[] = [];
             Object.entries(THREADS).forEach(([convId, msgs]) => {
-              const dm = DMS.find(d => d.id === convId);
+              const dm = activeDMS.find(d => d.id === convId);
               const group = GROUPS.find(g => g.id === convId);
               const convName = dm?.name ?? group?.name ?? convId;
               const convAvatar = dm?.avatar;
@@ -2540,7 +2515,7 @@ function IMSidebar({
             </Box>
             <DisclosureContent>
               <Box display="flex" flexDirection="column" pt="4">
-                {s.id === "dms" && [...DMS].filter(dm => {
+                {s.id === "dms" && [...activeDMS].filter(dm => {
                     if (movedItems.includes(dm.id) || ARCHIVED_DM_IDS.includes(dm.id)) return false;
                     if (getSectionSettings("dms").view === "unread")
                       return (dm.unread ?? 0) > 0 || (VAU_DELIVERABLES[dm.id]?.length ?? 0) > 0 || !!manualUnreadConvos?.has(dm.id);
@@ -2729,7 +2704,7 @@ function IMSidebar({
                 {s.id !== "dms" && s.id !== "groups" && s.id !== "channels" && (() => {
                   const sectionItems = s.items ?? [];
                   const allConvos = [
-                    ...DMS.map(d => ({ id: d.id, name: d.name, avatar: d.avatar, type: "dm" as const, isVAU: d.isVAU, status: d.status })),
+                    ...activeDMS.map(d => ({ id: d.id, name: d.name, avatar: d.avatar, type: "dm" as const, isVAU: d.isVAU, status: d.status })),
                     ...GROUPS.map(g => ({ id: g.id, name: g.name, avatar: "", type: "group" as const, emoji: g.emoji })),
                     ...CHANNELS.map(ch => ({ id: ch.id, name: ch.name, avatar: "", type: "channel" as const })),
                   ];
@@ -2843,7 +2818,7 @@ function IMSidebar({
             </Box>
             <DisclosureContent>
               <Box display="flex" flexDirection="column" pt="4">
-                {DMS.filter(dm => ARCHIVED_DM_IDS.includes(dm.id)).map(dm => (
+                {activeDMS.filter(dm => ARCHIVED_DM_IDS.includes(dm.id)).map(dm => (
                   <Box
                     key={dm.id}
                     display="flex"
@@ -2941,8 +2916,8 @@ function IMSidebar({
                   display="flex" alignItems="start" gap="12"
                   style={{ cursor: "pointer", padding: "10px 12px", borderRadius: 8, border: `1.5px solid ${createChannelVisibility === v ? "var(--ax-colors-border-focus, #4f8ef7)" : "var(--ax-colors-border-default)"}`, background: createChannelVisibility === v ? "var(--ax-colors-bg-default-hovered)" : "transparent" }}
                 >
-                  <Box style={{ marginTop: 2, width: 16, height: 16, borderRadius: "50%", border: `2px solid ${createChannelVisibility === v ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-border-default)"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    {createChannelVisibility === v && <Box style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--ax-colors-fg-accent)" }} />}
+                  <Box style={{ marginTop: 2, width: 16, height: 16, borderRadius: "50%", border: `2px solid ${createChannelVisibility === v ? "var(--ax-colors-fg-default)" : "var(--ax-colors-border-default)"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {createChannelVisibility === v && <Box style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--ax-colors-fg-default)" }} />}
                   </Box>
                   <Box display="flex" flexDirection="column" gap="2">
                     <Text fontSize="md" fontWeight="500" color="fg.default">
@@ -3510,11 +3485,20 @@ function IMMain({
   }, []);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const isVAU = !!DMS.find(d => d.id === selected)?.isVAU;
+  const isVAU = !!activeDMS.find(d => d.id === selected)?.isVAU;
+  const activeDMS = React.useMemo(() => {
+    try {
+      const raw = localStorage.getItem("active-vt");
+      if (!raw) return DMS;
+      const ov = JSON.parse(raw) as { name: string; avatar: string };
+      return DMS.map(d => d.id === "bubs" ? { ...d, name: ov.name, avatar: ov.avatar } : d);
+    } catch { return DMS; }
+  }, []);
+
   const isDeactivated = ARCHIVED_DM_IDS.includes(selected ?? "");
   const isChannel = CHANNELS.some(ch => ch.id === selected) || (extraChannels ?? []).some(ch => ch.id === selected);
   const thread = selected ? (threads[selected] ?? ARCHIVED_VAU_THREAD[selected] ?? CHANNEL_THREADS[selected] ?? []) : [];
-  const selectedDM = DMS.find(d => d.id === selected);
+  const selectedDM = activeDMS.find(d => d.id === selected);
   const selectedGroup = GROUPS.find(g => g.id === selected) ?? (extraGroups ?? []).find(g => g.id === selected);
   const selectedChannel = CHANNELS.find(ch => ch.id === selected) ?? (extraChannels ?? []).find(ch => ch.id === selected);
   const unreadCount = selectedDM?.unread ?? selectedGroup?.unread ?? selectedChannel?.unread ?? 0;
@@ -3699,7 +3683,7 @@ function IMMain({
   }, [searchOpen]);
 
   const conversationName =
-    DMS.find((d) => d.id === selected)?.name ||
+    activeDMS.find((d) => d.id === selected)?.name ||
     GROUPS.find((g) => g.id === selected)?.name ||
     (extraGroups ?? []).find((g) => g.id === selected)?.name ||
     CHANNELS.find((ch) => ch.id === selected)?.name;
@@ -3750,7 +3734,7 @@ function IMMain({
     } as const;
     const meta = QUICK_VIEW_META[quickView as keyof typeof QUICK_VIEW_META];
 
-    const unreadDMs = DMS.filter(d => (d.unread ?? 0) > 0 || manualUnreadConvos.has(d.id));
+    const unreadDMs = activeDMS.filter(d => (d.unread ?? 0) > 0 || manualUnreadConvos.has(d.id));
     const unreadGroups = GROUPS.filter(g => (g.unread ?? 0) > 0 || manualUnreadConvos.has(g.id));
     const unreadConvos: { id: string; name: string; avatar?: string; emoji?: string; isGroup?: boolean; status?: string; isVAU?: boolean }[] = [
       ...unreadDMs.map(d => ({ id: d.id, name: d.name, avatar: d.avatar, status: d.status, isVAU: d.isVAU })),
@@ -3767,9 +3751,6 @@ function IMMain({
           style={{ height: 56, borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}>
           <Box style={{ color: "var(--ax-colors-fg-secondary)" }}>{meta?.icon}</Box>
           <Text fontSize="lg" fontWeight="500" color="fg.default">{meta?.label}</Text>
-          <Box style={{ marginLeft: "auto" }}>
-            <Button appearance="subtle" size="sm" icon={<IconXmark size={14} />} onClick={onQuickViewDismiss} aria-label="Close" />
-          </Box>
         </Box>
 
         <Box display="flex" flexDirection="column" style={{ flex: 1, overflowY: "auto" }} px="16" py="16" gap="4">
@@ -3826,7 +3807,7 @@ function IMMain({
             threadedMessages.length === 0
               ? <Box py="40" style={{ textAlign: "center" }}><Text color="fg.tertiary">No active threads yet</Text></Box>
               : threadedMessages.map((msg, i) => {
-                  const dm = DMS.find(d => d.id === msg.convId);
+                  const dm = activeDMS.find(d => d.id === msg.convId);
                   const group = GROUPS.find(g => g.id === msg.convId);
                   const convName = dm?.name ?? group?.name ?? msg.convId;
                   const senderName = msg.senderName ?? (msg.from === "user" ? "Erika" : convName);
@@ -3863,7 +3844,7 @@ function IMMain({
             mentionMessages.length === 0
               ? <Box py="40" style={{ textAlign: "center" }}><Text color="fg.tertiary">No mentions yet</Text></Box>
               : mentionMessages.map((msg, i) => {
-                  const dm = DMS.find(d => d.id === msg.convId);
+                  const dm = activeDMS.find(d => d.id === msg.convId);
                   const group = GROUPS.find(g => g.id === msg.convId);
                   const convName = dm?.name ?? group?.name ?? msg.convId;
                   const senderName = msg.senderName ?? (msg.from === "user" ? "Erika" : convName);
@@ -3897,7 +3878,7 @@ function IMMain({
             // Group all deliverables by VAU
             const grouped = new Map<string, { name: string; avatar: string; items: Array<{ id: string; title: string; type: string; convId: string }> }>();
             Object.entries(VAU_DELIVERABLES).forEach(([vauId, items]) => {
-              const dm = DMS.find(d => d.id === vauId);
+              const dm = activeDMS.find(d => d.id === vauId);
               if (!dm) return;
               const filtered = items.filter(d => !dismissedDeliverableIds.has(d.id));
               if (!filtered.length) return;
@@ -3966,7 +3947,7 @@ function IMMain({
 
       {/* ── Conversation header ── */}
       {selected && (() => {
-        const dm = DMS.find(d => d.id === selected);
+        const dm = activeDMS.find(d => d.id === selected);
         const group = selectedGroup;
         const channel = selectedChannel;
         return (
@@ -4004,7 +3985,7 @@ function IMMain({
                     )}
                   </Box>
                   {dm.isVAU && (
-                    <Text fontSize="sm" color="fg.tertiary" style={{ fontStyle: "italic" }}>
+                    <Text fontSize="sm" color="fg.tertiary">
                       {isDeactivated ? "This VAU is no longer active" : (dm.role ?? (dm.status === "active" ? "Available" : dm.status === "ooo" ? "Out of Office" : "Offline"))}
                     </Text>
                   )}
@@ -4015,24 +3996,22 @@ function IMMain({
                     aria-label="Search conversation"
                     onClick={() => setSearchOpen(true)} />
                   {!dm.isVAU && !isDeactivated && (
-                    <DropdownMenu open={dmMenuOpen} onOpenChange={setDmMenuOpen}>
-                      <DropdownMenuTrigger asChild>
+                    <Menu
+                      options={[
+                        { label: isMuted ? "Unmute conversation" : "Mute conversation", execute: () => { toggleMute(); setDmMenuOpen(false); } },
+                        { label: "Move to another section", execute: () => { setMoveToSectionOpen(true); setDmMenuOpen(false); } },
+                        { label: "Mark as unread", execute: () => { setManualUnreadConvos(prev => { const next = new Set(prev); next.add(selected); return next; }); setDmMenuOpen(false); } },
+                      ]}
+                      open={dmMenuOpen}
+                      onOpenChange={setDmMenuOpen}
+                    >
+                      <MenuTrigger asChild>
                         <Button appearance="subtle" size="lg"
                           icon={<IconEllipsisSolid style={{ width: 20, height: 20 }} />}
                           aria-label="More options" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" style={{ minWidth: 220 }}>
-                        <DropdownMenuItem onClick={() => { toggleMute(); setDmMenuOpen(false); }}>
-                          {isMuted ? "Unmute conversation" : "Mute conversation"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => { setMoveToSectionOpen(true); setDmMenuOpen(false); }}>
-                          Move to another section
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => { setManualUnreadConvos(prev => { const next = new Set(prev); next.add(selected); return next; }); setDmMenuOpen(false); }}>
-                          Mark as unread
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      </MenuTrigger>
+                      <MenuContent align="end" />
+                    </Menu>
                   )}
                   {dm.isVAU && (
                     <div ref={vauMenuRef} style={{ position: "relative" }}>
@@ -4082,21 +4061,22 @@ function IMMain({
                     icon={<IconSearch style={{ width: 20, height: 20 }} />}
                     aria-label="Search conversation"
                     onClick={() => setSearchOpen(true)} />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                  <Menu
+                    options={[
+                      { label: "Notification settings", execute: () => setNotifModalOpen(true) },
+                      { label: "Rename group", execute: () => { setRenameValue(nameOverrides[selected] ?? group.name); setRenameDialogOpen(true); } },
+                      { label: "Mark as unread", execute: () => setManualUnreadConvos(prev => { const next = new Set(prev); next.add(selected); return next; }) },
+                      { label: "Move to another section", execute: () => setMoveToSectionOpen(true) },
+                      { label: "Leave group", execute: () => setLeaveConfirmOpen(true), intent: "danger", group: { label: "", hidden: true, separator: true } },
+                    ]}
+                  >
+                    <MenuTrigger asChild>
                       <Button appearance="subtle" size="lg"
                         icon={<IconEllipsisSolid style={{ width: 20, height: 20 }} />}
                         aria-label="More options" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" style={{ minWidth: 220 }}>
-                      <DropdownMenuItem onClick={() => setNotifModalOpen(true)}>Notification settings</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setRenameValue(nameOverrides[selected] ?? group.name); setRenameDialogOpen(true); }}>Rename group</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setManualUnreadConvos(prev => { const next = new Set(prev); next.add(selected); return next; })}>Mark as unread</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setMoveToSectionOpen(true)}>Move to another section</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem intent="danger" onClick={() => setLeaveConfirmOpen(true)}>Leave group</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </MenuTrigger>
+                    <MenuContent align="end" />
+                  </Menu>
                 </Box>
               </>
             ) : channel ? (
@@ -4135,24 +4115,23 @@ function IMMain({
                     icon={<IconSearch style={{ width: 20, height: 20 }} />}
                     aria-label="Search conversation"
                     onClick={() => setSearchOpen(true)} />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                  <Menu
+                    options={[
+                      { label: "Notification settings", execute: () => setNotifModalOpen(true) },
+                      { label: "Rename", execute: () => { setRenameValue(nameOverrides[selected] ?? channel.name); setRenameDialogOpen(true); } },
+                      { label: "Mark as unread", execute: () => setManualUnreadConvos(prev => { const next = new Set(prev); next.add(selected); return next; }) },
+                      { label: "Move to another section", execute: () => setMoveToSectionOpen(true) },
+                      { label: (channelPrivacyOverrides[selected] ?? channel.isPrivate) ? "Make public" : "Make private", execute: () => onTogglePrivacy(selected) },
+                      { label: "Leave channel", execute: () => setLeaveConfirmOpen(true), intent: "danger", group: { label: "", hidden: true, separator: true } },
+                    ]}
+                  >
+                    <MenuTrigger asChild>
                       <Button appearance="subtle" size="lg"
                         icon={<IconEllipsisSolid style={{ width: 20, height: 20 }} />}
                         aria-label="More options" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" style={{ minWidth: 220 }}>
-                      <DropdownMenuItem onClick={() => setNotifModalOpen(true)}>Notification settings</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setRenameValue(nameOverrides[selected] ?? channel.name); setRenameDialogOpen(true); }}>Rename</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setManualUnreadConvos(prev => { const next = new Set(prev); next.add(selected); return next; })}>Mark as unread</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setMoveToSectionOpen(true)}>Move to another section</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onTogglePrivacy(selected)}>
-                        {(channelPrivacyOverrides[selected] ?? channel.isPrivate) ? "Make public" : "Make private"}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem intent="danger" onClick={() => setLeaveConfirmOpen(true)}>Leave channel</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </MenuTrigger>
+                    <MenuContent align="end" />
+                  </Menu>
                 </Box>
               </>
             ) : null}
@@ -4267,7 +4246,7 @@ function IMMain({
                       <>
                         <Text fontSize="sm" color="fg.tertiary" style={{ marginBottom: 12 }}>{results.length} result{results.length !== 1 ? "s" : ""}</Text>
                         {results.map(msg => {
-                          const senderDM = DMS.find(d => d.id === msg.from);
+                          const senderDM = activeDMS.find(d => d.id === msg.from);
                           const senderName = msg.from === "user" ? "You" : (senderDM?.name ?? convName ?? msg.from);
                           const avatarSrc = senderDM?.avatar;
                           const lo = (msg.text as string).toLowerCase().indexOf(q);
@@ -4376,27 +4355,6 @@ function IMMain({
                           <AvatarWithHoverCard name="Me" src={msg.senderAvatar} size="md" />
                         </Box>
                       </Box>
-                    ) : msg.type === "daily-brief" ? (
-                      <Box key={msg.id} id={`msg-${msg.id}`} display="flex" gap="12" alignItems="start" py="4">
-                        <Box pt="4" style={{ flexShrink: 0 }}>
-                          <AvatarWithHoverCard name={msg.senderName ?? ""} src={msg.senderAvatar} size="md" />
-                        </Box>
-                        <Box display="flex" flexDirection="column" gap="4">
-                          <Box display="flex" gap="8" style={{ alignItems: "baseline", marginBottom: 2 }}>
-                            {msg.senderName && <Text fontSize="md" fontWeight="500" color="fg.default">{msg.senderName}</Text>}
-                            <Text fontSize="sm" color="fg.tertiary">{getMockTime(idx)}</Text>
-                          </Box>
-                          <Box style={{ background: "var(--ax-colors-bg-default)", border: "1px solid var(--ax-colors-border-default)", borderRadius: 12, padding: 20, maxWidth: 420 }}>
-                            <Box style={{ width: "100%", borderRadius: 6, overflow: "hidden", marginBottom: 16 }}>
-                              <img src="/avatars/daily-brief.png" alt="Daily brief" style={{ width: "100%", height: "auto", display: "block" }} />
-                            </Box>
-                            <Box display="flex" justifyContent="flex-end" gap="8">
-                              <Button size="md">Download</Button>
-                              <Button appearance="primary" size="md">Open brief</Button>
-                            </Box>
-                          </Box>
-                        </Box>
-                      </Box>
                     ) : msg.type === "hitl" ? (
                       <Box key={msg.id} id={`msg-${msg.id}`} display="flex" gap="12" alignItems="start" py="4">
                         <Box pt="4" style={{ flexShrink: 0 }}>
@@ -4408,17 +4366,24 @@ function IMMain({
                             <Text fontSize="sm" color="fg.tertiary">{getMockTime(idx)}</Text>
                           </Box>
                           {selected === "sg" ? (
-                            <ApprovalActionCard
-                              authorName="Randy"
-                              authorAvatar={DMS.find(d => d.id === "bubs")?.avatar ?? "/avatars/vau-frank.png"}
-                              isVAU
-                              badge="UPDATED"
-                              fileName="discover-the-unknown-qa.md"
-                              fileSubtitle="GEO Q&A article · 7 Q&A pairs · updated"
-                              approvalTitle="Team approval needed"
-                              approvalDescription="Review the updated Q&A article. Approve to proceed with publishing, or request further changes."
-                              persistKey="sg-dtku-approval"
-                              onPreview={() => onOpenReview()}
+                            <HITLApprovalCard
+                              fileName="Content Review for Blog Post"
+                              agentHandle="@ContentReview"
+                              dueDate="Due on July 8 at 4:15PM"
+                              approvalTitle="Does this blog post meet our brand guidelines?"
+                              approvalDescription="Blog post is for Q3. Please review ASAP in Opal."
+                              viewOnly
+                            />
+                          ) : selected === "kara" ? (
+                            <HITLApprovalCard
+                              fileName="Q&A: Discover the Unknown"
+                              agentHandle="@ContentReview"
+                              dueDate="Due on July 8 at 4:15PM"
+                              approvalTitle="Does this blog post meet our brand guidelines?"
+                              approvalDescription="Blog post is for Q3. Please review ASAP in Opal."
+                              persistKey="kara-q4-brief-approval"
+                              approvalState="pending"
+                              onPreview={() => imRouter.push('/opal?artifacts=1')}
                             />
                           ) : (
                             <ApprovalActionCard
@@ -4430,7 +4395,7 @@ function IMMain({
                               fileSubtitle="GEO-optimized Q&A article for Stride · v2 (updated)"
                               approvalTitle="Team approval needed"
                               approvalDescription="Review the Q4 content brief. Approve to proceed with building out article briefs and the editorial calendar, or request further changes."
-                              persistKey="kara-q4-brief-approval"
+                              persistKey="other-q4-brief-approval"
                               approvalState="pending"
                               onPreview={() => imRouter.push('/opal?artifacts=1')}
                             />
@@ -4610,7 +4575,7 @@ function IMMain({
       {!searchOpen && activeTab === "messages" && (() => {
         const alwaysTyping = selected ? (TYPING_USERS[selected] ?? []) : [];
         const vauTyping = typing && isVAU
-          ? [{ name: DMS.find(d => d.id === selected)?.name ?? "VAU", avatar: DMS.find(d => d.id === selected)?.avatar ?? "" }]
+          ? [{ name: activeDMS.find(d => d.id === selected)?.name ?? "VAU", avatar: activeDMS.find(d => d.id === selected)?.avatar ?? "" }]
           : [];
         const allTyping = [...alwaysTyping, ...vauTyping];
         if (allTyping.length === 0) return null;
@@ -4635,7 +4600,7 @@ function IMMain({
       })()}
 
       {/* OOO alert banner */}
-      {DMS.find(d => d.id === selected)?.status === "ooo" && (activeTab === "messages" || activeTab === "pins") && (
+      {activeDMS.find(d => d.id === selected)?.status === "ooo" && (activeTab === "messages" || activeTab === "pins") && (
         <Box px="16" pb="8" style={{ background: "var(--ax-colors-bg-default, white)", flexShrink: 0 }}>
           <Alert intent="warning">
             <Box display="flex" alignItems="center" justifyContent="space-between" gap="12">
@@ -4650,7 +4615,7 @@ function IMMain({
       {isGroupWithVAU && selected && (GROUP_PAUSED_VAU_IDS[selected] ?? []).length > 0 && (activeTab === "messages" || activeTab === "pins") && (
         <Box px="16" pb="8" style={{ background: "var(--ax-colors-bg-default, white)", flexShrink: 0 }}>
           {(GROUP_PAUSED_VAU_IDS[selected] ?? []).map(pausedId => {
-            const vauName = DMS.find(d => d.id === pausedId)?.name ?? pausedId;
+            const vauName = activeDMS.find(d => d.id === pausedId)?.name ?? pausedId;
             return (
               <Alert key={pausedId} intent="warning">
                 <Text fontSize="md">{vauName} is paused right now — messages will be delivered but workflows won&apos;t run.</Text>
@@ -4760,7 +4725,7 @@ function IMMain({
                         <Text fontSize="sm" style={{ fontSize: 10, fontWeight: 500, color: "var(--ax-colors-fg-default)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{u.title}</Text>
                         {/* Progress bar */}
                         <Box style={{ height: 3, borderRadius: 2, background: "var(--ax-colors-bg-tertiary, #e5eaf2)", overflow: "hidden" }}>
-                          <Box style={{ height: "100%", borderRadius: 2, background: "var(--ax-colors-fg-accent, #2563eb)", width: `${pct}%`, transition: "width 0.8s ease" }} />
+                          <Box style={{ height: "100%", borderRadius: 2, background: "var(--ax-colors-bg-information)", width: `${pct}%`, transition: "width 0.8s ease" }} />
                         </Box>
                       </Box>
                     </Box>
@@ -4824,29 +4789,19 @@ function IMMain({
             }}
           />
           <Box display="flex" alignItems="center" pt="4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <Menu
+              options={[
+                { label: "File", execute: () => fileInputRef.current?.click() },
+                { label: "Artifact", execute: () => setArtifactPickerOpen(true) },
+                { label: "Skills", execute: () => setAgentPickerOpen(true) },
+              ]}
+            >
+              <MenuTrigger asChild>
                 <Button appearance="subtle" size="sm" icon={<IconPlus />} aria-label="Add"
                   style={{ width: 28, height: 28, padding: 0, color: "var(--ax-colors-fg-tertiary)" }} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                  <Box display="flex" alignItems="center" gap="8">
-                    <IconPaperclip size={14} />File
-                  </Box>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setArtifactPickerOpen(true)}>
-                  <Box display="flex" alignItems="center" gap="8">
-                    <IconFileLines size={14} />Artifact
-                  </Box>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setAgentPickerOpen(true)}>
-                  <Box display="flex" alignItems="center" gap="8">
-                    <IconBook size={14} />Skills
-                  </Box>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </MenuTrigger>
+              <MenuContent align="start" />
+            </Menu>
             <Box style={{ flex: 1 }} />
             <Tooltip content="Send">
               <Button
@@ -4868,7 +4823,7 @@ function IMMain({
 
       {/* ── Profile panel ────────────────────────────────────────────── */}
       {(() => {
-        const dm = DMS.find(d => d.id === selected);
+        const dm = activeDMS.find(d => d.id === selected);
         const group = selectedGroup;
         const channel = selectedChannel;
         const USER_META: Record<string, { title: string; email: string; time: string }> = {
@@ -5246,7 +5201,7 @@ function IMMain({
             {/* Header */}
             <Box display="flex" alignItems="center" gap="10" px="16"
               style={{ height: 56, borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}>
-              <img src={selectedDM?.avatar ?? "/avatars/vau-frank.png"} alt="Randy" style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0 }} />
+              <img src="/vau-bubs.svg" alt="Randy" style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0 }} />
               <Box style={{ flex: 1, minWidth: 0 }}>
                 <Text fontSize="sm" fontWeight="600" color="fg.default">Randy</Text>
                 <Text color="fg.tertiary" style={{ fontSize: 11 }}>GEO Content Strategist</Text>
@@ -5287,7 +5242,7 @@ function IMMain({
 
               <ApprovalActionCard
                 authorName="Randy"
-                authorAvatar="/avatars/vau-frank.png"
+                authorAvatar="/vau-bubs.svg"
                 isVAU
                 badge="UPDATED"
                 fileName="discover-the-unknown-qa.md"
@@ -5445,23 +5400,19 @@ function IMMain({
               }}
             />
             <Box display="flex" alignItems="center" pt="4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              <Menu
+                options={[
+                  { label: "File", execute: () => fileInputRef.current?.click() },
+                  { label: "Artifact", execute: () => setArtifactPickerOpen(true) },
+                  { label: "Skills", execute: () => setAgentPickerOpen(true) },
+                ]}
+              >
+                <MenuTrigger asChild>
                   <Button appearance="subtle" size="sm" icon={<IconPlus />} aria-label="Add"
                     style={{ width: 28, height: 28, padding: 0, color: "var(--ax-colors-fg-tertiary)" }} />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                    <Box display="flex" alignItems="center" gap="8"><IconPaperclip size={14} />File</Box>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setArtifactPickerOpen(true)}>
-                    <Box display="flex" alignItems="center" gap="8"><IconFileLines size={14} />Artifact</Box>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setAgentPickerOpen(true)}>
-                    <Box display="flex" alignItems="center" gap="8"><IconBook size={14} />Skills</Box>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </MenuTrigger>
+                <MenuContent align="start" />
+              </Menu>
               <Box style={{ flex: 1 }} />
             </Box>
           </Box>
@@ -5588,8 +5539,8 @@ function IMMain({
     {(() => {
       const group = selectedGroup;
       const q = participantSearch.trim().toLowerCase();
-      const filteredPeople = DMS.filter(d => !d.isVAU && (!q || d.name.toLowerCase().includes(q)));
-      const filteredVAUs   = DMS.filter(d =>  d.isVAU && (!q || d.name.toLowerCase().includes(q)));
+      const filteredPeople = activeDMS.filter(d => !d.isVAU && (!q || d.name.toLowerCase().includes(q)));
+      const filteredVAUs   = activeDMS.filter(d =>  d.isVAU && (!q || d.name.toLowerCase().includes(q)));
       const renderRow = (dm: DMItem) => (
         <Box key={dm.id} display="flex" alignItems="center" gap="10" px="8" py="8"
           onClick={() => setSelectedParticipants(p => p.includes(dm.id) ? p.filter(x => x !== dm.id) : [...p, dm.id])}
@@ -5744,7 +5695,7 @@ function IMMain({
             <DialogFooter>
               {(() => {
                 const vauNames = selectedParticipants
-                  .map(id => DMS.find(d => d.id === id))
+                  .map(id => activeDMS.find(d => d.id === id))
                   .filter(d => d?.isVAU)
                   .map(d => d!.name);
                 const vauLabel = vauNames.length === 1 ? vauNames[0] : vauNames.length > 1 ? vauNames.slice(0, -1).join(", ") + " and " + vauNames[vauNames.length - 1] : null;
@@ -5757,7 +5708,7 @@ function IMMain({
               })()}
               <DialogClose asChild><Button appearance="default" size="md" onClick={resetHistory}>Cancel</Button></DialogClose>
               <Button appearance="primary" size="md" onClick={() => {
-                const names = selectedParticipants.map(id => DMS.find(d => d.id === id)?.name ?? id);
+                const names = selectedParticipants.map(id => activeDMS.find(d => d.id === id)?.name ?? id);
                 const nameStr = names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
                 const sysMsg: Message = {
                   id: `sys-${Date.now()}`,
@@ -5810,7 +5761,7 @@ function IMMain({
                 {artifacts.map((item, idx) => (
                   <Box key={item.id} rounded="lg" onClick={() => sendArtifact(item)}
                     style={{ border: "1px solid var(--ax-colors-border-default)", overflow: "hidden", background: "var(--ax-colors-bg-default)", cursor: "pointer" }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--ax-colors-border-accent)"; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--ax-colors-border-focus)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--ax-colors-border-default)"; }}>
                     <Box style={{ height: 72, overflow: "hidden", background: "var(--ax-colors-bg-secondary)", position: "relative" }}>
                       {item.thumbnail && <img src={item.thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />}
@@ -5991,7 +5942,7 @@ const RECENT_CONTACTS: (DMItem & { role: string })[] = [
   { id: "ao",   name: "Amara Osei",          avatar: "https://i.pravatar.cc/150?img=38", status: "active", role: "Brand Designer" },
   { id: "pr",   name: "Priya Rajan",         avatar: "https://i.pravatar.cc/150?img=44", status: "away",   role: "UX Researcher" },
   { id: "hw",   name: "Harry Winston-Brown", avatar: "https://i.pravatar.cc/150?img=52", status: "busy",   role: "Product Manager" },
-  { id: "bubs", name: "Randy",                avatar: "/avatars/vau-frank.png",                    status: "active", isVAU: true, role: "Content Drafting" },
+  { id: "bubs", name: "Randy",                avatar: "/vau-bubs.svg",                    status: "active", isVAU: true, role: "Content Drafting" },
   { id: "kara", name: "Kara",                avatar: "/vau-kara.svg",                    status: "active", isVAU: true, role: "SEO & Content Strategy" },
   { id: "eric", name: "Eric",                avatar: "/vau-eric.svg",                    status: "ooo",    isVAU: true, role: "A/B Testing & Experimentation" },
 ];
@@ -6269,30 +6220,22 @@ function BlogReviewPanel({ open, onClose, onWorkInOpal, onExpand }: { open: bool
       </Box>
       {/* Action buttons */}
       <Box display="flex" alignItems="center" gap="8" justifyContent="flex-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        <Menu
+          options={[
+            { label: "Download" },
+            { label: "Work in Opal", execute: () => onWorkInOpal() },
+          ]}
+        >
+          <MenuTrigger asChild>
             <Button
               appearance="subtle"
               size="sm"
               icon={<IconEllipsisSolid size={16} />}
               aria-label="More options"
             />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              <Box display="flex" alignItems="center" gap="8">
-                <IconDownload style={{ width: 16, height: 16 }} />
-                Download
-              </Box>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onWorkInOpal()}>
-              <Box display="flex" alignItems="center" gap="8">
-                <IconArrowUpRightFromSquare style={{ width: 16, height: 16 }} />
-                Work in Opal
-              </Box>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </MenuTrigger>
+          <MenuContent align="end" />
+        </Menu>
         <Button appearance="default" size="sm">
           Request Changes
         </Button>
@@ -6893,50 +6836,38 @@ export default function MessagesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selected, setSelected] = useState(() => searchParams.get("conversation") ?? "bubs");
-  const [bubsAvatar, setBubsAvatar] = useState<string>("/avatars/vau-frank.png");
-  const [threads, setThreads] = useState<Record<string, Message[]>>({ ...THREADS, ...CHANNEL_THREADS });
-  useEffect(() => {
-    const base = { ...THREADS, ...CHANNEL_THREADS };
-    try {
-      // Apply persisted avatar choice
-      const stored = localStorage.getItem("vau-bubs-avatar");
-      const chosenAvatar = stored ?? "/avatars/vau-frank.png";
-      if (stored) {
-        setBubsAvatar(stored);
-        const entry = DMS.find(d => d.id === "bubs");
-        if (entry) entry.avatar = stored;
-        // Patch existing thread messages
-        base.bubs = (base.bubs ?? []).map(m =>
-          m.senderName === "Randy" ? { ...m, senderAvatar: stored } : m
-        );
-      }
+  const [vtWelcome, setVtWelcome] = useState<{ name: string; avatar: string } | null>(null);
 
-      // Inject welcome message from onboarding
+  useEffect(() => {
+    try {
       const raw = sessionStorage.getItem("im-vau-welcome");
       if (raw) {
+        const data = JSON.parse(raw) as { name: string; avatar: string };
         sessionStorage.removeItem("im-vau-welcome");
-        const parsed = JSON.parse(raw) as { name?: string; avatar?: string };
-        const vauAvatar = parsed.avatar ?? chosenAvatar;
-        const vauName = parsed.name ?? "Randy";
-        const welcome: Message[] = [
-          {
-            id: "welcome-0",
-            from: "vau",
-            senderName: vauName,
-            senderAvatar: vauAvatar,
-            senderColor: "var(--opal-vau-bubs)",
-            text: "👋 Hey, I'm so excited to start working together! This is what I have planned for you: daily brief daily at 8 AM, weekly summary Friday at 5 PM. Let me know if you'd like to receive these at a different time.",
-            quickActions: [
-              { label: "Edit daily brief time" },
-              { label: "Edit weekly summary time" },
-            ],
-          },
-        ];
-        base.bubs = welcome;
+        setVtWelcome(data);
       }
     } catch {}
-    setThreads(base);
   }, []);
+
+  const activeDMS = useMemo(() => {
+    if (!vtWelcome) return DMS;
+    return DMS.map(d =>
+      d.id === "bubs" ? { ...d, name: vtWelcome.name, avatar: vtWelcome.avatar, preview: `${vtWelcome.name} is ready to start working with you` } : d
+    );
+  }, [vtWelcome]);
+
+  const [threads, setThreads] = useState<Record<string, Message[]>>({ ...THREADS, ...CHANNEL_THREADS });
+  useEffect(() => {
+    const welcomeThread: Message[] = vtWelcome ? [{
+      id: "welcome-1",
+      from: "vau",
+      senderName: vtWelcome.name,
+      senderAvatar: vtWelcome.avatar,
+      senderColor: "var(--opal-vau-bubs)",
+      text: `Hi! I'm ${vtWelcome.name}, your new Chief of Staff. I'm here to help you stay on top of everything — from meeting prep to follow-ups and keeping things moving. What would you like to tackle first?`,
+    }] : THREADS.bubs;
+    setThreads({ ...THREADS, ...CHANNEL_THREADS, bubs: welcomeThread });
+  }, [vtWelcome]);
 
   useEffect(() => {
     const convo = searchParams.get("conversation");

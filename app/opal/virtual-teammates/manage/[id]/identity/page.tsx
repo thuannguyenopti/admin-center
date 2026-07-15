@@ -5,12 +5,14 @@ import { useParams } from "next/navigation";
 import {
 	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
 	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
-	Badge, Box, Button, Heading, Select, SelectContent, SelectTrigger, Text, Tooltip,
+	Box, Button, Heading, Select, SelectContent, SelectTrigger, Tabs,
+	TabsContent, TabsList, TabsTrigger, Text, Tooltip,
 } from "@optiaxiom/react";
 import { IconCircleQuestion, IconEye, IconPen, IconTrashCan, IconUpload, IconUserSlash, IconXmark } from "@optiaxiom/icons";
 import Image from "next/image";
 import { Input } from "@/app/components/Input";
 import { VAUS } from "@/app/opal/data/vaus";
+import { PersonalityTab } from "./PersonalityTab";
 
 const CAPTION: React.CSSProperties = {
 	fontFamily: "Roboto Mono, monospace",
@@ -20,55 +22,6 @@ const CAPTION: React.CSSProperties = {
 	letterSpacing: "0.08em",
 	textTransform: "uppercase" as const,
 };
-
-type TemplateData = {
-	id: string;
-	name: string;
-	quote: string;
-	icon: string;
-	description: string;
-	traits: string[];
-	tone: string[];
-};
-
-const TEMPLATES: TemplateData[] = [
-	{
-		id: "pragmatist",
-		name: "The pragmatist",
-		quote: '"Done talks."',
-		icon: "/vt-icon-tape.png",
-		description: "Done, done, and done. They cut through noise, skip the chit-chat, and get the job done. Always right, all the time.",
-		traits: ["DECISIVE", "GROUNDED", "NO-NONSENSE", "RELIABLE"],
-		tone: ["DIRECT", "PLAINSPOKEN", "WRY", "EFFICIENT", "MATTER-OF-FACT"],
-	},
-	{
-		id: "tastemaker",
-		name: "The tastemaker",
-		quote: '"I liked it before."',
-		icon: "/vt-icon-disco.png",
-		description: "The first to bring a crazy idea to life. They are nonchalant, set the standard, and somehow always know what's next.",
-		traits: ["OPINIONATED", "DISCERNING", "AHEAD OF THE CURVE"],
-		tone: ["CONFIDENT", "CULTURED", "COOL"],
-	},
-	{
-		id: "cheerleader",
-		name: "The cheerleader",
-		quote: '"Wait, hear me out."',
-		icon: "/vt-icon-finger.png",
-		description: 'Enthusiasm is contagious and they\'re patient zero. They turn "meh" ideas into "wait, actually…" moments.',
-		traits: ["ENTHUSIASTIC", "PERSUASIVE", "FUNNY", "ZERO CHILL"],
-		tone: ["WARM", "SUPPORTIVE", "ENERGETIC"],
-	},
-	{
-		id: "spicy-realist",
-		name: "The spicy realist",
-		quote: '"Just saying."',
-		icon: "/vt-icon-chili.png",
-		description: "Skeptical? Always. Wrong? Rarely. They poke holes in bad ideas before they become expensive ones.",
-		traits: ["SKEPTICAL", "SHARP", "BLUNT", "CONTRARIAN"],
-		tone: ["DEADPAN", "BONE DRY", "WITTY", "SARCASTIC"],
-	},
-];
 
 const PICKER_AVATARS = [
 	{ src: "/avatars/vau-frank.png",   bg: "#FAF6E8" },
@@ -90,11 +43,8 @@ const PREVIEW_RESPONSES: Record<string, string> = {
 	"How would you handle a missed deadline": "First, I'd surface it immediately — no point letting it fester. Then I'd map what slipped, what it unlocks, and what the new realistic timeline looks like. Surprises are worse than bad news.",
 };
 
-
 function AvatarPickerCard({
-	avatar,
-	isSelected,
-	onClick,
+	avatar, isSelected, onClick,
 }: {
 	avatar: { src: string; bg: string };
 	isSelected: boolean;
@@ -142,242 +92,275 @@ export default function VATIdentityPage() {
 	const [visibility, setVisibility] = useState("Private");
 	const [showDeactivate, setShowDeactivate] = useState(false);
 	const [savedName, setSavedName] = useState(name);
-	const [savedVisibility, setSavedVisibility] = useState("Private");
 
 	const [currentAvatar, setCurrentAvatar] = useState<{ src: string; bg: string } | null>(null);
 	const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 	const [pickerSelected, setPickerSelected] = useState<{ src: string; bg: string } | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const [selectedTemplate, setSelectedTemplate] = useState("tastemaker");
 	const [previewOpen, setPreviewOpen] = useState(false);
 	const [previewPrompt, setPreviewPrompt] = useState("Summarize my week");
+	const [activeTab, setActiveTab] = useState("basics");
+	const [selectedPersonality, setSelectedPersonality] = useState<{ name: string; icon: string } | null>(null);
 
-	const isDirty = nameValue !== savedName || visibility !== savedVisibility;
-	const handleSave = () => {
-		setSavedName(nameValue);
-		setSavedVisibility(visibility);
-	};
+	const isDirty = nameValue !== savedName;
+	const handleSave = () => setSavedName(nameValue);
 
 	const displayAvatarSrc = currentAvatar?.src ?? vau?.avatar ?? "";
 	const displayAvatarBg = currentAvatar?.bg ?? vau?.avatarBg;
 
 	return (
 		<Box style={{ display: "flex", height: "100%", overflow: "hidden" }}>
-		<Box style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
-		<Box style={{ padding: "24px" }}>
-			<Heading level="2" mb="4">Identity</Heading>
-			<Text color="fg.secondary" fontSize="md" style={{ display: "block", marginBottom: 32 }}>
-				Define who {name} is and how they show up in the workplace
-			</Text>
-
-			{/* Identity card */}
-			<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "28px 32px" }}>
-				<Box style={{ display: "flex", alignItems: "flex-start", gap: 20, marginBottom: 24 }}>
-					<Box style={{ position: "relative", flexShrink: 0 }}>
-						<Box style={{ width: 56, height: 56, borderRadius: "50%", overflow: "hidden", backgroundColor: displayAvatarBg }}>
-							{displayAvatarSrc && (
-								<Image
-									src={displayAvatarSrc}
-									alt={name}
-									width={56}
-									height={56}
-									unoptimized
-									style={{ width: "100%", height: "100%", objectFit: "cover" }}
-								/>
-							)}
-						</Box>
-						<Box
-							onClick={() => { setPickerSelected(null); setShowAvatarPicker(true); }}
-							style={{
-								position: "absolute", bottom: -6, right: -6,
-								width: 24, height: 24, borderRadius: "50%",
-								background: "var(--ax-colors-bg-default)",
-								border: "1px solid var(--ax-colors-border-default)",
-								display: "flex", alignItems: "center", justifyContent: "center",
-								cursor: "pointer",
-							}}
-						>
-							<IconPen style={{ width: 13, height: 13, color: "var(--ax-colors-fg-secondary)" }} />
-						</Box>
-					</Box>
-					<Box style={{ flex: 1 }}>
-						<Text style={{ fontWeight: 600, fontSize: 16, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 2 }}>Identity</Text>
-						<Text fontSize="sm" color="fg.secondary">
-							The basics — who {name}{" "}is and how long they&apos;ve been on the job.
-						</Text>
-					</Box>
-					{isDirty && (
-						<Button appearance="primary" size="md" onClick={handleSave} style={{ alignSelf: "flex-start", flexShrink: 0 }}>
-							Save changes
-						</Button>
-					)}
-				</Box>
-
-				<Box style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-					<Box>
-						<Text fontSize="sm" color="fg.secondary" mb="6" style={{ fontWeight: 500 }}>Name</Text>
-						<Input
-							value={nameValue}
-							onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNameValue(e.target.value)}
-							style={{ width: "100%" }}
-						/>
-					</Box>
-					<Box>
-						<Text fontSize="sm" color="fg.secondary" mb="6" style={{ fontWeight: 500 }}>Visibility</Text>
-						<Select
-							value={visibility}
-							onValueChange={setVisibility}
-							options={["Private", "Team", "Public"].map((opt) => ({ label: opt, value: opt }))}
-						>
-							<SelectTrigger size="lg" style={{ width: "100%", fontFamily: "inherit", fontSize: 16, fontWeight: 400 }} />
-							<SelectContent />
-						</Select>
-					</Box>
-					<Box>
-						<Box display="flex" alignItems="center" gap="4" mb="6">
-							<Text fontSize="sm" color="fg.secondary" style={{ fontWeight: 500 }}>Email</Text>
-							<Tooltip content="This field is not editable" delayDuration={300}>
-								<span style={{ display: "inline-flex" }}>
-									<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
-								</span>
-							</Tooltip>
-						</Box>
-						<Box style={{
-							display: "flex", alignItems: "center",
-							height: 48, padding: "0 14px",
-							border: "1px solid var(--ax-colors-border-default)",
-							borderRadius: 6, background: "var(--ax-colors-bg-secondary)",
-						}}>
-							<Text fontSize="md" color="fg.default">{name}.VT@vau.opal.optimizely.com</Text>
-						</Box>
-					</Box>
-					<Box>
-						<Box display="flex" alignItems="center" gap="4" mb="6">
-							<Text fontSize="sm" color="fg.secondary" style={{ fontWeight: 500 }}>Start date</Text>
-							<Tooltip content="This field is not editable" delayDuration={300}>
-								<span style={{ display: "inline-flex" }}>
-									<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
-								</span>
-							</Tooltip>
-						</Box>
-						<Box style={{
-							height: 40, padding: "0 12px",
-							background: "var(--ax-colors-bg-secondary)",
-							border: "1px solid var(--ax-colors-border-default)",
-							borderRadius: 6, display: "flex", alignItems: "center",
-						}}>
-							<Text fontSize="md" color="fg.default">March 12, 2026</Text>
-						</Box>
-					</Box>
-				</Box>
-			</Box>
-
-			<Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "32px 0" }} />
-
-			{/* Personality section */}
-			<Box>
-				<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-					<Text style={{ fontSize: 18, fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>
-						Your teammates personality
-					</Text>
-					{!previewOpen && (
-						<Button size="md" icon={<IconEye size={16} />} onClick={() => setPreviewOpen(true)}>
-							Preview personality
-						</Button>
-					)}
-				</Box>
-				<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginBottom: 16 }}>
-					Choose a personality archetype to guide how your teammate interacts with you
-				</Text>
-				<Box style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-					{TEMPLATES.map((t) => {
-						const isSelected = t.id === selectedTemplate;
-						return (
-							<Box
-								key={t.id}
-								bg="bg.default"
-								onClick={() => setSelectedTemplate(t.id)}
-								style={{
-									border: "1px solid var(--ax-colors-border-default)",
-									outline: isSelected ? "2px solid #197A94" : "none",
-									outlineOffset: isSelected ? "2px" : "0",
-									borderRadius: 8,
-									padding: 16,
-									cursor: "pointer",
-									display: "flex",
-									flexDirection: "column",
-									gap: 12,
-								}}
+			<Box style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
+				<Box style={{ padding: "32px 40px 0" }}>
+					<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+						<Heading level="2">Identity</Heading>
+						{activeTab === "personality" && (
+							<Button
+								size="md"
+								icon={<IconEye size={16} />}
+								onClick={() => setPreviewOpen((p) => !p)}
 							>
-								<Box style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-									<img src={t.icon} alt="" width={40} height={40} style={{ objectFit: "contain", flexShrink: 0 }} />
-									<Box>
-										<Text asChild fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)", lineHeight: "1.2", display: "block", marginBottom: 4 }}>
-											<h4 style={{ margin: 0 }}>{t.name}</h4>
-										</Text>
-										<Text fontSize="sm" color="fg.tertiary" style={{ fontStyle: "italic", lineHeight: "1.3" }}>
-											{t.quote}
-										</Text>
-									</Box>
-								</Box>
-								<Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.5" }}>
-									{t.description}
-								</Text>
-								<Box style={{ height: 1, background: "var(--ax-colors-border-default)" }} />
-								<Box>
-									<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 6 }}>TRAITS</span>
-									<Box style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-										{t.traits.map((tr) => (
-											<Badge key={tr} intent="information">{tr}</Badge>
-										))}
-									</Box>
-								</Box>
-								<Box>
-									<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 6 }}>TONE</span>
-									<Box style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
-										{t.tone.slice(0, 3).map((to) => (
-											<Badge key={to}>{to}</Badge>
-										))}
-										{t.tone.length > 3 && (
-											<Tooltip delayDuration={200} content={t.tone.slice(3).join(", ")}>
-												<span style={{ display: "inline-flex" }}>
-													<Badge variant="subtle">+{t.tone.length - 3}</Badge>
-												</span>
-											</Tooltip>
+								{previewOpen ? "Close preview" : "Open personality preview"}
+							</Button>
+						)}
+					</Box>
+					<Text color="fg.secondary" fontSize="md" style={{ display: "block", marginBottom: 24 }}>
+						Define who {name} is and how they show up in the workplace
+					</Text>
+
+					<Tabs value={activeTab} onValueChange={setActiveTab}>
+						<TabsList mb="24">
+							<TabsTrigger value="basics">The basics</TabsTrigger>
+							<TabsTrigger value="personality">Personality</TabsTrigger>
+						</TabsList>
+
+						{/* ── The basics tab ── */}
+						<TabsContent value="basics">
+							<Box style={{ paddingBottom: 40 }}>
+								{/* Identity card */}
+								<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "28px 32px" }}>
+									<Box style={{ display: "flex", alignItems: "flex-start", gap: 20, marginBottom: 24 }}>
+										<Box style={{ position: "relative", flexShrink: 0 }}>
+											<Box style={{ width: 56, height: 56, borderRadius: "50%", overflow: "hidden", backgroundColor: displayAvatarBg }}>
+												{displayAvatarSrc && (
+													<Image
+														src={displayAvatarSrc}
+														alt={name}
+														width={56}
+														height={56}
+														unoptimized
+														style={{ width: "100%", height: "100%", objectFit: "cover" }}
+													/>
+												)}
+											</Box>
+											<Box
+												onClick={() => { setPickerSelected(null); setShowAvatarPicker(true); }}
+												style={{
+													position: "absolute", bottom: -6, right: -6,
+													width: 24, height: 24, borderRadius: "50%",
+													background: "var(--ax-colors-bg-default)",
+													border: "1px solid var(--ax-colors-border-default)",
+													display: "flex", alignItems: "center", justifyContent: "center",
+													cursor: "pointer",
+												}}
+											>
+												<IconPen style={{ width: 13, height: 13, color: "var(--ax-colors-fg-secondary)" }} />
+											</Box>
+										</Box>
+										<Box style={{ flex: 1 }}>
+											<Text style={{ fontWeight: 600, fontSize: 16, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 2 }}>Identity</Text>
+											<Text fontSize="sm" color="fg.secondary">
+												The basics — who {name} is and how long they&apos;ve been on the job.
+											</Text>
+										</Box>
+										{isDirty && (
+											<Button appearance="primary" size="md" onClick={handleSave} style={{ alignSelf: "flex-start", flexShrink: 0 }}>
+												Save changes
+											</Button>
 										)}
 									</Box>
+
+									<Box style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+										<Box>
+											<Text fontSize="sm" color="fg.secondary" mb="6" style={{ fontWeight: 500 }}>Name</Text>
+											<Input
+												value={nameValue}
+												onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNameValue(e.target.value)}
+												style={{ width: "100%" }}
+											/>
+										</Box>
+										<Box>
+											<Text fontSize="sm" color="fg.secondary" mb="6" style={{ fontWeight: 500 }}>Visibility</Text>
+											<Select
+												value={visibility}
+												onValueChange={setVisibility}
+												options={["Private", "Team", "Public"].map((opt) => ({ label: opt, value: opt }))}
+											>
+												<SelectTrigger size="lg" style={{ width: "100%", fontFamily: "inherit", fontSize: 16, fontWeight: 400 }} />
+												<SelectContent />
+											</Select>
+										</Box>
+										<Box>
+											<Box display="flex" alignItems="center" gap="4" mb="6">
+												<Text fontSize="sm" color="fg.secondary" style={{ fontWeight: 500 }}>Email</Text>
+												<Tooltip content="This field is not editable" delayDuration={300}>
+													<span style={{ display: "inline-flex" }}>
+														<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
+													</span>
+												</Tooltip>
+											</Box>
+											<Box style={{
+												display: "flex", alignItems: "center",
+												height: 48, padding: "0 14px",
+												border: "1px solid var(--ax-colors-border-default)",
+												borderRadius: 6, background: "var(--ax-colors-bg-secondary)",
+											}}>
+												<Text fontSize="md" color="fg.default">{name}.VT@vau.opal.optimizely.com</Text>
+											</Box>
+										</Box>
+										<Box>
+											<Box display="flex" alignItems="center" gap="4" mb="6">
+												<Text fontSize="sm" color="fg.secondary" style={{ fontWeight: 500 }}>Start date</Text>
+												<Tooltip content="This field is not editable" delayDuration={300}>
+													<span style={{ display: "inline-flex" }}>
+														<IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
+													</span>
+												</Tooltip>
+											</Box>
+											<Box style={{
+												height: 40, padding: "0 12px",
+												background: "var(--ax-colors-bg-secondary)",
+												border: "1px solid var(--ax-colors-border-default)",
+												borderRadius: 6, display: "flex", alignItems: "center",
+											}}>
+												<Text fontSize="md" color="fg.default">March 12, 2026</Text>
+											</Box>
+										</Box>
+									</Box>
+								</Box>
+
+								<Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "32px 0" }} />
+
+								{/* Deactivate */}
+								<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+									<Box>
+										<Text style={{ fontWeight: 600, fontSize: 15, color: "var(--ax-colors-fg-default)", marginBottom: 2, display: "block" }}>
+											Deactivate {name}
+										</Text>
+										<Text fontSize="sm" color="fg.secondary">
+											This action is permanent. All context and history will be deleted.
+										</Text>
+									</Box>
+									<Button
+										appearance="primary"
+										size="md"
+										addonBefore={<IconTrashCan style={{ color: "#fff" }} />}
+										style={{ background: "#A95A77", border: "none", color: "#fff", flexShrink: 0 }}
+										onClick={() => setShowDeactivate(true)}
+									>
+										Deactivate
+									</Button>
 								</Box>
 							</Box>
-						);
-					})}
+						</TabsContent>
+
+						{/* ── Personality tab ── */}
+						<TabsContent value="personality">
+							<PersonalityTab
+								name={name}
+								cardImage={vau?.cardImage}
+								previewOpen={previewOpen}
+								setPreviewOpen={setPreviewOpen}
+								onTemplateSelect={setSelectedPersonality}
+							/>
+						</TabsContent>
+					</Tabs>
 				</Box>
 			</Box>
 
-			<Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "32px 0" }} />
-
-			{/* Deactivate */}
-			<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-				<Box>
-					<Text style={{ fontWeight: 600, fontSize: 15, color: "var(--ax-colors-fg-default)", marginBottom: 2, display: "block" }}>
-						Deactivate {name}
-					</Text>
-					<Text fontSize="sm" color="fg.secondary">
-						This action is permanent. All context and history will be deleted.
-					</Text>
-				</Box>
-				<Button
-					appearance="primary"
-					size="md"
-					addonBefore={<IconTrashCan style={{ color: "#fff" }} />}
-					style={{ background: "#A95A77", border: "none", color: "#fff", flexShrink: 0 }}
-					onClick={() => setShowDeactivate(true)}
+			{/* Preview panel — only on personality tab */}
+			{previewOpen && activeTab === "personality" && (
+				<Box
+					bg="bg.default"
+					style={{
+						width: 320, flexShrink: 0,
+						borderLeft: "1px solid var(--ax-colors-border-default)",
+						display: "flex", flexDirection: "column", height: "100%",
+					}}
 				>
-					Deactivate
-				</Button>
-			</Box>
+					<Box style={{ padding: "20px 20px 12px", borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}>
+						<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+							<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>Personality preview</Text>
+							<button
+								onClick={() => setPreviewOpen(false)}
+								style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--ax-colors-fg-tertiary)", display: "flex" }}
+							>
+								<IconXmark size={16} />
+							</button>
+						</Box>
+						<Text fontSize="sm" color="fg.tertiary" style={{ lineHeight: "1.4" }}>
+							See how your teammate will engage with you, updates in real time
+						</Text>
+					</Box>
 
-			{/* Deactivate confirmation */}
+					<Box style={{ flex: 1, padding: "20px 16px", overflowY: "auto" }}>
+						<Box style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+							<Box style={{ background: "var(--ax-colors-bg-secondary)", borderRadius: "12px 12px 4px 12px", padding: "8px 12px", maxWidth: "85%" }}>
+								<Text fontSize="sm" color="fg.default">{previewPrompt}</Text>
+							</Box>
+						</Box>
+						<Box style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+							<Box style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: selectedPersonality ? "transparent" : (displayAvatarBg ?? "var(--ax-colors-bg-secondary)"), display: "flex", alignItems: "center", justifyContent: "center" }}>
+								{selectedPersonality ? (
+									<img src={selectedPersonality.icon} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+								) : displayAvatarSrc ? (
+									<Image src={displayAvatarSrc} alt={name} width={28} height={28} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+								) : null}
+							</Box>
+							<Box>
+								<Box style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+									<Text fontSize="sm" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>
+										{name}{selectedPersonality ? ` · ${selectedPersonality.name}` : ""}
+									</Text>
+									<Text fontSize="sm" color="fg.tertiary">9:39 AM</Text>
+								</Box>
+								<Box style={{ background: "var(--ax-colors-bg-success-subtle)", borderRadius: "4px 12px 12px 12px", padding: "10px 12px", maxWidth: 240 }}>
+									<Text fontSize="sm" style={{ lineHeight: "1.5", color: "var(--ax-colors-fg-default)" }}>
+										{PREVIEW_RESPONSES[previewPrompt]}
+									</Text>
+								</Box>
+							</Box>
+						</Box>
+					</Box>
+
+					<Box style={{ borderTop: "1px solid var(--ax-colors-border-secondary)", padding: "12px 16px 20px", flexShrink: 0 }}>
+						<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 8 }}>PREVIEW PROMPTS</span>
+						<Box style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+							{PREVIEW_PROMPTS.map((prompt) => (
+								<button
+									key={prompt}
+									onClick={() => setPreviewPrompt(prompt)}
+									style={{
+										display: "flex", alignItems: "center", gap: 6,
+										background: previewPrompt === prompt ? "var(--ax-colors-bg-secondary)" : "transparent",
+										border: "1px solid var(--ax-colors-border-default)",
+										borderRadius: 99, padding: "7px 14px",
+										cursor: "pointer", fontSize: 13,
+										color: "var(--ax-colors-fg-default)",
+										fontFamily: "inherit", textAlign: "left",
+									}}
+								>
+									<span style={{ color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }}>+</span>
+									{prompt}
+								</button>
+							))}
+						</Box>
+					</Box>
+				</Box>
+			)}
+
+			{/* Deactivate dialog */}
 			<AlertDialog open={showDeactivate} onOpenChange={setShowDeactivate}>
 				<AlertDialogContent size="sm" style={{ width: 520, borderRadius: 24 }}>
 					<AlertDialogHeader>{"Are you sure you want to deactivate " + name + "?"}</AlertDialogHeader>
@@ -403,7 +386,7 @@ export default function VATIdentityPage() {
 				</AlertDialogContent>
 			</AlertDialog>
 
-			{/* Avatar picker */}
+			{/* Avatar picker dialog */}
 			<AlertDialog open={showAvatarPicker} onOpenChange={setShowAvatarPicker}>
 				<AlertDialogContent style={{ width: 560, maxWidth: "92vw", borderRadius: 20 }}>
 					<AlertDialogHeader>Edit avatar</AlertDialogHeader>
@@ -462,85 +445,6 @@ export default function VATIdentityPage() {
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-		</Box>
-		</Box>
-
-		{/* Preview panel */}
-		{previewOpen && (
-			<Box
-				bg="bg.default"
-				style={{
-					width: 320, flexShrink: 0,
-					borderLeft: "1px solid var(--ax-colors-border-default)",
-					display: "flex", flexDirection: "column", height: "100%",
-				}}
-			>
-				<Box style={{ padding: "20px 20px 12px", borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}>
-					<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-						<Text fontSize="md" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>Personality preview</Text>
-						<button
-							onClick={() => setPreviewOpen(false)}
-							style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: "var(--ax-colors-fg-tertiary)", display: "flex" }}
-						>
-							<IconXmark size={16} />
-						</button>
-					</Box>
-					<Text fontSize="sm" color="fg.tertiary" style={{ lineHeight: "1.4" }}>
-						See how your teammate will engage with you, updates in real time
-					</Text>
-				</Box>
-
-				<Box style={{ flex: 1, padding: "20px 16px", overflowY: "auto" }}>
-					<Box style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
-						<Box style={{ background: "var(--ax-colors-bg-secondary)", borderRadius: "12px 12px 4px 12px", padding: "8px 12px", maxWidth: "85%" }}>
-							<Text fontSize="sm" color="fg.default">{previewPrompt}</Text>
-						</Box>
-					</Box>
-					<Box style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-						<Box style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: displayAvatarBg ?? "var(--ax-colors-bg-secondary)" }}>
-							{displayAvatarSrc && (
-								<Image src={displayAvatarSrc} alt={name} width={28} height={28} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-							)}
-						</Box>
-						<Box>
-							<Box style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-								<Text fontSize="sm" style={{ fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>{name}</Text>
-								<Text fontSize="sm" color="fg.tertiary">9:39 AM</Text>
-							</Box>
-							<Box style={{ background: "var(--ax-colors-bg-success-subtle)", borderRadius: "4px 12px 12px 12px", padding: "10px 12px", maxWidth: 240 }}>
-								<Text fontSize="sm" style={{ lineHeight: "1.5", color: "var(--ax-colors-fg-default)" }}>
-									{PREVIEW_RESPONSES[previewPrompt]}
-								</Text>
-							</Box>
-						</Box>
-					</Box>
-				</Box>
-
-				<Box style={{ borderTop: "1px solid var(--ax-colors-border-secondary)", padding: "12px 16px 20px", flexShrink: 0 }}>
-					<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 8 }}>PREVIEW PROMPTS</span>
-					<Box style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-						{PREVIEW_PROMPTS.map((prompt) => (
-							<button
-								key={prompt}
-								onClick={() => setPreviewPrompt(prompt)}
-								style={{
-									display: "flex", alignItems: "center", gap: 6,
-									background: previewPrompt === prompt ? "var(--ax-colors-bg-secondary)" : "transparent",
-									border: "1px solid var(--ax-colors-border-default)",
-									borderRadius: 99, padding: "7px 14px",
-									cursor: "pointer", fontSize: 13,
-									color: "var(--ax-colors-fg-default)",
-									fontFamily: "inherit", textAlign: "left",
-								}}
-							>
-								<span style={{ color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }}>+</span>
-								{prompt}
-							</button>
-						))}
-					</Box>
-				</Box>
-			</Box>
-		)}
 		</Box>
 	);
 }

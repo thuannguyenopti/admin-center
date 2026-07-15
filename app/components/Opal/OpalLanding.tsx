@@ -128,6 +128,8 @@ type OpalLandingProps = {
 	 * OpalLanding closes the dropdown automatically after this fires.
 	 */
 	onSuggestionClick: (suggestion: string) => void;
+	/** When set, replaces the generic heading with the teammate's avatar and name. */
+	activeTM?: { name: string; avatar: string };
 };
 
 export function OpalLanding({
@@ -135,6 +137,7 @@ export function OpalLanding({
 	contextualActionCard,
 	topSlot,
 	onSuggestionClick,
+	activeTM,
 }: OpalLandingProps) {
 	const [activePill, setActivePill] = useState<string | null>(null);
 	const [hoveredPill, setHoveredPill] = useState<string | null>(null);
@@ -222,23 +225,64 @@ export function OpalLanding({
 			}}
 		>
 			{/* Heading */}
-			<Heading
-				level="2"
-				style={{
-					position: "relative",
-					zIndex: 1,
-					fontFamily: "'Nudge SemiNormal', 'Die Grotesk B', sans-serif",
-					fontSize: "28px",
-					fontWeight: 600,
-					color: "var(--ax-colors-fg-default)",
-					letterSpacing: "-0.6px",
-					lineHeight: "40px",
-					marginBottom: "40px",
-					textAlign: "center",
-				}}
-			>
-				What are we working on today?
-			</Heading>
+			{activeTM ? (
+				<Box
+					display="flex"
+					flexDirection="column"
+					alignItems="center"
+					gap="16"
+					style={{ position: "relative", zIndex: 1, marginBottom: "40px" }}
+				>
+					<Box
+						style={{
+							width: 64,
+							height: 64,
+							borderRadius: "50%",
+							overflow: "hidden",
+							border: "2px solid var(--ax-colors-border-secondary)",
+							flexShrink: 0,
+						}}
+					>
+						<img
+							src={activeTM.avatar}
+							alt={activeTM.name}
+							style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+						/>
+					</Box>
+					<Heading
+						level="2"
+						style={{
+							fontFamily: "'Nudge SemiNormal', 'Die Grotesk B', sans-serif",
+							fontSize: "28px",
+							fontWeight: 600,
+							color: "var(--ax-colors-fg-default)",
+							letterSpacing: "-0.6px",
+							lineHeight: "40px",
+							textAlign: "center",
+						}}
+					>
+						Hi, I&apos;m {activeTM.name}. What are we working on?
+					</Heading>
+				</Box>
+			) : (
+				<Heading
+					level="2"
+					style={{
+						position: "relative",
+						zIndex: 1,
+						fontFamily: "'Nudge SemiNormal', 'Die Grotesk B', sans-serif",
+						fontSize: "28px",
+						fontWeight: 600,
+						color: "var(--ax-colors-fg-default)",
+						letterSpacing: "-0.6px",
+						lineHeight: "40px",
+						marginBottom: "40px",
+						textAlign: "center",
+					}}
+				>
+					What are we working on today?
+				</Heading>
+			)}
 
 			{/* Optional slot — View Agents pills etc. */}
 			{topSlot}
