@@ -1,15 +1,18 @@
 import {
 	IconPlus,
+	IconHouse,
 	IconList,
-	IconBooks,
-	IconStore,
+	IconChartLine,
 	IconUserGroup,
+	IconBook,
+	IconStore,
 	IconSparkles,
-	IconChartColumn,
 	IconFileLines,
 	IconGear,
 } from "@optiaxiom/icons";
 
+// Order and icon set match Figma "Library — Master" node 4033:31766 (Sidenav):
+// +, Home, Plan, Dashboard, Resource management, Library, Store, Work Request.
 export const cmpNav = [
 	{
 		label: "Create",
@@ -26,6 +29,12 @@ export const cmpNav = [
 		],
 	},
 	{
+		label: "Home",
+		url: "/cmp/dashboard",
+		highlight: "/cmp/dashboard",
+		icon: <IconHouse />,
+	},
+	{
 		label: "Plan",
 		url: "/cmp/plan-view",
 		// Task detail pages highlight Plan in the sidebar
@@ -33,16 +42,10 @@ export const cmpNav = [
 		icon: <IconList />,
 	},
 	{
-		label: "Library",
-		url: "/cmp/library",
-		highlight: "/cmp/library",
-		icon: <IconBooks />,
-	},
-	{
-		label: "Stock Images",
-		url: "/cmp/stock-images",
-		highlight: "/cmp/stock-images",
-		icon: <IconStore />,
+		label: "Dashboard",
+		url: "/cmp/reports",
+		highlight: "/cmp/reports",
+		icon: <IconChartLine />,
 	},
 	{
 		label: "Resource Management",
@@ -51,22 +54,30 @@ export const cmpNav = [
 		icon: <IconUserGroup />,
 	},
 	{
+		label: "Library",
+		url: "/cmp/library",
+		highlight: "/cmp/library",
+		icon: <IconBook />,
+	},
+	{
+		label: "Store",
+		url: "/cmp/stock-images",
+		highlight: "/cmp/stock-images",
+		icon: <IconStore />,
+	},
+	{
+		label: "Work Request",
+		url: "/cmp/work-request",
+		highlight: "/cmp/work-request",
+		icon: <IconFileLines />,
+	},
+	// Not in the Figma sidenav — kept reachable (deep links, settings sub-nav) but hidden from the rail.
+	{
 		label: "Idea Lab",
 		url: "/cmp/idea-lab",
 		highlight: "/cmp/idea-lab",
 		icon: <IconSparkles />,
-	},
-	{
-		label: "Analytics",
-		url: "/cmp/reports",
-		highlight: "/cmp/reports",
-		icon: <IconChartColumn />,
-	},
-	{
-		label: "Requests",
-		url: "/cmp/work-request",
-		highlight: "/cmp/work-request",
-		icon: <IconFileLines />,
+		hidden: true,
 	},
 	{
 		label: "Settings",
