@@ -110,11 +110,8 @@ export function useOpalHistory() {
 
       setChatHistory(loadedHistory);
 
-      // Prefer restoring previously selected chat; otherwise select the first chat if any.
-      const initialActive =
-        (savedActiveChatId && loadedHistory.some(h => h.id === savedActiveChatId) && savedActiveChatId) ||
-        (loadedHistory.length > 0 ? loadedHistory[0].id : null);
-      setActiveChat(initialActive);
+      // Always land on home (new thread) — history sidebar shows previous chats but none is pre-selected.
+      setActiveChat(null);
 
       if (savedMode) {
         setMode(savedMode as OpalMode);

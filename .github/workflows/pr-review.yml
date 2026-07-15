@@ -4,6 +4,12 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: PR number to review
+        required: true
+        type: number
 
 jobs:
   review:
@@ -11,30 +17,28 @@ jobs:
     permissions:
       pull-requests: write
       contents: read
+      models: read
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Review PR with GitHub Models
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
         run: |
-          git fetch origin main --depth=50
+          # Get diff via GitHub API — works for both triggers, no git gymnastics needed
+          DIFF=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+            --header "Accept: application/vnd.github.diff" 2>/dev/null | head -c 60000)
 
-          # Truncate at the source: a huge diff must never exhaust memory or
-          # SIGPIPE the pipeline (this is what broke the review on large PRs).
-          DIFF=$(git diff origin/main...HEAD 2>/dev/null | head -c 60000)
           if [ -z "$DIFF" ]; then
             echo "Empty diff — nothing to review"
             exit 0
           fi
 
-          CLAUDE_MD=$(cat CLAUDE.md 2>/dev/null | head -c 8000 || true)
+          PR_TITLE=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.title')
+          CLAUDE_MD=$(cat CLAUDE.md 2>/dev/null | head -c 8000 || echo "")
 
           PROMPT="You are a code reviewer for the axiom-play repository (a Next.js multi-product UI prototype using the Optimizely Axiom design system).
 
@@ -70,7 +74,7 @@ jobs:
           print(json.dumps(sys.stdin.read()))
           ")
 
-          RESPONSE=$(curl -sf https://models.github.com/inference/chat/completions \
+          RESPONSE=$(curl -s https://models.inference.ai.azure.com/chat/completions \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{
@@ -79,31 +83,24 @@ jobs:
               \"messages\": [{\"role\": \"user\", \"content\": $PROMPT_JSON}]
             }")
 
-          # Advisory bot: never fail the job on an API hiccup — just skip the comment.
-          if [ $? -ne 0 ] || [ -z "$RESPONSE" ]; then
-            echo "GitHub Models API call failed or returned empty — skipping review comment"
-            exit 0
-          fi
+          echo "API response: $RESPONSE" | head -c 500
 
-          COMMENT=$(echo "$RESPONSE" | python3 -c "
+          echo "$RESPONSE" | python3 -c "
           import sys, json
-          try:
-              data = json.load(sys.stdin)
-              print(data['choices'][0]['message']['content'])
-          except Exception:
-              print('')
-          ")
+          data = json.load(sys.stdin)
+          if 'choices' not in data:
+              print('API error:', data)
+              sys.exit(1)
+          " || exit 1
 
-          if [ -z "$COMMENT" ]; then
-            echo "No review content returned — skipping comment"
-            exit 0
-          fi
-
-          BODY="<!-- ai-review-bot -->
-
-          **AI Code Review**
-
-          ${COMMENT}"
+          echo "$RESPONSE" | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          comment = data['choices'][0]['message']['content']
+          body = '<!-- ai-review-bot -->\n\n**AI Code Review**\n\n' + comment
+          with open('/tmp/review-body.md', 'w') as f:
+              f.write(body)
+          "
 
           EXISTING=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
             --jq '.[] | select(.body | startswith("<!-- ai-review-bot -->")) | .id' \
@@ -113,4 +110,4 @@ jobs:
             gh api --method DELETE "repos/$GITHUB_REPOSITORY/issues/comments/$EXISTING" 2>/dev/null || true
           fi
 
-          gh pr comment "$PR_NUMBER" --body "$BODY"
+          gh pr comment "$PR_NUMBER" --body-file /tmp/review-body.md

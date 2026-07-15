@@ -68,6 +68,8 @@ export type ChatMessage = {
   authorInlineAvatar?: boolean;
   /** Optional key used to look up an inline card rendered below this message */
   cardAfterKey?: string;
+  /** When set, renders the activity-streaming loading UI (from Opal's agentic responses) */
+  activityScript?: import("@/app/opal/im/components/ActivityStreamBlock").ActivityPhase[];
 };
 
 export type OpalState = {

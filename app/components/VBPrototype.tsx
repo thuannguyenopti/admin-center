@@ -16,6 +16,7 @@ import {
 	Select,
 	SelectTrigger,
 	SelectContent,
+	toaster,
 } from "@optiaxiom/react";
 import React, {useEffect, useRef, useState, useCallback} from "react";
 import {
@@ -42,6 +43,7 @@ import {PreviewSettings} from "./vb/PreviewSettings";
 import VersionHistory from "./vb/versionHistory/VersionHistory";
 import {useBrandTone} from "./ai/BrandToneProvider";
 import {usePreflightContext} from "./ai/PreflightContext";
+import {useLayout} from "@/app/context/LayoutContext";
 
 import {getExtensionById} from "@/app/extensions/registry";
 
@@ -58,6 +60,9 @@ import type {useVersionHistory} from "@/app/hooks/useVersionHistory";
 import DragHandle from "@/app/components/DragHandle";
 import {getCompatibleInstances} from "@/app/lib/contentConnection";
 import {initialContentTypes} from "@/app/db/initialData";
+import {usePreflightWorkflow} from "@/app/hooks/useVTApprovalWorkflow";
+import {mockNotifications} from "@/app/opal/notifications/mockData";
+import {ApprovalActionCard} from "./Opal/ApprovalActionCard";
 import {IconArrowLeft} from "@optiaxiom/icons";
 
 /** -----------------------------
@@ -260,6 +265,10 @@ export default function VBPrototype({
 	contentType,
 	onSave,
 	onPublish,
+	onUnpublish,
+	onSchedule,
+	onCancelSchedule,
+	scheduledDate,
 	pageName,
 	pageId,
 	pageStatus,
@@ -286,6 +295,10 @@ export default function VBPrototype({
 	contentType?: ContentType | null;
 	onSave?: (page: PageInput) => void;
 	onPublish?: () => void;
+	onUnpublish?: () => void;
+	onSchedule?: (date: string) => void;
+	onCancelSchedule?: () => void;
+	scheduledDate?: string;
 	onTrash?: () => void;
 	pageName?: string;
 	pageId?: string;
@@ -334,6 +347,182 @@ export default function VBPrototype({
 	// Load persistent state for CMP connection
 	const [cmpContentInstances] = usePersistentState("cmpContentInstances", []);
 	const [persistentContentTypes] = usePersistentState("contentTypes", initialContentTypes);
+
+	const {opalPanelControls, setOpalActionCard} = useLayout();
+	const vtMessageIds = useRef<Record<string, string>>({});
+	const vtNotified = useRef<Set<string>>(new Set());
+	const preflightSummaryPosted = useRef(false);
+
+	const {
+		activities: vtActivities,
+		preflightStatus,
+		allComplete: preflightAllComplete,
+		startPreflight,
+		undoAllChanges: vtUndoAll,
+	} = usePreflightWorkflow(
+		pageId || "unknown",
+		pageName || "New Page",
+	);
+
+	const handlePublishConfirm = useCallback(
+		(options: { scheduledAt: string | null; runPreflight: boolean }) => {
+			if (options.runPreflight) {
+				vtMessageIds.current = {};
+				vtNotified.current = new Set();
+				preflightSummaryPosted.current = false;
+				setOpalActionCard(null);
+				startPreflight();
+				if (opalPanelControls) {
+					opalPanelControls.createNewChat();
+					opalPanelControls.openPanel();
+					opalPanelControls.addMessage({
+						role: "user",
+						content: `Run preflight review of "${pageName || "New Page"}"`,
+					});
+					opalPanelControls.addMessage({
+						role: "assistant",
+						content: "Starting preflight review...\n\n**Reviewers:** Frank (SEO Expert), Henry (Brand Expert), Lena (Legal Expert)",
+						authorName: "Opal",
+					});
+				}
+			} else if (options.scheduledAt) {
+				onSchedule?.(options.scheduledAt);
+			} else {
+				onPublish?.();
+			}
+		},
+		[startPreflight, onPublish, opalPanelControls, pageName]
+	);
+
+	useEffect(() => {
+		if (!opalPanelControls || preflightStatus === "idle") return;
+
+		for (const activity of vtActivities) {
+			const existingMsgId = vtMessageIds.current[activity.vtId];
+
+			if (!existingMsgId && activity.status === "analyzing") {
+				const msg = opalPanelControls.addMessage({
+					role: "assistant",
+					content: "Analyzing...",
+					authorName: activity.vtName,
+					authorAvatar: activity.vtAvatar,
+					authorTitle: activity.vtTemplateName,
+					authorInlineAvatar: true,
+				});
+				vtMessageIds.current[activity.vtId] = msg.id;
+			} else if (existingMsgId) {
+				if (activity.status === "optimizing") {
+					opalPanelControls.updateMessage(existingMsgId, {
+						content: "Reviewing...",
+					});
+				} else if (activity.status === "complete" && activity.changes) {
+					const changeSummary = activity.changes
+						.map((c) => `- **${c.field}**: ~~${c.oldValue}~~ → ${c.newValue}`)
+						.join("\n");
+					opalPanelControls.updateMessage(existingMsgId, {
+						content: `${activity.operation} complete\n\n${changeSummary}`,
+					});
+					if (!vtNotified.current.has(activity.vtId)) {
+						vtNotified.current.add(activity.vtId);
+						toaster.create(
+							`${activity.vtName} completed ${activity.operation}`,
+							{intent: "success"}
+						);
+						const now = new Date();
+						mockNotifications.unshift({
+							id: `n-preflight-${activity.vtId}-${Date.now()}`,
+							userId: "u1",
+							type: "agent_execution_autonomous",
+							title: `${activity.operation} complete`,
+							message: `${activity.vtName} completed ${activity.operation} on ${pageName || "New Page"} — ${activity.changes.length} changes applied.`,
+							status: "unread",
+							priority: "medium",
+							category: "agent_execution",
+							agentId: `vau-${activity.vtId}`,
+							agentName: activity.vtName,
+							deepLink: `/cms/edit/${pageId}`,
+							actionRequired: false,
+							createdAt: now,
+							timestamp: now.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}),
+							date: now.toLocaleDateString(),
+							executionStatus: "success",
+						});
+					}
+				}
+			}
+		}
+	}, [vtActivities, opalPanelControls, preflightStatus, pageId, pageName]);
+
+	const handlePreflightPublish = useCallback(() => {
+		onPublish?.();
+		setOpalActionCard(null);
+		opalPanelControls?.addMessage({
+			role: "assistant",
+			content: "Published successfully.",
+			authorName: "Opal",
+		});
+	}, [onPublish, setOpalActionCard, opalPanelControls]);
+
+	const handlePreflightUndo = useCallback(() => {
+		vtUndoAll();
+		setOpalActionCard(null);
+		opalPanelControls?.addMessage({
+			role: "assistant",
+			content: "All preflight changes have been reverted.",
+			authorName: "Opal",
+		});
+	}, [vtUndoAll, setOpalActionCard, opalPanelControls]);
+
+	useEffect(() => {
+		if (preflightAllComplete && opalPanelControls && !preflightSummaryPosted.current) {
+			preflightSummaryPosted.current = true;
+			const totalChanges = vtActivities.reduce(
+				(sum, a) => sum + (a.changes?.length ?? 0),
+				0
+			);
+			opalPanelControls.addMessage({
+				role: "assistant",
+				content: `All ${vtActivities.length} reviews complete. ${totalChanges} changes applied.`,
+				authorName: "Opal",
+			});
+			const now = new Date();
+			mockNotifications.unshift({
+				id: `n-preflight-complete-${Date.now()}`,
+				userId: "u1",
+				type: "approval_required",
+				title: `Preflight complete: ${pageName || "New Page"}`,
+				message: `All ${vtActivities.length} VT reviews finished — ${totalChanges} changes applied. Ready to publish.`,
+				status: "unread",
+				priority: "high",
+				category: "agent_execution",
+				agentId: "vau-frank",
+				agentName: "Frank",
+				deepLink: `/cms/edit/${pageId}`,
+				actionRequired: true,
+				approvalRequired: true,
+				approvalType: "cmp_workflow",
+				createdAt: now,
+				timestamp: now.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}),
+				date: now.toLocaleDateString(),
+				executionStatus: "success",
+			});
+			setOpalActionCard(
+				<ApprovalActionCard
+					authorName="Opal"
+					isVAU
+					fileName={pageName || "New Page"}
+					fileSubtitle={`${totalChanges} changes from preflight review`}
+					approvalTitle="Ready to publish"
+					approvalDescription="Review the changes above, then publish or undo all."
+					approveLabel="Publish"
+					rejectLabel="Undo all"
+					onApprove={handlePreflightPublish}
+					onRequestChanges={handlePreflightUndo}
+					cta
+				/>
+			);
+		}
+	}, [preflightAllComplete, vtActivities, opalPanelControls, setOpalActionCard, pageName, handlePreflightPublish, handlePreflightUndo]);
 
 	// Brand Tone integration - provide setCurrentEle to BrandToneProvider
 	const brandTone = useBrandTone();
@@ -1541,7 +1730,6 @@ export default function VBPrototype({
 						pageId={pageId}
 						lastSaved={lastSaved}
 						pageStatus={pageStatus}
-						onPublish={onPublish}
 						onViewOnWebsite={onViewOnWebsite}
 						onShowVersionHistory={() => setIsVersionHistoryOpen(true)}
 						contentTypeIcon={<IconFile size={16} />}
@@ -1565,7 +1753,15 @@ export default function VBPrototype({
 						onAddToTask={onAddToTask}
 						onRemoveFromTask={onRemoveFromTask}
 						currentTaskId={currentTaskId}
-					/>
+						onPublishConfirm={handlePublishConfirm}
+						onUnpublish={onUnpublish}
+						scheduledDate={scheduledDate}
+						onCancelSchedule={onCancelSchedule}
+						preflightStatus={preflightStatus}
+						preflightRanRecently={preflightStatus === "done"}
+						lastPublishedAt={pageStatus === "Published" || pageStatus === "Changed" ? "Jun 28, 2026" : null}
+						lastPublishedBy={pageStatus === "Published" || pageStatus === "Changed" ? "Jamie Chen" : null}
+											/>
 
 					{/* LEFT SIDEBAR (Properties only) */}
 					<Box
@@ -1686,7 +1882,6 @@ export default function VBPrototype({
 					pageId={pageId}
 					lastSaved={lastSaved}
 					pageStatus={pageStatus}
-					onPublish={onPublish}
 					onViewOnWebsite={onViewOnWebsite}
 					onShowVersionHistory={() => setIsVersionHistoryOpen(true)}
 					contentTypeIcon={<IconFile size={16} />}
@@ -1713,6 +1908,14 @@ export default function VBPrototype({
 					onAddToTask={onAddToTask}
 					onRemoveFromTask={onRemoveFromTask}
 					currentTaskId={currentTaskId}
+					onPublishConfirm={handlePublishConfirm}
+					onUnpublish={onUnpublish}
+					scheduledDate={scheduledDate}
+					onCancelSchedule={onCancelSchedule}
+					preflightStatus={preflightStatus}
+					preflightRanRecently={preflightStatus === "done"}
+					lastPublishedAt={pageStatus === "Published" || pageStatus === "Changed" ? "Jun 28, 2026" : null}
+					lastPublishedBy={pageStatus === "Published" || pageStatus === "Changed" ? "Jamie Chen" : null}
 				/>
 
 				{/* LEFT SIDEBAR */}
@@ -2316,10 +2519,8 @@ export default function VBPrototype({
 								? (activeExtension as any).manifest
 								: activeExtension;
 
-						// Ensure "original" exists in variations for extensions
 						const safeVariations = [...(variations || [])];
 						if (!safeVariations.find((v) => v.id === "original")) {
-							// fallback: construct "original" from top-level legacy outlines
 							safeVariations.unshift({
 								id: "original",
 								name: "Original",
@@ -2334,7 +2535,6 @@ export default function VBPrototype({
 							pageStatus,
 							variations: safeVariations,
 							selectedVariation,
-							// mutation hooks
 							onSelectVariation: setSelectedVariation,
 							onAddVariation,
 						};
@@ -2474,6 +2674,7 @@ export default function VBPrototype({
 			>
 				<Text>This action will unpublish the page and move it to the trash.</Text>
 			</AbstractDialog>
+
 
 			{isVersionHistoryOpen && (
 				<VersionHistory

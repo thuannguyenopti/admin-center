@@ -5,6 +5,8 @@ import {DetailsPanel, DetailsPanelHeader, DetailsPanelBody} from "@optiaxiom/rea
 import {
 	IconBell,
 	IconXmark,
+} from "@optiaxiom/icons";
+import {
 	IconChecks,
 	IconMegaphone,
 	IconLoader2,
@@ -294,12 +296,10 @@ function CompactNotificationCard({
 						notification.type === "im_mention" ||
 						notification.type === "im_thread_reply") &&
 						notification.deepLink && (
-							<Box pt="4" onClick={(e) => e.stopPropagation()}>
-								<a href={notification.deepLink} style={{textDecoration: "none"}}>
-									<Button size="sm" appearance="inverse">
-										Reply
-									</Button>
-								</a>
+							<Box pt="4" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = notification.deepLink; }}>
+								<Button size="sm" appearance="inverse">
+									Reply
+								</Button>
 							</Box>
 						)}
 
@@ -643,6 +643,7 @@ export default function NotificationDropdown() {
 				appearance="subtle"
 				size="md"
 				icon={<IconBell />}
+				color="fg.secondary"
 				aria-label="Notifications"
 				onClick={togglePanel}
 			/>

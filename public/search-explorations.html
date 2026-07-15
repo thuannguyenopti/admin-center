@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Search UX Explorations</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2ed; color: #1c1c1a; font-size: 14px; min-height: 100vh; padding: 32px; }
+
+  h1 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #6b6b65; margin-bottom: 24px; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+  .tab { padding: 6px 16px; border-radius: 8px; border: 0.5px solid rgba(0,0,0,0.12); background: #fff; color: #6b6b65; font-size: 13px; cursor: pointer; font-family: inherit; transition: background 0.1s; }
+  .tab.on { background: #e5e8e0; color: #1c1c1a; font-weight: 500; border-color: rgba(0,0,0,0.18); }
+  .tab:hover:not(.on) { background: #f5f7f2; }
+
+  .panel { display: none; }
+  .panel.on { display: block; }
+
+  /* IM Shell */
+  .shell { border-radius: 12px; overflow: hidden; border: 0.5px solid rgba(0,0,0,0.1); background: #f5f7f2; }
+  .hdr { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1); }
+  .htitle { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+  .ib { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; color: #6b6b65; font-size: 17px; border: none; background: transparent; cursor: pointer; transition: background 0.1s; }
+  .ib:hover { background: #f0f2ed; }
+  .msgs { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { display: flex; gap: 10px; }
+  .av { border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; }
+
+  /* Search input */
+  .si { display: flex; align-items: center; gap: 8px; border: 0.5px solid rgba(0,0,0,0.18); border-radius: 8px; padding: 7px 10px; background: #fff; }
+  .si input { border: none; outline: none; background: transparent; font-size: 13px; color: #1c1c1a; flex: 1; font-family: inherit; min-width: 0; }
+  .si input::placeholder { color: #9a9a94; }
+
+  /* Filters */
+  .frow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .frow select { font-size: 12px; border: 0.5px solid rgba(0,0,0,0.12); border-radius: 6px; padding: 4px 8px; background: #fff; color: #6b6b65; font-family: inherit; cursor: pointer; }
+  .frow label { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #6b6b65; cursor: pointer; }
+
+  /* Results */
+  .ri { display: flex; gap: 10px; padding: 8px 6px; border-radius: 8px; cursor: pointer; }
+  .ri:hover { background: #eef0ea; }
+  mark { background: rgba(186,117,23,0.18); color: #1c1c1a; font-weight: 500; padding: 0 2px; border-radius: 2px; font-style: normal; }
+  .rcount { font-size: 12px; color: #6b6b65; margin-bottom: 8px; }
+
+  /* Modal */
+  .modal-bg { background: rgba(0,0,0,0.38); display: flex; align-items: flex-start; justify-content: center; padding-top: 50px; position: absolute; inset: 0; }
+  .modal-box { background: #fff; border-radius: 12px; width: 520px; border: 0.5px solid rgba(0,0,0,0.14); }
+
+  /* Tip pills */
+  .tips { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .tip { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 20px; padding: 5px 12px; font-size: 12px; color: #6b6b65; }
+  .tip strong { color: #1c1c1a; font-weight: 500; }
+
+  /* Panel B interactive states */
+  #xpb .b-state { display: none; }
+  #xpb .b-state.visible { display: block; }
+
+  #xpb .search-icon-btn {
+    width: 30px; height: 30px; border-radius: 6px; border: none; background: transparent;
+    cursor: pointer; font-size: 16px; color: #6b6b65; display: inline-flex; align-items: center; justify-content: center;
+    transition: background 0.1s;
+  }
+  #xpb .search-icon-btn:hover { background: #f0f2ed; }
+  #xpb .search-icon-btn.active { background: #eef0ea; color: #1c1c1a; }
+
+  #xpb .conversation-view,
+  #xpb .search-view {
+    transition: opacity 0.18s ease;
+  }
+
+  /* Annotation callout */
+  .callout {
+    background: #fffbeb;
+    border: 0.5px solid rgba(186,117,23,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #633806;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .callout strong { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>Search UX Explorations</h1>
+<p class="subtitle">Filters kept: Any time · attachment · link &nbsp;—&nbsp; removed: From, In, reaction</p>
+
+<div class="tabs">
+  <button class="tab" onclick="xTab('a',this)">A — Full modal</button>
+  <button class="tab on" onclick="xTab('b',this)">B — Inline expansion</button>
+  <button class="tab" onclick="xTab('c',this)">C — Right rail</button>
+</div>
+
+<!-- ===== PANEL A ===== -->
+<div id="xpa" class="panel">
+  <div style="position:relative;min-height:520px;border-radius:12px;overflow:hidden;border:0.5px solid rgba(0,0,0,0.1)">
+    <div style="opacity:0.2;pointer-events:none">
+      <div class="hdr">
+        <div class="htitle"><button class="ib">←</button># opal-design</div>
+        <div style="display:flex;gap:4px"><button class="ib">🔍</button><button class="ib">ℹ</button></div>
+      </div>
+      <div class="msgs" style="background:#f5f7f2;min-height:380px">
+        <div class="msg"><div class="av" style="background:#9FE1CB;color:#085041;width:30px;height:30px">RV</div><div><div style="font-size:12px;color:#6b6b65;margin-bottom:3px">Randy Vargas · 9:32 AM</div><div style="font-size:13px;line-height:1.5">New figma component spec for the card system is ready — see attachment</div></div></div>
+        <div class="msg"><div class="av" style="background:#CECBF6;color:#3C3489;width:30px;height:30px">PR</div><div><div style="font-size:12px;color:#6b6b65;margin-bottom:3px">Priya Rajan · 11:15 AM</div><div style="font-size:13px;line-height:1.5">We should align the figma component structure before handing off to eng</div></div></div>
+        <div class="msg"><div class="av" style="background:#FAC775;color:#633806;width:30px;height:30px">JM</div><div><div style="font-size:12px;color:#6b6b65;margin-bottom:3px">Jason M · 2:04 PM</div><div style="font-size:13px;line-height:1.5">I updated the figma component statuses in the doc I shared yesterday</div></div></div>
+      </div>
+    </div>
+    <div class="modal-bg">
+      <div class="modal-box">
+        <div style="padding:14px 14px 10px">
+          <div class="si">
+            <span style="color:#9a9a94;font-size:16px">🔍</span>
+            <input type="text" value="figma component" />
+            <button class="ib" style="width:24px;height:24px;font-size:14px">✕</button>
+          </div>
+        </div>
+        <div style="padding:0 14px 10px;border-bottom:0.5px solid rgba(0,0,0,0.1)">
+          <div class="frow">
+            <select><option>Any time</option><option>Today</option><option>This week</option><option>This month</option></select>
+            <label><input type="checkbox" checked /> attachment</label>
+            <label><input type="checkbox" /> link</label>
+          </div>
+        </div>
+        <div style="padding:10px 14px 14px">
+          <div class="rcount">12 results</div>
+          <div class="ri"><div class="av" style="background:#CECBF6;color:#3C3489;width:30px;height:30px">PR</div><div style="flex:1"><div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:12px;font-weight:500">Priya Rajan</span><span style="font-size:11px;color:#9a9a94">2 days ago</span></div><div style="font-size:12px;color:#6b6b65;line-height:1.5;margin-top:1px">We should align the <mark>figma component</mark> structure before handing off to eng</div><div style="font-size:11px;color:#9a9a94;margin-top:2px"># opal-design</div></div></div>
+          <div class="ri"><div class="av" style="background:#FAC775;color:#633806;width:30px;height:30px">JM</div><div style="flex:1"><div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:12px;font-weight:500">Jason M</span><span style="font-size:11px;color:#9a9a94">3 days ago</span></div><div style="font-size:12px;color:#6b6b65;line-height:1.5;margin-top:1px">I updated the <mark>figma component</mark> statuses in the doc I shared yesterday</div><div style="font-size:11px;color:#9a9a94;margin-top:2px"># opal-design</div></div></div>
+          <div class="ri"><div class="av" style="background:#9FE1CB;color:#085041;width:30px;height:30px">RV</div><div style="flex:1"><div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:12px;font-weight:500">Randy Vargas</span><span style="font-size:11px;color:#9a9a94">Last week</span></div><div style="font-size:12px;color:#6b6b65;line-height:1.5;margin-top:1px">New <mark>figma component</mark> spec for the card system, see attachment 📎</div><div style="font-size:11px;color:#9a9a94;margin-top:2px"># opal-design</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tips">
+    <div class="tip"><strong>Triggered by:</strong> ⌘K or search icon in header</div>
+    <div class="tip"><strong>Scope:</strong> all conversations</div>
+    <div class="tip"><strong>Exit:</strong> Esc or click backdrop</div>
+  </div>
+</div>
+
+<!-- ===== PANEL B ===== -->
+<div id="xpb" class="panel on">
+  <div class="callout" id="b-hint">
+    👆 <strong>Click the search icon (🔍) in the header</strong> to trigger the takeover. Hit ✕ to go back.
+  </div>
+
+  <div class="shell">
+    <!-- STATE 1: Normal conversation -->
+    <div class="b-state visible" id="b-convo">
+      <div class="hdr">
+        <div class="htitle"><button class="ib">←</button># opal-design</div>
+        <div style="display:flex;gap:4px">
+          <button class="search-icon-btn" id="b-search-trigger" title="Search this conversation" onclick="bOpenSearch()">🔍</button>
+          <button class="ib">ℹ</button>
+        </div>
+      </div>
+      <div class="msgs">
+        <div class="msg"><div class="av" style="background:#9FE1CB;color:#085041;width:30px;height:30px">RV</div><div><div style="font-size:12px;color:#6b6b65;margin-bottom:3px">Randy Vargas · 9:32 AM</div><div style="font-size:13px;line-height:1.5">New figma component spec for the card system is ready — see attachment</div></div></div>
+        <div class="msg"><div class="av" style="background:#CECBF6;color:#3C3489;width:30px;height:30px">PR</div><div><div style="font-size:12px;color:#6b6b65;margin-bottom:3px">Priya Rajan · 11:15 AM</div><div style="font-size:13px;line-height:1.5">We should align the figma component structure before handing off to eng</div></div></div>
+        <div class="msg"><div class="av" style="background:#FAC775;color:#633806;width:30px;height:30px">JM</div><div><div style="font-size:12px;color:#6b6b65;margin-bottom:3px">Jason M · 2:04 PM</div><div style="font-size:13px;line-height:1.5">I updated the figma component statuses in the doc I shared yesterday</div></div></div>
+        <div class="msg"><div class="av" style="background:#9FE1CB;color:#085041;width:30px;height:30px">RV</div><div><div style="font-size:12px;color:#6b6b65;margin-bottom:3px">Randy Vargas · 3:20 PM</div><div style="font-size:13px;line-height:1.5">@Priya can you drop the link to the figma component library doc?</div></div></div>
+        <div class="msg"><div class="av" style="background:#CECBF6;color:#3C3489;width:30px;height:30px">PR</div><div><div style="font-size:12px;color:#6b6b65;margin-bottom:3px">Priya Rajan · 3:24 PM</div><div style="font-size:13px;line-height:1.5">Sure, adding it now 📎</div></div></div>
+      </div>
+    </div>
+
+    <!-- STATE 2: Search mode (replaces messages, header stays + transforms) -->
+    <div class="b-state" id="b-search" style="background:#fff">
+      <!-- Header: channel name stays, transforms to include search + close -->
+      <div style="background:#fff;border-bottom:0.5px solid rgba(0,0,0,0.1)">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px">
+          <div class="htitle" style="font-size:14px"><button class="ib">←</button># opal-design</div>
+          <button class="ib" style="font-size:14px" onclick="bCloseSearch()">✕</button>
+        </div>
+        <!-- Search bar appears below the title row -->
+        <div style="padding:0 16px 10px">
+          <div class="si">
+            <span style="color:#9a9a94;font-size:16px">🔍</span>
+            <input type="text" id="b-input" value="figma component" style="font-size:13px" />
+          </div>
+        </div>
+        <div style="padding:0 16px 12px">
+          <div class="frow">
+            <select><option>Any time</option><option>Today</option><option>This week</option><option>This month</option></select>
+            <label><input type="checkbox" checked /> attachment</label>
+            <label><input type="checkbox" /> link</label>
+          </div>
+        </div>
+      </div>
+      <!-- Results replace the messages area -->
+      <div style="background:#f5f7f2;padding:12px 16px 16px">
+        <div class="rcount">12 results for "figma component"</div>
+        <div class="ri" style="background:#fff;margin-bottom:2px"><div class="av" style="background:#CECBF6;color:#3C3489;width:30px;height:30px">PR</div><div style="flex:1"><div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:12px;font-weight:500">Priya Rajan</span><span style="font-size:11px;color:#9a9a94">2 days ago</span></div><div style="font-size:12px;color:#6b6b65;line-height:1.5;margin-top:1px">We should align the <mark>figma component</mark> structure before handing off to eng</div><div style="font-size:11px;color:#9a9a94;margin-top:2px"># opal-design</div></div></div>
+        <div class="ri"><div class="av" style="background:#FAC775;color:#633806;width:30px;height:30px">JM</div><div style="flex:1"><div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:12px;font-weight:500">Jason M</span><span style="font-size:11px;color:#9a9a94">3 days ago</span></div><div style="font-size:12px;color:#6b6b65;line-height:1.5;margin-top:1px">I updated the <mark>figma component</mark> statuses in the doc I shared yesterday</div><div style="font-size:11px;color:#9a9a94;margin-top:2px"># opal-design</div></div></div>
+        <div class="ri"><div class="av" style="background:#9FE1CB;color:#085041;width:30px;height:30px">RV</div><div style="flex:1"><div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:12px;font-weight:500">Randy Vargas</span><span style="font-size:11px;color:#9a9a94">Last week</span></div><div style="font-size:12px;color:#6b6b65;line-height:1.5;margin-top:1px">New <mark>figma component</mark> spec for the card system, see attachment 📎</div><div style="font-size:11px;color:#9a9a94;margin-top:2px"># opal-design</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tips">
+    <div class="tip"><strong>Triggered by:</strong> search icon in header</div>
+    <div class="tip"><strong>Scope:</strong> current conversation only</div>
+    <div class="tip"><strong>Exit:</strong> ✕ restores messages</div>
+  </div>
+</div>
+
+<!-- ===== PANEL C ===== -->
+<div id="xpc" class="panel">
+  <div class="shell" style="display:flex">
+    <div style="flex:1;min-width:0;border-right:0.5px solid rgba(0,0,0,0.1)">
+      <div class="hdr">
+        <div class="htitle" style="font-size:13px"><button class="ib">←</button># opal-design</div>
+        <div style="display:flex;gap:2px">
+          <button class="ib" style="background:#eef0ea">🔍</button>
+          <button class="ib">ℹ</button>
+        </div>
+      </div>
+      <div class="msgs">
+        <div class="msg"><div class="av" style="background:#9FE1CB;color:#085041;width:26px;height:26px;font-size:10px">RV</div><div><div style="font-size:11px;color:#6b6b65;margin-bottom:2px">Randy · 9:32 AM</div><div style="font-size:12px;line-height:1.5">New figma component spec for the card system is ready</div></div></div>
+        <div class="msg"><div class="av" style="background:#CECBF6;color:#3C3489;width:26px;height:26px;font-size:10px">PR</div><div><div style="font-size:11px;color:#6b6b65;margin-bottom:2px">Priya · 11:15 AM</div><div style="font-size:12px;line-height:1.5">We should align the figma component structure before handing off</div></div></div>
+        <div class="msg"><div class="av" style="background:#FAC775;color:#633806;width:26px;height:26px;font-size:10px">JM</div><div><div style="font-size:11px;color:#6b6b65;margin-bottom:2px">Jason · 2:04 PM</div><div style="font-size:12px;line-height:1.5">I updated the figma component statuses in the doc</div></div></div>
+      </div>
+    </div>
+    <div style="width:260px;flex-shrink:0;background:#fff;display:flex;flex-direction:column">
+      <div style="padding:10px 12px 8px;border-bottom:0.5px solid rgba(0,0,0,0.1)">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px">Search</div>
+        <div class="si" style="margin-bottom:8px;padding:6px 8px">
+          <span style="color:#9a9a94;font-size:14px">🔍</span>
+          <input type="text" value="figma component" style="font-size:12px" />
+          <button class="ib" style="width:20px;height:20px;font-size:12px">✕</button>
+        </div>
+        <div class="frow" style="gap:8px">
+          <select style="font-size:11px;padding:3px 6px"><option>Any time</option></select>
+          <label style="font-size:11px;gap:3px"><input type="checkbox" checked /> attach.</label>
+          <label style="font-size:11px;gap:3px"><input type="checkbox" /> link</label>
+        </div>
+      </div>
+      <div style="padding:8px 10px">
+        <div class="rcount" style="margin-bottom:6px">12 results</div>
+        <div class="ri"><div class="av" style="background:#CECBF6;color:#3C3489;width:26px;height:26px;font-size:10px">PR</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:11px;font-weight:500">Priya Rajan</span><span style="font-size:10px;color:#9a9a94">2d ago</span></div><div style="font-size:11px;color:#6b6b65;line-height:1.4;margin-top:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">We should align the <mark>figma component</mark> structure before handing off</div></div></div>
+        <div class="ri"><div class="av" style="background:#FAC775;color:#633806;width:26px;height:26px;font-size:10px">JM</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:11px;font-weight:500">Jason M</span><span style="font-size:10px;color:#9a9a94">3d ago</span></div><div style="font-size:11px;color:#6b6b65;line-height:1.4;margin-top:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">Updated the <mark>figma component</mark> statuses in the doc</div></div></div>
+        <div class="ri"><div class="av" style="background:#9FE1CB;color:#085041;width:26px;height:26px;font-size:10px">RV</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:11px;font-weight:500">Randy Vargas</span><span style="font-size:10px;color:#9a9a94">1w ago</span></div><div style="font-size:11px;color:#6b6b65;line-height:1.4;margin-top:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">New <mark>figma component</mark> spec for the card system 📎</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="tips">
+    <div class="tip"><strong>Triggered by:</strong> search icon (stays active)</div>
+    <div class="tip"><strong>Scope:</strong> current conversation</div>
+    <div class="tip"><strong>Exit:</strong> ✕ collapses the panel</div>
+  </div>
+</div>
+
+<script>
+function xTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.getElementById('xp' + id).classList.add('on');
+}
+
+function bOpenSearch() {
+  document.getElementById('b-convo').classList.remove('visible');
+  document.getElementById('b-search').classList.add('visible');
+  document.getElementById('b-hint').style.display = 'none';
+  setTimeout(() => document.getElementById('b-input').focus(), 50);
+}
+
+function bCloseSearch() {
+  document.getElementById('b-search').classList.remove('visible');
+  document.getElementById('b-convo').classList.add('visible');
+}
+</script>
+</body>
+</html>

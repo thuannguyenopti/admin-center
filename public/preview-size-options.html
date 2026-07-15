@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preview text size options</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #e8e6e0;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 32px;
+      padding: 48px 32px;
+      flex-wrap: wrap;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #888;
+      padding-left: 4px;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: #f4f3ef;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 0.5px solid rgba(0,0,0,0.08);
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #888;
+      padding: 10px 14px 6px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      cursor: default;
+      transition: background 0.1s;
+    }
+    .row:hover { background: rgba(0,0,0,0.04); }
+    .row.active { background: rgba(0,0,0,0.06); }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .presence {
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 2px solid #f4f3ef;
+    }
+    .presence.active  { background: #4ade80; }
+    .presence.away    { background: #f59e0b; }
+    .presence.busy    { background: #ef4444; }
+    .avatar-group {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: #e0ddd6;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      color: #888;
+    }
+    .avatar-group svg { width: 18px; height: 18px; }
+
+    .meta { flex: 1; min-width: 0; }
+
+    .name-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+    .name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .badge {
+      font-size: 10px;
+      font-weight: 500;
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 1px 5px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .ts {
+      color: #999;
+      flex-shrink: 0;
+      margin-left: auto;
+      padding-left: 4px;
+    }
+
+    .preview-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .preview {
+      color: #888;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    }
+    .unread-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #3b82f6;
+      flex-shrink: 0;
+    }
+
+    .divider {
+      height: 0.5px;
+      background: rgba(0,0,0,0.07);
+      margin: 0 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CURRENT -->
+  <div class="column">
+    <div class="option-label">Current — sm preview · xs time</div>
+    <div class="sidebar">
+      <div class="section-label">Direct messages</div>
+      <div class="row active">
+        <div class="avatar">
+          <img src="https://i.pravatar.cc/150?img=63" />
+          <div class="presence active"></div>
+        </div>
+        <div class="meta">
+          <div class="name-row">
+            <span class="name">Randy</span>
+            <span class="badge">Virtual</span>
+            <span class="ts" style="font-size:11px">9:54 AM</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview" style="font-size:13px">Randy sent an item that needs your appr...</span>
+            <div class="unread-dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="avatar">
+          <img src="https://i.pravatar.cc/150?img=47" />
+          <div class="presence active"></div>
+        </div>
+        <div class="meta">
+          <div class="name-row">
+            <span class="name">Jane Smith</span>
+            <span class="ts" style="font-size:11px">2:22 PM</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview" style="font-size:13px">Same 😂 see you at 2!</span>
+            <div class="unread-dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="avatar">
+          <img src="https://i.pravatar.cc/150?img=44" />
+          <div class="presence away"></div>
+        </div>
+        <div class="meta">
+          <div class="name-row">
+            <span class="name">Priya Rajan</span>
+            <span class="ts" style="font-size:11px">11:45 AM</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview" style="font-size:13px">Just flagging in case you hadn't seen the...</span>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-label" style="padding-top:10px">Group chats</div>
+      <div class="row">
+        <div class="avatar-group">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="name-row">
+            <span class="name">Black Friday Campaign</span>
+            <span class="ts" style="font-size:11px">1:08 PM</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview" style="font-size:13px">Randy: Love it! Opening it up now —</span>
+            <div class="unread-dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION A -->
+  <div class="column">
+    <div class="option-label">Option A — md preview · xs time</div>
+    <div class="sidebar">
+      <div class="section-label">Direct messages</div>
+      <div class="row active">
+        <div class="avatar">
+          <img src="https://i.pravatar.cc/150?img=63" />
+          <div class="presence active"></div>
+        </div>
+        <div class="meta">
+          <div class="name-row">
+            <span class="name">Randy</span>
+            <span class="badge">Virtual</span>
+            <span class="ts" style="font-size:11px">9:54 AM</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview" style="font-size:14px">Randy sent an item that needs your appr...</span>
+            <div class="unread-dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="avatar">
+          <img src="https://i.pravatar.cc/150?img=47" />
+          <div class="presence active"></div>
+        </div>
+        <div class="meta">
+          <div class="name-row">
+            <span class="name">Jane Smith</span>
+            <span class="ts" style="font-size:11px">2:22 PM</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview" style="font-size:14px">Same 😂 see you at 2!</span>
+            <div class="unread-dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="avatar">
+          <img src="https://i.pravatar.cc/150?img=44" />
+          <div class="presence away"></div>
+        </div>
+        <div class="meta">
+          <div class="name-row">
+            <span class="name">Priya Rajan</span>
+            <span class="ts" style="font-size:11px">11:45 AM</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview" style="font-size:14px">Just flagging in case you hadn't seen the...</span>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-label" style="padding-top:10px">Group chats</div>
+      <div class="row">
+        <div class="avatar-group">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="name-row">
+            <span class="name">Black Friday Campaign</span>
+            <span class="ts" style="font-size:11px">1:08 PM</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview" style="font-size:14px">Randy: Love it! Opening it up now —</span>
+            <div class="unread-dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION B -->
+  <div class="column">
+    <div class="option-label">Option B — md preview · sm time</div>
+    <div class="sidebar">
+      <div class="section-label">Direct messages</div>
+      <div class="row active">
+        <div class="avatar">
+          <img src="https://i.pravatar.cc/150?img=63" />
+          <div class="presence active"></div>
+        </div>
+        <div class="meta">
+          <div class="name-row">
+            <span class="name">Randy</span>
+            <span class="badge">Virtual</span>
+            <span class="ts" style="font-size:13px">9:54 AM</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview" style="font-size:14px">Randy sent an item that needs your appr...</span>
+            <div class="unread-dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="avatar">
+          <img src="https://i.pravatar.cc/150?img=47" />
+          <div class="presence active"></div>
+        </div>
+        <div class="meta">
+          <div class="name-row">
+            <span class="name">Jane Smith</span>
+            <span class="ts" style="font-size:13px">2:22 PM</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview" style="font-size:14px">Same 😂 see you at 2!</span>
+            <div class="unread-dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <div class="avatar">
+          <img src="https://i.pravatar.cc/150?img=44" />
+          <div class="presence away"></div>
+        </div>
+        <div class="meta">
+          <div class="name-row">
+            <span class="name">Priya Rajan</span>
+            <span class="ts" style="font-size:13px">11:45 AM</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview" style="font-size:14px">Just flagging in case you hadn't seen the...</span>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-label" style="padding-top:10px">Group chats</div>
+      <div class="row">
+        <div class="avatar-group">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="meta">
+          <div class="name-row">
+            <span class="name">Black Friday Campaign</span>
+            <span class="ts" style="font-size:13px">1:08 PM</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview" style="font-size:14px">Randy: Love it! Opening it up now —</span>
+            <div class="unread-dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+.root {
+	flex: 1;
+	min-height: 0;
+	min-width: 0;
+	padding: 24px 32px;
+}
+
+.compareGrid {
+	display: grid;
+	flex: 1;
+	gap: 24px;
+	grid-template-columns: 1fr 1fr;
+	min-height: 0;
+}
+
+@media (max-width: 860px) {
+	.root {
+		flex: none;
+		min-height: 420px;
+		padding: 20px;
+	}
+
+	.compareGrid {
+		gap: 16px;
+		grid-template-columns: 1fr;
+	}
+}

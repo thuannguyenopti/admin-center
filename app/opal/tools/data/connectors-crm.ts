@@ -3,15 +3,17 @@ import type { Connector } from "./types";
 export const CRM_CONNECTORS: Connector[] = [
     {
         id: "salesforce", name: "Salesforce", category: "CRM",
-        description: "Query and update Salesforce objects like leads, contacts, and opportunities.",
-        about: "The Salesforce REST API provides a powerful, convenient, and simple REST-based web services interface for interacting with Salesforce. Agents can query CRM data using SOQL, create or update records, and retrieve metadata.",
+        description: "Read, create, and update Salesforce records using SOQL queries and the REST API.",
+        about: "The Salesforce REST API gives agents full access to your CRM data — leads, contacts, accounts, opportunities, cases, and custom objects. Query records with SOQL, perform full-text search with SOSL, create and update records, and retrieve object metadata to understand your schema. Agents can surface pipeline status, log activities, and automate CRM updates directly within workflows — without leaving the conversation.",
         type: "auth_provider", authType: "OAuth 2.0", initials: "SF", color: "#00A1E0", textColor: "#ffffff", usesOCP: true,
         tools: [
-            { id: "sf_query", name: "soql_query", description: "Executes a SOQL query and returns matching records.", action: "Read" },
-            { id: "sf_get_record", name: "records_get", description: "Retrieves a specific record by type and ID.", action: "Read" },
-            { id: "sf_create_record", name: "records_create", description: "Creates a new record for the specified object type.", action: "Create" },
-            { id: "sf_update_record", name: "records_update", description: "Updates fields on an existing Salesforce record.", action: "Update" },
-            { id: "sf_search", name: "sosl_search", description: "Searches across multiple Salesforce objects using SOSL.", action: "Read" },
+            { id: "sf_query", name: "soql_query", description: "Executes a SOQL query and returns matching records with field values.", action: "Read" },
+            { id: "sf_search", name: "sosl_search", description: "Performs a full-text search across multiple Salesforce objects using SOSL.", action: "Read" },
+            { id: "sf_get_record", name: "records_get", description: "Retrieves a specific record by object type and ID, including all requested fields.", action: "Read" },
+            { id: "sf_create_record", name: "records_create", description: "Creates a new record for the specified Salesforce object type.", action: "Create" },
+            { id: "sf_update_record", name: "records_update", description: "Updates one or more fields on an existing Salesforce record.", action: "Update" },
+            { id: "sf_delete_record", name: "records_delete", description: "Deletes a record by object type and ID.", action: "Delete" },
+            { id: "sf_describe_object", name: "sobjects_describe", description: "Returns the metadata for a Salesforce object — fields, relationships, and picklist values.", action: "Read" },
         ],
     },
     {

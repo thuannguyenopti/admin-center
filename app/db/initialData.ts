@@ -1416,7 +1416,8 @@ export type Page = {
 	id: string;
 	name: string;
 	parentId: string | null;
-	status: "Published" | "Draft" | "Review" | "Changed" | "In Trash";
+	status: "Published" | "Draft" | "Review" | "Changed" | "In Trash" | "Scheduled";
+	scheduledDate?: string;
 	lastModified: string;
 	contentTypeId: string;
 	slug?: string;

@@ -297,6 +297,7 @@ export const IconXmark = createIcon("IconXmark");
 
 // Icons not yet in Axiom package — Tabler fallbacks
 export {IconPlug, IconTicket, IconMicrophone} from "@tabler/icons-react";
+export {IconFaceId} from "@tabler/icons-react";
 
 // Additional Axiom icons — Tabler fallback mappings
 export {IconUpload, IconDownload, IconSearch, IconChevronUp} from "@tabler/icons-react";

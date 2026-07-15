@@ -1,0 +1,27 @@
+.body {
+	display: flex;
+	flex: 1;
+	min-height: 0;
+}
+
+.sidePanel {
+	border-left: 1px solid var(--ax-colors-border-secondary);
+	display: flex;
+	flex-direction: column;
+	flex-shrink: 0;
+	overflow: hidden;
+	width: 380px;
+}
+
+@media (max-width: 860px) {
+	.body {
+		flex-direction: column;
+		overflow-y: auto;
+	}
+
+	.sidePanel {
+		border-left: none;
+		border-top: 1px solid var(--ax-colors-border-secondary);
+		width: 100%;
+	}
+}

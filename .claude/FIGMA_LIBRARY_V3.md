@@ -3,7 +3,6 @@
 **Purpose:** Authoritative reference for every Figma build agent. Missing keys = wrong output. Always use this file before writing any Figma design code. If a component is not listed here, run `search_design_system` at build time before guessing.
 
 **V3 library fileKey:** `qs72V79n1s9wYOcZ1TzBwM`
-**Display name in Figma inspector:** "Axiom Design System" ← if you see "Components V2 - Legacy" you're on the wrong library
 
 ---
 
@@ -194,59 +193,10 @@ variableSetKey: `703b36cc19b684c896b5122aba71edbd953c31ce`
 
 ### Typography
 
-**Two font families in V3:**
-- **Headings** → `VC Nudge` (SemiNormal ExtraBold / SemiBold)
-- **Body / UI** → `DI Grotesk B` (Regular / Medium / Bold)
-
-⚠️ Never hardcode `fontFamily: "Inter"` or manually set `fontFamily` — always apply via `importStyleByKeyAsync`.
-
-Apply a text style: `const style = await figma.importStyleByKeyAsync(key); textNode.textStyleId = style.id;`
-
-Note: `figma.teamLibrary.getAvailableLibraryTextStylesAsync()` is NOT available in the current plugin API. Use `figma.getLocalTextStyles()` when working inside the V3 library file, or use the known keys below.
-
-### Heading styles (font: VC Nudge)
-
-| Style name | key | Size | Weight | Line height |
-|---|---|---|---|---|
-| `Header/Heading 1` | `a09b6330732317550f89995464841bc6221ee0d4` | 50px | ExtraBold | 104% |
-| `Header/Heading 2` | `0f390bdbab1aa2567e514a688a2720f921f484c5` | 28px | ExtraBold | 104% |
-| `Header/Heading 3` | `65d1ad725186853c5e927203afbd64f0b01aefa1` | 20px | SemiBold | 110% |
-| `Header/Heading 4` | `961be639091acbc4478c68e8a9804df7eed2774d` | 16px | SemiBold | 130% |
-
-### Body styles (font: DI Grotesk B)
-
-| Style name | key | Size | Weight | Line height |
-|---|---|---|---|---|
-| `Body/Large/Regular` | `9e88b3e97321a07c3d4fa22a53e9fa0fac6138c8` | 16px | Regular | 150% |
-| `Body/Large/Medium` | `a1ae78db2fe63bb2df596d828cf149bf713caba9` | 16px | Medium | 150% |
-| `Body/Large/Bold` | `7d1aedb043b4fe329944270d8e182d8df5c26532` | 16px | Bold | 150% |
-| `Body/Medium/Regular` | `c20d5252d9eb7abd7184fe5e9e63188d8bb67cb6` | 14px | Regular | 143% |
-| `Body/Medium/Medium` | `b55bd52d7f484e80a6b91f51b6c47643f1c9b716` | 14px | Medium | 143% |
-| `Body/Medium/Bold` | `863bb50b204bcd99ea43f23de1b0db2b8240d2e7` | 14px | Medium | 143% |
-| `Body/Small/Regular` | `20dcc541d8693a94f49c64b86cbceb90bd35b82e` | 12px | Regular | 133% |
-| `Body/Small/Medium` | `e8d81d54329f72dd1aa473a6e30af0c3246212cb` | 12px | Medium | 133% |
-| `Body/Small/Bold` | `61679cba9e57f2ad9d079be913a0bb301504c825` | 12px | Medium | 133% |
-
-### Specialty styles
-
-| Style name | key | Font | Size |
-|---|---|---|---|
-| `Caption/Regular` | `12ff7c374cb555ff51300c31df1510eeb384614c` | Roboto Mono Regular | 12px |
-| `Data/Numeric` | `3ef8b54dfbb17ba474edfdf6df8b2053f62113dc` | DI Grotesk B Regular | 14px |
-| `Code/Regular` | `0859aa2c2eaf55b0573a117005eb1bf474b47735` | Hack Regular | 14px |
-| `Code/Bold` | `078dcaae6ff0029eb03f762303bff252172a54f0` | Hack Bold | 14px |
-
-### Role mapping
-
-| Usage | Style | Key |
-|---|---|---|
-| Page/screen title | `Header/Heading 3` | `65d1ad725186853c5e927203afbd64f0b01aefa1` |
-| Section heading | `Header/Heading 4` | `961be639091acbc4478c68e8a9804df7eed2774d` |
-| Large body / card title | `Body/Large/Bold` | `7d1aedb043b4fe329944270d8e182d8df5c26532` |
-| Row / item title | `Body/Medium/Bold` | `863bb50b204bcd99ea43f23de1b0db2b8240d2e7` |
-| Body text | `Body/Medium/Regular` | `c20d5252d9eb7abd7184fe5e9e63188d8bb67cb6` |
-| Secondary / preview text | `Body/Small/Regular` | `20dcc541d8693a94f49c64b86cbceb90bd35b82e` |
-| Timestamps / labels | `Body/Small/Bold` | `61679cba9e57f2ad9d079be913a0bb301504c825` |
+Typography style details (fontSize/fontWeight/lineHeight) were not returned by MCP `search_design_system`. The type scale lives in the "Typography" and "Opticon Typography" libraries (legacy names). At build time, use:
+```
+search_design_system(query: "heading body label type scale", fileKey: "qs72V79n1s9wYOcZ1TzBwM", includeStyles: true)
+```
 
 ---
 
@@ -292,4 +242,4 @@ These require a fresh `search_design_system` query at build time — they either
 
 ---
 
-*Last updated: 2026-07-02 — typography section rewritten with confirmed keys from `figma.getLocalTextStyles()` inside the V3 library file.*
+*Last updated: 2026-07-02 via MCP search_design_system queries against fileKey `qs72V79n1s9wYOcZ1TzBwM`.*
