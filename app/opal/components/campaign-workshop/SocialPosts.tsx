@@ -11,7 +11,7 @@ const CARDS: {
 	width: number;
 }[] = [
 	{ slot: "social-linkedin", aspect: "1 / 1", objectPosition: { default: "48% 50%", updated: "50% 50%" }, variant: "hero", width: 532 },
-	{ slot: "social-reel", aspect: "9 / 16", objectPosition: { default: "58% 50%", updated: "50% 50%" }, variant: "standard", width: 294 },
+	{ slot: "social-reel", aspect: "9 / 16", objectPosition: { default: "58% 50%", updated: "50% 50%" }, variant: "standard", width: 303 },
 	{ slot: "social-facebook", aspect: "16 / 9", objectPosition: { default: "50% 50%", updated: "50% 50%" }, variant: "standard", width: 532 },
 ];
 
