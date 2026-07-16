@@ -321,7 +321,7 @@ export function OpalInput({
   }, [value, mentionableAgents]);
 
   // Slash command menu — auto-open when user types "/"
-  const showSlashMenu = imMode && value.startsWith('/') && !showAgentDropdown;
+  const showSlashMenu = value.startsWith('/') && !showAgentDropdown;
   const slashTriggerRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (showSlashMenu) setTimeout(() => slashTriggerRef.current?.click(), 10);
@@ -909,8 +909,8 @@ export function OpalInput({
           />
         </Box>
 
-        {/* Slash command Menu — hidden anchor trigger, auto-opens when user types "/" in IM mode */}
-        {imMode && (
+        {/* Slash command Menu — hidden anchor trigger, auto-opens when user types "/" */}
+        {(
           <Menu options={slashCommandMenuOptions} size="sm">
             <MenuTrigger asChild>
               <button

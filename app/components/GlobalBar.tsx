@@ -583,7 +583,6 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 				</Box>
 
 				<Box display="flex" alignItems="center" gap="4">
-					<DemoResetButton />
 					{isOpalRoute ? (
 						<>
 							<DemoResetButton />
@@ -762,7 +761,6 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 									},
 								]}
 							/>
-							<DemoResetButton />
 							<Button
 								appearance="subtle"
 								size="md"

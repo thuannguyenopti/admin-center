@@ -70,6 +70,8 @@ export type ChatMessage = {
   cardAfterKey?: string;
   /** When set, renders the activity-streaming loading UI (from Opal's agentic responses) */
   activityScript?: import("@/app/opal/im/components/ActivityStreamBlock").ActivityPhase[];
+  /** When true, renders a CanvasOutputCard below the response text */
+  showCanvasCard?: boolean;
 };
 
 export type OpalState = {

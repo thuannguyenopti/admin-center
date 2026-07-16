@@ -42,6 +42,8 @@ export type ActivityPhase = {
   waitStyle?: "waiting" | "paused";
   /** xs explainer shown below the Paused indicator */
   explainerText?: string;
+  /** When set on a paused phase, auto-advances after this many ms (simulating system resolution) */
+  autoResumeMs?: number;
   /** Optional card rendered below the Paused indicator; receives onContinue to advance the stream */
   actionCard?: (onContinue: () => void) => React.ReactNode;
 };
@@ -74,14 +76,12 @@ export const RESEARCH_ACTIVITY_SCRIPT: ActivityPhase[] = [
       { label: "CANVAS STYLE", personal: true },
       { label: "OPTIMIZELY'S TONE AND VOICE" },
     ] }],
-    durationMs: 3400,
+    durationMs: 1400,
   },
   {
     summary: "Ran agent: research",
     items: [{ type: "agent-run", agentName: "research" }],
-    durationMs: 6800,
-    waitStyle: "paused",
-    explainerText: "Waiting for system execution",
+    durationMs: 2800,
   },
   {
     summary: "Searched the web",
@@ -89,7 +89,12 @@ export const RESEARCH_ACTIVITY_SCRIPT: ActivityPhase[] = [
       { type: "search", query: "virtual teammates agents marketing AI", resultCount: 10, results: RESEARCH_RESULTS_1 },
       { type: "search", query: '"marketing automation" "virtual agents" team collaboration', resultCount: 10, results: RESEARCH_RESULTS_2 },
     ],
-    durationMs: 4000,
+    durationMs: 2000,
+  },
+  {
+    summary: "Created canvas",
+    items: [{ type: "canvas-edit", label: "Created canvas" }],
+    durationMs: 2200,
   },
 ];
 
@@ -442,31 +447,36 @@ export function ActivityStreamBlock({
     }
   }, [currentPhase, script.length, onComplete]);
 
-  // Per-phase timer: fires after durationMs, then either auto-advances or pauses for user
+  // Per-phase timer: fires after durationMs, then either pauses or calls advance()
   useEffect(() => {
     if (isDone || waitingForUser) return;
-    let cancelled = false;
     const phase = script[currentPhase];
     if (!phase) return;
 
     const t = setTimeout(() => {
-      if (cancelled) return;
       if (phase.waitStyle === "paused") {
-        setWaitingForUser(true); // stay on this phase until user clicks Continue
+        setWaitingForUser(true);
       } else {
-        // Auto-advance
-        if (currentPhase < script.length - 1) {
-          setCurrentPhase(p => p + 1);
-        } else {
-          setIsDone(true);
-          setTimeout(() => { if (!cancelled) onComplete?.(); }, 800);
-        }
+        advance();
       }
     }, phase.durationMs);
 
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPhase, isDone, waitingForUser, advance]);
+
+  // Auto-resume for paused phases with autoResumeMs set
+  useEffect(() => {
+    if (!waitingForUser) return;
+    const phase = script[currentPhase];
+    if (!phase?.autoResumeMs) return;
+    let cancelled = false;
+    const t = setTimeout(() => {
+      if (!cancelled) advance();
+    }, phase.autoResumeMs);
     return () => { cancelled = true; clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPhase, isDone, waitingForUser]);
+  }, [waitingForUser, currentPhase]);
 
   return (
     <Box display="flex" flexDirection="column" gap="4">
