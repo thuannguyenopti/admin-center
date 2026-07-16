@@ -2,6 +2,7 @@
 
 import { Box } from "@optiaxiom/react";
 import { ChannelCard } from "./ChannelCard";
+import { EditableText } from "./EditableText";
 import { SLOT_META, resolveSlotImage, type ImageOverrides } from "./assets";
 
 const RACE_DETAILS = [
@@ -21,15 +22,20 @@ export function EmailPreview({
 	buildStep,
 	imageOverrides,
 	onEdit,
+	onEditText,
 	showRationale,
+	textOverrides,
 }: {
 	buildStep: number;
 	imageOverrides: ImageOverrides;
 	onEdit: (slot: "email-hero") => void;
+	onEditText: (fieldId: string, value: string) => void;
 	showRationale: boolean;
+	textOverrides: Partial<Record<string, string>>;
 }) {
 	const showBuildOverlay = buildStep < 3;
 	const meta = SLOT_META["email-hero"];
+	const text = (id: string, fallback: string) => textOverrides[id] ?? fallback;
 
 	return (
 		<article style={{ background: "var(--ax-colors-bg-default)", boxShadow: "0 0 0 1px rgba(28, 28, 28, 0.08)", margin: "0 auto", maxWidth: 680, padding: 24, position: "relative" }}>
@@ -45,19 +51,22 @@ export function EmailPreview({
 				</div>
 			)}
 
-			<div style={{ color: "#6B6B6B", fontSize: 13, fontWeight: 650, marginBottom: 16 }}>
-				Subject: Your Boston Marathon week starts with Stride
-			</div>
+			<Box display="flex" gap="4" style={{ alignItems: "baseline", color: "#6B6B6B", fontSize: 13, fontWeight: 650, marginBottom: 16 }}>
+				<span>Subject:</span>
+				<EditableText ariaLabel="subject line" value={text("email-subject", "Your Boston Marathon week starts with Stride")} onChange={(v) => onEditText("email-subject", v)} style={{ color: "#6B6B6B", fontSize: 13, fontWeight: 650 }} />
+			</Box>
 
 			<Box style={{ marginBottom: 20 }}>
 				<ChannelCard
-					altText={meta.altText}
+					altText={text("email-hero-alt", meta.altText)}
 					aspectRatio="16 / 9"
 					createdLabel={meta.createdLabel}
 					image={resolveSlotImage("email-hero", imageOverrides)}
-					imageAlt="Boston Marathon campaign email hero"
+					imageAlt="Sunrise training run for Stride's Boston Marathon 2026 campaign"
+					onAltTextChange={(next) => onEditText("email-hero-alt", next)}
 					onEdit={() => onEdit("email-hero")}
-					title={meta.title}
+					onTitleChange={(next) => onEditText("email-hero-title", next)}
+					title={text("email-hero-title", meta.title)}
 					variant="hero"
 				/>
 			</Box>
@@ -77,11 +86,14 @@ export function EmailPreview({
 					</span>
 				</div>
 
-				<h1 style={{ color: "#1C1C1C", fontSize: 28, fontWeight: 800, lineHeight: "36px", margin: "0 0 14px", textAlign: "center" }}>
-					Make marathon Monday
-					<br />
-					your momentum moment.
-				</h1>
+				<Box style={{ margin: "0 0 14px", textAlign: "center" }}>
+					<EditableText
+						ariaLabel="email headline"
+						value={text("email-headline", "Make marathon Monday your momentum moment.")}
+						onChange={(v) => onEditText("email-headline", v)}
+						style={{ color: "#1C1C1C", fontSize: 28, fontWeight: 800, lineHeight: "36px" }}
+					/>
+				</Box>
 				<p style={{ color: "#3A3A3A", fontSize: 15, lineHeight: "24px", margin: "0 0 24px", textAlign: "center" }}>
 					Race week is the moment every training run was building toward.
 					<br />

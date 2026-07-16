@@ -3,11 +3,14 @@
 import { Box, Button } from "@optiaxiom/react";
 import { IconChevronDown, IconDownload, IconPen } from "@optiaxiom/icons";
 import { Text } from "@/app/components/Text";
+import { EditableText } from "./EditableText";
 
 // Matches Figma "Image Gen II - 10 Channel Pack Items" (node 6708:89886): title + chevron,
 // "Created {date}" subline, photo, an Alt Text sub-card, and an Edit/Download button row.
 // `variant="hero"` overlays Edit on the image (the LinkedIn 1:1 card in the Figma spec);
 // `variant="standard"` puts Edit inline with Download below Alt Text (the other two cards).
+// Title and Alt Text are inline-editable (EditableText) — the one shared card component
+// covers editing on every blog/social/email surface that renders through it.
 export function ChannelCard({
 	altText,
 	aspectRatio,
@@ -15,8 +18,10 @@ export function ChannelCard({
 	image,
 	imageAlt,
 	objectPosition = "50% 50%",
+	onAltTextChange,
 	onDownload,
 	onEdit,
+	onTitleChange,
 	title,
 	variant = "standard",
 	width,
@@ -27,8 +32,10 @@ export function ChannelCard({
 	image: string;
 	imageAlt: string;
 	objectPosition?: string;
+	onAltTextChange: (next: string) => void;
 	onDownload?: () => void;
 	onEdit: () => void;
+	onTitleChange: (next: string) => void;
 	title: string;
 	variant?: "hero" | "standard";
 	width?: number;
@@ -47,9 +54,9 @@ export function ChannelCard({
 		>
 			<Box display="flex" flexDirection="column" gap="4">
 				<Box display="flex" alignItems="center" gap="8">
-					<Text fontWeight="700" fontSize="lg" style={{ flex: 1 }}>
-						{title}
-					</Text>
+					<Box style={{ flex: 1, minWidth: 0 }}>
+						<EditableText ariaLabel="asset title" value={title} onChange={onTitleChange} style={{ fontSize: 16, fontWeight: 700 }} />
+					</Box>
 					<IconChevronDown size={16} color="var(--ax-colors-fg-tertiary)" />
 				</Box>
 				<Text fontSize="sm" color="fg.tertiary">
@@ -83,9 +90,7 @@ export function ChannelCard({
 				<Text fontWeight="500" fontSize="sm">
 					Alt Text
 				</Text>
-				<Text fontSize="sm" color="fg.secondary">
-					{altText}
-				</Text>
+				<EditableText ariaLabel="alt text" multiline value={altText} onChange={onAltTextChange} style={{ color: "var(--ax-colors-fg-secondary)", fontSize: 14 }} />
 			</Box>
 
 			<Box display="flex" gap="16" justifyContent="flex-end">

@@ -8,17 +8,18 @@ import { EmailPreview } from "./EmailPreview";
 import { EditorWorkspace } from "./EditorWorkspace";
 import { OpalPanel } from "./OpalPanel";
 import { WorkflowDrawer, FrankWorkflowPanel } from "./WorkflowDrawer";
-import { allSlotsUpdated, SLOT_META, type ImageOverrides, type ImageSlotId } from "./assets";
+import { type ImageOverrides, type ImageSlotId } from "./assets";
 
-type Mode = "canvas" | "edit" | "confirm" | "result" | "workflow" | "workflow-done";
+type Mode = "canvas" | "edit" | "result" | "workflow" | "workflow-done";
 
 const DEFAULT_SLOT: ImageSlotId = "social-linkedin";
 const WORKFLOW_CHECK_IDS = ["blog", "email", "social"];
 
 // The canvas view opened from the "suite ready" message card — renders inline
 // as `leftCanvas` in the real Opal Chats page (app/opal/page.tsx), not a
-// separate route. Owns its own view state (tab/mode/per-image overrides);
-// the surrounding conversation lives in real ChatMessages, not scene state.
+// separate route. Owns its own view state (tab/mode/per-image/per-text
+// overrides); the surrounding conversation lives in real ChatMessages, not
+// scene state.
 export function CampaignWorkshopCanvas({
 	initialShowRationale = false,
 	initialTab = "blog",
@@ -33,6 +34,7 @@ export function CampaignWorkshopCanvas({
 	const [mode, setMode] = useState<Mode>("canvas");
 	const [editingSlot, setEditingSlot] = useState<ImageSlotId | null>(null);
 	const [imageOverrides, setImageOverrides] = useState<ImageOverrides>({});
+	const [textOverrides, setTextOverrides] = useState<Partial<Record<string, string>>>({});
 	const [workflowChecks, setWorkflowChecks] = useState<Record<string, boolean>>({});
 	const [workflowComplete, setWorkflowComplete] = useState(false);
 	const activeSlot = editingSlot ?? DEFAULT_SLOT;
@@ -42,14 +44,17 @@ export function CampaignWorkshopCanvas({
 		setMode("edit");
 	};
 
-	// Preserves the workshop's own narrative choice ("update all images?") while
-	// still supporting "just this one" — editing one asset no longer changes the others.
-	const applyImageReplacement = (target: "current" | "all") => {
-		setImageOverrides((current) => {
-			if (target === "all") return allSlotsUpdated();
-			if (!editingSlot) return current;
-			return { ...current, [editingSlot]: SLOT_META[editingSlot].updatedImage };
-		});
+	// Picking a specific photo for a specific slot/aspect ratio — no more
+	// ambiguous "apply to all images?" step, since the choice is inherently
+	// scoped to the one asset being edited.
+	const selectImage = (url: string) => {
+		if (!editingSlot) return;
+		setImageOverrides((current) => ({ ...current, [editingSlot]: url }));
+		setMode("result");
+	};
+
+	const editText = (fieldId: string, value: string) => {
+		setTextOverrides((current) => ({ ...current, [fieldId]: value }));
 	};
 
 	const toggleWorkflowCheck = (id: string) => {
@@ -66,25 +71,13 @@ export function CampaignWorkshopCanvas({
 		setMode("workflow-done");
 	};
 
-	if (mode === "edit" || mode === "confirm") {
-		return (
-			<EditorWorkspace
-				confirmMode={mode === "confirm"}
-				editingSlot={editingSlot}
-				imageOverrides={imageOverrides}
-				onConfirm={(target) => {
-					applyImageReplacement(target);
-					setMode("result");
-				}}
-				onGenerate={() => setMode("confirm")}
-				onRevise={() => setMode("edit")}
-			/>
-		);
+	if (mode === "edit") {
+		return <EditorWorkspace editingSlot={editingSlot} imageOverrides={imageOverrides} onSelectImage={selectImage} />;
 	}
 
 	if (mode === "result") {
 		return (
-			<WorkspaceWithPanel panel={<OpalPanel editingSlot={activeSlot} mode="result" onOpenWorkflow={() => setMode("workflow")} />}>
+			<WorkspaceWithPanel panel={<OpalPanel editingSlot={activeSlot} imageOverrides={imageOverrides} mode="result" onOpenWorkflow={() => setMode("workflow")} />}>
 				<CanvasStage
 					activeTab="social"
 					onClose={onClose}
@@ -93,7 +86,7 @@ export function CampaignWorkshopCanvas({
 					onToggleRationale={() => setShowRationale((v) => !v)}
 					showRationale={false}
 				>
-					<SocialPosts imageOverrides={imageOverrides} onEdit={startEdit} />
+					<SocialPosts imageOverrides={imageOverrides} onEdit={startEdit} onEditText={editText} textOverrides={textOverrides} />
 				</CanvasStage>
 			</WorkspaceWithPanel>
 		);
@@ -105,7 +98,7 @@ export function CampaignWorkshopCanvas({
 			<WorkspaceWithPanel
 				panel={
 					mode === "workflow-done" ? (
-						<OpalPanel editingSlot={activeSlot} mode={hasAnyOverride ? "result" : "context"} onOpenWorkflow={() => setMode("workflow-done")} />
+						<OpalPanel editingSlot={activeSlot} imageOverrides={imageOverrides} mode={hasAnyOverride ? "result" : "context"} onOpenWorkflow={() => setMode("workflow-done")} />
 					) : (
 						<FrankWorkflowPanel />
 					)
@@ -122,7 +115,7 @@ export function CampaignWorkshopCanvas({
 							showRationale={false}
 							showWorkflow
 						>
-							<SocialPosts imageOverrides={imageOverrides} onEdit={startEdit} />
+							<SocialPosts imageOverrides={imageOverrides} onEdit={startEdit} onEditText={editText} textOverrides={textOverrides} />
 						</CanvasStage>
 					</div>
 					<WorkflowDrawer
@@ -138,7 +131,7 @@ export function CampaignWorkshopCanvas({
 	}
 
 	return (
-		<WorkspaceWithPanel panel={<OpalPanel editingSlot={activeSlot} mode="canvas" />}>
+		<WorkspaceWithPanel panel={<OpalPanel editingSlot={activeSlot} imageOverrides={imageOverrides} mode="canvas" />}>
 			<CanvasStage
 				activeTab={tab}
 				onClose={onClose}
@@ -147,9 +140,9 @@ export function CampaignWorkshopCanvas({
 				onToggleRationale={() => setShowRationale((v) => !v)}
 				showRationale={showRationale}
 			>
-				{tab === "blog" && <BlogPost buildStep={3} imageOverrides={imageOverrides} onEdit={startEdit} showRationale={showRationale} />}
-				{tab === "social" && <SocialPosts imageOverrides={imageOverrides} onEdit={startEdit} />}
-				{tab === "email" && <EmailPreview buildStep={3} imageOverrides={imageOverrides} onEdit={startEdit} showRationale={showRationale} />}
+				{tab === "blog" && <BlogPost buildStep={3} imageOverrides={imageOverrides} onEdit={startEdit} onEditText={editText} showRationale={showRationale} textOverrides={textOverrides} />}
+				{tab === "social" && <SocialPosts imageOverrides={imageOverrides} onEdit={startEdit} onEditText={editText} textOverrides={textOverrides} />}
+				{tab === "email" && <EmailPreview buildStep={3} imageOverrides={imageOverrides} onEdit={startEdit} onEditText={editText} showRationale={showRationale} textOverrides={textOverrides} />}
 			</CanvasStage>
 		</WorkspaceWithPanel>
 	);

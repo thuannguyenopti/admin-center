@@ -3,7 +3,8 @@
 import type { CSSProperties } from "react";
 import { Box } from "@optiaxiom/react";
 import { ChannelCard } from "./ChannelCard";
-import { SLOT_META, resolveSlotImage, type ImageOverrides } from "./assets";
+import { EditableText } from "./EditableText";
+import { IMG, SLOT_META, resolveSlotImage, type ImageOverrides } from "./assets";
 
 const styles: Record<string, CSSProperties> = {
 	article: {
@@ -149,21 +150,32 @@ const styles: Record<string, CSSProperties> = {
 		margin: "24px 0",
 		padding: "4px 0 4px 20px",
 	},
+	communityCaption: {
+		color: "#6B6B6B",
+		fontSize: 13,
+		lineHeight: "20px",
+		margin: 0,
+	},
 };
 
 export function BlogPost({
 	buildStep,
 	imageOverrides,
 	onEdit,
+	onEditText,
 	showRationale,
+	textOverrides,
 }: {
 	buildStep: number;
 	imageOverrides: ImageOverrides;
 	onEdit: (slot: "blog-hero") => void;
+	onEditText: (fieldId: string, value: string) => void;
 	showRationale: boolean;
+	textOverrides: Partial<Record<string, string>>;
 }) {
 	const showBuildOverlay = buildStep < 3;
 	const meta = SLOT_META["blog-hero"];
+	const text = (id: string, fallback: string) => textOverrides[id] ?? fallback;
 
 	return (
 		<article style={styles.article}>
@@ -186,19 +198,21 @@ export function BlogPost({
 
 			<Box style={{ marginBottom: 34, maxWidth: 780 }}>
 				<ChannelCard
-					altText={meta.altText}
+					altText={text("blog-hero-alt", meta.altText)}
 					aspectRatio="16 / 7"
 					createdLabel={meta.createdLabel}
 					image={resolveSlotImage("blog-hero", imageOverrides)}
-					imageAlt="Runner training before the Boston Marathon campaign"
+					imageAlt="Boston Marathon finish line for Stride's 2026 campaign"
+					onAltTextChange={(next) => onEditText("blog-hero-alt", next)}
 					onEdit={() => onEdit("blog-hero")}
-					title={meta.title}
+					onTitleChange={(next) => onEditText("blog-hero-title", next)}
+					title={text("blog-hero-title", meta.title)}
 					variant="hero"
 				/>
 			</Box>
 
-			<div style={styles.kicker}>Stride Event Guide • Boston Marathon 2026</div>
-			<h1 style={styles.title}>Boston Starts Long Before the Starting Line</h1>
+			<EditableText ariaLabel="kicker" value={text("blog-kicker", "Stride Event Guide • Boston Marathon 2026")} onChange={(v) => onEditText("blog-kicker", v)} style={styles.kicker} />
+			<EditableText ariaLabel="headline" value={text("blog-headline", "Boston Starts Long Before the Starting Line")} onChange={(v) => onEditText("blog-headline", v)} style={styles.title} />
 			<p style={styles.text}>
 				On Monday, April 20, 2026, the Boston Marathon will turn the road from Hopkinton to Boylston Street into one of running&apos;s most electric stages. For Stride runners, Boston is more than race day. It is the months of quiet training, the weekday miles squeezed between meetings, and the moment a personal goal becomes something a whole city can cheer.
 			</p>
@@ -243,6 +257,16 @@ export function BlogPost({
 			</p>
 
 			<h2 style={styles.sectionHeading}>After the Finish Line</h2>
+			<Box display="flex" gap="16" alignItems="center" style={{ margin: "4px 0 18px" }}>
+				<img
+					alt="Runners and neighbors along the Boston Marathon course near mile 17"
+					src={IMG.communityCircle}
+					style={{ borderRadius: "50%", flexShrink: 0, height: 104, objectFit: "cover", width: 104 }}
+				/>
+				<p style={styles.communityCaption}>
+					Every mile has a crowd behind it — neighbors, aid-station volunteers, and the runners who circle back for their pace group.
+				</p>
+			</Box>
 			<p style={styles.text}>
 				Boston rewards preparation. Stride&apos;s role is to make that preparation feel visible, supported, and worth celebrating — whether someone is chasing a qualifying time, cheering from the course, or using marathon Monday as the spark for their own first mile. The campaign carries through to post-race recovery content so the relationship doesn&apos;t end at Boylston.
 			</p>
