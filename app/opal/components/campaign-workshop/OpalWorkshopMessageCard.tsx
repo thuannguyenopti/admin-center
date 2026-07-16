@@ -2,6 +2,7 @@
 
 import { AskQuestionsActionCard } from "@/app/components/Opal/AskQuestionsActionCard";
 import { CampaignBriefOptions, BuildPlanCard, CopyDraftCard, SuiteReadyCard } from "./MessageCards";
+import { QuickActionRow } from "./QuickActionRow";
 import type { ContentTab } from "./CanvasStage";
 
 // Every distinct decision point in the Boston Marathon campaign script, in
@@ -64,63 +65,78 @@ export function OpalWorkshopMessageCard({
 			);
 		case "opal-audience":
 			return (
-				<AskQuestionsActionCard
-					title="Let's create your Boston Marathon content suite"
-					questions={[AUDIENCE_Q]}
-					submitLabel="Continue"
-					onSubmit={(answers) =>
-						onAdvance(labelFor(AUDIENCE_Q, answers.audience), "Got it — runners it is! One more thing before I start generating.", "opal-angle")
-					}
-				/>
+				<>
+					<AskQuestionsActionCard
+						title="Let's create your Boston Marathon content suite"
+						questions={[AUDIENCE_Q]}
+						submitLabel="Continue"
+						onSubmit={(answers) =>
+							onAdvance(labelFor(AUDIENCE_Q, answers.audience), "Got it — runners it is! One more thing before I start generating.", "opal-angle")
+						}
+					/>
+					<QuickActionRow onEditInCanvas={() => onOpenCanvas("blog", false)} />
+				</>
 			);
 		case "opal-angle":
 			return (
-				<AskQuestionsActionCard
-					title="One more thing before I start generating"
-					questions={[ANGLE_Q]}
-					submitLabel="Generate"
-					onSubmit={(answers) =>
-						onAdvance(
-							labelFor(ANGLE_Q, answers.angle),
-							"Perfect. I’ll build this live so you can steer it: first the story arc, then the hero image, then the channel versions.",
-							"opal-build",
-						)
-					}
-				/>
+				<>
+					<AskQuestionsActionCard
+						title="One more thing before I start generating"
+						questions={[ANGLE_Q]}
+						submitLabel="Generate"
+						onSubmit={(answers) =>
+							onAdvance(
+								labelFor(ANGLE_Q, answers.angle),
+								"Perfect. I’ll build this live so you can steer it: first the story arc, then the hero image, then the channel versions.",
+								"opal-build",
+							)
+						}
+					/>
+					<QuickActionRow onEditInCanvas={() => onOpenCanvas("blog", false)} />
+				</>
 			);
 		case "opal-build":
 			return (
-				<BuildPlanCard
-					activeStep={2}
-					onContinue={() =>
-						onAdvance(
-							"Use the bridge runner. It feels aspirational.",
-							"Good call. I’m locking that hero image and shaping the opening around Boston training, race-week energy, and the finish-line payoff.",
-							"opal-copy",
-						)
-					}
-				/>
+				<>
+					<BuildPlanCard
+						activeStep={2}
+						onContinue={() =>
+							onAdvance(
+								"Use the bridge runner. It feels aspirational.",
+								"Good call. I’m locking that hero image and shaping the opening around Boston training, race-week energy, and the finish-line payoff.",
+								"opal-copy",
+							)
+						}
+					/>
+					<QuickActionRow onEditInCanvas={() => onOpenCanvas("blog", false)} />
+				</>
 			);
 		case "opal-copy":
 			return (
-				<CopyDraftCard
-					onApprove={() =>
-						onAdvance(
-							"Approve opening. Keep the tone driven.",
-							"Your Boston Marathon 2026 content suite is ready: a long-form Stride blog post, three social formats, and email copy. Opening the canvas now.",
-							"opal-suite",
-						)
-					}
-				/>
+				<>
+					<CopyDraftCard
+						onApprove={() =>
+							onAdvance(
+								"Approve opening. Keep the tone driven.",
+								"Your Boston Marathon 2026 content suite is ready: a long-form Stride blog post, three social formats, and email copy. Opening the canvas now.",
+								"opal-suite",
+							)
+						}
+					/>
+					<QuickActionRow onEditInCanvas={() => onOpenCanvas("blog", true)} />
+				</>
 			);
 		case "opal-suite":
 			return (
-				<SuiteReadyCard
-					notificationSent={false}
-					onMarkReviewed={() => onAdvance("Notify Pei Chen for final approval.", "Pei Chen notified — awaiting final approval.")}
-					onOpenRationale={() => onOpenCanvas("blog", true)}
-					onOpenSocial={() => onOpenCanvas("social", false)}
-				/>
+				<>
+					<SuiteReadyCard
+						notificationSent={false}
+						onMarkReviewed={() => onAdvance("Notify Pei Chen for final approval.", "Pei Chen notified — awaiting final approval.")}
+						onOpenRationale={() => onOpenCanvas("blog", true)}
+						onOpenSocial={() => onOpenCanvas("social", false)}
+					/>
+					<QuickActionRow onEditInCanvas={() => onOpenCanvas("blog", true)} />
+				</>
 			);
 		default:
 			return null;

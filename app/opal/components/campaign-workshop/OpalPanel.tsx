@@ -14,7 +14,7 @@ export function OpalPanel({
 	onRun,
 }: {
 	editingSlot: ImageSlotId;
-	mode: "context" | "edit" | "confirm" | "result";
+	mode: "canvas" | "context" | "edit" | "confirm" | "result";
 	onConfirm?: (target: "current" | "all") => void;
 	onOpenWorkflow?: () => void;
 	onRevise?: () => void;
@@ -41,17 +41,19 @@ export function OpalPanel({
 			</Box>
 
 			<Box style={{ display: "flex", flex: 1, flexDirection: "column", gap: 14, minHeight: 0, overflow: "auto", padding: 16 }}>
-				<Box border="1" borderColor="border.tertiary" rounded="md" p="10" display="flex" alignItems="center" gap="10">
-					<img alt="Selected asset" src={updated ? meta.updatedImage : meta.defaultImage} style={{ borderRadius: 6, height: 58, objectFit: "cover", width: 58 }} />
-					<Box>
-						<Text fontSize="sm" fontWeight="700">
-							{meta.title}
-						</Text>
-						<Text fontSize="xs" color="fg.tertiary">
-							Selected asset
-						</Text>
+				{mode !== "canvas" && (
+					<Box border="1" borderColor="border.tertiary" rounded="md" p="10" display="flex" alignItems="center" gap="10">
+						<img alt="Selected asset" src={updated ? meta.updatedImage : meta.defaultImage} style={{ borderRadius: 6, height: 58, objectFit: "cover", width: 58 }} />
+						<Box>
+							<Text fontSize="sm" fontWeight="700">
+								{meta.title}
+							</Text>
+							<Text fontSize="xs" color="fg.tertiary">
+								Selected asset
+							</Text>
+						</Box>
 					</Box>
-				</Box>
+				)}
 
 				{mode === "edit" && (
 					<Box border="1" borderColor="border.tertiary" rounded="md" p="12">
@@ -109,11 +111,27 @@ export function OpalPanel({
 				)}
 			</Box>
 
-			<Box border="1" borderColor="border.tertiary" rounded="md" display="flex" alignItems="center" justifyContent="space-between" px="12" m="16" style={{ flexShrink: 0, height: 42 }}>
-				<Text fontSize="sm" color="fg.tertiary">
-					Message Opal
-				</Text>
-				<IconPaperPlaneTop size={17} />
+			<Box display="flex" flexDirection="column" gap="8" m="16" style={{ flexShrink: 0 }}>
+				<Box border="1" borderColor="border.tertiary" rounded="md" display="flex" alignItems="center" justifyContent="space-between" px="12" style={{ height: 42 }}>
+					<Text fontSize="sm" color="fg.tertiary">
+						Message Opal
+					</Text>
+					<IconPaperPlaneTop size={17} />
+				</Box>
+				{mode === "canvas" && (
+					<Box display="flex" gap="8">
+						<Box bg="bg.secondary" rounded="sm" px="8" py="2">
+							<Text fontSize="xs" fontWeight="700" color="fg.default" style={{ letterSpacing: "0.04em", textTransform: "uppercase" }}>
+								Brand Pack
+							</Text>
+						</Box>
+						<Box bg="bg.secondary" rounded="sm" px="8" py="2">
+							<Text fontSize="xs" fontWeight="700" color="fg.default" style={{ letterSpacing: "0.04em", textTransform: "uppercase" }}>
+								Boston Marathon 2026
+							</Text>
+						</Box>
+					</Box>
+				)}
 			</Box>
 		</Box>
 	);

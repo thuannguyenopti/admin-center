@@ -138,18 +138,20 @@ export function CampaignWorkshopCanvas({
 	}
 
 	return (
-		<CanvasStage
-			activeTab={tab}
-			onClose={onClose}
-			onOpenWorkflow={() => setMode("workflow")}
-			onTabChange={setTab}
-			onToggleRationale={() => setShowRationale((v) => !v)}
-			showRationale={showRationale}
-		>
-			{tab === "blog" && <BlogPost buildStep={3} imageOverrides={imageOverrides} onEdit={startEdit} showRationale={showRationale} />}
-			{tab === "social" && <SocialPosts imageOverrides={imageOverrides} onEdit={startEdit} />}
-			{tab === "email" && <EmailPreview buildStep={3} imageOverrides={imageOverrides} onEdit={startEdit} showRationale={showRationale} />}
-		</CanvasStage>
+		<WorkspaceWithPanel panel={<OpalPanel editingSlot={activeSlot} mode="canvas" />}>
+			<CanvasStage
+				activeTab={tab}
+				onClose={onClose}
+				onOpenWorkflow={() => setMode("workflow")}
+				onTabChange={setTab}
+				onToggleRationale={() => setShowRationale((v) => !v)}
+				showRationale={showRationale}
+			>
+				{tab === "blog" && <BlogPost buildStep={3} imageOverrides={imageOverrides} onEdit={startEdit} showRationale={showRationale} />}
+				{tab === "social" && <SocialPosts imageOverrides={imageOverrides} onEdit={startEdit} />}
+				{tab === "email" && <EmailPreview buildStep={3} imageOverrides={imageOverrides} onEdit={startEdit} showRationale={showRationale} />}
+			</CanvasStage>
+		</WorkspaceWithPanel>
 	);
 }
 
