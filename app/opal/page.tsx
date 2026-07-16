@@ -19,8 +19,6 @@ import { HeadlessTaskPanel, useTaskController } from "./components/HeadlessTaskP
 import { GrabHandle } from "@/app/components/Opal/OpalChatView";
 import { imToChatMessage } from "@/app/opal/im/lib/adapters";
 import type { IMMessage } from "@/app/opal/im/lib/types";
-import { useCampaignWorkshop } from "@/app/opal/hooks/useCampaignWorkshop";
-import { CampaignWorkshopCanvas } from "@/app/opal/components/campaign-workshop/CampaignWorkshopCanvas";
 import {
   RESEARCH_ACTIVITY_SCRIPT,
   IMAGE_GEN_ACTIVITY_SCRIPT,
@@ -190,11 +188,6 @@ export default function OpalPage() {
     updateMessage,
   } = opalContext.chatState;
   const { actionCard: atlassianActionCard, modalElement } = useAtlassianConnectorSuggestion(inputValue);
-  const campaignWorkshop = useCampaignWorkshop({
-    activeChatId: opalContext.history.activeChat,
-    addMessage,
-    messages,
-  });
 
   const {
     agentSession,
@@ -522,7 +515,7 @@ export default function OpalPage() {
     }
   }, [messages.length]);
 
-  const geoMessageCards = landingPageReady ? {
+  const messageCards = landingPageReady ? {
     'geo-initial': (
       <Box display="flex" flexDirection="column" gap="12">
         <InlineEditorCard
@@ -575,8 +568,6 @@ export default function OpalPage() {
     ),
   } : undefined;
 
-  const messageCards = { ...geoMessageCards, ...campaignWorkshop.messageCards };
-
   const hasMessages = messages.length > 0;
 
   // Once a conversation starts, hand off to the full chat view
@@ -595,11 +586,11 @@ export default function OpalPage() {
           variant="home"
           streamingMode="expanded"
           headerTitle={undefined}
-          imThreadName={(editorOpen || headlessTaskOpen) ? "Frank" : campaignWorkshop.canvasOpen ? "Opal" : undefined}
+          imThreadName={(editorOpen || headlessTaskOpen) ? "Frank" : undefined}
           imIsVAU={(editorOpen || headlessTaskOpen) || undefined}
           imTemplateName={(editorOpen || headlessTaskOpen) ? "GEO Content Strategist" : undefined}
-          imThreadAvatar={(editorOpen || headlessTaskOpen) ? "/avatars/vau-frank.png" : campaignWorkshop.canvasOpen ? "/opal.png" : undefined}
-          imSimplified={editorOpen || headlessTaskOpen || campaignWorkshop.canvasOpen}
+          imThreadAvatar={(editorOpen || headlessTaskOpen) ? "/avatars/vau-frank.png" : undefined}
+          imSimplified={editorOpen || headlessTaskOpen}
           onImThreadNameClick={landingPageReady ? () => { try { sessionStorage.setItem('im-initial-chat', 'conv-demo-geo-qa'); } catch {} window.location.href = '/opal/im'; } : undefined}
           messages={messages}
           inputValue={inputValue}
@@ -644,17 +635,11 @@ export default function OpalPage() {
               : (atlassianActionCard ?? undefined)
           }
           messageCards={messageCards}
-          canvasMode={editorOpen || headlessTaskOpen || campaignWorkshop.canvasOpen}
+          canvasMode={editorOpen || headlessTaskOpen}
           chatPanelVisible={chatPanelVisible}
           onCloseChat={(editorOpen || headlessTaskOpen) ? () => setChatPanelVisible(false) : undefined}
           leftCanvas={
-            campaignWorkshop.canvasOpen ? (
-              <CampaignWorkshopCanvas
-                initialShowRationale={campaignWorkshop.canvasShowRationale}
-                initialTab={campaignWorkshop.canvasTab}
-                onClose={campaignWorkshop.closeCanvas}
-              />
-            ) : editorOpen || headlessTaskOpen ? (
+            editorOpen || headlessTaskOpen ? (
               <Box display="flex" flexDirection="row" h="full" w="full" style={{ minHeight: 0 }}>
                 {editorOpen && (
                   <Box style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden' }}>

@@ -37,12 +37,6 @@ const ACTIVE_CHAT_ID_KEY = 'opal_active_chat_id';
 // Mock chat history data
 const mockChatHistory: ChatHistoryItem[] = [
   {
-    id: 'boston-marathon-2026',
-    title: 'Boston Marathon 2026 Campaign',
-    date: new Date(),
-    preview: 'Your Boston Marathon 2026 content suite is ready to review.',
-  },
-  {
     id: '1',
     title: 'Creating a Mobile-First Design Strategy: An Actionable Plan',
     date: new Date(),
