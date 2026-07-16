@@ -3475,13 +3475,15 @@ function IMMain({
   const [workshopCanvasOpen, setWorkshopCanvasOpen] = useState(false);
   const [workshopCanvasTab, setWorkshopCanvasTab] = useState<ContentTab>("blog");
   const [workshopCanvasRationale, setWorkshopCanvasRationale] = useState(false);
-  const advanceOpalThread = (userText: string, assistantText: string, nextCardId?: OpalWorkshopMessageId) => {
+  // assistantText is omitted for the final question in the flow — once the
+  // canvas opens fullscreen, the conversation continues there, not here.
+  const advanceOpalThread = (userText: string, assistantText?: string, nextCardId?: OpalWorkshopMessageId) => {
     setThreads((prev) => ({
       ...prev,
       opal: [
         ...(prev.opal ?? []),
         { id: crypto.randomUUID(), from: "user", text: userText },
-        { id: crypto.randomUUID(), from: "vau", senderName: "Opal", senderAvatar: "/opal.png", text: assistantText },
+        ...(assistantText ? [{ id: crypto.randomUUID(), from: "vau" as const, senderName: "Opal", senderAvatar: "/opal.png", text: assistantText }] : []),
         ...(nextCardId ? [{ id: nextCardId, from: "vau" as const, type: "hitl" as const, senderName: "Opal", senderAvatar: "/opal.png", text: "" }] : []),
       ],
     }));

@@ -1,7 +1,7 @@
 "use client";
 
 import { AskQuestionsActionCard } from "@/app/components/Opal/AskQuestionsActionCard";
-import { CampaignBriefOptions, BuildPlanCard, CopyDraftCard, SuiteReadyCard } from "./MessageCards";
+import { CampaignBriefOptions } from "./MessageCards";
 import { QuickActionRow } from "./QuickActionRow";
 import type { ContentTab } from "./CanvasStage";
 
@@ -10,7 +10,9 @@ import type { ContentTab } from "./CanvasStage";
 // via its existing "hitl" message pattern, switched on the message's own id
 // since — unlike the file's other hitl threads (sg/kara, one card per whole
 // conversation) — this one conversation has several distinct cards in sequence.
-export type OpalWorkshopMessageId = "opal-brief" | "opal-audience" | "opal-angle" | "opal-build" | "opal-copy" | "opal-suite";
+// The flow ends at "opal-angle": once that's answered, the canvas takes over
+// fullscreen and the conversation continues there, not in this thread.
+export type OpalWorkshopMessageId = "opal-brief" | "opal-audience" | "opal-angle";
 
 const AUDIENCE_Q = {
 	id: "audience",
@@ -46,7 +48,7 @@ export function OpalWorkshopMessageCard({
 	onOpenCanvas,
 }: {
 	messageId: string;
-	onAdvance: (userText: string, assistantText: string, nextCardId?: OpalWorkshopMessageId) => void;
+	onAdvance: (userText: string, assistantText?: string, nextCardId?: OpalWorkshopMessageId) => void;
 	onOpenCanvas: (tab: ContentTab, showRationale: boolean) => void;
 }) {
 	switch (messageId) {
@@ -84,58 +86,14 @@ export function OpalWorkshopMessageCard({
 						title="One more thing before I start generating"
 						questions={[ANGLE_Q]}
 						submitLabel="Generate"
-						onSubmit={(answers) =>
-							onAdvance(
-								labelFor(ANGLE_Q, answers.angle),
-								"Perfect. I’ll build this live so you can steer it: first the story arc, then the hero image, then the channel versions.",
-								"opal-build",
-							)
-						}
+						onSubmit={(answers) => {
+							// Last question in the flow — no further chat reply here.
+							// Opal keeps talking, but from inside the fullscreen canvas.
+							onAdvance(labelFor(ANGLE_Q, answers.angle));
+							onOpenCanvas("blog", false);
+						}}
 					/>
 					<QuickActionRow onEditInCanvas={() => onOpenCanvas("blog", false)} />
-				</>
-			);
-		case "opal-build":
-			return (
-				<>
-					<BuildPlanCard
-						activeStep={2}
-						onContinue={() =>
-							onAdvance(
-								"Use the bridge runner. It feels aspirational.",
-								"Good call. I’m locking that hero image and shaping the opening around Boston training, race-week energy, and the finish-line payoff.",
-								"opal-copy",
-							)
-						}
-					/>
-					<QuickActionRow onEditInCanvas={() => onOpenCanvas("blog", false)} />
-				</>
-			);
-		case "opal-copy":
-			return (
-				<>
-					<CopyDraftCard
-						onApprove={() =>
-							onAdvance(
-								"Approve opening. Keep the tone driven.",
-								"Your Boston Marathon 2026 content suite is ready: a long-form Stride blog post, three social formats, and email copy. Opening the canvas now.",
-								"opal-suite",
-							)
-						}
-					/>
-					<QuickActionRow onEditInCanvas={() => onOpenCanvas("blog", true)} />
-				</>
-			);
-		case "opal-suite":
-			return (
-				<>
-					<SuiteReadyCard
-						notificationSent={false}
-						onMarkReviewed={() => onAdvance("Notify Pei Chen for final approval.", "Pei Chen notified — awaiting final approval.")}
-						onOpenRationale={() => onOpenCanvas("blog", true)}
-						onOpenSocial={() => onOpenCanvas("social", false)}
-					/>
-					<QuickActionRow onEditInCanvas={() => onOpenCanvas("blog", true)} />
 				</>
 			);
 		default:
