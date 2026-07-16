@@ -5155,15 +5155,20 @@ function IMMain({
         );
       })()}
 
-      {/* ── Campaign canvas overlay (Opal — Boston Marathon workshop) ─── */}
-      {workshopCanvasOpen && (
-        <Box style={{ position: "absolute", inset: 0, background: "var(--ax-colors-bg-default)", zIndex: 30 }}>
+      {/* ── Campaign canvas overlay (Opal — Boston Marathon workshop) ───
+          Fullscreen portal, same as the Stride GEO expanded-doc view below —
+          the Figma canvas frames show no surrounding app chrome or Messages
+          sidebar, so this needs to escape IMMain's content pane entirely
+          rather than sit inset within it. */}
+      {workshopCanvasOpen && typeof document !== "undefined" && createPortal(
+        <Box style={{ position: "fixed", inset: 0, background: "var(--ax-colors-bg-default)", zIndex: 200 }}>
           <CampaignWorkshopCanvas
             initialTab={workshopCanvasTab}
             initialShowRationale={workshopCanvasRationale}
             onClose={() => setWorkshopCanvasOpen(false)}
           />
-        </Box>
+        </Box>,
+        document.body,
       )}
 
       {/* ── Document Review overlay (Stride GEO) ─────────────────── */}
