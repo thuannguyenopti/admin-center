@@ -72,7 +72,7 @@ export function CampaignWorkshopCanvas({
 	};
 
 	if (mode === "edit") {
-		return <EditorWorkspace editingSlot={editingSlot} imageOverrides={imageOverrides} onSelectImage={selectImage} />;
+		return <EditorWorkspace editingSlot={editingSlot} imageOverrides={imageOverrides} onBack={() => setMode("canvas")} onClose={onClose} onSelectImage={selectImage} />;
 	}
 
 	if (mode === "result") {
