@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box } from "@optiaxiom/react";
-import { Layout } from "@optiaxiom/react/unstable";
 import {
 	ReactFlow,
 	Background,
@@ -1074,75 +1073,83 @@ export function FormBuilder() {
 
 	return (
 		<Box style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }} bg="bg.default">
-				<Layout
-					resizable
-					size="full"
-					style={{ height: "100%", flex: 1, minHeight: 0 }}
-					header={
-						<FormBuilderTopNav
-							formTitle={formTitle}
-							isLibraryOpen={isLibraryOpen}
-							canUndo={canUndo}
-							canRedo={canRedo}
-							onToggleLibrary={() => setIsLibraryOpen((v) => !v)}
-							onTitleChange={setFormTitle}
-							onUndo={undo}
-							onRedo={redo}
-							isActive={isActive}
-							onSave={handleSave}
-							onToggleActive={() => {
-							setIsActive((v) => {
-								toaster.create(v ? "Template set to Inactive" : "Template set to Active", { intent: v ? "information" : "success" });
-								return !v;
-							});
-						}}
-							onEditDetails={() => setIsEditDetailsOpen(true)}
-							conflictCount={conflicts.length}
-							onViewIssues={handleOpenIssues}
-							onShowPreview={() => setIsPreviewOpen(true)}
-							onClose={handleCloseRequest}
-						/>
-					}
-					sidebar={isLibraryOpen ? (
+				{/* Top nav */}
+				<FormBuilderTopNav
+					formTitle={formTitle}
+					isLibraryOpen={isLibraryOpen}
+					canUndo={canUndo}
+					canRedo={canRedo}
+					onToggleLibrary={() => setIsLibraryOpen((v) => !v)}
+					onTitleChange={setFormTitle}
+					onUndo={undo}
+					onRedo={redo}
+					isActive={isActive}
+					onSave={handleSave}
+					onToggleActive={() => {
+						setIsActive((v) => {
+							toaster.create(v ? "Template set to Inactive" : "Template set to Active", { intent: v ? "information" : "success" });
+							return !v;
+						});
+					}}
+					onEditDetails={() => setIsEditDetailsOpen(true)}
+					conflictCount={conflicts.length}
+					onViewIssues={handleOpenIssues}
+					onShowPreview={() => setIsPreviewOpen(true)}
+					onClose={handleCloseRequest}
+				/>
+
+				{/* Body: sidebar + canvas + details panel */}
+				<Box style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}>
+					{/* Left sidebar */}
+					{isLibraryOpen && (
 						<FormBuilderSidebar
-						onDragStart={onDragStart}
-						customFields={customFields}
-						onCreateField={handleCreateCustomField}
-					/>
-					) : null}
-					detailsPanel={detailsPanel}
-				>
-					<Box
-						ref={reactFlowWrapper}
-						style={{ flex: 1, minHeight: 0, height: "100%", position: "relative" }}
-					>
-						<ReactFlow
-							nodes={patchedNodes}
-							edges={patchedEdges}
-							nodeTypes={nodeTypes}
-							edgeTypes={edgeTypes}
-							onNodesChange={(changes) =>
-								onNodesChange(changes.filter((c) => !(c.type === "remove" && c.id === STARTING_NODE_ID)))
-							}
-							onEdgesChange={onEdgesChange}
-							onConnect={onConnect}
-							onInit={setReactFlowInstance}
-							onDrop={onDrop}
-							onDragOver={onDragOver}
-							onNodeClick={onNodeClick}
-							onPaneClick={onPaneClick}
-							onNodeDragStop={(e, node, currentNodes) => onNodeDragStop(e, node, currentNodes)}
-							snapToGrid
-							snapGrid={[20, 20]}
-							fitView
-							fitViewOptions={{ padding: 0.4 }}
-							deleteKeyCode={["Delete", "Backspace"]}
+							onDragStart={onDragStart}
+							customFields={customFields}
+							onCreateField={handleCreateCustomField}
+						/>
+					)}
+
+					{/* Canvas — uses absolute fill inside a relative container */}
+					<Box style={{ flex: 1, position: "relative", minWidth: 0 }}>
+						<Box
+							ref={reactFlowWrapper}
+							style={{ position: "absolute", inset: 0 }}
 						>
-							<Controls />
-							<Background variant={BackgroundVariant.Dots} gap={20} size={1} />
-						</ReactFlow>
+							<ReactFlow
+								nodes={patchedNodes}
+								edges={patchedEdges}
+								nodeTypes={nodeTypes}
+								edgeTypes={edgeTypes}
+								onNodesChange={(changes) =>
+									onNodesChange(changes.filter((c) => !(c.type === "remove" && c.id === STARTING_NODE_ID)))
+								}
+								onEdgesChange={onEdgesChange}
+								onConnect={onConnect}
+								onInit={setReactFlowInstance}
+								onDrop={onDrop}
+								onDragOver={onDragOver}
+								onNodeClick={onNodeClick}
+								onPaneClick={onPaneClick}
+								onNodeDragStop={(e, node, currentNodes) => onNodeDragStop(e, node, currentNodes)}
+								snapToGrid
+								snapGrid={[20, 20]}
+								fitView
+								fitViewOptions={{ padding: 0.4 }}
+								deleteKeyCode={["Delete", "Backspace"]}
+							>
+								<Controls />
+								<Background variant={BackgroundVariant.Dots} gap={20} size={1} />
+							</ReactFlow>
+						</Box>
 					</Box>
-				</Layout>
+
+					{/* Right details panel */}
+					{detailsPanel && (
+						<Box style={{ width: 380, flexShrink: 0, height: "100%", overflow: "auto" }}>
+							{detailsPanel}
+						</Box>
+					)}
+				</Box>
 
 				<CreateTemplateModal
 					open={isCreateModalOpen}
