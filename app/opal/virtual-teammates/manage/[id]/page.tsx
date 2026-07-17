@@ -249,14 +249,14 @@ function GridImageCard({ item, avatarSrc, avatarBg, isPinned, onTogglePin }: { i
 								{ label: "Open", addon: <IconArrowUpRightFromSquare /> },
 								{ label: "Share", addon: <IconShareNodes /> },
 								{ label: "Download as", addon: <IconDownload />, subOptions: [
-									{ label: "PDF", value: "pdf" },
-									{ label: "Word (.docx)", value: "docx" },
-									{ label: "Markdown", value: "md" },
-									{ label: "Plain text", value: "txt" },
+									{ label: "PDF" },
+									{ label: "Word (.docx)" },
+									{ label: "Markdown" },
+									{ label: "Plain text" },
 								]},
 								{ label: "Rename", addon: <IconPen /> },
 								{ label: "Pin", addon: <IconThumbtack /> },
-								{ label: "Delete", intent: "danger" as const, addon: <IconTrashCan />, group: { separator: true } },
+								{ label: "Delete", intent: "danger" as const, addon: <IconTrashCan />, group: { label: "", separator: true } },
 							]}>
 							<MenuTrigger asChild>
 								<Button appearance="default" size="sm" aria-label="Options" icon={<IconEllipsisSolid style={{ width: 13, height: 13 }} />} style={BTN_STYLE} />
@@ -413,7 +413,7 @@ export default function VATWorkPage() {
 						options={[
 							{ label: `Sign in as ${vau.name}`, addon: <IconUserCheck /> },
 							{ label: "Pause", addon: <IconPause />, execute: () => setShowBreakDialog(true) },
-							{ label: "Delete", addon: <IconTrashCan />, intent: "danger" as const, group: { separator: true } },
+							{ label: "Delete", addon: <IconTrashCan />, intent: "danger" as const, group: { label: "", separator: true } },
 						]}
 					>
 						<MenuTrigger asChild>
@@ -552,14 +552,14 @@ export default function VATWorkPage() {
 											{ label: "Open", addon: <IconArrowUpRightFromSquare /> },
 											{ label: "Share", addon: <IconShareNodes /> },
 											{ label: "Download as", addon: <IconDownload />, subOptions: [
-												{ label: "PDF", value: "pdf" },
-												{ label: "Word (.docx)", value: "docx" },
-												{ label: "Markdown", value: "md" },
-												{ label: "Plain text", value: "txt" },
+												{ label: "PDF" },
+												{ label: "Word (.docx)" },
+												{ label: "Markdown" },
+												{ label: "Plain text" },
 											]},
 											{ label: "Rename", addon: <IconPen /> },
 											{ label: "Pin", addon: <IconThumbtack /> },
-											{ label: "Delete", intent: "danger" as const, addon: <IconTrashCan />, execute: () => deleteWorkItem(item.name), group: { separator: true } },
+											{ label: "Delete", intent: "danger" as const, addon: <IconTrashCan />, execute: () => deleteWorkItem(item.name), group: { label: "", separator: true } },
 										]}
 									>
 										<MenuTrigger asChild>
