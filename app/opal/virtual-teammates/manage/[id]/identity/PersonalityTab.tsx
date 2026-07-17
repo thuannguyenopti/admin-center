@@ -273,10 +273,8 @@ export function PersonalityTab({
 	return (
 		<>
 			<Box style={{ padding: "0 0 40px" }}>
-				<Text style={{ fontSize: 18, fontWeight: 600, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 4 }}>
-					Pick a personality
-				</Text>
-				<Text fontSize="sm" color="fg.secondary" style={{ display: "block", marginBottom: 20 }}>
+				<Heading level="3" mb="4">Pick a personality</Heading>
+				<Text fontSize="md" color="fg.secondary" style={{ display: "block", marginBottom: 20 }}>
 					Choose a personality to guide how your teammate interacts with you
 				</Text>
 
@@ -456,7 +454,7 @@ export function PersonalityTab({
 							Build your own
 						</Text>
 						<Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.5", textAlign: "center" }}>
-							Choose your vibe, shape its personality, and watch it come to life.
+							Choose your vibe, shape its personality, and watch it come to life
 						</Text>
 					</Box>
 				</Box>

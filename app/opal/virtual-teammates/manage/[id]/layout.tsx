@@ -153,10 +153,10 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 						</Box>
 						<Box display="flex" flexDirection="column" gap="2">
 							<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, lineHeight: "1.2" }}>
-								{vau.characterName ?? vau.name}
+								{vau.name}
 							</Text>
 							<Text fontSize="sm" color="fg.tertiary" style={{ fontWeight: 400, lineHeight: "1.2" }}>
-								{vau.name}
+								{vau.characterName ?? vau.name}
 							</Text>
 						</Box>
 					</Box>
@@ -205,18 +205,6 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/responsibilities`)}
 				/>
 
-				{/* Bottom: Sign in as */}
-				<Box style={{ flex: 1 }} />
-				<Box style={{ padding: "0 16px 24px" }}>
-					<Button
-						appearance="default"
-						size="md"
-						addonBefore={<IconArrowsRotate size={14} />}
-						style={{ width: "100%", justifyContent: "center" }}
-					>
-						Sign in as {vau?.characterName ?? vau?.name ?? "teammate"}
-					</Button>
-				</Box>
 			</Box>
 
 			{/* Main content */}

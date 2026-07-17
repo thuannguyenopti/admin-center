@@ -12,6 +12,7 @@ import {
 	IconSearch,
 	IconTrashCan,
 	IconUserPlus,
+	IconUserCheck,
 } from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import { VAUS } from "@/app/opal/data/vaus";
@@ -184,6 +185,11 @@ export default function VirtualTeammatesManagePage() {
 															label: "Chat",
 															addon: <IconMessageLines />,
 															execute: () => router.push("/opal/im"),
+														},
+														{
+															label: `Sign in as ${vau.characterName ?? vau.name}`,
+															addon: <IconUserCheck />,
+															execute: () => {},
 														},
 														{
 															label: "Pause",

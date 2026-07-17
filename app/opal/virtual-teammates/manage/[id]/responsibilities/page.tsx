@@ -17,13 +17,15 @@ import {
 	Text,
 	Tooltip,
 } from "@optiaxiom/react";
-import { IconAngleDown, IconEllipsisSolid, IconXmark } from "@optiaxiom/icons";
+import { IconAngleDown, IconCalendar, IconEllipsisSolid, IconXmark } from "@optiaxiom/icons";
 import { VAUS } from "@/app/opal/data/vaus";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type ApprovalMode = "auto" | "ask-first" | "never";
 type InteractionStatus = "active" | "disabled";
+
+type JobStatus = "active" | "paused";
 
 type Responsibility = {
 	id: string;
@@ -33,6 +35,7 @@ type Responsibility = {
 	scheduledTime: string;
 	scheduledDays: string;
 	approvalMode: ApprovalMode;
+	status: JobStatus;
 };
 
 type Interaction = {
@@ -49,29 +52,32 @@ const DEFAULT_RESPONSIBILITIES: Responsibility[] = [
 	{
 		id: "r1",
 		name: "Daily brief",
-		description: "Delivers your morning brief with everything you need to know for the day ahead.",
+		description: "Daily digest delivered",
 		targetAgent: "IM_ability_MC",
 		scheduledTime: "8:00 AM EST",
 		scheduledDays: "Monday – Friday",
 		approvalMode: "auto",
+		status: "active",
 	},
 	{
 		id: "r2",
 		name: "Meeting prep",
-		description: "Makes sure you have all you need to nail your meetings each day.",
+		description: "Pre-meeting brief",
 		targetAgent: "Meeting_agent",
 		scheduledTime: "8:00 AM EST",
 		scheduledDays: "Monday – Friday",
 		approvalMode: "auto",
+		status: "active",
 	},
 	{
 		id: "r3",
 		name: "Weekly wrap",
-		description: "Provides you with an end of week summary highlighting goals, wins, and next steps.",
+		description: "End-of-week performance summary",
 		targetAgent: "Owner",
 		scheduledTime: "5:00 PM EST",
 		scheduledDays: "Friday",
 		approvalMode: "ask-first",
+		status: "paused",
 	},
 ];
 
@@ -88,7 +94,7 @@ const DEFAULT_INTERACTIONS: Interaction[] = [
 // ─── Approval badge ───────────────────────────────────────────────────────────
 
 const APPROVAL_CONFIG: Record<ApprovalMode, { label: string; intent: "success" | "warning" | "danger"; tooltip: string }> = {
-	auto:       { label: "Auto",       intent: "success", tooltip: "Runs automatically without any approval." },
+	auto:       { label: "Auto",       intent: "neutral", tooltip: "Runs automatically without any approval." },
 	"ask-first": { label: "Ask first", intent: "warning", tooltip: "Requires human approval before running." },
 	never:      { label: "Never",      intent: "danger",  tooltip: "This responsibility will never run automatically." },
 };
@@ -148,9 +154,9 @@ export default function ResponsibilitiesPage() {
 
 	return (
 		<Box style={{ padding: "32px 40px" }}>
-			<Heading level="2" mb="4">Responsibilities</Heading>
-			<Text color="fg.secondary" fontSize="md" mb="24">
-				How {name} works and when they kick into action.
+			<Heading level="1" mb="4">Responsibilities</Heading>
+			<Text color="fg.secondary" fontSize="lg" mb="24">
+				How {name} works and when they kick into action
 			</Text>
 
 			<Tabs defaultValue="jobs">
@@ -164,8 +170,8 @@ export default function ResponsibilitiesPage() {
 				<TabsContent value="jobs">
 					<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
 						<Box>
-							<Text fontSize="md" color="fg.default" fontWeight="600">Jobs</Text>
-							<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 2 }}>Scheduled tasks {name} runs automatically</Text>
+							<Heading level="3" mb="0">Jobs</Heading>
+							<Text fontSize="md" color="fg.secondary" style={{ marginTop: 4 }}>Scheduled tasks {name} runs automatically</Text>
 						</Box>
 						<Menu options={[{ label: "Create job" }, { label: "Install from catalog" }]}>
 							<MenuTrigger asChild>
@@ -182,7 +188,7 @@ export default function ResponsibilitiesPage() {
 							<thead>
 								<tr style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
 									<th style={{ ...TH, width: 32, padding: "8px 4px 8px 12px" }}></th>
-									{["Job", "Trigger", "Target agent", "Scheduled", "Approval mode", ""].map((col, i) => (
+									{["Job", "Trigger", "Scheduled", "Approval mode", "Status", ""].map((col, i) => (
 										<th key={i} style={{ ...TH, width: i === 5 ? 48 : undefined }}>{col}</th>
 									))}
 								</tr>
@@ -229,14 +235,22 @@ export default function ResponsibilitiesPage() {
 												<Badge intent="information" variant="subtle">Scheduled</Badge>
 											</td>
 											<td style={{ padding: "12px 16px", verticalAlign: "middle" }}>
-												<Text fontSize="md" color="fg.secondary">{row.targetAgent}</Text>
-											</td>
-											<td style={{ padding: "12px 16px", verticalAlign: "middle" }}>
-												<Text fontSize="md" color="fg.default">{row.scheduledTime}</Text>
-												<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 2 }}>{row.scheduledDays}</Text>
+												<Box display="flex" gap="6" style={{ alignItems: "flex-start" }}>
+													<IconCalendar style={{ width: 14, height: 14, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0, marginTop: 2 }} />
+													<Box>
+														<Text fontSize="md" color="fg.default">{row.scheduledTime}</Text>
+														<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 2 }}>{row.scheduledDays}</Text>
+													</Box>
+												</Box>
 											</td>
 											<td style={{ padding: "12px 16px", verticalAlign: "middle" }}>
 												<ApprovalBadge mode={row.approvalMode} />
+											</td>
+											<td style={{ padding: "12px 16px", verticalAlign: "middle" }}>
+												{row.status === "active"
+													? <Badge intent="success" variant="subtle">Active</Badge>
+													: <Badge intent="danger" variant="subtle">Paused</Badge>
+												}
 											</td>
 											<td style={{ padding: "12px 16px", verticalAlign: "middle", width: 48, textAlign: "right" }}>
 												<Menu options={[{ label: "Edit" }, { label: "Pause" }, { label: "Delete", intent: "danger" as const }]}>
@@ -258,8 +272,8 @@ export default function ResponsibilitiesPage() {
 				<TabsContent value="interactions">
 					<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
 						<Box>
-							<Text fontSize="md" color="fg.default" fontWeight="600">Interactions</Text>
-							<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 2 }}>Channels and modes by which {name} can be reached</Text>
+							<Heading level="3" mb="0">Interactions</Heading>
+							<Text fontSize="md" color="fg.secondary" style={{ marginTop: 4 }}>Channels and modes by which {name} can be reached</Text>
 						</Box>
 						<Button appearance="default" size="md">
 							Add interaction
@@ -270,7 +284,7 @@ export default function ResponsibilitiesPage() {
 						<table style={{ borderCollapse: "collapse", width: "100%" }}>
 							<thead>
 								<tr style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
-									{["Ability", "Target agent", "Status", ""].map((col, i) => (
+									{["Interaction", "Target agent", "Status", ""].map((col, i) => (
 										<th key={i} style={{ ...TH, width: i === 3 ? 48 : undefined }}>{col}</th>
 									))}
 								</tr>
@@ -320,8 +334,8 @@ export default function ResponsibilitiesPage() {
 				{/* ── Rules tab ── */}
 				<TabsContent value="rules">
 					<Box mb="16">
-						<Text fontSize="md" color="fg.default" fontWeight="600">Rules</Text>
-						<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 2 }}>Instructions your teammate follows — things like how to respond, what to prioritize, or what to avoid.</Text>
+						<Heading level="3" mb="0">Rules</Heading>
+						<Text fontSize="md" color="fg.secondary" style={{ marginTop: 4 }}>Instructions your teammate follows — things like how to respond, what to prioritize, or what to avoid</Text>
 					</Box>
 
 					<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px" }}>

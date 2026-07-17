@@ -114,7 +114,7 @@ export default function VATIdentityPage() {
 			<Box style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
 				<Box style={{ padding: "32px 40px 0" }}>
 					<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-						<Heading level="2">Identity</Heading>
+						<Heading level="1">Identity</Heading>
 						{activeTab === "personality" && (
 							<Button
 								size="md"
@@ -125,7 +125,7 @@ export default function VATIdentityPage() {
 							</Button>
 						)}
 					</Box>
-					<Text color="fg.secondary" fontSize="md" style={{ display: "block", marginBottom: 24 }}>
+					<Text color="fg.secondary" fontSize="lg" style={{ display: "block", marginBottom: 24 }}>
 						Define who {name} is and how they show up in the workplace
 					</Text>
 
@@ -169,9 +169,10 @@ export default function VATIdentityPage() {
 											</Box>
 										</Box>
 										<Box style={{ flex: 1 }}>
-											<Text style={{ fontWeight: 600, fontSize: 16, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 2 }}>Identity</Text>
-											<Text fontSize="sm" color="fg.secondary">
-												The basics — who {name} is and how long they&apos;ve been on the job.
+											<Heading level="3" mb="0">Identity</Heading>
+											<Box style={{ height: 4 }} />
+											<Text fontSize="md" color="fg.secondary">
+												{`The basics — who ${name} is and how long they've been on the job.`}
 											</Text>
 										</Box>
 										{isDirty && (
@@ -240,10 +241,8 @@ export default function VATIdentityPage() {
 									</Box>
 								</Box>
 
-								<Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "32px 0" }} />
-
 								{/* Deactivate */}
-								<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+								<Box bg="bg.default" style={{ marginTop: 32, border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
 									<Box>
 										<Text style={{ fontWeight: 600, fontSize: 15, color: "var(--ax-colors-fg-default)", marginBottom: 2, display: "block" }}>
 											Deactivate {name}

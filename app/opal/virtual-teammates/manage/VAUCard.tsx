@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Box, Button, EllipsisMenuButton, Menu, MenuContent, MenuTrigger, Text } from "@optiaxiom/react";
-import { IconCircleExclamation, IconComments } from "@optiaxiom/icons";
+import { IconCircleExclamation, IconCirclePause, IconComments, IconUserCheck, IconTrashCan } from "@optiaxiom/icons";
 import Image from "next/image";
 import { type VAU } from "@/app/opal/data/vaus";
 
@@ -18,9 +18,10 @@ const CAPTION = {
 
 const NEEDS_REVIEW_IDS = new Set(["frank"]);
 
-const ELLIPSIS_OPTIONS = [
-	{ label: "Pause" },
-	{ label: "Delete", intent: "danger" as const },
+const ELLIPSIS_OPTIONS = (name: string) => [
+	{ label: `Sign in as ${name}`, addon: <IconUserCheck /> },
+	{ label: "Pause", addon: <IconCirclePause /> },
+	{ label: "Delete", intent: "danger" as const, addon: <IconTrashCan /> },
 ];
 
 export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => void }) {
@@ -159,7 +160,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 				>
 					Chat
 				</Button>
-				<Menu options={ELLIPSIS_OPTIONS}>
+				<Menu options={ELLIPSIS_OPTIONS(vau.name)}>
 					<MenuTrigger asChild>
 						<EllipsisMenuButton appearance="subtle" size="md" aria-label="More options" />
 					</MenuTrigger>
