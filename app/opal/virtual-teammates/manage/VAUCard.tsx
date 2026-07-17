@@ -136,19 +136,6 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 				style={{ marginTop: "auto" }}
 				onClick={(e) => e.stopPropagation()}
 			>
-				{needsReview && (
-					<Button
-						appearance="danger"
-						size="md"
-						addonAfter={<IconCircleExclamation />}
-						onClick={(e) => {
-							e.stopPropagation();
-							router.push(`/opal/virtual-teammates/manage/${vau.id}`);
-						}}
-					>
-						Needs review
-					</Button>
-				)}
 				<Button
 					appearance="default"
 					size="md"

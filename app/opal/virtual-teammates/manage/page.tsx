@@ -170,13 +170,7 @@ export default function VirtualTeammatesManagePage() {
 												</Badge>
 											)}
 										</Td>
-										<Td>
-											{needsReview && (
-												<Badge style={{ background: "#FEF3C7", color: "#92400E", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-													Needs Review
-												</Badge>
-											)}
-										</Td>
+										<Td></Td>
 										<Td type="button">
 											<Box onClick={(e: React.MouseEvent) => e.stopPropagation()}>
 												<Menu
