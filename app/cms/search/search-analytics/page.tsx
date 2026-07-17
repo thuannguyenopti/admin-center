@@ -7,7 +7,7 @@ import {Table, Tr, Td, Th} from "@/app/components/Table";
 import {metricsData, topQueries, TopQuery} from "@/app/db/analyticsData";
 import {Flex} from "@/app/components/Flex";
 import {Button} from "@/app/components/Button";
-import {IconSparkles} from "@tabler/icons-react";
+import {IconSparkles} from "@/app/lib/axiom-icons";
 
 type SortColumn = keyof TopQuery;
 type SortDirection = "asc" | "desc";
@@ -142,7 +142,7 @@ export default function SearchAnalytics() {
 				/>
 			</Box>
 			{/* Problematic Queries Table */}
-			<Heading level="4" mb="16">
+			<Heading level="2" mb="16">
 				Problematic Queries
 			</Heading>
 			<Table>

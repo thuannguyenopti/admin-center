@@ -15,7 +15,7 @@ import {
 	MenuTrigger,
 	MenuContent,
 } from "@optiaxiom/react";
-import { IconPlus, IconDots, IconSearch, IconHelp } from "@tabler/icons-react";
+import {IconPlus, IconEllipsisSolid, IconSearch, IconHelp} from "@/app/lib/axiom-icons";
 import usePersistentState from "@/app/usePersistentState";
 import AbstractDialog from "@/app/components/AbstractDialog";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
@@ -231,7 +231,7 @@ export default function PropertyGroupsPage() {
 									]}
 								>
 									<MenuTrigger
-										icon={<IconDots size={16} />}
+										icon={<IconEllipsisSolid size={16} />}
 										appearance="subtle"
 										size="sm"
 									/>

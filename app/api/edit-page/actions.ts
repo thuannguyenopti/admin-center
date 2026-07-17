@@ -14,7 +14,7 @@ export type AddImageAction = {
 	elementId: string;
 	afterElementId?: string;
 	beforeElementId?: string;
-	imagePrompt: string | {prompt: string; alt?: string};
+	imagePrompt: string;
 	altText?: string;
 };
 
@@ -27,7 +27,7 @@ export type UpdateTextAction = {
 export type UpdateImageAction = {
 	action: "update_image";
 	elementId: string;
-	imagePrompt: string | {prompt: string; alt?: string};
+	imagePrompt: string;
 	altText?: string;
 };
 
@@ -180,18 +180,12 @@ export async function executeActions(
 
 				console.log(`[Actions] Image element inserted, tree:`, JSON.stringify(currentOutline.tree, null, 2).substring(0, 500));
 
-				// Queue for image generation - handle both string and object imagePrompt
-				const promptValue = typeof action.imagePrompt === 'string'
-					? action.imagePrompt
-					: action.imagePrompt?.prompt;
-
-				if (promptValue && typeof promptValue === 'string') {
-					pendingImages.push({
-						elementId: action.elementId,
-						prompt: promptValue,
-						alt: action.altText || (typeof action.imagePrompt === 'object' ? action.imagePrompt.alt : undefined) || "",
-					});
-				}
+				// Queue for image generation
+				pendingImages.push({
+					elementId: action.elementId,
+					prompt: action.imagePrompt,
+					alt: action.altText || "",
+				});
 				break;
 			}
 
@@ -208,18 +202,12 @@ export async function executeActions(
 
 			case "update_image": {
 				console.log(`[Actions] Queuing image update for ${action.elementId}`);
-				// Queue for image generation - handle both string and object imagePrompt
-				const promptValue = typeof action.imagePrompt === 'string'
-					? action.imagePrompt
-					: action.imagePrompt?.prompt;
-
-				if (promptValue && typeof promptValue === 'string') {
-					pendingImages.push({
-						elementId: action.elementId,
-						prompt: promptValue,
-						alt: action.altText || (typeof action.imagePrompt === 'object' ? action.imagePrompt.alt : undefined) || "",
-					});
-				}
+				// Queue for image generation
+				pendingImages.push({
+					elementId: action.elementId,
+					prompt: action.imagePrompt,
+					alt: action.altText || "",
+				});
 				break;
 			}
 
@@ -362,18 +350,11 @@ export async function executeActions(
 
 							// If element has imagePrompt property, queue for generation
 							if (el.properties.imagePrompt) {
-								const imagePrompt = el.properties.imagePrompt;
-								const promptValue = typeof imagePrompt === 'string'
-									? imagePrompt
-									: imagePrompt?.prompt;
-
-								if (promptValue && typeof promptValue === 'string') {
-									pendingImages.push({
-										elementId: el.elementId,
-										prompt: promptValue,
-										alt: (typeof imagePrompt === 'object' ? imagePrompt.alt : undefined) || ""
-									});
-								}
+								pendingImages.push({
+									elementId: el.elementId,
+									prompt: el.properties.imagePrompt.prompt,
+									alt: el.properties.imagePrompt.alt || ""
+								});
 								// Remove imagePrompt from properties (will be replaced with image URL)
 								delete newElements[el.elementId].properties.imagePrompt;
 							}
@@ -399,21 +380,13 @@ export async function executeActions(
 	if (pendingImages.length > 0) {
 		console.log(`[Actions] Generating ${pendingImages.length} images`);
 
-		// Find the "Generating images" step in the checklist (should be at index 3)
-		const imageStepIndex = checklist.findIndex((item: any) =>
-			item.label && item.label.toLowerCase().includes("generating image")
-		);
-
 		for (let i = 0; i < pendingImages.length; i++) {
-			// Update the label and status of the single "Generating images" step
-			if (imageStepIndex >= 0) {
-				checklist[imageStepIndex].label = `Generating image ${i + 1} of ${pendingImages.length}`;
-				checklist[imageStepIndex].status = "running";
-				sendEvent("checklist", {items: checklist});
-			}
+			const checklistIndex = 3 + i; // After "Applying changes"
+			checklist[checklistIndex].status = "running";
+			sendEvent("checklist", {items: checklist});
 
 			const {elementId, prompt, alt} = pendingImages[i];
-			console.log(`[Actions] Generating image ${i + 1}/${pendingImages.length}: ${typeof prompt === 'string' ? prompt.substring(0, 50) : String(prompt)}...`);
+			console.log(`[Actions] Generating image ${i + 1}/${pendingImages.length}: ${prompt.substring(0, 50)}...`);
 
 			const generatedImage = await generateImage({prompt, alt});
 
@@ -421,10 +394,8 @@ export async function executeActions(
 			console.log(`[Actions] Setting image URL for ${elementId}: ${generatedImage.url.substring(0, 80)}...`);
 			currentOutline = updateElementProperty(currentOutline, elementId, "image", generatedImage.url);
 
-			if (imageStepIndex >= 0) {
-				checklist[imageStepIndex].status = "completed";
-				sendEvent("checklist", {items: checklist});
-			}
+			checklist[checklistIndex].status = "completed";
+			sendEvent("checklist", {items: checklist});
 			await delay(500);
 		}
 	}

@@ -1,17 +1,36 @@
 "use client";
 
-import { useState } from "react";
-import { Box, Badge, Button, Input, Text } from "@optiaxiom/react";
-import { IconArrowsMaximize, IconArrowUp, IconArrowDown, IconArrowLeft, IconArrowRight, IconUpload } from "@tabler/icons-react";
-import { SettingsCard, Label } from "./SettingsCard";
-import type { IntentOption, RatioOption } from "../config";
-import { ratioOptions, operationMeta } from "../config";
+import {useState} from "react";
+import {Box, Badge, Button, Input, Text} from "@optiaxiom/react";
+import {
+	IconArrowsMaximize,
+	IconArrowUp,
+	IconArrowDown,
+	IconArrowLeft,
+	IconArrowRight,
+	IconUpload,
+} from "@/app/lib/axiom-icons";
+import {SettingsCard, Label} from "./SettingsCard";
+import type {IntentOption, RatioOption} from "../config";
+import {ratioOptions, operationMeta} from "../config";
 
-function ChipRow({ children }: { children: React.ReactNode }) {
-	return <Box display="flex" style={{ flexWrap: "wrap" }} gap="8">{children}</Box>;
+function ChipRow({children}: {children: React.ReactNode}) {
+	return (
+		<Box display="flex" style={{flexWrap: "wrap"}} gap="8">
+			{children}
+		</Box>
+	);
 }
 
-function Chip({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) {
+function Chip({
+	active,
+	children,
+	onClick,
+}: {
+	active: boolean;
+	children: React.ReactNode;
+	onClick: () => void;
+}) {
 	return (
 		<button
 			type="button"
@@ -21,7 +40,9 @@ function Chip({ active, children, onClick }: { active: boolean; children: React.
 				padding: "0 12px",
 				borderRadius: 999,
 				border: "1px solid var(--ax-colors-border-secondary)",
-				background: active ? "var(--ax-colors-bg-secondary)" : "var(--ax-colors-bg-default)",
+				background: active
+					? "var(--ax-colors-bg-secondary)"
+					: "var(--ax-colors-bg-default)",
 				color: "var(--ax-colors-fg-default)",
 				fontSize: 13,
 				fontWeight: active ? 700 : 500,
@@ -51,11 +72,12 @@ export function OperationControls({
 		case "Edit":
 			return (
 				<SettingsCard title="Edit controls">
-					<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
+					<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
 						{meta.description}
 					</Text>
-					<Text fontSize="xs" color="fg.tertiary" style={{ lineHeight: 1.6 }}>
-						Describe changes in the prompt bar below. Edits preserve composition and structure.
+					<Text fontSize="xs" color="fg.tertiary" style={{lineHeight: 1.6}}>
+						Describe changes in the prompt bar below. Edits preserve composition and
+						structure.
 					</Text>
 				</SettingsCard>
 			);
@@ -75,12 +97,13 @@ export function OperationControls({
 		case "Inpaint":
 			return (
 				<SettingsCard title="Inpaint">
-					<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
+					<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
 						{meta.description}
 					</Text>
 					<Badge intent="primary">Coming soon</Badge>
-					<Text fontSize="xs" color="fg.tertiary" style={{ lineHeight: 1.6 }}>
-						Brush selection tool will allow you to mask regions. For now, describe the area and changes in the prompt.
+					<Text fontSize="xs" color="fg.tertiary" style={{lineHeight: 1.6}}>
+						Brush selection tool will allow you to mask regions. For now, describe the
+						area and changes in the prompt.
 					</Text>
 				</SettingsCard>
 			);
@@ -94,16 +117,21 @@ export function OperationControls({
 		case "Extract":
 			return (
 				<SettingsCard title="Extract">
-					<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
+					<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
 						{meta.description}
 					</Text>
 					<Label>Output</Label>
 					<ChipRow>
-						<Chip active onClick={() => {}}>Transparent PNG</Chip>
-						<Chip active={false} onClick={() => {}}>White background</Chip>
+						<Chip active onClick={() => {}}>
+							Transparent PNG
+						</Chip>
+						<Chip active={false} onClick={() => {}}>
+							White background
+						</Chip>
 					</ChipRow>
-					<Text fontSize="xs" color="fg.tertiary" style={{ lineHeight: 1.6 }}>
-						The subject will be isolated with clean edges, ready for reuse in other compositions.
+					<Text fontSize="xs" color="fg.tertiary" style={{lineHeight: 1.6}}>
+						The subject will be isolated with clean edges, ready for reuse in other
+						compositions.
 					</Text>
 				</SettingsCard>
 			);
@@ -115,20 +143,22 @@ export function OperationControls({
 
 function UpscaleControls() {
 	const [target, setTarget] = useState<"2x" | "4x" | "Print-ready">("2x");
-	const resolutions = { "2x": "2048 × 2048", "4x": "4096 × 4096", "Print-ready": "300 DPI" };
+	const resolutions = {"2x": "2048 × 2048", "4x": "4096 × 4096", "Print-ready": "300 DPI"};
 
 	return (
 		<SettingsCard title="Upscale">
 			<Label>Target resolution</Label>
 			<ChipRow>
 				{(["2x", "4x", "Print-ready"] as const).map((value) => (
-					<Chip key={value} active={target === value} onClick={() => setTarget(value)}>{value}</Chip>
+					<Chip key={value} active={target === value} onClick={() => setTarget(value)}>
+						{value}
+					</Chip>
 				))}
 			</ChipRow>
 			<Text fontSize="xs" color="fg.tertiary">
 				Estimated output: {resolutions[target]}
 			</Text>
-			<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
+			<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
 				Increases sharpness and detail without altering content, layout, or colours.
 			</Text>
 		</SettingsCard>
@@ -152,23 +182,35 @@ function ResizeControls({
 				<Input
 					value={width}
 					onChange={(e) => setWidth(e.target.value)}
-					style={{ textAlign: "center" }}
+					style={{textAlign: "center"}}
 				/>
-				<Text fontSize="sm" color="fg.tertiary">×</Text>
+				<Text fontSize="sm" color="fg.tertiary">
+					×
+				</Text>
 				<Input
 					value={height}
 					onChange={(e) => setHeight(e.target.value)}
-					style={{ textAlign: "center" }}
+					style={{textAlign: "center"}}
 				/>
-				<Text fontSize="xs" color="fg.tertiary">px</Text>
+				<Text fontSize="xs" color="fg.tertiary">
+					px
+				</Text>
 			</Box>
 			<Label>Quick presets</Label>
 			<ChipRow>
-				{ratioOptions.filter((r) => r !== "Auto").map((ratio) => (
-					<Chip key={ratio} active={aspectRatio === ratio} onClick={() => setAspectRatio(ratio)}>{ratio}</Chip>
-				))}
+				{ratioOptions
+					.filter((r) => r !== "Auto")
+					.map((ratio) => (
+						<Chip
+							key={ratio}
+							active={aspectRatio === ratio}
+							onClick={() => setAspectRatio(ratio)}
+						>
+							{ratio}
+						</Chip>
+					))}
 			</ChipRow>
-			<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
+			<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
 				Adjusts dimensions without changing composition. No content is added or removed.
 			</Text>
 		</SettingsCard>
@@ -187,14 +229,22 @@ function RecomposeControls({
 			<Label>Target format</Label>
 			<ChipRow>
 				{ratioOptions.map((ratio) => (
-					<Chip key={ratio} active={aspectRatio === ratio} onClick={() => setAspectRatio(ratio)}>{ratio}</Chip>
+					<Chip
+						key={ratio}
+						active={aspectRatio === ratio}
+						onClick={() => setAspectRatio(ratio)}
+					>
+						{ratio}
+					</Chip>
 				))}
 			</ChipRow>
-			<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
-				Adapts layout and framing for the new format. The core subject is preserved while composition adjusts to fit.
+			<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
+				Adapts layout and framing for the new format. The core subject is preserved while
+				composition adjusts to fit.
 			</Text>
-			<Text fontSize="xs" color="fg.tertiary" style={{ lineHeight: 1.6 }}>
-				Use the prompt to guide recomposition — e.g. &quot;create space for a headline on the left&quot;.
+			<Text fontSize="xs" color="fg.tertiary" style={{lineHeight: 1.6}}>
+				Use the prompt to guide recomposition — e.g. &quot;create space for a headline on
+				the left&quot;.
 			</Text>
 		</SettingsCard>
 	);
@@ -213,17 +263,17 @@ function ExtendControls() {
 	}
 
 	const dirs = [
-		{ key: "top", icon: IconArrowUp, label: "Top" },
-		{ key: "bottom", icon: IconArrowDown, label: "Bottom" },
-		{ key: "left", icon: IconArrowLeft, label: "Left" },
-		{ key: "right", icon: IconArrowRight, label: "Right" },
+		{key: "top", icon: IconArrowUp, label: "Top"},
+		{key: "bottom", icon: IconArrowDown, label: "Bottom"},
+		{key: "left", icon: IconArrowLeft, label: "Left"},
+		{key: "right", icon: IconArrowRight, label: "Right"},
 	];
 
 	return (
 		<SettingsCard title="Extend">
 			<Label>Extend direction</Label>
-			<Box display="flex" gap="8" style={{ flexWrap: "wrap" }}>
-				{dirs.map(({ key, icon: Icon, label }) => (
+			<Box display="flex" gap="8" style={{flexWrap: "wrap"}}>
+				{dirs.map(({key, icon: Icon, label}) => (
 					<button
 						key={key}
 						type="button"
@@ -236,13 +286,13 @@ function ExtendControls() {
 							padding: "0 14px",
 							borderRadius: 999,
 							border: directions.has(key)
-								? "2px solid var(--ax-colors-border-accent)"
+								? "2px solid var(--ax-colors-border-default)"
 								: "1px solid var(--ax-colors-border-secondary)",
 							background: directions.has(key)
-								? "var(--ax-colors-bg-accent-light)"
+								? "var(--ax-colors-bg-default-pressed)"
 								: "var(--ax-colors-bg-default)",
 							color: directions.has(key)
-								? "var(--ax-colors-fg-accent)"
+								? "var(--ax-colors-fg-default)"
 								: "var(--ax-colors-fg-default)",
 							fontSize: 13,
 							fontWeight: directions.has(key) ? 700 : 500,
@@ -257,11 +307,14 @@ function ExtendControls() {
 			<Label>Extend amount</Label>
 			<ChipRow>
 				{["25%", "50%", "100%"].map((amount) => (
-					<Chip key={amount} active={amount === "50%"} onClick={() => {}}>{amount}</Chip>
+					<Chip key={amount} active={amount === "50%"} onClick={() => {}}>
+						{amount}
+					</Chip>
 				))}
 			</ChipRow>
-			<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
-				Expands the canvas by generating new content that matches the existing scene seamlessly.
+			<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
+				Expands the canvas by generating new content that matches the existing scene
+				seamlessly.
 			</Text>
 		</SettingsCard>
 	);
@@ -278,7 +331,7 @@ function ProductPlacementControls() {
 					height: 100,
 					borderRadius: 14,
 					border: "1.5px dashed var(--ax-colors-border-secondary)",
-					background: "var(--ax-colors-bg-accent-light)",
+					background: "var(--ax-colors-bg-secondary)",
 					color: "var(--ax-colors-fg-secondary)",
 					display: "flex",
 					flexDirection: "column",
@@ -289,16 +342,21 @@ function ProductPlacementControls() {
 				}}
 			>
 				<IconUpload size={24} />
-				<Text fontSize="xs" fontWeight="600">Upload product image</Text>
+				<Text fontSize="xs" fontWeight="600">
+					Upload product image
+				</Text>
 			</button>
 			<Label>Placement style</Label>
 			<ChipRow>
 				{["Natural", "Flat lay", "Lifestyle", "Studio"].map((style) => (
-					<Chip key={style} active={style === "Natural"} onClick={() => {}}>{style}</Chip>
+					<Chip key={style} active={style === "Natural"} onClick={() => {}}>
+						{style}
+					</Chip>
 				))}
 			</ChipRow>
-			<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
-				The product will be inserted with realistic scale, perspective, lighting, and shadows. Use the prompt to describe the scene.
+			<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
+				The product will be inserted with realistic scale, perspective, lighting, and
+				shadows. Use the prompt to describe the scene.
 			</Text>
 		</SettingsCard>
 	);
@@ -312,17 +370,22 @@ function VariationControls() {
 			<Label>Number of variations</Label>
 			<ChipRow>
 				{[2, 3, 4, 6].map((n) => (
-					<Chip key={n} active={count === n} onClick={() => setCount(n)}>{n}</Chip>
+					<Chip key={n} active={count === n} onClick={() => setCount(n)}>
+						{n}
+					</Chip>
 				))}
 			</ChipRow>
 			<Label>What to vary</Label>
 			<ChipRow>
 				{["Style", "Composition", "Colour", "Headline", "Background"].map((v) => (
-					<Chip key={v} active={v === "Style" || v === "Headline"} onClick={() => {}}>{v}</Chip>
+					<Chip key={v} active={v === "Style" || v === "Headline"} onClick={() => {}}>
+						{v}
+					</Chip>
 				))}
 			</ChipRow>
-			<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
-				Generates {count} alternative versions that maintain consistency with the original while introducing controlled differences.
+			<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
+				Generates {count} alternative versions that maintain consistency with the original
+				while introducing controlled differences.
 			</Text>
 		</SettingsCard>
 	);

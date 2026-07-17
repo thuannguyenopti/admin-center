@@ -18,6 +18,7 @@ type OpalChatProps = {
   isLoading?: boolean;
   onRegenerate?: (id: string) => void;
   onVersionChange?: (id: string, versionIndex: number, content: string) => void;
+  onActivityComplete?: (messageId: string) => void;
   hideSuggestions?: boolean;
   variant?: 'assistant' | 'home';
   collapsedSessionIds?: Set<string>;
@@ -28,15 +29,26 @@ type OpalChatProps = {
   highlightedOpalEndId?: string | null;
   onOpenOpalRange?: (agentEndId: string) => void;
   onCloseOpalRange?: (agentEndId: string) => void;
-  activeAgentCtx?: { emoji: string; name: string; avatar?: string; templateName?: string } | null;
+  activeAgentCtx?: { emoji: string; name: string } | null;
   contextChip?: string | null;
   contextualActionCard?: React.ReactNode;
-  onReaction?: (messageId: string, emoji: string) => void;
-  onQuote?: (messageId: string) => void;
+  /** Cards keyed by cardAfterKey — rendered inline below the matching message */
   messageCards?: Record<string, React.ReactNode>;
+  /** When true, render the IM-flavored quick actions (emoji + edit + copy) and reaction pills. */
+  imMode?: boolean;
+  /** Current user id (for reaction is-mine state). */
+  currentUserId?: string;
+  /** Reactions keyed by message id: { messageId: { emoji: [userId[]] } }. */
+  messageReactions?: Record<string, Record<string, string[]>>;
+  /** Toggle reaction handler. */
+  onToggleReaction?: (messageId: string, emoji: string) => void;
+  /** Reply-in-thread handler — opens a thread panel for the message id. */
+  onReplyInThread?: (messageId: string) => void;
+  /** Quote-reply handler — pins message as quote in the main composer. */
+  onQuoteReply?: (messageId: string) => void;
 };
 
-export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamingMode = "collapsed", threadKey, isLoading, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip, contextualActionCard, onReaction, onQuote, messageCards }: OpalChatProps) {
+export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamingMode = "collapsed", threadKey, isLoading, onRegenerate, onVersionChange, onActivityComplete, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip, contextualActionCard, messageCards, imMode, currentUserId, messageReactions, onToggleReaction, onReplyInThread, onQuoteReply }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [streamingExpandedByThreadKey, setStreamingExpandedByThreadKey] = useState<Record<string, boolean>>({});
   let opalContext;
@@ -211,8 +223,6 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
         overflowY: 'auto',
         minHeight: '300px',
         width: '100%',
-        paddingLeft: variant !== 'assistant' ? '16px' : undefined,
-        paddingRight: variant !== 'assistant' ? '16px' : undefined,
         paddingBottom: contextualActionCard && hasMessages ? '24px' : undefined,
       }}
     >
@@ -268,6 +278,8 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
             maxWidth: variant === 'home' ? '768px' : 'none',
             margin: variant === 'home' ? '0 auto' : '0',
             width: '100%',
+            paddingLeft: imMode ? '24px' : undefined,
+            paddingRight: imMode ? '24px' : undefined,
           }}
         >
           {augmented.map(({ message, skip, collapsed, collapsedOpal, agentContext, showOpalHeader }) => {
@@ -283,19 +295,18 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
                     gap: 8,
                     padding: '6px 8px',
                     borderRadius: 6,
-                    border: '1px solid #e9edf5',
-                    background: '#f9fafc',
+                    border: '1px solid var(--ax-colors-border-secondary)',
+                    background: 'var(--ax-colors-bg-secondary)',
                     cursor: 'pointer',
-                    color: '#4f576e',
+                    color: 'var(--ax-colors-fg-secondary)',
                     fontSize: 13,
-                    fontFamily: 'Inter, sans-serif',
                     width: '100%',
                     textAlign: 'left',
                   }}
                 >
                   <span style={{ fontSize: 15 }}>{collapsed.emoji}</span>
                   <span>Conversation with {collapsed.name}</span>
-                  <span style={{ marginLeft: 'auto', color: '#9ca3af', fontSize: 12 }}>›</span>
+                  <span style={{ marginLeft: 'auto', color: 'var(--ax-colors-fg-tertiary)', fontSize: 12 }}>›</span>
                 </button>
               );
             }
@@ -335,6 +346,7 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
                   showOpalHeader={showOpalHeader}
                   onRegenerate={onRegenerate}
                   onVersionChange={onVersionChange}
+                  onActivityComplete={onActivityComplete}
                   onSuggestionClick={onSuggestionClick}
                   onSubmitPrompt={onSubmitPrompt}
                   streamingMode={streamingMode}
@@ -344,13 +356,17 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
                   }
                   isOpalLoading={isLoading}
                   hideActionBar={!!lastAssistantId && message.id === lastAssistantId}
-                  onReaction={onReaction}
-                  onQuote={onQuote}
+                  imMode={imMode}
+                  currentUserId={currentUserId}
+                  reactions={messageReactions?.[message.id]}
+                  onToggleReaction={onToggleReaction}
+                  onReplyInThread={onReplyInThread}
+                  onQuoteReply={onQuoteReply}
                 />
-                {message.metadata?.cardKey && messageCards?.[message.metadata.cardKey] && (
-                  <div style={{ paddingLeft: 48, paddingBottom: 8, paddingRight: 16 }}>
-                    {messageCards[message.metadata.cardKey]}
-                  </div>
+                {message.cardAfterKey && messageCards?.[message.cardAfterKey] && (
+                  <Box style={{ marginTop: -20 }}>
+                    {messageCards[message.cardAfterKey]}
+                  </Box>
                 )}
                 {collapsedOpal && (
                   <Disclosure
@@ -383,6 +399,7 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
                             showOpalHeader={m.role === 'assistant'}
                             onRegenerate={onRegenerate}
                             onVersionChange={onVersionChange}
+                  onActivityComplete={onActivityComplete}
                             streamingMode={streamingMode}
                             isStreamingExpanded={isThreadStreamingExpanded}
                             onStreamingExpandedChange={(open) =>

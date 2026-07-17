@@ -117,7 +117,7 @@ function PillMenuSelect({
 					multi: true,
 					selected: () => true,
 				})),
-		[availableItems, selectedItems, onToggle],
+		[availableItems, selectedItems, onToggle]
 	);
 
 	return (

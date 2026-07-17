@@ -2,7 +2,7 @@
 
 import React, {useMemo, useState, useEffect, useRef} from "react";
 import {Box, Button, Text} from "@optiaxiom/react";
-import {IconPlus} from "@tabler/icons-react";
+import {IconPlus} from "@/app/lib/axiom-icons";
 
 import Section from "./Section";
 import Row from "./Row";
@@ -11,7 +11,9 @@ import Ele, {EleMap} from "./Ele";
 import {getProperty, isImageDrag, isInternalDrag, VB_INTERNAL_MIME} from "./blocks/utils";
 import {getPreviewLabel} from "./blocks/previewLabel";
 import {BLOCK_SCHEMAS} from "./blocks/schemas";
-import {initialPages} from "@/app/db/initialData";
+import {findTemplateBySemanticTag, findTemplateByValue} from "./blocks/displayTemplateUtils";
+import {initialPages, initialContentTypes, ContentType} from "@/app/db/initialData";
+import usePersistentState from "@/app/usePersistentState";
 
 /** Extract plain text from a TipTap JSON document (or string) for outline labels. */
 function extractPlainText(value: any): string {
@@ -37,7 +39,7 @@ function getImageNameFromUrl(url: string): string {
 	try {
 		const urlObj = new URL(url);
 		const pathname = urlObj.pathname;
-		const parts = pathname.split('/').filter(Boolean);
+		const parts = pathname.split("/").filter(Boolean);
 
 		// Handle picsum.photos URLs with /seed/{name}/{width}/{height} pattern
 		if (urlObj.hostname.includes("picsum.photos") && parts.includes("seed")) {
@@ -97,7 +99,7 @@ const getDraggedAlt = (dt: DataTransfer) => {
 
 const INSERT_BAR_STYLE: React.CSSProperties = {
 	height: "2px",
-	backgroundColor: "#0037FF",
+	backgroundColor: "var(--ax-colors-fg-secondary)",
 	borderRadius: "2px",
 	margin: "-1px 0",
 	pointerEvents: "none",
@@ -191,23 +193,33 @@ export default function OutlineTree({
 	};
 
 	const elementOptions = useMemo(() => {
-		const types = new Set<string>();
+		// Exclude variant types — they're style options on the parent tile, not separate elements
+		const source = Object.keys(BLOCK_SCHEMAS).filter((type) => !BLOCK_SCHEMAS[type]?.variantOf);
 
-		initialPages.forEach((page) => {
-			(page.outlines || []).forEach((outline) => {
-				Object.values(outline.elements || {}).forEach((ele: any) => {
-					if (ele?.type) types.add(ele.type);
-				});
-			});
-		});
-
-		const source = types.size ? Array.from(types) : Object.keys(BLOCK_SCHEMAS);
+		// availableForComposition is a code-level flag — always read from initialContentTypes,
+		// not from the localStorage copy which may have stale or stripped fields.
+		const compositionMap = new Map(initialContentTypes.map((ct) => [ct.id, ct]));
 
 		return source
 			.map((type) => ({
 				type,
 				label: BLOCK_SCHEMAS[type]?.displayName ?? toTitle(type),
 			}))
+			.filter((opt) => {
+				const ct = compositionMap.get(opt.type);
+				if (ct?.availableForComposition && ct.compositionDisplayAs?.includes("Element"))
+					return true;
+				// Let variant types through if their parent content type passes the filter
+				const parentId = BLOCK_SCHEMAS[opt.type]?.variantOf;
+				if (parentId) {
+					const parentCt = compositionMap.get(parentId);
+					return (
+						parentCt?.availableForComposition &&
+						parentCt.compositionDisplayAs?.includes("Element")
+					);
+				}
+				return false;
+			})
 			.sort((a, b) => a.label.localeCompare(b.label));
 	}, []);
 
@@ -363,7 +375,13 @@ export default function OutlineTree({
 	};
 
 	// addElement used by Col "+" menu
-	const addElement = (type: string, colIndex: number, rowIndex: number, sectionIndex: number) => {
+	const addElement = (
+		type: string,
+		colIndex: number,
+		rowIndex: number,
+		sectionIndex: number,
+		initialProps?: Record<string, any>
+	) => {
 		const uKey = `${type}-${Date.now()}`;
 
 		const pendingImageData = (window as any).__pendingImageData;
@@ -384,9 +402,21 @@ export default function OutlineTree({
 
 						// Special case for image if we have pending data
 						if (type === "ct-image" && imageUrl) {
-							if (props["title"]) props["title"] = imageAlt || "Untitled Image";
-							if (props["altText"]) props["altText"] = imageAlt;
-							if (props["imageUrl"]) props["imageUrl"] = imageUrl;
+							if ("title" in props) props["title"] = imageAlt || "Untitled Image";
+							if ("altText" in props) props["altText"] = imageAlt;
+							if ("imageUrl" in props) props["imageUrl"] = imageUrl;
+						}
+
+						// Merge caller-supplied initial props (e.g. selected template variant)
+						if (initialProps) Object.assign(props, initialProps);
+
+						// Derive displayTemplateKey from the template value so the canvas
+						// renders the correct visual style without requiring a separate edit.
+						if (props.template && !props.displayTemplateKey) {
+							const dtKey =
+								findTemplateBySemanticTag(props.template, {contentType: type}) ??
+								findTemplateByValue(props.template, {contentType: type});
+							if (dtKey) props.displayTemplateKey = dtKey;
 						}
 
 						return props;
@@ -544,7 +574,9 @@ export default function OutlineTree({
 	useEffect(() => {
 		const currentSectionIds = data.map((section: any) => section?.id).filter(Boolean);
 		const previousSectionIds = prevSectionIdsRef.current;
-		const addedSectionIds = currentSectionIds.filter((id: string) => !previousSectionIds.includes(id));
+		const addedSectionIds = currentSectionIds.filter(
+			(id: string) => !previousSectionIds.includes(id)
+		);
 
 		// Only scroll if exactly one section was added (not removed, not switched outlines)
 		if (
@@ -559,9 +591,9 @@ export default function OutlineTree({
 				// Find the newly added section element
 				const addedSectionEl = Array.from(
 					outlineContainerRef.current.querySelectorAll("[data-section-id]")
-				).find(
-					(el) => el.getAttribute("data-section-id") === addedSectionId
-				) as HTMLElement | undefined;
+				).find((el) => el.getAttribute("data-section-id") === addedSectionId) as
+					| HTMLElement
+					| undefined;
 
 				if (addedSectionEl) {
 					addedSectionEl.scrollIntoView({
@@ -691,7 +723,9 @@ export default function OutlineTree({
 								addRow={(e: any) => addRow(e, sindex, null)}
 								isSelected={currentSection === section.id}
 								onHoverChange={setCurrentHoverSection}
-								onScrollToPreview={(sectionId) => onScrollToSection?.(sectionId, outlineId!)}
+								onScrollToPreview={(sectionId) =>
+									onScrollToSection?.(sectionId, outlineId!)
+								}
 							>
 								{(section.children ?? []).map((row: any, rIndex: number) => {
 									const showRowBarAbove =
@@ -756,18 +790,31 @@ export default function OutlineTree({
 																	removeCol={() =>
 																		removeCol(col.id)
 																	}
-																	addElement={(type: string) =>
+																	addElement={(
+																		type: string,
+																		initialProps?: Record<
+																			string,
+																			any
+																		>
+																	) =>
 																		addElement(
 																			type,
 																			cIndex,
 																			rIndex,
-																			sindex
+																			sindex,
+																			initialProps
 																		)
 																	}
 																	elementOptions={elementOptions}
-																	isSelected={currentColumn === col.id}
-																	onHoverChange={setCurrentHoverColumn}
-																	onScrollToPreview={onScrollToColumn}
+																	isSelected={
+																		currentColumn === col.id
+																	}
+																	onHoverChange={
+																		setCurrentHoverColumn
+																	}
+																	onScrollToPreview={
+																		onScrollToColumn
+																	}
 																>
 																	<div
 																		className={
@@ -1017,26 +1064,36 @@ export default function OutlineTree({
 																		}}
 																	>
 																		{/* Empty state for columns with no elements */}
-																		{(getColChildren(col) ?? []).length === 0 && !dragging && (
-																			<Box
-																				display="flex"
-																				flexDirection="column"
-																				alignItems="center"
-																				justifyContent="center"
-																				gap="8"
-																				p="16"
-																				rounded="md"
-																				bg="bg.default.hovered"
-																				style={{
-																					minHeight: "80px",
-																					border: "1px dashed var(--border-secondary)",
-																				}}
-																			>
-																				<Text fontSize="sm" color="fg.tertiary" textAlign="center">
-																					Drop elements here or use the + button
-																				</Text>
-																			</Box>
-																		)}
+																		{(getColChildren(col) ?? [])
+																			.length === 0 &&
+																			!dragging && (
+																				<Box
+																					display="flex"
+																					flexDirection="column"
+																					alignItems="center"
+																					justifyContent="center"
+																					gap="8"
+																					p="16"
+																					rounded="md"
+																					bg="bg.default.hovered"
+																					style={{
+																						minHeight:
+																							"80px",
+																						border: "1px dashed var(--border-secondary)",
+																					}}
+																				>
+																					<Text
+																						fontSize="sm"
+																						color="fg.tertiary"
+																						textAlign="center"
+																					>
+																						Drop
+																						elements
+																						here or use
+																						the + button
+																					</Text>
+																				</Box>
+																			)}
 
 																		{(
 																			getColChildren(col) ??
@@ -1114,10 +1171,46 @@ export default function OutlineTree({
 																									element
 																								}
 																								label={
-																									getPreviewLabel(theEles[element.id]?.properties) ||
-																									getImageNameFromUrl(getProperty(theEles[element.id]?.properties, "appImage", "App Image")) ||
-																									getImageNameFromUrl(getProperty(theEles[element.id]?.properties, "image", "Image")) ||
-																									extractPlainText(getProperty(theEles[element.id]?.properties, "richtext", "Rich Text")) ||
+																									getPreviewLabel(
+																										theEles[
+																											element
+																												.id
+																										]
+																											?.properties
+																									) ||
+																									getImageNameFromUrl(
+																										getProperty(
+																											theEles[
+																												element
+																													.id
+																											]
+																												?.properties,
+																											"appImage",
+																											"App Image"
+																										)
+																									) ||
+																									getImageNameFromUrl(
+																										getProperty(
+																											theEles[
+																												element
+																													.id
+																											]
+																												?.properties,
+																											"image",
+																											"Image"
+																										)
+																									) ||
+																									extractPlainText(
+																										getProperty(
+																											theEles[
+																												element
+																													.id
+																											]
+																												?.properties,
+																											"richtext",
+																											"Rich Text"
+																										)
+																									) ||
 																									""
 																								}
 																								setCurrentEle={
@@ -1128,7 +1221,10 @@ export default function OutlineTree({
 																								}
 																								onOpenStyleEditor={
 																									onOpenStyleEditor
-																										? () => onOpenStyleEditor(element.id)
+																										? () =>
+																												onOpenStyleEditor(
+																													element.id
+																												)
 																										: undefined
 																								}
 																							/>

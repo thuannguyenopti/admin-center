@@ -120,8 +120,6 @@ export type ConversationIndexEntry = {
   muted?: boolean;
   bookmarked?: boolean;
   section_id?: string;
-  /** Presence status of the other participant (DMs only). */
-  other_participant_status?: PresenceStatus;
 };
 
 export type SidebarSection = {
@@ -192,7 +190,6 @@ export type UserProfile = {
   user_id: string;
   display_name: string;
   email?: string;
-  status?: PresenceStatus;
 };
 
 export type UserSearchResponse = {

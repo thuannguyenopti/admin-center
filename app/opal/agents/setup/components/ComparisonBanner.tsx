@@ -5,7 +5,7 @@ import {
     Button,
     Box,
 } from "@optiaxiom/react";
-import { IconXmark } from "@optimizely/axiom-icons";
+import { IconXmark } from "@optiaxiom/icons";
 
 interface ComparisonBannerProps {
     versionName: string;

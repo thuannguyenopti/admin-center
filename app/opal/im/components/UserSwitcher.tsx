@@ -3,14 +3,13 @@
 import { useEffect, useState } from "react";
 import {
   Box,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  Menu,
+  MenuContent,
+  MenuTrigger,
   Text,
+  type MenuOption,
 } from "@optiaxiom/react";
-import { IconAngleDown } from "@optimizely/axiom-icons";
+import { IconAngleDown } from "@optiaxiom/icons";
 import { searchUsers } from "../lib/service";
 import {
   getCurrentUserId,
@@ -41,9 +40,34 @@ export function UserSwitcher() {
     if (typeof window !== "undefined") window.location.reload();
   };
 
+  const toOption = (
+    u: UserProfile,
+    group: MenuOption["group"],
+  ): MenuOption => ({
+    key: u.user_id,
+    label: u.display_name,
+    group,
+    addon: <UserAvatar userId={u.user_id} name={u.display_name} size={24} />,
+    detail:
+      u.user_id === currentId ? (
+        <Text fontSize="sm" color="fg.tertiary">
+          active
+        </Text>
+      ) : undefined,
+    execute: () => handlePick(u.user_id),
+  });
+
+  const peopleGroup = { label: "People" };
+  const vauGroup = { label: "Virtual teammates", separator: true };
+
+  const options: MenuOption[] = [
+    ...humans.map((u) => toOption(u, peopleGroup)),
+    ...vaus.map((u) => toOption(u, vauGroup)),
+  ];
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Menu options={options}>
+      <MenuTrigger asChild>
         <Box
           display="flex"
           alignItems="center"
@@ -69,46 +93,8 @@ export function UserSwitcher() {
           </Box>
           <IconAngleDown size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
         </Box>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" style={{ minWidth: 240 }}>
-        <Box px="12" py="6">
-          <Text fontSize="sm" fontWeight="500" color="fg.tertiary">
-            People
-          </Text>
-        </Box>
-        {humans.map((u) => (
-          <DropdownMenuItem key={u.user_id} onClick={() => handlePick(u.user_id)}>
-            <Box display="flex" alignItems="center" gap="12" w="full">
-              <UserAvatar userId={u.user_id} name={u.display_name} size={24} />
-              <Text>{u.display_name}</Text>
-              {u.user_id === currentId && (
-                <Text fontSize="sm" color="fg.tertiary" style={{ marginLeft: "auto" }}>
-                  active
-                </Text>
-              )}
-            </Box>
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <Box px="12" py="6">
-          <Text fontSize="sm" fontWeight="500" color="fg.tertiary">
-            Virtual teammates
-          </Text>
-        </Box>
-        {vaus.map((u) => (
-          <DropdownMenuItem key={u.user_id} onClick={() => handlePick(u.user_id)}>
-            <Box display="flex" alignItems="center" gap="12" w="full">
-              <UserAvatar userId={u.user_id} name={u.display_name} size={24} />
-              <Text>{u.display_name}</Text>
-              {u.user_id === currentId && (
-                <Text fontSize="sm" color="fg.tertiary" style={{ marginLeft: "auto" }}>
-                  active
-                </Text>
-              )}
-            </Box>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </MenuTrigger>
+      <MenuContent align="end" style={{ minWidth: 240 }} />
+    </Menu>
   );
 }

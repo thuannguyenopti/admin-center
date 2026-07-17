@@ -1,11 +1,11 @@
 "use client";
 
-import { Box } from "@optiaxiom/react";
+import {Box} from "@optiaxiom/react";
 import SparklesIcon from "@/app/cmp/assets/sparkles 16.svg";
-import { IconBrowser, IconFileText } from "@tabler/icons-react";
-import type { Page } from "@/app/db/initialData";
-import type { ContentInstance } from "@/app/db/cmpInitialData";
-import type { AssetItem, TaskArticle } from "../../types";
+import {IconBrowser, IconFileLines} from "@/app/lib/axiom-icons";
+import type {Page} from "@/app/db/initialData";
+import type {ContentInstance} from "@/app/db/cmpInitialData";
+import type {AssetItem, TaskArticle} from "../../types";
 
 type TaskItemStripProps = {
 	contentInstances: ContentInstance[];
@@ -39,11 +39,11 @@ export function TaskItemStrip({
 	onSelectTaskAsset,
 }: TaskItemStripProps) {
 	const items = [
-		{ kind: "suggested" as const },
-		...contentInstances.map((item) => ({ kind: "content-instance" as const, item })),
-		...pages.map((item) => ({ kind: "page" as const, item })),
-		...taskArticles.map((item) => ({ kind: "article" as const, item })),
-		...taskAssets.map((item) => ({ kind: "asset" as const, item })),
+		{kind: "suggested" as const},
+		...contentInstances.map((item) => ({kind: "content-instance" as const, item})),
+		...pages.map((item) => ({kind: "page" as const, item})),
+		...taskArticles.map((item) => ({kind: "article" as const, item})),
+		...taskAssets.map((item) => ({kind: "asset" as const, item})),
 	];
 
 	return (
@@ -95,16 +95,14 @@ export function TaskItemStrip({
 				return (
 					<Box
 						alignItems="center"
-						bg={isSelected ? "bg.default" : "bg.secondary"}
+						bg={isSelected ? "bg.default.pressed" : "bg.default"}
 						border="1"
-						borderColor={isSelected ? "border.accent" : "border.tertiary"}
+						borderColor={isSelected ? "border.default" : "border.tertiary"}
 						display="flex"
 						justifyContent="center"
-						key={entry.kind === "suggested" ? "suggested" : entry.item.id ?? index}
+						key={entry.kind === "suggested" ? "suggested" : (entry.item.id ?? index)}
 						rounded="md"
 						style={{
-							background: "#FFF",
-							boxShadow: isSelected ? "0 0 0 1px #FFF, 0 0 0 3px #2E66F7" : "none",
 							flexShrink: 0,
 							height: 32,
 							minHeight: 32,
@@ -141,13 +139,17 @@ export function TaskItemStrip({
 							type="button"
 						>
 							{entry.kind === "suggested" ? (
-								<SparklesIcon height={14} style={{ color: "var(--ax-colors-fg-secondary)" }} width={14} />
+								<SparklesIcon
+									height={14}
+									style={{color: "var(--ax-colors-fg-secondary)"}}
+									width={14}
+								/>
 							) : entry.kind === "content-instance" ? (
-								<IconFileText color="var(--ax-colors-fg-secondary)" size={16} />
+								<IconFileLines color="var(--ax-colors-fg-secondary)" size={16} />
 							) : entry.kind === "page" ? (
 								<IconBrowser color="var(--ax-colors-fg-secondary)" size={16} />
 							) : entry.kind === "article" ? (
-								<IconFileText color="var(--ax-colors-fg-secondary)" size={16} />
+								<IconFileLines color="var(--ax-colors-fg-secondary)" size={16} />
 							) : (
 								<img
 									alt=""

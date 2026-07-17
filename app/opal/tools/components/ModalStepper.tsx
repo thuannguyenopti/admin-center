@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Text } from "@optiaxiom/react";
-import { IconCheck } from "@optimizely/axiom-icons";
+import { IconCheck } from "@optiaxiom/icons";
 
 interface ModalStepperProps {
     currentStep: number;
@@ -27,8 +27,8 @@ export function ModalStepper({ currentStep, steps }: ModalStepperProps) {
                             display="flex"
                             flexDirection="column"
                             alignItems="center"
-                            gap="12"
-                            style={{ minWidth: 112 }}
+                            gap="8"
+                            style={{ minWidth: 80 }}
                         >
                             <Box
                                 rounded="full"
@@ -36,40 +36,37 @@ export function ModalStepper({ currentStep, steps }: ModalStepperProps) {
                                 alignItems="center"
                                 justifyContent="center"
                                 style={{
-                                    width: 40,
-                                    height: 40,
+                                    width: 36,
+                                    height: 36,
                                     background: isCompleted
-                                        ? "var(--ax-colors-bg-success-subtle)"
+                                        ? "var(--ax-colors-bg-success)"
                                         : isCurrent
-                                            ? "var(--ax-colors-bg-accent-subtle)"
-                                            : "var(--ax-colors-bg-tertiary)",
-                                    border: isCurrent
-                                        ? "2px solid var(--ax-colors-border-focus)"
-                                        : "2px solid transparent",
-                                    color: isCompleted
-                                        ? "var(--ax-colors-fg-success)"
+                                            ? "var(--ax-colors-bg-information-subtle)"
+                                            : "var(--ax-colors-bg-secondary)",
+                                    border: isCompleted
+                                        ? "2px solid var(--ax-colors-border-success)"
                                         : isCurrent
-                                            ? "var(--ax-colors-fg-accent)"
-                                            : "var(--ax-colors-fg-tertiary)",
+                                            ? "2px solid var(--ax-colors-border-focus)"
+                                            : "2px solid var(--ax-colors-border-secondary)",
                                     flexShrink: 0,
                                 }}
                             >
                                 {isCompleted ? (
-                                    <IconCheck size={18} />
+                                    <IconCheck size={16} color="var(--ax-colors-fg-success-strong)" />
                                 ) : (
                                     <Text
                                         fontSize="sm"
                                         fontWeight="600"
-                                        color={isPending ? "fg.tertiary" : "fg.accent"}
+                                        color={isPending ? "fg.secondary" : "fg.default"}
                                     >
                                         {index + 1}
                                     </Text>
                                 )}
                             </Box>
                             <Text
-                                fontSize="md"
+                                fontSize="sm"
                                 fontWeight={isCurrent ? "600" : "500"}
-                                color={isPending ? "fg.tertiary" : "fg.default"}
+                                color={isPending ? "fg.secondary" : "fg.default"}
                                 textAlign="center"
                                 style={{ lineHeight: 1.25 }}
                             >
@@ -82,12 +79,12 @@ export function ModalStepper({ currentStep, steps }: ModalStepperProps) {
                                 style={{
                                     flex: 1,
                                     height: 2,
-                                    marginTop: 19,
-                                    marginLeft: 12,
-                                    marginRight: 12,
+                                    marginTop: 17,
+                                    marginLeft: 8,
+                                    marginRight: 8,
                                     background: index < currentStep
                                         ? "var(--ax-colors-border-success)"
-                                        : "var(--ax-colors-border-tertiary)",
+                                        : "var(--ax-colors-border-secondary)",
                                 }}
                             />
                         )}

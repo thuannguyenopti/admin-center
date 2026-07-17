@@ -51,6 +51,7 @@ import {
 import Item from "@/app/components/Item";
 import {Page, ContentType, initialContentTypes, canCreateChildType} from "@/app/db/initialData";
 import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
+import {OpalButton} from "@/app/components/OpalButton";
 import ContentInstancePicker from "@/app/components/ContentInstancePicker";
 import {imageSelectorInstances} from "@/app/db/imageLibraryData";
 import {ContentInstance} from "@/app/db/cmpInitialData";
@@ -1181,13 +1182,10 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 								Back
 							</Button>
 							{generateWithOpal ? (
-								<Button
-									appearance="primary-opal"
-									onClick={handleCreate}
-									icon={<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />}
-								>
+								<OpalButton onClick={handleCreate}>
+									<Image src="/opal-orb.svg" alt="" width={16} height={16} />
 									Generate Page
-								</Button>
+								</OpalButton>
 							) : (
 								<Button appearance="primary" onClick={handleCreate}>
 									Create Page

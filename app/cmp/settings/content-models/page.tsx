@@ -131,7 +131,7 @@ export default function ContentModelsPage() {
 				<Text fontSize="md" color="fg.secondary" mb="16">
 					Create and customize templates to better structure how work is collaboratively planned.
 					Templates can be applied as Campaign Briefs, Task Briefs, or Request Forms.{" "}
-					<Link href="#" style={{ color: "var(--ax-colors-fg-accent)" }}>
+					<Link href="#">
 						Learn more
 					</Link>
 				</Text>

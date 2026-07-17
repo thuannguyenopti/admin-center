@@ -1,10 +1,10 @@
 "use client";
 
-import { Box, Button, Input, Switch, Text, Textarea } from "@optiaxiom/react";
-import { IconAdjustmentsHorizontal, IconUpload, IconPlus } from "@tabler/icons-react";
-import { SettingsCard, Label } from "./SettingsCard";
-import { OperationControls } from "./OperationControls";
-import type { PromptHistoryEntry } from "./PromptBar";
+import {Box, Button, Input, Switch, Text, Textarea} from "@optiaxiom/react";
+import {IconAdjustmentsHorizontal, IconUpload, IconPlus} from "@/app/lib/axiom-icons";
+import {SettingsCard, Label} from "./SettingsCard";
+import {OperationControls} from "./OperationControls";
+import type {PromptHistoryEntry} from "./PromptBar";
 import {
 	ratioOptions,
 	channelPacks,
@@ -22,11 +22,23 @@ import {
 	type TextLayoutOption,
 } from "../config";
 
-function ChipRow({ children }: { children: React.ReactNode }) {
-	return <Box display="flex" style={{ flexWrap: "wrap" }} gap="8">{children}</Box>;
+function ChipRow({children}: {children: React.ReactNode}) {
+	return (
+		<Box display="flex" style={{flexWrap: "wrap"}} gap="8">
+			{children}
+		</Box>
+	);
 }
 
-function Chip({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) {
+function Chip({
+	active,
+	children,
+	onClick,
+}: {
+	active: boolean;
+	children: React.ReactNode;
+	onClick: () => void;
+}) {
 	return (
 		<button
 			type="button"
@@ -36,7 +48,9 @@ function Chip({ active, children, onClick }: { active: boolean; children: React.
 				padding: "0 12px",
 				borderRadius: 999,
 				border: "1px solid var(--ax-colors-border-secondary)",
-				background: active ? "var(--ax-colors-bg-secondary)" : "var(--ax-colors-bg-default)",
+				background: active
+					? "var(--ax-colors-bg-secondary)"
+					: "var(--ax-colors-bg-default)",
 				color: "var(--ax-colors-fg-default)",
 				fontSize: 13,
 				fontWeight: active ? 700 : 500,
@@ -48,7 +62,17 @@ function Chip({ active, children, onClick }: { active: boolean; children: React.
 	);
 }
 
-function StyledSelect({ value, onChange, options, placeholder }: { value: string; onChange: (value: string) => void; options: readonly string[]; placeholder?: string }) {
+function StyledSelect({
+	value,
+	onChange,
+	options,
+	placeholder,
+}: {
+	value: string;
+	onChange: (value: string) => void;
+	options: readonly string[];
+	placeholder?: string;
+}) {
 	return (
 		<select
 			value={value}
@@ -61,11 +85,16 @@ function StyledSelect({ value, onChange, options, placeholder }: { value: string
 				padding: "0 12px",
 				fontSize: 14,
 				background: "var(--ax-colors-bg-default)",
-				color: !value && placeholder ? "var(--ax-colors-fg-tertiary)" : "var(--ax-colors-fg-default)",
+				color:
+					!value && placeholder
+						? "var(--ax-colors-fg-tertiary)"
+						: "var(--ax-colors-fg-default)",
 			}}
 		>
 			{placeholder && (
-				<option value="" disabled>{placeholder}</option>
+				<option value="" disabled>
+					{placeholder}
+				</option>
 			)}
 			{options.map((option) => (
 				<option key={option}>{option}</option>
@@ -132,10 +161,20 @@ export function SettingsSidebar({
 	const isEdit = canvasMode === "edit";
 
 	/* Operations that show references — always in generate, plus relevant edit operations */
-	const showReferences = intent === "Generate" || intent === "Variation" || intent === "Edit" || intent === "Recompose" || !isEdit;
+	const showReferences =
+		intent === "Generate" ||
+		intent === "Variation" ||
+		intent === "Edit" ||
+		intent === "Recompose" ||
+		!isEdit;
 
 	return (
-		<Box display="flex" flexDirection="column" gap="16" style={{ minHeight: 0, alignSelf: "start" }}>
+		<Box
+			display="flex"
+			flexDirection="column"
+			gap="16"
+			style={{minHeight: 0, alignSelf: "start"}}
+		>
 			<OutputSettingsCard
 				intent={intent}
 				setIntent={setIntent}
@@ -179,7 +218,9 @@ export function SettingsSidebar({
 
 			{isEdit && <AdvancedCard editTool={editTool} setEditTool={setEditTool} />}
 
-			{isEdit && <CanvasSettingsCard settings={canvasSettings} setSettings={setCanvasSettings} />}
+			{isEdit && (
+				<CanvasSettingsCard settings={canvasSettings} setSettings={setCanvasSettings} />
+			)}
 		</Box>
 	);
 }
@@ -202,18 +243,33 @@ function OutputSettingsCard({
 	return (
 		<SettingsCard title="Output">
 			<Label>Goal</Label>
-			<StyledSelect value={intent} onChange={(v) => setIntent(v as IntentOption)} options={intentOptions} />
-			<Text fontSize="xs" color="fg.tertiary" style={{ lineHeight: 1.5 }}>
+			<StyledSelect
+				value={intent}
+				onChange={(v) => setIntent(v as IntentOption)}
+				options={intentOptions}
+			/>
+			<Text fontSize="xs" color="fg.tertiary" style={{lineHeight: 1.5}}>
 				{operationMeta[intent].description}
 			</Text>
 			<Label>Aspect ratio</Label>
 			<ChipRow>
 				{ratioOptions.map((ratio) => (
-					<Chip key={ratio} active={aspectRatio === ratio} onClick={() => setAspectRatio(ratio)}>{ratio}</Chip>
+					<Chip
+						key={ratio}
+						active={aspectRatio === ratio}
+						onClick={() => setAspectRatio(ratio)}
+					>
+						{ratio}
+					</Chip>
 				))}
 			</ChipRow>
 			<Label>Channel pack</Label>
-			<StyledSelect value={channelPack} onChange={setChannelPack} options={channelPacks} placeholder="Please select package" />
+			<StyledSelect
+				value={channelPack}
+				onChange={setChannelPack}
+				options={channelPacks}
+				placeholder="Please select package"
+			/>
 		</SettingsCard>
 	);
 }
@@ -244,25 +300,43 @@ function BrandCopyCard({
 	return (
 		<SettingsCard title="Brand and copy">
 			<Label>Brand pack</Label>
-			<StyledSelect value={brandPack} onChange={(v) => setBrandPack(v as BrandPack)} options={brandPacks} />
+			<StyledSelect
+				value={brandPack}
+				onChange={(v) => setBrandPack(v as BrandPack)}
+				options={brandPacks}
+			/>
 			<Label>Text overlay</Label>
 			<ChipRow>
-				<Chip active={textOverlayEnabled} onClick={() => setTextOverlayEnabled(true)}>On</Chip>
-				<Chip active={!textOverlayEnabled} onClick={() => setTextOverlayEnabled(false)}>Off</Chip>
+				<Chip active={textOverlayEnabled} onClick={() => setTextOverlayEnabled(true)}>
+					On
+				</Chip>
+				<Chip active={!textOverlayEnabled} onClick={() => setTextOverlayEnabled(false)}>
+					Off
+				</Chip>
 			</ChipRow>
 			<Label>Text layout preset</Label>
 			<ChipRow>
 				{textLayoutOptions.map((option) => (
-					<Chip key={option} active={textLayoutPreset === option} onClick={() => setTextLayoutPreset(option)}>{option}</Chip>
+					<Chip
+						key={option}
+						active={textLayoutPreset === option}
+						onClick={() => setTextLayoutPreset(option)}
+					>
+						{option}
+					</Chip>
 				))}
 			</ChipRow>
-			<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
+			<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
 				Use brand-safe presets to control headline scale and placement across output ratios.
 			</Text>
 			<Label>Headline</Label>
 			<Input value={headline} onChange={(e) => setHeadline(e.target.value)} />
 			<Label>Subheadline</Label>
-			<Textarea value={subheadline} onChange={(e) => setSubheadline(e.target.value)} style={{ minHeight: 80 }} />
+			<Textarea
+				value={subheadline}
+				onChange={(e) => setSubheadline(e.target.value)}
+				style={{minHeight: 80}}
+			/>
 		</SettingsCard>
 	);
 }
@@ -284,7 +358,11 @@ function ReferencesCard({
 		<SettingsCard title="References">
 			<Label>Generation history</Label>
 			{promptHistory.length > 0 ? (
-				<Box display="grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }} gap="8">
+				<Box
+					display="grid"
+					style={{gridTemplateColumns: "repeat(2, minmax(0, 1fr))"}}
+					gap="8"
+				>
 					{promptHistory.map((entry, i) => (
 						<button
 							key={i}
@@ -319,10 +397,10 @@ function ReferencesCard({
 			)}
 
 			<Label>Source references</Label>
-			<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
+			<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
 				Upload reference images to guide composition and style.
 			</Text>
-			<Box display="grid" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }} gap="8">
+			<Box display="grid" style={{gridTemplateColumns: "repeat(4, minmax(0, 1fr))"}} gap="8">
 				<ReferenceSlot icon={<IconUpload size={22} />} label="Upload" dashed />
 				<ReferenceSlot icon={<IconPlus size={22} />} label="Add" />
 				<ReferenceSlot icon={<IconPlus size={22} />} label="Add" />
@@ -332,15 +410,27 @@ function ReferencesCard({
 	);
 }
 
-function ReferenceSlot({ icon, label, dashed }: { icon: React.ReactNode; label: string; dashed?: boolean }) {
+function ReferenceSlot({
+	icon,
+	label,
+	dashed,
+}: {
+	icon: React.ReactNode;
+	label: string;
+	dashed?: boolean;
+}) {
 	return (
 		<button
 			type="button"
 			style={{
 				aspectRatio: "1 / 1",
 				borderRadius: 14,
-				border: dashed ? "1.5px dashed var(--ax-colors-border-secondary)" : "1px dashed var(--ax-colors-border-secondary)",
-				background: dashed ? "var(--ax-colors-bg-accent-light)" : "var(--ax-colors-bg-default)",
+				border: dashed
+					? "1.5px dashed var(--ax-colors-border-secondary)"
+					: "1px dashed var(--ax-colors-border-secondary)",
+				background: dashed
+					? "var(--ax-colors-bg-secondary)"
+					: "var(--ax-colors-bg-default)",
 				color: "var(--ax-colors-fg-secondary)",
 				display: "flex",
 				flexDirection: "column",
@@ -352,7 +442,9 @@ function ReferenceSlot({ icon, label, dashed }: { icon: React.ReactNode; label: 
 			aria-label={label === "Upload" ? "Upload reference image" : "Add another reference"}
 		>
 			{icon}
-			<Text fontSize="xs" fontWeight="700">{label}</Text>
+			<Text fontSize="xs" fontWeight="700">
+				{label}
+			</Text>
 		</button>
 	);
 }
@@ -367,17 +459,25 @@ function AdvancedCard({
 	return (
 		<SettingsCard title="Advanced">
 			<Box display="flex" alignItems="center" justifyContent="space-between" mb="12">
-				<Text fontSize="sm" fontWeight="600">Canvas controls</Text>
+				<Text fontSize="sm" fontWeight="600">
+					Canvas controls
+				</Text>
 				<IconAdjustmentsHorizontal size={18} color="var(--ax-colors-fg-secondary)" />
 			</Box>
 			<Label>Edit tool</Label>
-			<StyledSelect value={editTool} onChange={(v) => setEditTool(v as EditToolOption)} options={editToolOptions} />
+			<StyledSelect
+				value={editTool}
+				onChange={(v) => setEditTool(v as EditToolOption)}
+				options={editToolOptions}
+			/>
 			{editTool === "Upscale" ? (
 				<>
 					<Label>Upscale target</Label>
 					<ChipRow>
 						{["2x", "4x", "Print-ready"].map((value) => (
-							<Chip key={value} active={value === "2x"} onClick={() => {}}>{value}</Chip>
+							<Chip key={value} active={value === "2x"} onClick={() => {}}>
+								{value}
+							</Chip>
 						))}
 					</ChipRow>
 				</>
@@ -387,48 +487,73 @@ function AdvancedCard({
 					<Label>Resize behavior</Label>
 					<ChipRow>
 						{["Fit", "Fill", "Smart crop"].map((value) => (
-							<Chip key={value} active={value === "Smart crop"} onClick={() => {}}>{value}</Chip>
+							<Chip key={value} active={value === "Smart crop"} onClick={() => {}}>
+								{value}
+							</Chip>
 						))}
 					</ChipRow>
 				</>
 			) : null}
-			<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
-				Use {editTool.toLowerCase()} to adapt the approved draft without leaving the canvas workflow.
+			<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
+				Use {editTool.toLowerCase()} to adapt the approved draft without leaving the canvas
+				workflow.
 			</Text>
 		</SettingsCard>
 	);
 }
 
-function CanvasSettingsCard({ settings, setSettings }: { settings: CanvasSettings; setSettings: (s: CanvasSettings) => void }) {
-	const update = (partial: Partial<CanvasSettings>) => setSettings({ ...settings, ...partial });
+function CanvasSettingsCard({
+	settings,
+	setSettings,
+}: {
+	settings: CanvasSettings;
+	setSettings: (s: CanvasSettings) => void;
+}) {
+	const update = (partial: Partial<CanvasSettings>) => setSettings({...settings, ...partial});
 
 	return (
 		<SettingsCard title="Settings">
 			<Box display="flex" alignItems="center" justifyContent="space-between">
 				<Text fontSize="sm">Show grid overlay</Text>
-				<Switch checked={settings.showGrid} onCheckedChange={(v) => update({ showGrid: v })} />
+				<Switch
+					checked={settings.showGrid}
+					onCheckedChange={(v) => update({showGrid: v})}
+				/>
 			</Box>
 			<Box display="flex" alignItems="center" justifyContent="space-between">
 				<Text fontSize="sm">Snap to grid</Text>
-				<Switch checked={settings.snapToGrid} onCheckedChange={(v) => update({ snapToGrid: v })} />
+				<Switch
+					checked={settings.snapToGrid}
+					onCheckedChange={(v) => update({snapToGrid: v})}
+				/>
 			</Box>
 			<Box display="flex" alignItems="center" justifyContent="space-between">
 				<Text fontSize="sm">Show alignment guides</Text>
-				<Switch checked={settings.showGuides} onCheckedChange={(v) => update({ showGuides: v })} />
+				<Switch
+					checked={settings.showGuides}
+					onCheckedChange={(v) => update({showGuides: v})}
+				/>
 			</Box>
 			<Box display="flex" alignItems="center" justifyContent="space-between">
 				<Text fontSize="sm">Auto-save drafts</Text>
-				<Switch checked={settings.autoSave} onCheckedChange={(v) => update({ autoSave: v })} />
+				<Switch
+					checked={settings.autoSave}
+					onCheckedChange={(v) => update({autoSave: v})}
+				/>
 			</Box>
 			<Label>Export quality</Label>
 			<ChipRow>
 				{(["Standard", "High", "Max"] as const).map((quality) => (
-					<Chip key={quality} active={settings.exportQuality === quality} onClick={() => update({ exportQuality: quality })}>
+					<Chip
+						key={quality}
+						active={settings.exportQuality === quality}
+						onClick={() => update({exportQuality: quality})}
+					>
 						{quality}
 					</Chip>
 				))}
 			</ChipRow>
-			<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
+			<Text fontSize="xs" color="fg.secondary" style={{lineHeight: 1.6}}>
 				Canvas settings control visual aids and output quality for this editing session.
 			</Text>
 		</SettingsCard>

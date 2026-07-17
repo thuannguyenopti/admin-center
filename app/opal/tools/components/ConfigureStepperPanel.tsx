@@ -17,10 +17,11 @@ import {
     IconPen,
     IconTrashCan,
     IconXmark,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import { ConnectorAvatar } from "./ConnectorAvatar";
 import { ModalStepper } from "./ModalStepper";
+import { SalesforceConfig, GA4Config } from "./OCPConfigPanel";
 import { type Connector, type ToolAction } from "../data/connectors";
 import type { ConnectedConnector } from "./AddConnectorModal";
 import { requiresDeferredUserConnect } from "../lib/connectorAuth";
@@ -45,9 +46,9 @@ function SelectionCard({
             rounded="md"
             onClick={onClick}
             style={{
-                border: `2px solid ${selected ? "var(--ax-colors-border-focus)" : "var(--ax-colors-border-tertiary)"}`,
+                border: `2px solid ${selected ? "var(--ax-colors-border-focus)" : "var(--ax-colors-border-secondary)"}`,
                 cursor: "pointer",
-                background: selected ? "var(--ax-colors-bg-accent-subtle)" : "var(--ax-colors-bg-default)",
+                background: selected ? "var(--ax-colors-bg-information-subtle)" : "var(--ax-colors-bg-default)",
                 transition: "border-color 0.15s, background 0.15s",
             }}
         >
@@ -72,16 +73,21 @@ interface ConfigureStepperPanelProps {
     connector: Connector;
     onClose: () => void;
     onSave: (connector: ConnectedConnector) => void;
+    initialStep?: 0 | 1 | 2 | 3;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function ConfigureStepperPanel({ connector, onClose, onSave }: ConfigureStepperPanelProps) {
+export function ConfigureStepperPanel({ connector, onClose, onSave, initialStep = 0 }: ConfigureStepperPanelProps) {
     const [mounted, setMounted] = useState(false);
-    const [step, setStep] = useState<0 | 1 | 2>(0);
+    const [step, setStep] = useState<0 | 1 | 2 | 3>(initialStep);
     const [enabledForOrg, setEnabledForOrg] = useState(true);
     const [access, setAccess] = useState<"all" | "teams">("all");
-    const [managedBy, setManagedBy] = useState<"user" | "admin">("user");
+    const [managedBy, setManagedBy] = useState<"user" | "admin">(
+        connector.authType === "API Key" ? "admin" : "user"
+    );
+    const [instanceUrl, setInstanceUrl] = useState("");
+    const [apiKey, setApiKey] = useState("");
     const [selectedTools, setSelectedTools] = useState<string[]>(connector.tools.map(t => t.id));
     const [toolSearch, setToolSearch] = useState("");
 
@@ -135,7 +141,6 @@ export function ConfigureStepperPanel({ connector, onClose, onSave }: ConfigureS
                 flexDirection: "column",
                 background: "var(--ax-colors-bg-default)",
                 borderLeft: "1px solid var(--ax-colors-border-tertiary)",
-                boxShadow: "-4px 0 24px rgba(0,0,0,0.08)",
             }}
         >
             {/* Header */}
@@ -192,7 +197,7 @@ export function ConfigureStepperPanel({ connector, onClose, onSave }: ConfigureS
                 flexDirection="column"
                 style={{ flex: 1, minHeight: 0, overflowY: "auto" }}
             >
-                <ModalStepper currentStep={step} steps={["Permissions", "Type", "Tools"]} />
+                <ModalStepper currentStep={step} steps={["Permissions", "Type", "Connect", "Tools"]} />
 
                 {/* Step 0: Permissions */}
                 {step === 0 && (
@@ -242,8 +247,49 @@ export function ConfigureStepperPanel({ connector, onClose, onSave }: ConfigureS
                     </Box>
                 )}
 
-                {/* Step 2: Tools */}
+                {/* Step 2: Connect */}
                 {step === 2 && (
+                    <Box>
+                        {connector.usesOCP ? (
+                            connector.id === "salesforce" ? <SalesforceConfig /> : <GA4Config />
+                        ) : (
+                            <>
+                                <Text fontWeight="600" mb="4">Enter connection credentials</Text>
+                                <Text fontSize="sm" color="fg.secondary" mb="20">
+                                    Provide the credentials Opal will use to connect on behalf of all users.
+                                </Text>
+                                <Box display="flex" flexDirection="column" gap="16">
+                                    <Box>
+                                        <Text fontSize="sm" fontWeight="500" mb="6">Instance URL</Text>
+                                        <Input
+                                            placeholder={`https://${connector.name.toLowerCase().replace(/\s+/g, "")}.example.com`}
+                                            value={instanceUrl}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInstanceUrl(e.target.value)}
+                                        />
+                                        <Text fontSize="xs" color="fg.tertiary" mt="4">
+                                            The base URL of your {connector.name} instance
+                                        </Text>
+                                    </Box>
+                                    <Box>
+                                        <Text fontSize="sm" fontWeight="500" mb="6">API Key</Text>
+                                        <Input
+                                            placeholder="sk-••••••••••••••••••••••••"
+                                            value={apiKey}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApiKey(e.target.value)}
+                                            type="password"
+                                        />
+                                        <Text fontSize="xs" color="fg.tertiary" mt="4">
+                                            Found in {connector.name} under Settings → API Keys
+                                        </Text>
+                                    </Box>
+                                </Box>
+                            </>
+                        )}
+                    </Box>
+                )}
+
+                {/* Step 3: Tools */}
+                {step === 3 && (
                     <Box>
                         <Text fontWeight="600" mb="4">Which tools can be used by default?</Text>
                         <Text fontSize="sm" color="fg.secondary" mb="16">
@@ -354,15 +400,15 @@ export function ConfigureStepperPanel({ connector, onClose, onSave }: ConfigureS
             >
                 <Box>
                     {step > 0 && (
-                        <Button appearance="default" onClick={() => setStep(s => (s - 1) as 0 | 1 | 2)}>
+                        <Button appearance="default" onClick={() => setStep(s => (s - 1) as 0 | 1 | 2 | 3)}>
                             Previous
                         </Button>
                     )}
                 </Box>
                 <Box display="flex" gap="8">
                     <Button appearance="subtle" onClick={onClose}>Cancel</Button>
-                    {step < 2 ? (
-                        <Button appearance="primary" onClick={() => setStep(s => (s + 1) as 0 | 1 | 2)}>
+                    {step < 3 ? (
+                        <Button appearance="primary" onClick={() => setStep(s => (s + 1) as 0 | 1 | 2 | 3)}>
                             Next
                         </Button>
                     ) : (

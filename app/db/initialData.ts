@@ -1,3 +1,5 @@
+import { MARATHON_EVENT_OUTLINE } from "./marathonEventOutline";
+
 // --- SEO Block Type ---
 export type SEOBlockLocale = {
 	title: string;
@@ -386,6 +388,7 @@ export type ContentType = {
 	isAvailable?: boolean;
 	availableForComposition?: boolean;
 	compositionDisplayAs?: CompositionDisplayAs[];
+	componentDocsUrl?: string;
 	// AvailableContentTypesAttribute (parent-side control)
 	availableContentTypes?: {
 		availability?: "All" | "None"; // Default behavior: All means all types allowed, None means no types allowed
@@ -467,9 +470,18 @@ export const initialContentTypes: ContentType[] = [
 		properties: [
 			{ id: "title", name: "Title", displayName: "Title", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "String", groupName: "Content", order: 2 },
-			{ id: "featuredImage", name: "Featured Image", displayName: "Featured Image", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 3 },
-			{ id: "body", name: "Body", displayName: "Body", type: "XhtmlString", required: true, groupName: "Content", order: 4 },
-			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", allowedTypes: ["ct-author"], required: true, groupName: "Content", order: 5 },
+			{ id: "category", name: "Category", displayName: "Category", type: "String", groupName: "Content", order: 3 },
+			{ id: "readingTime", name: "Reading Time", displayName: "Reading Time", type: "String", groupName: "Content", order: 4 },
+			{ id: "publishDate", name: "Publish Date", displayName: "Publish Date", type: "String", groupName: "Content", order: 5 },
+			{ id: "featuredImage", name: "Featured Image", displayName: "Featured Image", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 6 },
+			{ id: "heroLogo", name: "Hero Logo", displayName: "Hero Logo", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 7 },
+			{ id: "body", name: "Body", displayName: "Body", type: "XhtmlString", required: true, groupName: "Content", order: 7 },
+			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", allowedTypes: ["ct-author"], required: true, groupName: "Content", order: 8 },
+			{ id: "ctaHeading", name: "CTA Heading", displayName: "CTA Heading", type: "String", groupName: "Actions", order: 1 },
+			{ id: "ctaPrimaryText", name: "CTA Primary Text", displayName: "CTA Primary Button", type: "String", groupName: "Actions", order: 2 },
+			{ id: "ctaPrimaryLink", name: "CTA Primary Link", displayName: "CTA Primary Link", type: "String", groupName: "Actions", order: 3 },
+			{ id: "ctaSecondaryText", name: "CTA Secondary Text", displayName: "CTA Secondary Button", type: "String", groupName: "Actions", order: 4 },
+			{ id: "ctaSecondaryLink", name: "CTA Secondary Link", displayName: "CTA Secondary Link", type: "String", groupName: "Actions", order: 5 },
 			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
 		],
 	},
@@ -582,6 +594,16 @@ export const initialContentTypes: ContentType[] = [
 		],
 	},
 	{
+		id: "exp-event-page",
+		name: "Event Page",
+		displayName: "Event Page",
+		baseType: "Experience",
+		description: "Event landing page with hero, registration form, and content sections",
+		properties: [
+			{ id: "mainOutline", name: "Main", type: "outline" },
+		],
+	},
+	{
 		id: "ct-product",
 		name: "Product",
 		displayName: "Product",
@@ -629,6 +651,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Image",
 		baseType: "Block",
 		description: "An image block for page layouts",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{
 				id: "image",
@@ -667,6 +691,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Heading",
 		baseType: "Block",
 		description: "A heading block",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{ id: "text", name: "Text", displayName: "Text", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "accent", name: "Accent", displayName: "Accent Text", type: "String", required: false, groupName: "Content", order: 2, description: "Optional rotated accent text displayed above the heading" },
@@ -693,13 +719,12 @@ export const initialContentTypes: ContentType[] = [
 				type: "SelectOne",
 				groupName: "Appearance",
 				options: [
-					{ label: "Default", value: "default" },
-					{ label: "Prominent", value: "prominent" },
-					{ label: "Subtle", value: "subtle" },
-					{ label: "Red Accent", value: "accent-red" },
-					{ label: "Blue Accent", value: "accent-blue" }
+					{ label: "H1", value: "h-1" },
+					{ label: "H2", value: "h-2" },
+					{ label: "H3", value: "h-3" },
+					{ label: "H4", value: "h-4" }
 				],
-				defaultValue: "default"
+				defaultValue: "h-1"
 			}
 		],
 	},
@@ -709,6 +734,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Number Line",
 		baseType: "Block",
 		description: "A number badge with horizontal line separator",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{ id: "number", name: "Number", displayName: "Number", type: "String", required: false, groupName: "Content", order: 1, description: "Number to display (e.g., '01', '02'). Leave empty for line only." }
 		],
@@ -719,8 +746,10 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Text",
 		baseType: "Block",
 		description: "A text block",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
-			{ id: "text", name: "Text", displayName: "Text", type: "String", required: true, groupName: "Content", order: 1 },
+			{ id: "text", name: "Text", displayName: "Text", type: "LongString", required: true, groupName: "Content", order: 1 },
 			{
 				id: "template",
 				name: "Template",
@@ -742,6 +771,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Rich Text",
 		baseType: "Block",
 		description: "A rich text block supporting simple markup",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [{ id: "richtext", name: "Rich Text", displayName: "Rich Text", type: "XhtmlString", required: true, groupName: "Content", order: 1 }],
 	},
 	{
@@ -750,6 +781,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Button",
 		baseType: "Block",
 		description: "A button block",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{ id: "label", name: "Label", displayName: "Label", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "url", name: "URL", displayName: "URL", type: "Url", groupName: "Content", order: 2 },
@@ -761,7 +794,7 @@ export const initialContentTypes: ContentType[] = [
 				groupName: "Appearance",
 				options: [
 					{ label: "Primary", value: "primary" },
-					{ label: "Secondary", value: "secondary" },
+					{ label: "Outline", value: "outline" },
 					{ label: "Subtle", value: "subtle" }
 				],
 				defaultValue: "primary"
@@ -798,7 +831,7 @@ export const initialContentTypes: ContentType[] = [
 				id: "heading",
 				name: "Heading",
 				displayName: "Heading",
-				type: "String",
+				type: "LongString",
 				required: true,
 				groupName: "Content",
 				order: 3,
@@ -822,6 +855,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Hero Section",
 		baseType: "Block",
 		description: "A full-width hero section with heading, subheading, buttons, and optional app mockup",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{
 				id: "badge",
@@ -837,7 +872,7 @@ export const initialContentTypes: ContentType[] = [
 				id: "heading",
 				name: "Heading",
 				displayName: "Heading",
-				type: "String",
+				type: "LongString",
 				required: true,
 				groupName: "Content",
 				order: 1,
@@ -1155,6 +1190,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Input",
 		baseType: "Block",
 		description: "An input block",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
 		properties: [
 			{ id: "label", name: "Label", displayName: "Label", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "placeholder", name: "Placeholder", displayName: "Placeholder", type: "String", groupName: "Content", order: 2 },
@@ -1220,6 +1257,7 @@ export const initialContentTypes: ContentType[] = [
 					{ id: "pm-bp-title", sourcePropertyId: "field-bp-title", targetPropertyId: "title", transformation: "direct", required: true, description: "Title → Title" },
 					{ id: "pm-bp-excerpt", sourcePropertyId: "field-bp-excerpt", targetPropertyId: "subtitle", transformation: "direct", description: "Excerpt → Subtitle" },
 					{ id: "pm-bp-featured-image", sourcePropertyId: "field-bp-featured-image", targetPropertyId: "featuredImage", transformation: "direct", description: "Featured Image → Featured Image" },
+					{ id: "pm-bp-hero-logo", sourcePropertyId: "field-bp-hero-logo", targetPropertyId: "heroLogo", transformation: "direct", description: "Hero Logo → Hero Logo" },
 					{ id: "pm-bp-content", sourcePropertyId: "field-bp-content", targetPropertyId: "body", transformation: "direct", required: true, description: "Content → Body" },
 					{ id: "pm-bp-author", sourcePropertyId: "field-bp-author", targetPropertyId: "author", transformation: "direct", required: true, description: "Author → Author" },
 				],
@@ -1378,7 +1416,8 @@ export type Page = {
 	id: string;
 	name: string;
 	parentId: string | null;
-	status: "Published" | "Draft" | "Review" | "Changed" | "In Trash";
+	status: "Published" | "Draft" | "Review" | "Changed" | "In Trash" | "Scheduled";
+	scheduledDate?: string;
 	lastModified: string;
 	contentTypeId: string;
 	slug?: string;
@@ -1422,6 +1461,7 @@ export type Application = {
 	name: string;
 	appId: string;
 	url?: string;
+	componentDocsUrl?: string;
 	startPageId?: string;
 	modifiedAt?: string;
 	modifiedBy?: string;
@@ -1798,7 +1838,7 @@ export const initialPages: Page[] = [
 							"ele-hero-block": {
 								type: "ct-hero",
 								properties: {
-									heading: "Set it. Sweat it. Send it.",
+									heading: "Set it. Sweat it.\nSend it.",
 									subheading: "Let the streets, and the world know.",
 									primaryButton: "GET STARTED",
 									secondaryButton: "BOOK A DEMO",
@@ -1822,7 +1862,7 @@ export const initialPages: Page[] = [
 									text: "One home for every training block",
 									accent: "01Why Stride",
 									level: "h2",
-									displayTemplateKey: "prominentHeading",
+									displayTemplateKey: "h2Heading",
 					displaySettings: [
 						{ key: "size", value: "large" },
 						{ key: "emphasis", value: "bold" },
@@ -1953,7 +1993,7 @@ export const initialPages: Page[] = [
 									text: "Coaches get clarity fast",
 									accent: "02Live context",
 									level: "h2",
-									displayTemplateKey: "prominentHeading",
+									displayTemplateKey: "h2Heading",
 									displaySettings: [
 										{ key: "size", value: "large" },
 										{ key: "emphasis", value: "bold" },
@@ -1985,7 +2025,7 @@ export const initialPages: Page[] = [
 									text: "Features that keep crews aligned",
 									accent: "03Crew rituals",
 									level: "h2",
-									displayTemplateKey: "prominentHeading",
+									displayTemplateKey: "h2Heading",
 									displaySettings: [
 										{ key: "size", value: "large" },
 										{ key: "emphasis", value: "bold" },
@@ -2023,7 +2063,7 @@ export const initialPages: Page[] = [
 									text: "Let athletes stay in flow",
 									accent: "04Flow state",
 									level: "h2",
-									displayTemplateKey: "prominentHeading",
+									displayTemplateKey: "h2Heading",
 									displaySettings: [
 										{ key: "size", value: "large" },
 										{ key: "emphasis", value: "bold" },
@@ -2154,7 +2194,7 @@ export const initialPages: Page[] = [
 							},
 						],
 						elements: {
-							"ele-about-h1": { type: "ct-heading", properties: { text: "About us", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+							"ele-about-h1": { type: "ct-heading", properties: { text: "About us", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 							"ele-about-intro-text": { type: "ct-text", properties: { text: "Stride was founded on a simple belief: that everyone has an athlete inside them, waiting to break free. We build tools that help you visualize your progress, connect with others, and reach your full potential.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "large" }] } },
 							"ele-about-mission-h2": { type: "ct-heading", properties: { text: "Our Mission", level: "h2" } },
 							"ele-about-mission-text": { type: "ct-text", properties: { text: "We're dedicated to making professional-grade training tools accessible to everyone. Whether you're training for your first 5k or your fiftieth marathon, Stride is with you every step of the way.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
@@ -2216,16 +2256,16 @@ export const initialPages: Page[] = [
 				] }] },
 				{ id: "sec-ne-events-btn", name: "Events Button", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-ne-events-btn", open: true, children: [{ id: "col-ne-events-btn", open: true, elements: [{ id: "ele-ne-all-events-btn" }] }] }] },
 			], elements: {
-				"ele-ne-h1": { type: "ct-heading", properties: { text: "News & Events", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-ne-h1": { type: "ct-heading", properties: { text: "News & Events", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-ne-news-h2": { type: "ct-heading", properties: { text: "Latest News", level: "h2" } },
 				"ele-ne-news-1": { type: "ct-news-item", properties: { title: "Stride raises Series B to expand global fitness community", date: "2026-02-01", image: "/sports-1.jpg", summary: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more." } },
 				"ele-ne-news-2": { type: "ct-news-item", properties: { title: "Introducing Stride Stats 2.0 with AI coaching", date: "2026-01-15", image: "/sports-2.jpg", summary: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing." } },
 				"ele-ne-news-3": { type: "ct-news-item", properties: { title: "Stride named Top 10 Fitness App of 2025", date: "2025-12-10", image: "/sports-3.jpg", summary: "FitTech Magazine has recognized Stride as a leading solution for endurance athletes in their annual awards." } },
-				"ele-ne-all-news-btn": { type: "ct-button", properties: { label: "ALL NEWS", displayTemplateKey: "secondaryButton" } },
+				"ele-ne-all-news-btn": { type: "ct-button", properties: { label: "ALL NEWS", displayTemplateKey: "outlineButton" } },
 				"ele-ne-events-h2": { type: "ct-heading", properties: { text: "Upcoming Events", level: "h2" } },
 				"ele-ne-event-1": { type: "ct-event-card", properties: { title: "Global Running Summit 2026", date: "2026-04-20", location: "San Francisco, CA", description: "Join us for a day of keynotes and workshops on the future of endurance sports and wearable technology." } },
 				"ele-ne-event-2": { type: "ct-event-card", properties: { title: "Stride Community Marathon", date: "2026-06-15", location: "London, UK", description: "Connect with other Stride athletes, break your personal bests, and celebrate with the community." } },
-				"ele-ne-all-events-btn": { type: "ct-button", properties: { label: "ALL EVENTS", displayTemplateKey: "secondaryButton" } },
+				"ele-ne-all-events-btn": { type: "ct-button", properties: { label: "ALL EVENTS", displayTemplateKey: "outlineButton" } },
 			}},
 			{ id: "ol-ne-sidebar", title: "Sidebar", tree: [{ id: "sec-ne-nav", name: "Nav", open: true, children: [{ id: "row-ne-nav", open: true, children: [{ id: "col-ne-nav", open: true, elements: [{ id: "ele-ne-nav-1" }, { id: "ele-ne-nav-1a" }, { id: "ele-ne-nav-1b" }, { id: "ele-ne-nav-2" }, { id: "ele-ne-nav-3" }, { id: "ele-ne-nav-4" }] }] }] }], elements: {
 				"ele-ne-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
@@ -2251,7 +2291,7 @@ export const initialPages: Page[] = [
 			{ id: "ol-news-main", title: "Main", tree: [
 				{ id: "sec-news-list", name: "News", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-news-list", open: true, children: [{ id: "col-news-list", open: true, elements: [{ id: "ele-news-h1" }, { id: "ele-news-item-1" }, { id: "ele-news-item-2" }, { id: "ele-news-item-3" }] }] }] },
 			], elements: {
-				"ele-news-h1": { type: "ct-heading", properties: { text: "News", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-news-h1": { type: "ct-heading", properties: { text: "News", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-news-item-1": { type: "ct-news-item", properties: { title: "Stride raises Series B to expand global fitness community", date: "2026-02-01", image: "/sports-1.jpg", summary: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more." } },
 				"ele-news-item-2": { type: "ct-news-item", properties: { title: "Introducing Stride Stats 2.0 with AI coaching", date: "2026-01-15", image: "/sports-2.jpg", summary: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing." } },
 				"ele-news-item-3": { type: "ct-news-item", properties: { title: "Stride named Top 10 Fitness App of 2025", date: "2025-12-10", image: "/sports-3.jpg", summary: "FitTech Magazine has recognized Stride as a leading solution for endurance athletes in their annual awards." } },
@@ -2284,7 +2324,7 @@ export const initialPages: Page[] = [
 					{ id: "col-ev-2", open: true, elements: [{ id: "ele-ev-item-2" }] },
 				] }] },
 			], elements: {
-				"ele-ev-h1": { type: "ct-heading", properties: { text: "Events", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-ev-h1": { type: "ct-heading", properties: { text: "Events", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-ev-item-1": { type: "ct-event-card", properties: { title: "Global Running Summit 2026", date: "2026-04-20", location: "San Francisco, CA", description: "Join us for a day of keynotes and workshops on the future of endurance sports and wearable technology." } },
 				"ele-ev-item-2": { type: "ct-event-card", properties: { title: "Stride Community Marathon", date: "2026-06-15", location: "London, UK", description: "Connect with other Stride athletes, break your personal bests, and celebrate with the community." } },
 			}},
@@ -2319,7 +2359,7 @@ export const initialPages: Page[] = [
 					{ id: "col-mgmt-4", open: true, elements: [{ id: "ele-mgmt-card-4" }] },
 				] }] },
 			], elements: {
-				"ele-mgmt-h1": { type: "ct-heading", properties: { text: "Management", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-mgmt-h1": { type: "ct-heading", properties: { text: "Management", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-mgmt-intro": { type: "ct-text", properties: { text: "Our experienced and dedicated managers are committed to improving the effectiveness of project teams everywhere. Meet them here:", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
 				"ele-mgmt-card-1": { type: "ct-card", properties: { backgroundImage: "/sports-1.jpg", label: "Robert Carlsson — CEO", description: "Robert is Stride's CEO and visionary leader. Robert has led product development for major sports brands for over 20 years. robert.carlsson@stride.com | +46 8 123 456", displaySettings: [{ key: "style", value: "simple" }] } },
 				"ele-mgmt-card-2": { type: "ct-card", properties: { backgroundImage: "/sports-2.jpg", label: "Michelle Hernandez — CFO", description: "Michelle brings more than 10 years of finance and operational management experience to Stride. michelle.hernandez@stride.com | +46 8 123 458", displaySettings: [{ key: "style", value: "simple" }] } },
@@ -2350,7 +2390,7 @@ export const initialPages: Page[] = [
 			{ id: "ol-ct-main", title: "Main", tree: [
 				{ id: "sec-ct-content", name: "Contact", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-ct-content", open: true, children: [{ id: "col-ct-content", open: true, elements: [{ id: "ele-ct-h1" }, { id: "ele-ct-intro" }, { id: "ele-ct-body" }, { id: "ele-ct-support" }, { id: "ele-ct-press" }, { id: "ele-ct-phone" }] }] }] },
 			], elements: {
-				"ele-ct-h1": { type: "ct-heading", properties: { text: "Contact Us", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-ct-h1": { type: "ct-heading", properties: { text: "Contact Us", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-ct-intro": { type: "ct-text", properties: { text: "We'd love to hear from you.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "large" }] } },
 				"ele-ct-body": { type: "ct-text", properties: { text: "Get in touch with our team for support, partnership inquiries, or general questions.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
 				"ele-ct-support": { type: "ct-text", properties: { text: "Support: support@stride.com", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
@@ -2381,10 +2421,10 @@ export const initialPages: Page[] = [
 			{ id: "ol-coach-main", title: "Main", tree: [
 				{ id: "sec-coach-content", name: "Coaches", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-coach-content", open: true, children: [{ id: "col-coach-content", open: true, elements: [{ id: "ele-coach-h1" }, { id: "ele-coach-intro" }, { id: "ele-coach-body" }, { id: "ele-coach-apply-btn" }] }] }] },
 			], elements: {
-				"ele-coach-h1": { type: "ct-heading", properties: { text: "Become a Coach", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-coach-h1": { type: "ct-heading", properties: { text: "Become a Coach", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-coach-intro": { type: "ct-text", properties: { text: "Partner with us to bring professional training to everyone.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "large" }] } },
 				"ele-coach-body": { type: "ct-text", properties: { text: "Join our network of certified coaches and help athletes across the globe reach their peak performance.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
-				"ele-coach-apply-btn": { type: "ct-button", properties: { label: "APPLY NOW", displayTemplateKey: "secondaryButton" } },
+				"ele-coach-apply-btn": { type: "ct-button", properties: { label: "APPLY NOW", displayTemplateKey: "outlineButton" } },
 			}},
 			{ id: "ol-coach-sidebar", title: "Sidebar", tree: [{ id: "sec-coach-nav", name: "Nav", open: true, children: [{ id: "row-coach-nav", open: true, children: [{ id: "col-coach-nav", open: true, elements: [{ id: "ele-co-nav-1" }, { id: "ele-co-nav-1a" }, { id: "ele-co-nav-1b" }, { id: "ele-co-nav-2" }, { id: "ele-co-nav-3" }, { id: "ele-co-nav-4" }] }] }] }], elements: {
 				"ele-co-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
@@ -2410,10 +2450,10 @@ export const initialPages: Page[] = [
 			{ id: "ol-reseller-main", title: "Main", tree: [
 				{ id: "sec-reseller-content", name: "Reseller", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-reseller-content", open: true, children: [{ id: "col-reseller-content", open: true, elements: [{ id: "ele-reseller-h1" }, { id: "ele-reseller-intro" }, { id: "ele-reseller-body" }, { id: "ele-reseller-apply-btn" }] }] }] },
 			], elements: {
-				"ele-reseller-h1": { type: "ct-heading", properties: { text: "Become a Reseller", level: "h1", displayTemplateKey: "prominentHeading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-reseller-h1": { type: "ct-heading", properties: { text: "Become a Reseller", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
 				"ele-reseller-intro": { type: "ct-text", properties: { text: "Stock Stride hardware, apparel, and subscriptions at your retail location or online shop.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "large" }] } },
 				"ele-reseller-body": { type: "ct-text", properties: { text: "Our reseller program gives you access to wholesale pricing, co-branded marketing assets, and priority support. Whether you run a specialty running store or an online fitness marketplace, we make onboarding seamless.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
-				"ele-reseller-apply-btn": { type: "ct-button", properties: { label: "BECOME A RESELLER", displayTemplateKey: "secondaryButton" } },
+				"ele-reseller-apply-btn": { type: "ct-button", properties: { label: "BECOME A RESELLER", displayTemplateKey: "outlineButton" } },
 			}},
 			{ id: "ol-reseller-sidebar", title: "Sidebar", tree: [{ id: "sec-reseller-nav", name: "Nav", open: true, children: [{ id: "row-reseller-nav", open: true, children: [{ id: "col-reseller-nav", open: true, elements: [{ id: "ele-rs-nav-1" }, { id: "ele-rs-nav-1a" }, { id: "ele-rs-nav-1b" }, { id: "ele-rs-nav-2" }, { id: "ele-rs-nav-3" }, { id: "ele-rs-nav-4" }] }] }] }], elements: {
 				"ele-rs-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
@@ -3218,7 +3258,7 @@ export const initialPages: Page[] = [
 								type: "ct-button",
 								properties: {
 									label: "ALL NEWS & EVENTS",
-									displayTemplateKey: "secondaryButton",
+									displayTemplateKey: "outlineButton",
 					displaySettings: [],
 								},
 							},
@@ -5249,113 +5289,172 @@ export const initialPages: Page[] = [
 		name: "5 Tips for Your First Marathon",
 		parentId: "page-site-blog",
 		status: "Published",
-		lastModified: "2023-10-24",
+		lastModified: "2026-04-12",
 		contentTypeId: "ct-blog-post",
 		slug: "5-tips-for-your-first-marathon",
 		data: {
-			title: "5 Tips for Your First Marathon",
+			title: "5 Tips for Your First Marathon with Stride",
 			subtitle: "Build confidence, stay consistent, and make race day feel familiar.",
-			body: `<p>Training for 26.2 miles starts with a single step — and a plan you can actually stick to. Here are five practical tips that help first-timers build fitness without burning out.</p>
+			category: "Training",
+			heroLogo: "/boston-marathon-logo.png",
+			readingTime: "8 min read",
+			publishDate: "Apr 12, 2026",
+			featuredImage: "/cmp/assets/recommendation/panel-01-image.jpg",
+			body: `<p>Training for 26.2 miles starts with a single step — and a plan you can actually stick to. Whether you're lacing up your Stride Pros for the first time or graduating from 10Ks, these five tips will help you build fitness without burning out.</p>
 <h2>1) Keep the easy runs easy</h2>
-<p>Your easy pace should feel conversational. That’s where most of your aerobic gains come from.</p>
+<p>Your easy pace should feel conversational. That's where most of your aerobic gains come from. The Stride Pro's cushioned midsole is built for exactly this — absorbing miles without breaking you down.</p>
 <h2>2) Long runs are practice, not a test</h2>
-<p>Focus on time-on-feet and fueling. Don’t race your long run.</p>
+<p>Focus on time-on-feet and fueling. Don't race your long run. Use it to rehearse your race-day nutrition and hydration strategy.</p>
 <h2>3) Fuel early and often</h2>
 <ul>
   <li><p>Start fueling around 30–45 minutes in</p></li>
-  <li><p>Aim for consistent carbs + water</p></li>
+  <li><p>Aim for 30–60g of carbs per hour</p></li>
+  <li><p>Practice with the same gels and drinks you'll use on race day</p></li>
 </ul>
-<h2>4) Don’t skip recovery</h2>
-<p>Sleep, easy days, and lower-intensity weeks are part of the training.</p>
+<h2>4) Don't skip recovery</h2>
+<p>Sleep, easy days, and lower-intensity weeks are part of the training. Your body adapts during rest, not during the run. Stride's recovery line is designed to support this phase.</p>
 <h2>5) Rehearse race day</h2>
-<p>Try your breakfast, gels, and outfit on a long run so there are no surprises.</p>`,
-			author: "1",
+<p>Try your breakfast, gels, shoes, and outfit on a long run so there are no surprises. If you're running a Stride event, check in early and walk the start area the day before.</p>`,
+			author: { name: "Rachel Voss", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face" },
+			ctaHeading: "Ready to compete?",
+			ctaPrimaryText: "GET STARTED",
+			ctaPrimaryLink: "/registration",
+			ctaSecondaryText: "REQUEST A DEMO",
+			ctaSecondaryLink: "/demo",
 		},
 	},
 	{
 		id: "page-site-blog-post-2",
-		name: "Intervals for Beginners",
+		name: "Interval Training with Stride",
 		parentId: "page-site-blog",
 		status: "Published",
-		lastModified: "2023-10-28",
+		lastModified: "2026-04-18",
 		contentTypeId: "ct-blog-post",
-		slug: "intervals-for-beginners",
+		slug: "interval-training-with-stride",
 		data: {
-			title: "Intervals for Beginners",
-			subtitle: "A simple approach to speedwork that won’t fry your legs.",
-			body: `<p>Intervals don’t have to be scary. Think of them as controlled effort followed by recovery, repeated a few times. The goal is better form, efficiency, and confidence — not exhaustion.</p>
+			title: "Speed Sessions: A Runner's Guide to Intervals",
+			subtitle: "How to add speedwork to your training without burning out.",
+			category: "Performance",
+			readingTime: "6 min read",
+			publishDate: "Apr 18, 2026",
+			featuredImage: "/cmp/assets/recommendation/panel-06-image.jpg",
+			body: `<p>Intervals don't have to be scary. Think of them as controlled effort followed by recovery, repeated a few times. The goal is better form, efficiency, and confidence — not exhaustion.</p>
 <h2>A starter workout</h2>
 <ul>
   <li><p><strong>Warm up:</strong> 10 minutes easy + 3 short strides</p></li>
   <li><p><strong>Main set:</strong> 6 × (1 min steady-hard, 2 min easy)</p></li>
   <li><p><strong>Cool down:</strong> 10 minutes easy</p></li>
 </ul>
-<p>During the hard minute, aim for “comfortably hard” — you should finish feeling like you could do one more rep.</p>
+<p>During the hard minute, aim for "comfortably hard" — you should finish feeling like you could do one more rep. The Stride Racer's responsive plate gives you that extra snap without the crash.</p>
+<h2>When to level up</h2>
+<p>Once 1-minute reps feel manageable, try 2–3 minute reps at a slightly slower pace. The key is progressive overload — small, sustainable jumps in volume or intensity.</p>
 <h2>Common mistakes</h2>
 <ul>
   <li><p>Starting too fast on rep 1</p></li>
   <li><p>Skipping the warm-up</p></li>
   <li><p>Doing intervals on tired legs every week</p></li>
 </ul>
-<p>One interval session per week is plenty for most runners.</p>`,
-			author: "2",
+<p>One interval session per week is plenty for most runners. Quality over quantity — always.</p>`,
+			author: { name: "Todd Slayton", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face" },
+			ctaHeading: "Find your next event",
+			ctaPrimaryText: "VIEW EVENTS",
+			ctaPrimaryLink: "/events",
+			ctaSecondaryText: "JOIN THE COMMUNITY",
+			ctaSecondaryLink: "/community",
 		},
 	},
-
 	{
 		id: "page-site-blog-post-3",
 		name: "Race Day Checklist",
 		parentId: "page-site-blog",
-		status: "Draft",
-		lastModified: "2023-10-29",
+		status: "Published",
+		lastModified: "2026-05-02",
 		contentTypeId: "ct-blog-post",
 		slug: "race-day-checklist",
 		data: {
-			title: "Race Day Checklist",
+			title: "The Stride Race Day Checklist",
 			subtitle: "Remove the stress by planning the small stuff ahead of time.",
-			body: `<p>Race mornings get chaotic fast. The best way to stay calm is to remove decisions and make the day feel like a routine workout.</p>
+			category: "Race Day",
+			readingTime: "5 min read",
+			publishDate: "May 2, 2026",
+			featuredImage: "/cmp/assets/recommendation/panel-05-image.jpg",
+			body: `<p>Race mornings get chaotic fast. The best way to stay calm is to remove decisions and make the day feel like a routine workout. Here's the checklist our Stride athletes swear by.</p>
 <h2>The night before</h2>
 <ul>
-  <li><p>Lay out your kit (shoes, socks, top, shorts/tights)</p></li>
-  <li><p>Pin your bib and pack safety pins (or your belt)</p></li>
+  <li><p>Lay out your kit — Stride shoes, socks, top, shorts or tights</p></li>
+  <li><p>Pin your bib and attach your timing chip</p></li>
   <li><p>Charge your watch and phone</p></li>
   <li><p>Plan breakfast + pack a backup snack</p></li>
+  <li><p>Check the weather and adjust layers accordingly</p></li>
 </ul>
 <h2>Race morning</h2>
 <ul>
   <li><p>Arrive early and find toilets first</p></li>
-  <li><p>Do 5–10 minutes easy jogging + a few strides (if appropriate)</p></li>
+  <li><p>Do 5–10 minutes easy jogging + a few strides</p></li>
   <li><p>Start conservatively for the first 5–10 minutes</p></li>
+  <li><p>Smile at the crowd — they're there for you</p></li>
 </ul>
-<blockquote><p><strong>Pro tip:</strong> Write your plan (pace + fueling) on a note in your phone. When nerves spike, you’ll follow the plan.</p></blockquote>`,
-			author: "3",
+<blockquote><p><strong>Pro tip:</strong> Write your plan (pace + fueling) on your wrist or a card in your pocket. When nerves spike, you'll follow the plan instead of the adrenaline.</p></blockquote>`,
+			author: { name: "Rachel Voss", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face" },
+			ctaHeading: "Ready to compete?",
+			ctaPrimaryText: "GET STARTED",
+			ctaPrimaryLink: "/registration",
+			ctaSecondaryText: "REQUEST A DEMO",
+			ctaSecondaryLink: "/demo",
 		},
 	},
-
 	{
 		id: "page-site-blog-post-4",
 		name: "How to Choose Running Shoes",
 		parentId: "page-site-blog",
 		status: "Published",
-		lastModified: "2023-10-30",
+		lastModified: "2026-05-10",
 		contentTypeId: "ct-blog-post",
 		slug: "how-to-choose-running-shoes",
 		data: {
-			title: "How to Choose Running Shoes",
+			title: "Finding Your Perfect Stride: A Shoe Guide",
 			subtitle: "Comfort first, then match the shoe to your training.",
-			body: `<p>The “best” shoe is the one that fits your foot and your running. Start with comfort and stability, then refine based on your training goals.</p>
+			category: "Gear",
+			readingTime: "7 min read",
+			publishDate: "May 10, 2026",
+			featuredImage: "/cmp/assets/recommendation/panel-08-image.jpg",
+			body: `<p>The "best" shoe is the one that fits your foot and your running. Start with comfort and stability, then refine based on your training goals. Here's how the Stride lineup breaks down.</p>
 <h2>Fit comes first</h2>
-<p>Look for a secure heel, a roomy toe box, and no hot spots. Your toes should be able to wiggle, and the shoe shouldn’t slip when you walk or jog.</p>
+<p>Look for a secure heel, a roomy toe box, and no hot spots. Your toes should be able to wiggle, and the shoe shouldn't slip when you walk or jog. Every Stride shoe is designed with an anatomical last that mirrors the natural foot shape.</p>
 <h2>Match the shoe to the session</h2>
 <ul>
-  <li><p><strong>Daily trainer:</strong> comfortable, durable, forgiving</p></li>
-  <li><p><strong>Workout shoe:</strong> lighter, snappier, more responsive</p></li>
-  <li><p><strong>Trail shoe:</strong> grip, protection, stable platform</p></li>
+  <li><p><strong>Stride Pro:</strong> daily trainer — comfortable, durable, forgiving. Built for the miles that matter most.</p></li>
+  <li><p><strong>Stride Racer:</strong> workout shoe — lighter, snappier, carbon plate for race-day performance.</p></li>
+  <li><p><strong>Stride Trail:</strong> trail shoe — aggressive grip, rock plate protection, stable platform for technical terrain.</p></li>
 </ul>
-<h2>Don’t overthink pronation labels</h2>
-<p>Unless you have a specific injury history, prioritize what feels natural and stable. If possible, test-run them on a treadmill or outside.</p>`,
-			author: "1",
+<h2>Don't overthink pronation labels</h2>
+<p>Unless you have a specific injury history, prioritize what feels natural and stable. Visit a Stride retail partner for a free gait analysis, or test-run them at any Stride event expo.</p>`,
+			author: { name: "Todd Slayton", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face" },
+			ctaHeading: "Find your fit",
+			ctaPrimaryText: "SHOP STRIDE",
+			ctaPrimaryLink: "/shop",
+			ctaSecondaryText: "FIND A STORE",
+			ctaSecondaryLink: "/stores",
 		},
+	},
+
+	{
+		id: "page-site-marathon-2027",
+		name: "Boston Marathon 2027",
+		parentId: "page-site-home",
+		status: "Published",
+		lastModified: "2026-05-29",
+		contentTypeId: "exp-event-page",
+		slug: "boston-marathon-2027",
+		data: {},
+		variations: [
+			{
+				id: "original",
+				name: "Original",
+				status: "Published",
+				outlines: [MARATHON_EVENT_OUTLINE],
+			},
+		],
 	},
 
 	{
@@ -5837,7 +5936,7 @@ export const initialPages: Page[] = [
 							"ele-ch-news-label": { type: "ct-text", properties: { text: "NEWS", displayTemplateKey: "accentText", displaySettings: [{ key: "color", value: "blue" }] } },
 							"ele-ch-news-1": { type: "ct-sidebar-item", properties: { title: "Stride raises Series B to expand global fitness community", description: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more." } },
 							"ele-ch-news-2": { type: "ct-sidebar-item", properties: { title: "Introducing Stride Stats 2.0 with AI coaching", description: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing." } },
-							"ele-ch-news-btn": { type: "ct-button", properties: { label: "ALL NEWS & EVENTS", displayTemplateKey: "secondaryButton" } },
+							"ele-ch-news-btn": { type: "ct-button", properties: { label: "ALL NEWS & EVENTS", displayTemplateKey: "outlineButton" } },
 						},
 					},
 				],
@@ -5954,7 +6053,7 @@ export const initialPages: Page[] = [
 							"ele-sub-news-label": { type: "ct-text", properties: { text: "NEWS", displayTemplateKey: "accentText", displaySettings: [{ key: "color", value: "blue" }] } },
 							"ele-sub-news-1": { type: "ct-sidebar-item", properties: { title: "Stride raises Series B to expand global fitness community", description: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more." } },
 							"ele-sub-news-2": { type: "ct-sidebar-item", properties: { title: "Introducing Stride Stats 2.0 with AI coaching", description: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing." } },
-							"ele-sub-news-btn": { type: "ct-button", properties: { label: "ALL NEWS & EVENTS", displayTemplateKey: "secondaryButton" } },
+							"ele-sub-news-btn": { type: "ct-button", properties: { label: "ALL NEWS & EVENTS", displayTemplateKey: "outlineButton" } },
 						},
 					},
 				],

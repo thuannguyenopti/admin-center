@@ -22,12 +22,13 @@ import {
     IconEye,
     IconPen,
     IconTrashCan,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { ConnectorTile } from "./ConnectorTile";
 import { ConnectorAvatar } from "./ConnectorAvatar";
 import { ModalStepper } from "./ModalStepper";
+import { SalesforceConfig, GA4Config } from "./OCPConfigPanel";
 import { CONNECTORS, type Connector, type ToolAction } from "../data/connectors";
 import { requiresDeferredUserConnect, usesDirectUserConnect } from "../lib/connectorAuth";
 
@@ -58,7 +59,7 @@ interface AddConnectorModalProps {
     isUserView?: boolean;
     initialConnector?: Connector | null;
     initialScreen?: Screen;
-    initialStep?: 0 | 1 | 2;
+    initialStep?: 0 | 1 | 2 | 3;
     initialToolsDisclosureOpen?: boolean;
     onConfigureInPanel?: (connector: Connector) => void;
 }
@@ -91,9 +92,9 @@ function SelectionCard({
             rounded="md"
             onClick={onClick}
             style={{
-                border: `2px solid ${selected ? "var(--ax-colors-border-focus)" : "var(--ax-colors-border-tertiary)"}`,
+                border: `2px solid ${selected ? "var(--ax-colors-border-focus)" : "var(--ax-colors-border-secondary)"}`,
                 cursor: "pointer",
-                background: selected ? "var(--ax-colors-bg-accent-subtle)" : "var(--ax-colors-bg-default)",
+                background: selected ? "var(--ax-colors-bg-information-subtle)" : "var(--ax-colors-bg-default)",
                 transition: "border-color 0.15s, background 0.15s",
             }}
         >
@@ -121,10 +122,14 @@ export function AddConnectorModal({
 }: AddConnectorModalProps) {
     const [screen, setScreen] = useState<Screen>(initialScreen);
     const [selected, setSelected] = useState<Connector | null>(initialConnector);
-    const [step, setStep] = useState<0 | 1 | 2>(0);
+    const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
     const [enabledForOrg, setEnabledForOrg] = useState(true);
     const [access, setAccess] = useState<"all" | "teams">("all");
-    const [managedBy, setManagedBy] = useState<"user" | "admin">("user");
+    const [managedBy, setManagedBy] = useState<"user" | "admin">(
+        initialConnector?.authType === "API Key" ? "admin" : "user"
+    );
+    const [instanceUrl, setInstanceUrl] = useState("");
+    const [apiKey, setApiKey] = useState("");
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [toolSearch, setToolSearch] = useState("");
     const [browseSearch, setBrowseSearch] = useState("");
@@ -148,6 +153,7 @@ export function AddConnectorModal({
             setScreen(initialScreen);
             setSelected(initialConnector);
             setStep(initialStep);
+            setManagedBy(initialConnector?.authType === "API Key" ? "admin" : "user");
             setDetailToolsDisclosureOpen(initialToolsDisclosureOpen);
             if (initialConnector) {
                 setSelectedTools(getDefaultToolIds(initialConnector));
@@ -163,6 +169,8 @@ export function AddConnectorModal({
         setEnabledForOrg(true);
         setAccess("all");
         setManagedBy("user");
+        setInstanceUrl("");
+        setApiKey("");
         setSelectedTools([]);
         setToolSearch("");
         setBrowseSearch("");
@@ -565,7 +573,7 @@ export function AddConnectorModal({
                         <Box style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
                             <ModalStepper
                                 currentStep={step}
-                                steps={["Permissions", "Type", "Tools"]}
+                                steps={["Permissions", "Type", "Connect", "Tools"]}
                             />
 
                             {/* Step 0: Permissions */}
@@ -616,8 +624,49 @@ export function AddConnectorModal({
                                 </Box>
                             )}
 
-                            {/* Step 2: Tools */}
-                            {step === 2 && (
+                            {/* Step 2: Connect */}
+                            {step === 2 && selected && (
+                                <Box>
+                                    {selected.usesOCP ? (
+                                        selected.id === "salesforce" ? <SalesforceConfig /> : <GA4Config />
+                                    ) : (
+                                        <>
+                                            <Text fontWeight="600" mb="4">Enter connection credentials</Text>
+                                            <Text fontSize="sm" color="fg.secondary" mb="20">
+                                                Provide the credentials Opal will use to connect on behalf of all users.
+                                            </Text>
+                                            <Box display="flex" flexDirection="column" gap="16">
+                                                <Box>
+                                                    <Text fontSize="sm" fontWeight="500" mb="6">Instance URL</Text>
+                                                    <Input
+                                                        placeholder={`https://${selected.name.toLowerCase().replace(/\s+/g, "")}.example.com`}
+                                                        value={instanceUrl}
+                                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInstanceUrl(e.target.value)}
+                                                    />
+                                                    <Text fontSize="xs" color="fg.tertiary" mt="4">
+                                                        The base URL of your {selected.name} instance
+                                                    </Text>
+                                                </Box>
+                                                <Box>
+                                                    <Text fontSize="sm" fontWeight="500" mb="6">API Key</Text>
+                                                    <Input
+                                                        placeholder="sk-••••••••••••••••••••••••"
+                                                        value={apiKey}
+                                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApiKey(e.target.value)}
+                                                        type="password"
+                                                    />
+                                                    <Text fontSize="xs" color="fg.tertiary" mt="4">
+                                                        Found in {selected.name} under Settings → API Keys
+                                                    </Text>
+                                                </Box>
+                                            </Box>
+                                        </>
+                                    )}
+                                </Box>
+                            )}
+
+                            {/* Step 3: Tools */}
+                            {step === 3 && (
                                 <Box>
                                     <Text fontWeight="600" mb="4">Which tools can be used by default?</Text>
                                     <Text fontSize="sm" color="fg.secondary" mb="16">
@@ -729,7 +778,7 @@ export function AddConnectorModal({
                                 {step > 0 ? (
                                     <Button
                                         appearance="default"
-                                        onClick={() => setStep(s => (s - 1) as 0 | 1 | 2)}
+                                        onClick={() => setStep(s => (s - 1) as 0 | 1 | 2 | 3)}
                                     >
                                         Previous
                                     </Button>
@@ -737,10 +786,10 @@ export function AddConnectorModal({
                             </Box>
                             <Box display="flex" gap="12">
                                 <Button appearance="subtle" onClick={() => handleOpenChange(false)}>Cancel</Button>
-                                {step < 2 ? (
+                                {step < 3 ? (
                                     <Button
                                         appearance="primary"
-                                        onClick={() => setStep(s => (s + 1) as 0 | 1 | 2)}
+                                        onClick={() => setStep(s => (s + 1) as 0 | 1 | 2 | 3)}
                                     >
                                         Next
                                     </Button>

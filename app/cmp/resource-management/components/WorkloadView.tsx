@@ -1,8 +1,15 @@
-import { Box, Avatar } from "@optiaxiom/react";
-import { Text } from "@/app/components/Text";
-import { useState, CSSProperties } from "react";
-import type { WorkloadCell, TeamMember } from "../types";
-import { peopleColumnWidth, weekColumns, workloadCellMinWidth, workloadCellHeight, workloadGridMinWidth, groupedMonths } from "../constants";
+import {Box, Avatar} from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
+import {useState, CSSProperties} from "react";
+import type {WorkloadCell, TeamMember} from "../types";
+import {
+	peopleColumnWidth,
+	weekColumns,
+	workloadCellMinWidth,
+	workloadCellHeight,
+	workloadGridMinWidth,
+	groupedMonths,
+} from "../constants";
 
 export function WorkloadTabButton({
 	active,
@@ -19,15 +26,17 @@ export function WorkloadTabButton({
 			style={{
 				background: "transparent",
 				border: 0,
-				borderBottom: `2px solid ${
-					active ? "var(--ax-colors-border-accent)" : "transparent"
-				}`,
+				borderBottom: `2px solid ${active ? "var(--ax-colors-fg-default)" : "transparent"}`,
 				cursor: "pointer",
 				padding: "12px 8px",
 			}}
 			type="button"
 		>
-			<Text color={active ? "fg.default" : "fg.secondary"} fontSize="sm" fontWeight={active ? "500" : "400"}>
+			<Text
+				color={active ? "fg.default" : "fg.secondary"}
+				fontSize="sm"
+				fontWeight={active ? "500" : "400"}
+			>
 				{children}
 			</Text>
 		</button>
@@ -125,12 +134,19 @@ export function WorkloadCellBox({
 					...baseStyle,
 					backgroundColor,
 					backgroundImage,
-					boxShadow: active ? "inset 0 0 0 2px var(--ax-colors-border-accent)" : undefined,
+					boxShadow: active
+						? "inset 0 0 0 2px var(--ax-colors-border-default)"
+						: undefined,
 					transition: "background-color 120ms ease, box-shadow 120ms ease",
 				}}
 			>
 				{cell.value !== null ? (
-					<Text color="fg.default" fontSize="md" fontWeight="600" style={{ color: textColor, maxWidth: "none" }}>
+					<Text
+						color="fg.default"
+						fontSize="md"
+						fontWeight="600"
+						style={{color: textColor, maxWidth: "none"}}
+					>
 						{cell.value}
 					</Text>
 				) : null}
@@ -164,9 +180,9 @@ export function WorkloadGrid({
 			rounded="lg"
 			overflow="hidden"
 			w="full"
-			style={{ height: "100%", minHeight: 0 }}
+			style={{height: "100%", minHeight: 0}}
 		>
-			<Box overflow="auto" w="full" flex="1" style={{ minHeight: 0 }}>
+			<Box overflow="auto" w="full" flex="1" style={{minHeight: 0}}>
 				<Box
 					style={{
 						minWidth: workloadGridMinWidth,
@@ -204,7 +220,11 @@ export function WorkloadGrid({
 									gridColumn: `span ${month.weeks}`,
 								}}
 							>
-								<Text color="fg.secondary" fontSize="sm" style={{ lineHeight: "16px", maxWidth: "none" }}>
+								<Text
+									color="fg.secondary"
+									fontSize="sm"
+									style={{lineHeight: "16px", maxWidth: "none"}}
+								>
 									{month.label}
 								</Text>
 							</Box>
@@ -231,7 +251,11 @@ export function WorkloadGrid({
 								zIndex: 4,
 							}}
 						>
-							<Text color="fg.secondary" fontSize="sm" style={{ lineHeight: "20px", maxWidth: "none" }}>
+							<Text
+								color="fg.secondary"
+								fontSize="sm"
+								style={{lineHeight: "20px", maxWidth: "none"}}
+							>
 								People
 							</Text>
 						</Box>
@@ -251,7 +275,11 @@ export function WorkloadGrid({
 									borderRight: "1px solid var(--ax-colors-border-tertiary)",
 								}}
 							>
-								<Text color="fg.secondary" fontSize="sm" style={{ lineHeight: "16px", maxWidth: "none" }}>
+								<Text
+									color="fg.secondary"
+									fontSize="sm"
+									style={{lineHeight: "16px", maxWidth: "none"}}
+								>
 									{week.label}
 								</Text>
 							</Box>
@@ -259,7 +287,11 @@ export function WorkloadGrid({
 					</Box>
 
 					{rows.map((member) => (
-						<Box key={member.id} display="grid" style={{ gridTemplateColumns: tableColumns }}>
+						<Box
+							key={member.id}
+							display="grid"
+							style={{gridTemplateColumns: tableColumns}}
+						>
 							<Box
 								alignItems="center"
 								bg="bg.default"
@@ -272,7 +304,7 @@ export function WorkloadGrid({
 									borderRight: "1px solid var(--ax-colors-border-tertiary)",
 									boxShadow:
 										selectedPersonId === member.id
-											? "inset 3px 0 0 var(--ax-colors-border-accent)"
+											? "inset 3px 0 0 var(--ax-colors-border-default)"
 											: undefined,
 									height: workloadCellHeight,
 									left: 0,
@@ -281,14 +313,34 @@ export function WorkloadGrid({
 								}}
 							>
 								<Avatar name={member.name} size="md" src={member.avatarSrc} />
-								<Box display="flex" flexDirection="column" style={{ gap: 1, minWidth: 0 }}>
-									<Text color="fg.default" fontSize="md" fontWeight="600" style={{ lineHeight: "24px" }} truncate>
+								<Box
+									display="flex"
+									flexDirection="column"
+									style={{gap: 1, minWidth: 0}}
+								>
+									<Text
+										color="fg.default"
+										fontSize="md"
+										fontWeight="600"
+										style={{lineHeight: "24px"}}
+										truncate
+									>
 										{member.name}
 									</Text>
-									<Text color="fg.secondary" fontSize="sm" style={{ lineHeight: "18px" }} truncate>
+									<Text
+										color="fg.secondary"
+										fontSize="sm"
+										style={{lineHeight: "18px"}}
+										truncate
+									>
 										{member.role}
 									</Text>
-									<Text color="fg.tertiary" fontSize="sm" style={{ lineHeight: "18px" }} truncate>
+									<Text
+										color="fg.tertiary"
+										fontSize="sm"
+										style={{lineHeight: "18px"}}
+										truncate
+									>
 										{member.weeklyCapacity} · {member.timezone}
 									</Text>
 								</Box>
@@ -297,7 +349,10 @@ export function WorkloadGrid({
 							{member.cells.map((cell, index) => (
 								<WorkloadCellBox
 									key={`${member.id}-${index}`}
-									active={selectedPersonId === member.id && selectedWeekIndex === index}
+									active={
+										selectedPersonId === member.id &&
+										selectedWeekIndex === index
+									}
 									cell={cell}
 									onClick={() => onSelectCell(member.id, index)}
 									theme={theme}

@@ -14,13 +14,12 @@ import {
 	Menu,
 	MenuTrigger,
 	MenuContent,
-	Tooltip,
+	SidebarToggle,
 } from "@optiaxiom/react";
-import {Button} from "./Button";
 import {Text} from "./Text";
 import React, {useEffect, useState, useMemo, Suspense} from "react";
 
-import {useRouter, usePathname} from "next/navigation";
+import {useRouter, usePathname, useSearchParams} from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
 import {LayoutProvider, useLayout} from "../context/LayoutContext";
@@ -30,15 +29,20 @@ import {PreflightProvider} from "../components/ai/PreflightContext";
 import {OpalPanelActionsProvider} from "../context/OpalPanelActionsContext";
 import {OpalVariationBuildProvider} from "../context/OpalVariationBuildContext";
 import {ExperimentResultsProvider} from "../context/ExperimentResultsContext";
-import {IconChevronLeft, IconChevronRight} from "@optimizely/axiom-icons";
 import usePersistentState from "@/app/usePersistentState";
 import {FilterPanelProvider} from "../cms/content/context/FilterPanelContext";
-import {ContentManagerLayoutProvider, useContentManagerLayout} from "../cms/content/context/ContentManagerLayoutContext";
+import {
+	ContentManagerLayoutProvider,
+	useContentManagerLayout,
+} from "../cms/content/context/ContentManagerLayoutContext";
 import ContentManagerSidebar from "../cms/content/components/ContentManagerSidebar";
 import {OpalPanel} from "./OpalPanel";
 import {useOpalState} from "@/app/hooks/useOpalState";
 import {useOpalHistory} from "@/app/hooks/useOpalHistory";
 import {CodePanel} from "./CodePanel";
+import {IconSidebar} from "@optimizely/axiom-icons";
+import {FEATURED_AGENTS} from "@/app/opal/opalAgents";
+import {useAgentChatMode} from "@/app/hooks/useAgentChatMode";
 
 type PendingOpalPrompt = {
 	chatId: string;
@@ -52,35 +56,56 @@ function TemplateContent({
 	children: React.ReactNode;
 	structure: any;
 }>) {
-	const {asideContent, titleActions, footerContent, hidePageHeader, setOpalPanelControls, opalPanelWidth, setCodePanelControls} = useLayout();
+	const {
+		asideContent,
+		subNavContent,
+		subNavWidth,
+		titleActions,
+		topContent,
+		footerContent,
+		hidePageHeader,
+		setOpalPanelControls,
+		opalPanelWidth,
+		setCodePanelControls,
+	} = useLayout();
 	const opalContext = useOpalContext();
 	// Stable slice — deps use primitive values (not object/array refs) so this memo
 	// only recomputes when the actual content changes, even though OpalContextProvider
 	// recreates its context value on every render (because navigationStructure is a new
 	// array ref on each render from layout.tsx).
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const stableOpalCtx = useMemo(() => ({
-		currentPage: opalContext.currentPage,
-		availableFeatures: opalContext.availableFeatures,
-		opalCapabilities: opalContext.opalCapabilities,
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}), [
-		opalContext.currentPage?.path,
-		opalContext.currentPage?.productArea,
-		opalContext.currentPage?.pageName,
-		opalContext.currentPage?.pageDescription,
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		JSON.stringify(opalContext.availableFeatures),
-	]);
+	const stableOpalCtx = useMemo(
+		() => ({
+			currentPage: opalContext.currentPage,
+			availableFeatures: opalContext.availableFeatures,
+			opalCapabilities: opalContext.opalCapabilities,
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		}),
+		[
+			opalContext.currentPage?.path,
+			opalContext.currentPage?.productArea,
+			opalContext.currentPage?.pageName,
+			opalContext.currentPage?.pageDescription,
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+			JSON.stringify(opalContext.availableFeatures),
+		]
+	);
 	const router = useRouter();
-	const onOpalNavigate = React.useCallback((p: string) => { router.push(p); }, [router]);
+	const onOpalNavigate = React.useCallback(
+		(p: string) => {
+			router.push(p);
+		},
+		[router]
+	);
 	const path = usePathname();
-	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
+	const searchParams = useSearchParams();
+	const [isExpanded, setIsExpanded] = useState(false);
+	const isHydrated = true;
 	const [mounted, setMounted] = useState(false);
 	const [pendingOpalPrompt, setPendingOpalPrompt] = useState<PendingOpalPrompt | null>(null);
-	const [opalContextChip, setOpalContextChip] = useState<{ label: string; content: string } | null>(null);
-	const isOpalStudio = path.startsWith("/cmp/opal-studio");
-
+	const [opalContextChip, setOpalContextChip] = useState<{label: string; content: string} | null>(
+		null
+	);
 	// Code panel state
 	const [isCodePanelOpen, setIsCodePanelOpen] = useState(false);
 	const [codePanelTarget, setCodePanelTarget] = useState<string | null>(null);
@@ -128,6 +153,20 @@ function TemplateContent({
 		onNavigate: onOpalNavigate,
 	});
 
+	const {
+		agentSession: panelAgentSession,
+		agentBarElement: panelAgentBar,
+		sortedAgents: panelSortedAgents,
+		handleSelectAgent: panelHandleSelectAgent,
+		handleSendMessage: panelHandleSendMessage,
+	} = useAgentChatMode({
+		messages,
+		inputValue,
+		setInputValue,
+		sendMessage,
+		addMessage,
+	});
+
 	useEffect(() => {
 		if (!pendingOpalPrompt || isLoading) return;
 		if (activeChat !== pendingOpalPrompt.chatId) return;
@@ -139,11 +178,15 @@ function TemplateContent({
 	}, [activeChat, isLoading, messages.length, pendingOpalPrompt, sendMessage, setInputValue]);
 
 	const closeOpalWithRouteAwareness = () => {
-		if (isOpalStudio) {
+		// `opalCloseReturnTo` is a nav-item flag (resolved below): closing the Opal
+		// panel navigates to ?returnTo= (or the flag's fallback URL) instead of
+		// staying on the page.
+		if (opalCloseReturnTo) {
 			const returnTo =
 				typeof window !== "undefined"
-					? new URLSearchParams(window.location.search).get("returnTo") || "/cmp/library"
-					: "/cmp/library";
+					? new URLSearchParams(window.location.search).get("returnTo") ||
+						opalCloseReturnTo
+					: opalCloseReturnTo;
 			closeOpal();
 			router.push(returnTo);
 			return;
@@ -155,14 +198,34 @@ function TemplateContent({
 	// Mutable ref holding latest versions of all Opal controls so the effect below
 	// can register stable wrapper functions without re-running on every render.
 	const opalControlsRef = React.useRef({
-		openOpal, toggleOpal, closeOpal, createNewChat, clearHistory,
-		addMessage, updateMessage, removeMessage, setInputValue, sendMessage,
-		setInputDisabled, setPendingOpalPrompt, setOpalContextChip,
+		openOpal,
+		toggleOpal,
+		closeOpal,
+		createNewChat,
+		clearHistory,
+		addMessage,
+		updateMessage,
+		removeMessage,
+		setInputValue,
+		sendMessage,
+		setInputDisabled,
+		setPendingOpalPrompt,
+		setOpalContextChip,
 	});
 	opalControlsRef.current = {
-		openOpal, toggleOpal, closeOpal, createNewChat, clearHistory,
-		addMessage, updateMessage, removeMessage, setInputValue, sendMessage,
-		setInputDisabled, setPendingOpalPrompt, setOpalContextChip,
+		openOpal,
+		toggleOpal,
+		closeOpal,
+		createNewChat,
+		clearHistory,
+		addMessage,
+		updateMessage,
+		removeMessage,
+		setInputValue,
+		sendMessage,
+		setInputDisabled,
+		setPendingOpalPrompt,
+		setOpalContextChip,
 	};
 
 	// Provide Opal panel controls through LayoutContext.
@@ -191,7 +254,7 @@ function TemplateContent({
 			launchWithContext: (label: string, content: string) => {
 				opalControlsRef.current.createNewChat();
 				opalControlsRef.current.openOpal();
-				opalControlsRef.current.setOpalContextChip({ label, content });
+				opalControlsRef.current.setOpalContextChip({label, content});
 			},
 		});
 		return () => setOpalPanelControls(null);
@@ -218,19 +281,40 @@ function TemplateContent({
 		router.push(`${url}`);
 	};
 
-	const toggleSidebar = (e?: React.MouseEvent) => {
-		e?.stopPropagation();
-		setIsExpanded((prev: boolean) => !prev);
+	const menuItems = Array.isArray(structure) ? structure : [];
+	// Nav-item matching. `highlight` may be a string or an array of path prefixes.
+	// An optional `query` object further constrains a match to specific search
+	// params (e.g. {artifacts: "1"}). Returns the longest matching highlight, or
+	// null when the item doesn't match the current location.
+	const highlightMatch = (item: any): string | null => {
+		if (item?.highlight == null) return null;
+		if (
+			item.query &&
+			!Object.entries(item.query).every(([key, value]) => searchParams.get(key) === value)
+		) {
+			return null;
+		}
+		const highlights: string[] = Array.isArray(item.highlight)
+			? item.highlight
+			: [item.highlight];
+		const matched = highlights.filter((h) => (item.exact ? path === h : path.includes(h)));
+		const additional: string[] =
+			item.additionalHighlights?.filter((h: string) => path.includes(h)) ?? [];
+		return [...matched, ...additional].sort((a, b) => b.length - a.length)[0] ?? null;
 	};
 
-	const menuItems = Array.isArray(structure) ? structure : [];
-	const highlight1 = menuItems
-		.filter((item: any) => item?.highlight != null && (item.exact ? path === item.highlight : path.includes(item.highlight)))
-		.sort((a: any, b: any) => b.highlight.length - a.highlight.length)[0];
-	const isCmpTaskDetail = path.startsWith("/cmp/task/");
-	const routeHighlight = isCmpTaskDetail
-		? menuItems.find((item: any) => item.label === "Plan") || highlight1
-		: highlight1;
+	// Best-matching nav item for the current route. Query-constrained matches beat
+	// plain ones, hidden entries (which exist solely to carry layout flags for a
+	// route) beat visible ones, then longest highlight wins.
+	const routeHighlight = menuItems
+		.map((item: any) => ({item, match: highlightMatch(item)}))
+		.filter((entry: any) => entry.match != null)
+		.sort(
+			(a: any, b: any) =>
+				(b.item.query ? 1 : 0) - (a.item.query ? 1 : 0) ||
+				(b.item.hidden ? 1 : 0) - (a.item.hidden ? 1 : 0) ||
+				b.match.length - a.match.length
+		)[0]?.item;
 	const lvl2 = routeHighlight?.children
 		?.filter((item: any) => (item.url ? path.includes(item.url) : false))
 		.sort((a: any, b: any) => b.url.length - a.url.length)[0];
@@ -242,96 +326,67 @@ function TemplateContent({
 		.sort((a: any, b: any) => b.url.length - a.url.length)[0];
 
 	const heading = lvl4?.label || lvl3?.label || lvl2?.label;
-	const desc = lvl4?.description || lvl3?.description || lvl2?.description || highlight1?.description;
+	const desc =
+		lvl4?.description || lvl3?.description || lvl2?.description || routeHighlight?.description;
+
+	// Resolve a layout flag from the deepest matching nav level upward.
+	const navFlag = (name: string) =>
+		lvl4?.[name] ?? lvl3?.[name] ?? lvl2?.[name] ?? routeHighlight?.[name];
+
+	// Nav-item layout flags — see CLAUDE.md. All layout variation must be driven
+	// by these (or useLayout context), never by route checks in this file.
+	const fullscreen = !!navFlag("fullscreen"); // no shell at all, children own the viewport
+	const hideSidebar = !!navFlag("hideSidebar"); // no primary/secondary sidebar, GlobalBar stays
+	const chromeless = !!navFlag("chromeless"); // no GlobalBar and no sidebars
+	const opalCloseReturnTo = navFlag("opalCloseReturnTo") as string | undefined;
+
+	// TODO(standards): the Content Manager coupling below (CMS-specific sidebar,
+	// widths, and the FilterPanelProvider in TemplateWrapper) is the last
+	// route-specific logic in this file. It should move behind a generic
+	// secondary-sidebar mechanism (e.g. nav flag + useLayout content injection).
 	const isContentManager = path.includes("/cms/content");
 	const showVT =
 		routeHighlight?.children?.length > 1 ||
 		typeof lvl3 !== "undefined" ||
 		typeof lvl4 !== "undefined";
-	const showSecondarySidebar = !isOpalStudio && (isContentManager || showVT);
+	const showViaSubNavContent = !!subNavContent && !hideSidebar;
+	const showSecondarySidebar =
+		!hideSidebar && (isContentManager || showVT || showViaSubNavContent);
 	const {contentSubNavExpanded} = useContentManagerLayout();
 	// When Content Manager sub-nav is collapsed, reserve 56px; when expanded, 224px. Other secondary sidebars (VT) use 224px.
-	const secondarySidebarWidth = isContentManager ? (contentSubNavExpanded ? 224 : 56) : 224;
-	const customLayout = routeHighlight?.customLayout || isCmpTaskDetail || isOpalStudio;
+	const secondarySidebarWidth = showViaSubNavContent
+		? subNavWidth
+		: isContentManager
+			? contentSubNavExpanded
+				? 224
+				: 56
+			: 224;
+	const customLayout = !!navFlag("customLayout");
 	const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 
 	// Primary sidebar width: 56px collapsed, 224px expanded
-	const primarySidebarWidth = isOpalStudio ? 0 : isExpanded ? 224 : 56;
+	const primarySidebarWidth = hideSidebar || chromeless ? 0 : isExpanded ? 224 : 56;
 
 	// Calculate total left offset for footer
-	const footerLeftOffset = primarySidebarWidth + (showSecondarySidebar ? secondarySidebarWidth : 0);
+	const footerLeftOffset =
+		primarySidebarWidth + (showSecondarySidebar ? secondarySidebarWidth : 0);
 
-	// Check if we're on the Workflow Builder page
-	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
-
-	// Form Builder: full-viewport canvas, no app shell
-	const isFormBuilder = path.startsWith("/cmp/settings/templates/form");
-
-	// Full-screen canvas mode — ?artifacts=1 on /opal hides all shell chrome
-	const isArtifactsCanvas = path === "/opal" && typeof window !== "undefined"
-		? new URLSearchParams(window.location.search).get("artifacts") === "1"
-		: false;
-
-	// Experiment Results: hide "Optimizations" heading and push content up to where it was
-	const isExperimentResultsPage =
-		path.includes("/web-experimentation/optimizations") && path.includes("/results");
-	// Experiment detail (Variations): full-bleed layout with its own title and sidebar
-	const isOptimizationDetailPage = /^\/web-experimentation\/optimizations\/[^/]+$/.test(path);
-	// Visual Editor: dedicated full-viewport surface (no app shell chrome)
-	const isOptimizationVisualEditorPage =
-		/^\/web-experimentation\/optimizations\/[^/]+\/visual-editor/.test(path);
-	// List ↔ detail ↔ results change padding and overflow; skip the shell slide so navigation feels instant
-	const instantOptimizationsLayout = path.startsWith("/web-experimentation/optimizations");
-	const shellTransition = instantOptimizationsLayout ? "none" : ".7s cubic-bezier(0, 1, 0, 1)";
+	// `instantShell: true` on a nav item disables the shell slide transition
+	const shellTransition = navFlag("instantShell") ? "none" : ".7s cubic-bezier(0, 1, 0, 1)";
 
 	if (!isHydrated || !mounted) {
 		return <Box style={{height: "100vh"}} bg="bg.page" />;
 	}
 
-	if (isWorkflowBuilder || isFormBuilder) {
+	if (fullscreen) {
 		return (
-			<Box style={{ height: "100vh", width: "100vw", overflow: "hidden", display: "flex", flexDirection: "column" }} bg="bg.default">
+			<Box style={{height: "100vh", width: "100vw"}} bg="bg.default">
 				{children}
 			</Box>
 		);
 	}
 
-	if (isArtifactsCanvas) {
-		return (
-			<Box
-				style={{
-					height: "100dvh",
-					width: "100vw",
-					overflow: "hidden",
-					display: "flex",
-					flexDirection: "column",
-				}}
-				bg="bg.page"
-			>
-				{children}
-			</Box>
-		);
-	}
-
-	if (isOptimizationVisualEditorPage) {
-		return (
-			<Box
-				style={{
-					height: "100dvh",
-					width: "100vw",
-					maxHeight: "100dvh",
-					overflow: "hidden",
-					display: "flex",
-					flexDirection: "column",
-				}}
-				bg="bg.default"
-			>
-				{children}
-			</Box>
-		);
-	}
-
-	const sidebarColWidth = isOpalStudio ? 0 : primarySidebarWidth;
+	const sidebarColWidth = primarySidebarWidth;
 	return (
 		<OpalPanelActionsProvider
 			openPanel={openOpal}
@@ -339,275 +394,280 @@ function TemplateContent({
 			openExperimentCreationAgent={showExperimentCreationAgent}
 		>
 			<OpalVariationBuildProvider addMessage={addMessage} updateMessage={updateMessage}>
-		<Box
-			className="grid grid-rows-[auto_1fr] h-screen"
-			style={{ gridTemplateColumns: `${sidebarColWidth}px 1fr`, transition: "grid-template-columns 0.2s ease-out" }}
-			bg="bg.page"
-		>
-			<GlobalBar onOpalClick={toggleOpal} />
-			{!isOpalStudio ? (
-				<Box display="flex" z="10" style={{minHeight: 0}}>
-					<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
-						<Box
-							onClick={toggleSidebar}
-							style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
-						>
-							<Nav>
-								<NavBody>
-									{menuItems.map((menuItem: any) => {
-										if (menuItem.isMenuTrigger) {
-											return (
-												<React.Fragment key={menuItem.label}>
-													<Menu
-														options={menuItem.menuOptions.map((opt: any) => ({
-															label: opt.label,
-															execute: () => menuClick(opt.url),
-														}))}
-													>
-														<MenuTrigger asChild>
-															<NavItem
-																aria-label={menuItem.label}
-																icon={menuItem.icon}
-																className="[&_svg]:w-6 [&_svg]:h-6 [&_svg]:overflow-visible"
-															>
-																{menuItem.label}
-															</NavItem>
-														</MenuTrigger>
-														<MenuContent />
-													</Menu>
-													<Box className="h-2" />
-												</React.Fragment>
-											);
-										}
-
-										if (!menuItem.url) {
-											return (
-												<Box
-													key={menuItem.label}
-													px="16"
-													py="8"
-													mt="4"
-													borderT="1"
-													borderColor="border.tertiary"
-													onClick={(e: React.MouseEvent) => e.stopPropagation()}
-												>
-													{isExpanded && (
-														<Text fontSize="sm" color="fg.tertiary" mt="2">
-															{menuItem.label}
-														</Text>
-													)}
-												</Box>
-											);
-										}
-
-										const isActive =
-											routeHighlight?.label === menuItem.label ||
-											(menuItem.exact ? path === menuItem.highlight : path.includes(menuItem.highlight));
-
-										const icon =
-											menuItem.label === "Notifications" &&
-												!path.startsWith("/opal/notifications") ? (
-												<Box style={{ position: "relative", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
-													{menuItem.icon}
-													<Box
-														rounded="full"
-														display="flex"
-														alignItems="center"
-														justifyContent="center"
-														style={{
-															position: "absolute",
-															top: 2,
-															right: 0,
-															backgroundColor: "var(--ax-colors-fg-error)",
-															minWidth: 14,
-															height: 14,
-															padding: "0 4px",
-															fontSize: 9,
-															fontWeight: 700,
-															color: "white",
-															pointerEvents: "none",
-														}}
-													>
-														10
-													</Box>
-												</Box>
-											) : (
-												menuItem.icon
-											);
-
-										const itemClick = (e: React.MouseEvent) => menuClick(menuItem.url, e);
-										const hasNotifDot = menuItem.label === "Notifications" && !path.startsWith("/opal/notifications");
-
-										// Expanded: plain NavItem with label
-										if (isExpanded) {
-											return (
-												<NavItem
-													key={menuItem.label}
-													onClick={itemClick}
-													active={isActive}
-													aria-label={menuItem.label}
-													icon={hasNotifDot ? menuItem.icon : icon}
-													addonAfter={hasNotifDot ? <Badge variant="strong" intent="danger">10</Badge> : undefined}
-												>
-													{menuItem.label}
-												</NavItem>
-											);
-										}
-
-										// Collapsed: NavItem wrapped in Tooltip so label shows on hover
-										return (
-											<Tooltip key={menuItem.label} content={menuItem.label} side="right">
-												<NavItem
-													onClick={itemClick}
-													active={isActive}
-													aria-label={menuItem.label}
-													icon={icon}
-												>
-													{menuItem.label}
-												</NavItem>
-											</Tooltip>
-										);
-									})}
-								</NavBody>
-								<NavFooter>
-									<NavList>
-										<Button
-											aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
-											icon={
-												!isExpanded ? (
-													<IconChevronRight size={16} color="var(--ax-colors-fg-secondary)" />
-												) : (
-													<IconChevronLeft size={16} color="var(--ax-colors-fg-secondary)" />
-												)
-											}
-											onClick={toggleSidebar}
-											appearance="subtle"
-										/>
-									</NavList>
-								</NavFooter>
-							</Nav>
-						</Box>
-					</Sidebar>
-					<Box
-						style={{
-							marginLeft: -secondarySidebarWidth,
-							transform: showSecondarySidebar ? `translateX(${secondarySidebarWidth}px)` : "translateX(0px)",
-							transition: shellTransition,
-							overflowX: "hidden",
-							overflowY: isContentManager ? "hidden" : undefined,
-							minHeight: isContentManager ? 0 : undefined,
-							width: secondarySidebarWidth,
-							minWidth: secondarySidebarWidth,
-							flexShrink: 0,
-							height: "100%",
-						}}
-						borderR="1"
-						borderColor="border.tertiary"
-						bg="bg.default"
-						overflow="hidden"
-						className="slide"
-					>
-						{isContentManager ? (
-							<ContentManagerSidebar />
-						) : showVT ? (
-							<Sidebar className="flex" h="full" style={{overflowY: "auto", overflowX: "hidden"}}>
-								<SubNav
+				<Box
+					className="grid grid-rows-[auto_1fr] h-screen"
+					overflow="hidden"
+					style={{
+						gridTemplateColumns: `${sidebarColWidth}px 1fr`,
+						transition: "grid-template-columns 0.2s ease-out",
+					}}
+					bg="bg.default"
+				>
+					{!chromeless && <GlobalBar onOpalClick={toggleOpal} />}
+					{!hideSidebar && !chromeless ? (
+						<Box display="flex" z="10" style={{minHeight: 0, height: "100%"}}>
+							<Sidebar
+								className="h-full z-10 relative"
+								expanded={isExpanded}
+								onExpandedChange={setIsExpanded}
+								defaultExpanded={isExpanded}
+								style={{ borderRight: "1px solid var(--ax-colors-border-default)" }}
+							>
+								<Box
 									style={{
-										height: "100%",
-										overflowY: "auto",
-										overflowX: "hidden",
-										borderRight: 0,
+										flex: 1,
+										minHeight: 0,
+										display: "flex",
+										flexDirection: "column",
 									}}
 								>
-									<div
-										className="flex w-[500%]"
-										style={{
-											transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)}px)`,
-											transition: shellTransition,
-											minHeight: "100%",
-											overflowX: "hidden",
-										}}
-									>
-										{showVT && routeHighlight?.children && (
-											<VT
-												backLink={undefined}
-												title={routeHighlight.children?.title || routeHighlight.label}
-												description={routeHighlight.children?.description}
-												items={routeHighlight.children}
-											/>
-										)}
-										{showVT && lvl3 && (
-											<VT
-												backLink={lvl2}
-												title={lvl2.children?.title}
-												description={lvl2.children?.description}
-												items={lvl2.children?.children}
-											/>
-										)}
-										{showVT && lvl4 && (
-											<VT
-												backLink={lvl3}
-												title={lvl3.children?.title}
-												description={lvl3.children?.description}
-												items={lvl3.children?.children}
-											/>
-										)}
-									</div>
-								</SubNav>
+									<Nav>
+										<NavBody>
+											{menuItems
+												.filter((item: any) => !item.hidden)
+												.map((menuItem: any) => {
+													if (menuItem.isMenuTrigger) {
+														return (
+															<React.Fragment key={menuItem.label}>
+																<Menu
+																	options={menuItem.menuOptions.map(
+																		(opt: any) => ({
+																			label: opt.label,
+																			execute: () =>
+																				menuClick(opt.url),
+																		})
+																	)}
+																>
+																	<MenuTrigger asChild>
+																		<NavItem
+																			aria-label={
+																				menuItem.label
+																			}
+																			icon={menuItem.icon}
+																			className="[&_svg]:w-6 [&_svg]:h-6 [&_svg]:overflow-visible"
+																		>
+																			{menuItem.label}
+																		</NavItem>
+																	</MenuTrigger>
+																	<MenuContent />
+																</Menu>
+																<Box className="h-2" />
+															</React.Fragment>
+														);
+													}
+
+													if (!menuItem.url) {
+														return (
+															<Box
+																key={menuItem.label}
+																px="16"
+																py="8"
+																mt="4"
+																borderT="1"
+																borderColor="border.tertiary"
+																onClick={(e: React.MouseEvent) =>
+																	e.stopPropagation()
+																}
+															>
+																{isExpanded && (
+																	<Text
+																		fontSize="sm"
+																		color="fg.tertiary"
+																		mt="2"
+																	>
+																		{menuItem.label}
+																	</Text>
+																)}
+															</Box>
+														);
+													}
+
+													const isActive =
+														routeHighlight?.label === menuItem.label ||
+														highlightMatch(menuItem) != null;
+
+													const itemClick = (e: React.MouseEvent) =>
+														menuClick(menuItem.url, e);
+													// `badge` on a nav item shows a count badge while
+													// the item is not active
+													const showBadge =
+														menuItem.badge != null && !isActive;
+
+													// Expanded: plain NavItem with label
+													return (
+														<NavItem
+															key={menuItem.label}
+															onClick={itemClick}
+															active={isActive}
+															aria-label={menuItem.label}
+															icon={menuItem.icon}
+															addonAfter={
+																showBadge ? (
+																	<Badge
+																		variant="strong"
+																		intent="danger"
+																	>
+																		{menuItem.badge}
+																	</Badge>
+																) : undefined
+															}
+														>
+															{menuItem.label}
+														</NavItem>
+													);
+												})}
+										</NavBody>
+										<NavFooter>
+											<NavList>
+												<SidebarToggle icon={<IconSidebar />} />
+											</NavList>
+										</NavFooter>
+									</Nav>
+								</Box>
 							</Sidebar>
-						) : null}
-					</Box>
-				</Box>
-			) : null}
-			<Box
-				overflowX="hidden"
-				display="flex"
-				flexDirection="row"
-				fontSize="md"
-				color="fg.default"
-				h="full"
-				style={{minHeight: 0}}
-			>
-				<Box
-					flex="1"
-					className="min-w-0 relative main-scroll-area"
-					overflow={customLayout ? "hidden" : "auto"}
-					h="full"
-					style={{ minHeight: 0 }}
-				>
-					{customLayout ? (
-						children
-					) : (
+							<Box
+								style={{
+									marginLeft: -secondarySidebarWidth,
+									transform: showSecondarySidebar
+										? `translateX(${secondarySidebarWidth}px)`
+										: "translateX(0px)",
+									transition: shellTransition,
+									overflowX: "hidden",
+									overflowY: isContentManager ? "hidden" : undefined,
+									minHeight: isContentManager ? 0 : undefined,
+									width: secondarySidebarWidth,
+									minWidth: secondarySidebarWidth,
+									flexShrink: 0,
+									height: "100%",
+								}}
+								bg="bg.default"
+								overflow="hidden"
+								className="slide"
+							>
+								{showViaSubNavContent ? (
+									<Box
+										h="full"
+										overflow="auto"
+										style={{width: subNavWidth, minWidth: subNavWidth}}
+									>
+										{subNavContent}
+									</Box>
+								) : isContentManager ? (
+									<ContentManagerSidebar />
+								) : showVT ? (
+									<Sidebar
+										className="flex"
+										h="full"
+										style={{overflowY: "auto", overflowX: "hidden"}}
+									>
+										<SubNav
+											style={{
+												height: "100%",
+												overflowY: "auto",
+												overflowX: "hidden",
+												borderRight: 0,
+											}}
+										>
+											<div
+												className="flex w-[500%]"
+												style={{
+													transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)}px)`,
+													transition: shellTransition,
+													minHeight: "100%",
+													overflowX: "hidden",
+												}}
+											>
+												{showVT && routeHighlight?.children && (
+													<VT
+														backLink={undefined}
+														title={
+															routeHighlight.children?.title ||
+															routeHighlight.label
+														}
+														description={
+															routeHighlight.children?.description
+														}
+														items={routeHighlight.children}
+													/>
+												)}
+												{showVT && lvl3 && (
+													<VT
+														backLink={lvl2}
+														title={lvl2.children?.title}
+														description={lvl2.children?.description}
+														items={lvl2.children?.children}
+													/>
+												)}
+												{showVT && lvl4 && (
+													<VT
+														backLink={lvl3}
+														title={lvl3.children?.title}
+														description={lvl3.children?.description}
+														items={lvl3.children?.children}
+													/>
+												)}
+											</div>
+										</SubNav>
+									</Sidebar>
+								) : null}
+							</Box>
+						</Box>
+					) : null}
+					<Box
+						overflowX="hidden"
+						display="flex"
+						flexDirection="row"
+						fontSize="md"
+						color="fg.default"
+						p="0"
+						h="full"
+						style={{
+							minHeight: 0,
+							marginRight: opalPanelWidth > 0 ? `${opalPanelWidth}px` : undefined,
+							transition: "margin-right 0.3s cubic-bezier(0, 1, 0, 1)",
+							...(chromeless ? {gridColumn: "1 / -1", gridRow: "1 / -1"} : {}),
+						}}
+					>
 						<Box
-							style={{
-								marginLeft: secondarySidebarWidth,
-								marginRight: -secondarySidebarWidth,
-								width: !showSecondarySidebar ? "100%" : `calc(100% - ${secondarySidebarWidth}px)`,
-								transform: showSecondarySidebar
-									? "translateX(0px)"
-									: `translateX(-${secondarySidebarWidth}px)`,
-								transition: "margin 0.2s ease-out, width 0.2s ease-out, transform 0.2s ease-out",
-								...(isOptimizationDetailPage
-									? { minHeight: 0, height: "100%" }
-									: {}),
-							}}
-							color="fg.default"
-							overflow={isOptimizationDetailPage ? "hidden" : "auto"}
-							px={isOptimizationDetailPage ? "0" : "32"}
-							py={isOptimizationDetailPage ? "0" : "24"}
-							pb={footerContent ? "80" : "24"}
-							display={isOptimizationDetailPage ? "flex" : undefined}
-							flexDirection={isOptimizationDetailPage ? "column" : undefined}
-							h={isOptimizationDetailPage ? "full" : undefined}
+							flex="1"
+							className="min-w-0 relative main-scroll-area"
+							overflow={customLayout ? "hidden" : "auto"}
+							h="full"
+							style={{minHeight: 0}}
 						>
-							{isExperimentResultsPage || isOptimizationDetailPage ? (
+							{customLayout ? (
 								children
 							) : (
-								<>
+								<Box
+									style={{
+										marginLeft: secondarySidebarWidth,
+										marginRight: -secondarySidebarWidth,
+										width: !showSecondarySidebar
+											? "100%"
+											: `calc(100% - ${secondarySidebarWidth}px)`,
+										transform: showSecondarySidebar
+											? "translateX(0px)"
+											: `translateX(-${secondarySidebarWidth}px)`,
+										transition:
+											"margin 0.2s ease-out, width 0.2s ease-out, transform 0.2s ease-out",
+									}}
+									color="fg.default"
+									pb={footerContent ? "80" : "24"}
+									p={"32"}
+									bg="bg.page"
+									rounded="lg"
+									m="8"
+								>
 									{!shouldHidePageHeader && (
 										<Box w="full" className="min-w-0" overflow="hidden">
-											<Box display="flex" justifyContent="space-between" alignItems="center" w="full" mb="16">
-												<Heading level="3" truncate>
+											<Box
+												display="flex"
+												justifyContent="space-between"
+												alignItems="center"
+												w="full"
+												mb="16"
+											>
+												<Heading level="1" truncate>
 													{heading || routeHighlight?.label}
 												</Heading>
 												{titleActions}
@@ -618,15 +678,25 @@ function TemplateContent({
 													color="fg.secondary"
 													display="block"
 													w="full"
-													style={{width: "100%", maxWidth: "none"}}
+													style={{
+														width: "100%",
+														maxWidth: "none",
+													}}
 												>
 													{desc}
 												</Text>
 											)}
 										</Box>
 									)}
+									{topContent && <Box>{topContent}</Box>}
 									<Box
-										mt={!shouldHidePageHeader && desc ? "0" : !shouldHidePageHeader ? "24" : "0"}
+										mt={
+											!shouldHidePageHeader && desc
+												? "0"
+												: !shouldHidePageHeader
+													? "24"
+													: "0"
+										}
 										z="10"
 										className="relative"
 										w="full"
@@ -634,78 +704,93 @@ function TemplateContent({
 									>
 										{children}
 									</Box>
-								</>
+								</Box>
 							)}
 						</Box>
-					)}
-				</Box>
-				{asideContent && (
-					<Box
-						borderL="1"
-						borderColor="border.tertiary"
-						bg="bg.default"
-						h="full"
-						overflow="auto"
-						style={{width: "fit-content", minWidth: "384px", flexShrink: 0}}
-					>
-						{asideContent}
+						{asideContent && (
+							<Box
+								borderL="1"
+								borderColor="border.tertiary"
+								bg="bg.default"
+								h="full"
+								overflow="auto"
+								style={{
+									width: "fit-content",
+									minWidth: "384px",
+									maxWidth: "760px",
+									flexShrink: 0,
+								}}
+							>
+								{asideContent}
+							</Box>
+						)}
 					</Box>
-				)}
-			</Box>
-			{footerContent && (
-				<Box
-					style={{
-						position: "fixed",
-						bottom: 0,
-						left: `${footerLeftOffset}px`,
-						right: `${opalPanelWidth}px`,
-						transition: "left 0.2s ease-out, right 0.3s cubic-bezier(0, 1, 0, 1)"
-					}}
-					borderT="1"
-					borderL="1"
-					borderColor="border.secondary"
-					bg="bg.default"
-					px="32"
-					py="16"
-					display="flex"
-					justifyContent="end"
-					z="20"
-				>
-					{footerContent}
+					{footerContent && (
+						<Box
+							style={{
+								position: "fixed",
+								bottom: 0,
+								left: `${footerLeftOffset}px`,
+								right: `${opalPanelWidth}px`,
+								transition:
+									"left 0.2s ease-out, right 0.3s cubic-bezier(0, 1, 0, 1)",
+							}}
+							borderT="1"
+							borderL="1"
+							borderColor="border.secondary"
+							bg="bg.default"
+							px="32"
+							py="16"
+							display="flex"
+							justifyContent="end"
+							z="20"
+						>
+							{footerContent}
+						</Box>
+					)}
+					<OpalPanel
+						isOpen={isOpalOpen}
+						onClose={closeOpalWithRouteAwareness}
+						messages={messages}
+						inputValue={inputValue}
+						isLoading={isLoading}
+						error={error}
+						isInputDisabled={isInputDisabled}
+						setInputValue={setInputValue}
+						sendMessage={panelHandleSendMessage}
+						regenerate={regenerate}
+						groupedHistory={groupedHistory}
+						activeChat={activeChat}
+						searchQuery={searchQuery}
+						isHistoryVisible={isHistoryVisible}
+						mode={mode}
+						setSearchQuery={setSearchQuery}
+						toggleHistory={toggleHistory}
+						toggleMode={toggleMode}
+						createNewChat={createNewChat}
+						deleteChat={deleteChat}
+						selectChat={selectChat}
+						contextChip={opalContextChip?.label ?? null}
+						contextContent={opalContextChip?.content ?? null}
+						onContextChipRemove={() => setOpalContextChip(null)}
+						mentionableAgents={panelSortedAgents}
+						onMentionSelect={panelHandleSelectAgent}
+						agentBar={panelAgentBar}
+						inputAgentCtx={
+							panelAgentSession
+								? {
+										name: panelAgentSession.agent.name,
+										handle: panelAgentSession.agent.handle,
+									}
+								: null
+						}
+					/>
+					<CodePanel
+						isOpen={isCodePanelOpen}
+						onClose={() => setIsCodePanelOpen(false)}
+						target={codePanelTarget}
+					/>
 				</Box>
-			)}
-			<OpalPanel
-				isOpen={isOpalOpen}
-				onClose={closeOpalWithRouteAwareness}
-				messages={messages}
-				inputValue={inputValue}
-				isLoading={isLoading}
-				error={error}
-				isInputDisabled={isInputDisabled}
-				setInputValue={setInputValue}
-				sendMessage={sendMessage}
-				regenerate={regenerate}
-				groupedHistory={groupedHistory}
-				activeChat={activeChat}
-				searchQuery={searchQuery}
-				isHistoryVisible={isHistoryVisible}
-				mode={mode}
-				setSearchQuery={setSearchQuery}
-				toggleHistory={toggleHistory}
-				toggleMode={toggleMode}
-				createNewChat={createNewChat}
-				deleteChat={deleteChat}
-				selectChat={selectChat}
-				contextChip={opalContextChip?.label ?? null}
-				contextContent={opalContextChip?.content ?? null}
-				onContextChipRemove={() => setOpalContextChip(null)}
-			/>
-			<CodePanel
-				isOpen={isCodePanelOpen}
-				onClose={() => setIsCodePanelOpen(false)}
-				target={codePanelTarget}
-			/>
-		</Box>
 			</OpalVariationBuildProvider>
 		</OpalPanelActionsProvider>
 	);
@@ -728,9 +813,11 @@ function TemplateWrapper(props: any) {
 	}
 
 	return (
-		<ContentManagerLayoutProvider>
-			<TemplateContent {...props} />
-		</ContentManagerLayoutProvider>
+		<Suspense fallback={null}>
+			<ContentManagerLayoutProvider>
+				<TemplateContent {...props} />
+			</ContentManagerLayoutProvider>
+		</Suspense>
 	);
 }
 

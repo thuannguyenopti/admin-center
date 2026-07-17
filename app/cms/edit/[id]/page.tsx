@@ -5,8 +5,17 @@ import {useParams} from "next/navigation";
 import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {initialPages, Page, initialContentTypes, ContentType} from "@/app/db/initialData";
-import {useEffect, useState, useCallback, useMemo, useRef} from "react";
-import {Alert, Badge, Box, Heading, Spinner, Text, toaster} from "@optiaxiom/react";
+import {useEffect, useState, useCallback} from "react";
+import {
+	Alert,
+	Badge,
+	Box,
+	Heading,
+	Spinner,
+	Text,
+	toaster,
+	Link as AxiomLink,
+} from "@optiaxiom/react";
 import Link from "next/link";
 import {buildPageSlug} from "@/app/site/resolveSlug";
 import {useVersionHistory} from "@/app/hooks/useVersionHistory";
@@ -14,13 +23,18 @@ import {useOpalPageGeneration} from "@/app/hooks/useOpalPageGeneration";
 import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
 import ContentInstancePicker from "@/app/components/ContentInstancePicker";
 import {initialContentInstances, ContentInstance} from "@/app/db/cmpInitialData";
-import {connectInstanceToPage, syncPageWithInstance, disconnectPage, getCompatibleInstances, getBoundPropertyIds} from "@/app/lib/contentConnection";
+import {
+	connectInstanceToPage,
+	syncPageWithInstance,
+	disconnectPage,
+	getCompatibleInstances,
+} from "@/app/lib/contentConnection";
 
 export default function EditPageDetail() {
 	const params = useParams();
 	const resolvedParams = params instanceof Promise ? use(params) : params;
 	const id = (resolvedParams?.id ?? "") as string;
-	const [pages, setPages, isHydrated] = usePersistentState("pages_v6", initialPages) as [
+	const [pages, setPages, isHydrated] = usePersistentState("pages_v5", initialPages) as [
 		Page[],
 		any,
 		boolean,
@@ -30,12 +44,16 @@ export default function EditPageDetail() {
 	const [renderKey, setRenderKey] = useState(0);
 	const [hasPendingGeneration, setHasPendingGeneration] = useState(false);
 	const versionHistory = useVersionHistory(id);
-	const syncedInstanceRef = useRef<string | null>(null);
-	const prevIsGeneratingRef = useRef<boolean>(false);
 
 	// CMP Content Connection
-	const [contentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
-	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [ContentType[], any];
+	const [contentInstances] = usePersistentState(
+		"cmpContentInstances",
+		initialContentInstances
+	) as [ContentInstance[], any];
+	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		any,
+	];
 	const [isContentPickerOpen, setIsContentPickerOpen] = useState(false);
 
 	// Check for pending generation immediately on mount
@@ -59,158 +77,115 @@ export default function EditPageDetail() {
 
 	type PagePatch = {outlines?: any; properties?: any; variationId?: string};
 
-	const handleSave = useCallback((patch: PagePatch) => {
-		if (!page) {
-			console.log("[handleSave] No page, skipping save");
-			return;
-		}
+	const handleSave = useCallback(
+		(patch: PagePatch) => {
+			if (!page) {
+				console.log("[handleSave] No page, skipping save");
+				return;
+			}
 
-		console.log("[handleSave] Saving patch:", patch);
+			console.log("[handleSave] Saving patch:", patch);
 
-		const vid = patch.variationId || "original";
+			const vid = patch.variationId || "original";
 
-		// 1. Prepare Next State
-		let nextVariations = page.variations ? [...page.variations] : [];
-		let nextOutlines = page.outlines;
-		let nextData = page.data;
+			// 1. Prepare Next State
+			let nextVariations = page.variations ? [...page.variations] : [];
+			let nextOutlines = page.outlines;
+			let nextData = page.data;
 
-		// Consolidated update logic: update variation if it exists in the array
-		const idx = nextVariations.findIndex((v) => v.id === vid);
-		if (idx !== -1) {
-			nextVariations[idx] = {
-				...nextVariations[idx],
-				outlines: patch.outlines,
-				data: patch.properties ?? nextVariations[idx].data,
+			// Consolidated update logic: always update the variation in the array
+			const idx = nextVariations.findIndex((v) => v.id === vid);
+			if (idx !== -1) {
+				nextVariations[idx] = {
+					...nextVariations[idx],
+					outlines: patch.outlines,
+					data: patch.properties ?? nextVariations[idx].data,
+				};
+
+				// Also update page-level outlines if this is the original variation
+				if (vid === "original" && patch.outlines !== undefined) {
+					nextOutlines = patch.outlines;
+				}
+				// Update page-level data if properties were provided
+				if (vid === "original" && patch.properties !== undefined) {
+					nextData = patch.properties;
+				}
+			}
+
+			const nextPage: Page = {
+				...page,
+				outlines: nextOutlines,
+				variations: nextVariations,
+				data: nextData,
+				status: "Changed" as const,
 			};
-		}
 
-		// Always update page-level data for "original" variation
-		if (vid === "original") {
-			if (patch.outlines !== undefined) {
-				nextOutlines = patch.outlines;
-			}
-			if (patch.properties !== undefined) {
-				nextData = patch.properties;
-			}
-		}
+			setPages((prev: any[]) => prev.map((p) => (p.id === id ? nextPage : p)));
 
-		const nextPage: Page = {
-			...page,
-			outlines: nextOutlines,
-			variations: nextVariations,
-			data: nextData,
-			status: "Changed" as const,
-		};
+			setPage(nextPage);
 
-		setPages((prev: any[]) => prev.map((p) => (p.id === id ? nextPage : p)));
-
-		setPage(nextPage);
-
-		// Note: Removed forced remount to prevent resetting UI state on every save
-		// VBPrototype handles prop updates via useEffect hooks
-		// setRenderKey(prev => prev + 1);
-
-		console.log("[handleSave] Saved successfully. Next page:", {
-			outlinesCount: nextPage.outlines?.length,
-			variationsCount: nextPage.variations?.length,
-			firstVariationOutlinesCount: nextPage.variations?.[0]?.outlines?.length,
-		});
-	}, [page, id, setPages]);
+			console.log("[handleSave] Saved successfully. Next page:", {
+				outlinesCount: nextPage.outlines?.length,
+				variationsCount: nextPage.variations?.length,
+				firstVariationOutlinesCount: nextPage.variations?.[0]?.outlines?.length,
+			});
+		},
+		[page, id, setPages]
+	);
 
 	// CMP Content Connection Handlers
-	const handleConnectInstance = useCallback((instance: ContentInstance | ContentInstance[]) => {
+	const handleConnectInstance = useCallback(
+		(instance: ContentInstance | ContentInstance[]) => {
+			if (!page) return;
+
+			// Only handle single instance selection (not multi-select)
+			const selectedInstance = Array.isArray(instance) ? instance[0] : instance;
+			if (!selectedInstance) return;
+
+			const connectedPage = connectInstanceToPage(selectedInstance, page, contentTypes);
+
+			setPages((prev: Page[]) => prev.map((p) => (p.id === page.id ? connectedPage : p)));
+
+			setPage(connectedPage);
+			setRenderKey((prev) => prev + 1); // Force re-render to show updated data
+			setIsContentPickerOpen(false);
+			toaster.create("Content connected successfully", {intent: "success"});
+		},
+		[page, setPages, contentTypes]
+	);
+
+	const handleSyncContent = useCallback(() => {
 		if (!page) return;
 
-		// Only handle single instance selection (not multi-select)
-		const selectedInstance = Array.isArray(instance) ? instance[0] : instance;
-		if (!selectedInstance) return;
-
-		const connectedPage = connectInstanceToPage(
-			selectedInstance,
-			page,
-			contentTypes
-		);
-
-		setPages((prev: Page[]) =>
-			prev.map(p => p.id === page.id ? connectedPage : p)
-		);
-
-		setPage(connectedPage);
-		setRenderKey(prev => prev + 1); // Force re-render to show updated data
-		setIsContentPickerOpen(false);
-		toaster.create("Content connected successfully", { intent: "success" });
-	}, [page, setPages, contentTypes]);
-
-	// Auto-sync connected content on page load
-	useEffect(() => {
-		if (!page?.cmpConnection || !isHydrated) return;
-
-		const instanceId = page.cmpConnection.instanceId;
-		const syncKey = `${page.id}-${instanceId}`;
-
-		// Skip if we've already synced this page-instance combination
-		if (syncedInstanceRef.current === syncKey) return;
-
-		const syncedPage = syncPageWithInstance(
-			page,
-			contentInstances,
-			contentTypes
-		);
+		const syncedPage = syncPageWithInstance(page, contentInstances, contentTypes);
 
 		if (syncedPage) {
-			// Only update if data actually changed
-			const dataChanged = JSON.stringify(syncedPage.data) !== JSON.stringify(page.data);
-
-			if (dataChanged) {
-				setPages((prev: Page[]) =>
-					prev.map(p => p.id === page.id ? syncedPage : p)
-				);
-				setPage(syncedPage);
-				setRenderKey(prev => prev + 1);
-			} else {
-				// No data change - just update sync metadata without changing status
-				const updatedPage = {
-					...page,
-					cmpConnection: {
-						...page.cmpConnection,
-						syncStatus: "synced" as const,
-						lastSyncedAt: new Date().toISOString(),
-					}
-				};
-				setPages((prev: Page[]) =>
-					prev.map(p => p.id === page.id ? updatedPage : p)
-				);
-				setPage(updatedPage);
-			}
-			syncedInstanceRef.current = syncKey;
+			setPages((prev: Page[]) => prev.map((p) => (p.id === page.id ? syncedPage : p)));
+			setPage(syncedPage);
+			setRenderKey((prev) => prev + 1); // Force re-render to show updated data
+			toaster.create("Content synced successfully", {intent: "success"});
+		} else {
+			toaster.create("Could not sync content - instance not found", {intent: "danger"});
 		}
-	}, [page?.id, page?.cmpConnection?.instanceId, isHydrated, contentInstances, contentTypes, setPages]);
+	}, [page, contentInstances, setPages, contentTypes]);
 
 	const handleDisconnect = useCallback(() => {
 		if (!page) return;
 
 		const disconnectedPage = disconnectPage(page);
 
-		setPages((prev: Page[]) =>
-			prev.map(p => p.id === page.id ? disconnectedPage : p)
-		);
+		setPages((prev: Page[]) => prev.map((p) => (p.id === page.id ? disconnectedPage : p)));
 
 		setPage(disconnectedPage);
-		toaster.create("Content disconnected", { intent: "information" });
+		toaster.create("Content disconnected", {intent: "information"});
 	}, [page, setPages]);
 
-	const compatibleInstances = page ? getCompatibleInstances(page, contentInstances, contentTypes, pages) : [];
-	const boundPropertyIds = useMemo(() => {
-		if (!page) return new Set<string>();
-		return getBoundPropertyIds(page, contentTypes);
-	}, [page, contentTypes]);
+	const compatibleInstances = page
+		? getCompatibleInstances(page, contentInstances, contentTypes)
+		: [];
 
 	// Opal page generation hook (must be after handleSave is defined)
-	const {isGenerating} = useOpalPageGeneration(
-		id,
-		page?.contentTypeId || "",
-		handleSave
-	);
+	const {isGenerating} = useOpalPageGeneration(id, page?.contentTypeId || "", handleSave);
 
 	// Register page update handler and set active page for iteration
 	const {setPageUpdateHandler, setActivePage, setPageDataGetter} = useOpalGeneration();
@@ -223,7 +198,7 @@ export default function EditPageDetail() {
 			if (!page) return null;
 
 			// Get outlines from the original variation or fallback to page.outlines
-			const originalVariation = page.variations?.find(v => v.id === "original");
+			const originalVariation = page.variations?.find((v) => v.id === "original");
 			const outlines = originalVariation?.outlines || page.outlines || [];
 
 			return {
@@ -240,24 +215,19 @@ export default function EditPageDetail() {
 		};
 	}, [setPageUpdateHandler, setActivePage, setPageDataGetter, handleSave, id, page]);
 
-	// Clear hasPendingGeneration when generation completes and force VB re-render
+	// Clear hasPendingGeneration when actual generation starts
 	useEffect(() => {
-		// Only clear after transition from generating→not generating (not on initial mount)
-		if (prevIsGeneratingRef.current && !isGenerating && hasPendingGeneration) {
+		if (isGenerating) {
 			setHasPendingGeneration(false);
-			// Force VBPrototype to remount with the generated content
-			setRenderKey(prev => prev + 1);
 		}
-		prevIsGeneratingRef.current = isGenerating;
-	}, [isGenerating, hasPendingGeneration]);
-
+	}, [isGenerating]);
 
 	const handlePublish = () => {
 		if (!page) return;
 
 		// Create version snapshot before publishing
 		// Get the current variation's data
-		const currentVariation = page.variations?.find(v => v.id === "original") || null;
+		const currentVariation = page.variations?.find((v) => v.id === "original") || null;
 		const outlines = currentVariation?.outlines || page.outlines || [];
 		const properties = currentVariation?.data || page.data || {};
 
@@ -273,10 +243,43 @@ export default function EditPageDetail() {
 			properties: JSON.parse(JSON.stringify(properties)), // Deep clone
 		});
 
-		// Update page status
+		// Update page status and clear any scheduled date
 		const updatedPages = pages.map((p) => {
 			if (p.id === id) {
-				return {...p, status: "Published"};
+				return {...p, status: "Published" as const, scheduledDate: undefined};
+			}
+			return p;
+		});
+		setPages(updatedPages);
+	};
+
+	const handleSchedule = (date: string) => {
+		if (!page) return;
+		const updatedPages = pages.map((p) => {
+			if (p.id === id) {
+				return {...p, status: "Scheduled" as const, scheduledDate: date};
+			}
+			return p;
+		});
+		setPages(updatedPages);
+	};
+
+	const handleCancelSchedule = () => {
+		if (!page) return;
+		const updatedPages = pages.map((p) => {
+			if (p.id === id) {
+				return {...p, status: "Draft" as const, scheduledDate: undefined};
+			}
+			return p;
+		});
+		setPages(updatedPages);
+	};
+
+	const handleUnpublish = () => {
+		if (!page) return;
+		const updatedPages = pages.map((p) => {
+			if (p.id === id) {
+				return {...p, status: "Draft" as const, scheduledDate: undefined};
 			}
 			return p;
 		});
@@ -383,15 +386,15 @@ export default function EditPageDetail() {
 		};
 		setPages((prev: any[]) => prev.map((p) => (p.id === id ? updatedPage : p)));
 		setPage(updatedPage);
-		toaster.create(`Added to task: ${taskName}`, { intent: "success" });
+		toaster.create(`Added to task: ${taskName}`, {intent: "success"});
 	};
 
 	const handleRemoveFromTask = () => {
 		if (!page) return;
-		const updatedPage = { ...page, cmpTaskMetadata: undefined };
+		const updatedPage = {...page, cmpTaskMetadata: undefined};
 		setPages((prev: any[]) => prev.map((p) => (p.id === id ? updatedPage : p)));
 		setPage(updatedPage);
-		toaster.create("Removed from task", { intent: "information" });
+		toaster.create("Removed from task", {intent: "information"});
 	};
 
 	const handleRestoreVersion = (version: any) => {
@@ -436,40 +439,39 @@ export default function EditPageDetail() {
 		console.log(`Restored version: ${version.id}`);
 	};
 
-	// Show generation spinner if there's pending generation or actively generating
-	if (hasPendingGeneration || isGenerating) {
-		return (
-			<Box
-				style={{height: "100%", width: "100%", position: "relative"}}
-				bg="bg.page"
-				display="flex"
-				alignItems="center"
-				justifyContent="center"
-			>
-				<Box
-					display="flex"
-					flexDirection="column"
-					alignItems="center"
-					gap="16"
-					p="32"
-					bg="bg.default"
-					rounded="lg"
-					shadow="lg"
-					style={{border: "1px solid var(--ax-colors-border-default)"}}
-				>
-					<Spinner size="lg" />
-					<Text fontSize="lg" fontWeight="500">
-						Opal is generating your page...
-					</Text>
-					<Text fontSize="sm" color="fg.secondary">
-						Please wait while we create your content
-					</Text>
-				</Box>
-			</Box>
-		);
-	}
-
 	if (!isHydrated || !page) {
+		// Show generation spinner if there's pending generation, otherwise show simple loading
+		if (hasPendingGeneration) {
+			return (
+				<Box
+					style={{height: "100%", width: "100%", position: "relative"}}
+					bg="bg.page"
+					display="flex"
+					alignItems="center"
+					justifyContent="center"
+				>
+					<Box
+						display="flex"
+						flexDirection="column"
+						alignItems="center"
+						gap="16"
+						p="32"
+						bg="bg.default"
+						rounded="lg"
+						shadow="lg"
+						style={{border: "1px solid var(--ax-colors-border-default)"}}
+					>
+						<Spinner size="lg" />
+						<Text fontSize="lg" fontWeight="500">
+							Opal is generating your page...
+						</Text>
+						<Text fontSize="sm" color="fg.secondary">
+							Please wait while we create your content
+						</Text>
+					</Box>
+				</Box>
+			);
+		}
 		return <Box p="24">Loading...</Box>;
 	}
 
@@ -486,23 +488,21 @@ export default function EditPageDetail() {
 			{page?.cmpTaskMetadata && (
 				<Box pl="24" pt="16" pr="12" pb="8" bg="bg.default">
 					<Alert intent="information">
-						<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+						<Box
+							display="flex"
+							alignItems="center"
+							justifyContent="space-between"
+							w="full"
+						>
 							<Text>
 								Part of task:{" "}
-								<Link
-									href={`/cmp/task/${page.cmpTaskMetadata.taskId}`}
-									style={{
-										color: "var(--ax-colors-fg-accent)",
-										textDecoration: "underline",
-										fontWeight: 600,
-									}}
-								>
-									{page.cmpTaskMetadata.taskName}
-								</Link>
+								<AxiomLink asChild fontWeight="600">
+									<Link href={`/cmp/task/${page.cmpTaskMetadata.taskId}`}>
+										{page.cmpTaskMetadata.taskName}
+									</Link>
+								</AxiomLink>
 							</Text>
-							{page.cmpConnection && (
-								<Badge intent="success">Connected to CMP</Badge>
-							)}
+							{page.cmpConnection && <Badge intent="success">Connected to CMP</Badge>}
 						</Box>
 					</Alert>
 				</Box>
@@ -514,6 +514,10 @@ export default function EditPageDetail() {
 				contentType={contentType}
 				onSave={handleSave}
 				onPublish={handlePublish}
+				onUnpublish={handleUnpublish}
+				onSchedule={handleSchedule}
+				onCancelSchedule={handleCancelSchedule}
+				scheduledDate={page.scheduledDate}
 				pageName={page.name}
 				pageId={page.id}
 				pageStatus={page.status}
@@ -529,9 +533,9 @@ export default function EditPageDetail() {
 				isOpalGenerating={isGenerating}
 				hasPendingGeneration={hasPendingGeneration}
 				onConnectContent={() => setIsContentPickerOpen(true)}
+				onSyncContent={page?.cmpConnection ? handleSyncContent : undefined}
 				onDisconnectContent={page?.cmpConnection ? handleDisconnect : undefined}
 				hasConnection={!!page?.cmpConnection}
-				boundPropertyIds={boundPropertyIds}
 				onAddToTask={handleAddToTask}
 				onRemoveFromTask={page?.cmpTaskMetadata ? handleRemoveFromTask : undefined}
 				currentTaskId={page?.cmpTaskMetadata?.taskId ?? null}

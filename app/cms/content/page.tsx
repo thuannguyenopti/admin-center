@@ -18,11 +18,11 @@ import {
 	IconFile,
 	IconBox,
 	IconLayoutGrid,
-	IconPhoto,
+	IconImage,
 	IconChevronUp,
 	IconChevronDown,
 	IconLink,
-} from "@tabler/icons-react";
+} from "@/app/lib/axiom-icons";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import {Flex} from "@/app/components/Flex";
@@ -49,7 +49,7 @@ function getIconForType(type: UnifiedContentItem["baseType"]) {
 		case "Block":
 			return <IconLayoutGrid size={16} />;
 		case "Media":
-			return <IconPhoto size={16} />;
+			return <IconImage size={16} />;
 	}
 }
 
@@ -92,9 +92,7 @@ export default function ContentPage() {
 	// Ensure value is always in options so downshift getItemProps receives a valid item
 	const itemsPerPageValue = useMemo(() => {
 		const str = String(itemsPerPage);
-		return PAGE_SIZE_OPTIONS.some((o) => o.value === str)
-			? str
-			: PAGE_SIZE_OPTIONS[0].value;
+		return PAGE_SIZE_OPTIONS.some((o) => o.value === str) ? str : PAGE_SIZE_OPTIONS[0].value;
 	}, [itemsPerPage]);
 
 	// Sort filtered content (guard undefined from context/hydration)
@@ -154,12 +152,16 @@ export default function ContentPage() {
 	// Lifted tag and category state for details pane so 1↔2 selection switch doesn't lose edits
 	const [detailsPaneTags, setDetailsPaneTags] = useState<string[] | null>(null);
 	const [detailsPaneCategories, setDetailsPaneCategories] = useState<string[] | null>(null);
-	const [batchEditMode, setBatchEditMode] = useState<{ tags: boolean; categories: boolean }>({ tags: false, categories: false });
+	const [batchEditMode, setBatchEditMode] = useState<{tags: boolean; categories: boolean}>({
+		tags: false,
+		categories: false,
+	});
 	const lastSyncedTagsSelectionKeyRef = useRef<string>("");
 	const lastSyncedCategoriesSelectionKeyRef = useRef<string>("");
 	const prevPaneOpenRef = useRef(false);
 	const paneOpen = !!(selectedContentId || selectedRows.size >= 1);
-	const { contentSubNavExpanded, setContentSubNavExpanded, contentSubNavPinned } = useContentManagerLayout();
+	const {contentSubNavExpanded, setContentSubNavExpanded, contentSubNavPinned} =
+		useContentManagerLayout();
 
 	const handleFilterToggle = () => {
 		const next = !isFilterPanelOpen;
@@ -174,7 +176,13 @@ export default function ContentPage() {
 		if (paneJustOpened && contentSubNavExpanded && !contentSubNavPinned && !isFilterPanelOpen) {
 			setContentSubNavExpanded(false);
 		}
-	}, [paneOpen, contentSubNavExpanded, contentSubNavPinned, isFilterPanelOpen, setContentSubNavExpanded]);
+	}, [
+		paneOpen,
+		contentSubNavExpanded,
+		contentSubNavPinned,
+		isFilterPanelOpen,
+		setContentSubNavExpanded,
+	]);
 	const selectedItems = useMemo(
 		() => (displayContent ?? []).filter((item) => selectedRows.has(item.id)),
 		[displayContent, selectedRows]
@@ -189,27 +197,48 @@ export default function ContentPage() {
 	);
 	// Selection key: only sync pane from union when this changes and we're not in batch edit (avoids overwriting after Apply / green on subsequent selections)
 	const selectionKey = useMemo(
-		() => (selectedItems.length > 0 ? [...selectedItems.map((i) => i.id)].sort().join(",") : ""),
+		() =>
+			selectedItems.length > 0 ? [...selectedItems.map((i) => i.id)].sort().join(",") : "",
 		[selectedItems]
 	);
 	useEffect(() => {
-		if (paneOpen && selectedItems.length > 0 && !batchEditMode.tags && selectionKey !== lastSyncedTagsSelectionKeyRef.current) {
+		if (
+			paneOpen &&
+			selectedItems.length > 0 &&
+			!batchEditMode.tags &&
+			selectionKey !== lastSyncedTagsSelectionKeyRef.current
+		) {
 			lastSyncedTagsSelectionKeyRef.current = selectionKey;
 			setDetailsPaneTags(selectedItemsTagUnion);
 		}
 	}, [paneOpen, selectedItems.length, batchEditMode.tags, selectionKey, selectedItemsTagUnion]);
 	useEffect(() => {
-		if (paneOpen && selectedItems.length > 0 && !batchEditMode.categories && selectionKey !== lastSyncedCategoriesSelectionKeyRef.current) {
+		if (
+			paneOpen &&
+			selectedItems.length > 0 &&
+			!batchEditMode.categories &&
+			selectionKey !== lastSyncedCategoriesSelectionKeyRef.current
+		) {
 			lastSyncedCategoriesSelectionKeyRef.current = selectionKey;
 			setDetailsPaneCategories(selectedItemsCategoryUnion);
 		}
-	}, [paneOpen, selectedItems.length, batchEditMode.categories, selectionKey, selectedItemsCategoryUnion]);
+	}, [
+		paneOpen,
+		selectedItems.length,
+		batchEditMode.categories,
+		selectionKey,
+		selectedItemsCategoryUnion,
+	]);
 	// When exiting batch edit, mark current selection as "synced" so we don't overwrite the pane's applied/reverted state
-	const handleBatchEditModeChange = useCallback((mode: { tags: boolean; categories: boolean }) => {
-		if (!mode.tags && selectionKey) lastSyncedTagsSelectionKeyRef.current = selectionKey;
-		if (!mode.categories && selectionKey) lastSyncedCategoriesSelectionKeyRef.current = selectionKey;
-		setBatchEditMode(mode);
-	}, [selectionKey]);
+	const handleBatchEditModeChange = useCallback(
+		(mode: {tags: boolean; categories: boolean}) => {
+			if (!mode.tags && selectionKey) lastSyncedTagsSelectionKeyRef.current = selectionKey;
+			if (!mode.categories && selectionKey)
+				lastSyncedCategoriesSelectionKeyRef.current = selectionKey;
+			setBatchEditMode(mode);
+		},
+		[selectionKey]
+	);
 
 	// Reset pagination when filters or page size change
 	useEffect(() => {
@@ -218,7 +247,8 @@ export default function ContentPage() {
 
 	const handleSelectAll = (checked: boolean) => {
 		// Check if we're currently in indeterminate state (some but not all selected)
-		const currentlyAllSelected = displayContent.length > 0 && displayContent.every((item) => selectedRows.has(item.id));
+		const currentlyAllSelected =
+			displayContent.length > 0 && displayContent.every((item) => selectedRows.has(item.id));
 		const currentlyIndeterminate = selectedRows.size > 0 && !currentlyAllSelected;
 
 		// If clicking from indeterminate state, always deselect all
@@ -262,8 +292,7 @@ export default function ContentPage() {
 	// Check selection state across ALL items (not just current page)
 	const isAllSelected =
 		displayContent.length > 0 && displayContent.every((item) => selectedRows.has(item.id));
-	const isSomeSelected =
-		selectedRows.size > 0 && !isAllSelected;
+	const isSomeSelected = selectedRows.size > 0 && !isAllSelected;
 
 	const handleSort = (column: string) => {
 		if (sortColumn === column) {
@@ -311,11 +340,7 @@ export default function ContentPage() {
 					aria-label="Filter content"
 					icon={<IconFilter />}
 					onClick={handleFilterToggle}
-					style={{
-						backgroundColor: isFilterPanelOpen ? "#0037ff" : undefined,
-						borderColor: isFilterPanelOpen ? "#0037ff" : undefined,
-						color: isFilterPanelOpen ? "#ffffff" : undefined,
-					}}
+					appearance={isFilterPanelOpen ? "primary" : "default"}
 				/>
 			</Flex>
 			{hasActiveFilters && (
@@ -403,13 +428,15 @@ export default function ContentPage() {
 								<Item
 									icon={getIconForType(item.baseType)}
 									title={item.name}
-									endAdornment={item.hasConnection ? (
-										<Tooltip content="Connected to content" auto>
-											<Box display="inline-flex" color="fg.accent">
-												<IconLink size={14} />
-											</Box>
-										</Tooltip>
-									) : undefined}
+									endAdornment={
+										item.hasConnection ? (
+											<Tooltip content="Connected to content" auto>
+												<Box display="inline-flex" color="fg.secondary">
+													<IconLink size={14} />
+												</Box>
+											</Tooltip>
+										) : undefined
+									}
 								/>
 							</Td>
 							<Td>{item.baseType}</Td>
@@ -448,7 +475,7 @@ export default function ContentPage() {
 							: `Showing ${(currentPage - 1) * effectiveItemsPerPage + 1}–${Math.min(
 									currentPage * effectiveItemsPerPage,
 									displayContent.length
-							  )} of ${displayContent.length}`}
+								)} of ${displayContent.length}`}
 					</AxiomText>
 				</Box>
 				<Box display="flex" alignItems="center" gap="8">
@@ -488,7 +515,7 @@ export default function ContentPage() {
 							setSelectedRows(new Set());
 							setDetailsPaneTags(null);
 							setDetailsPaneCategories(null);
-							setBatchEditMode({ tags: false, categories: false });
+							setBatchEditMode({tags: false, categories: false});
 						}}
 						onBatchEditModeChange={handleBatchEditModeChange}
 					/>

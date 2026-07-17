@@ -13,7 +13,7 @@ import {
 import {Button} from "@/app/components/Button";
 import {Flex} from "@/app/components/Flex";
 import {Text} from "@/app/components/Text";
-import {IconDots, IconGripVertical, IconPlus} from "@tabler/icons-react";
+import {IconEllipsisSolid, IconGripVertical, IconPlus} from "@/app/lib/axiom-icons";
 import {useState} from "react";
 import Preview from "./Preview";
 import {Aside} from "@/app/context/LayoutContext";
@@ -120,7 +120,7 @@ export default function OrderPage() {
 										>
 											<MenuTrigger
 												appearance="subtle"
-												icon={<IconDots size={16} />}
+												icon={<IconEllipsisSolid size={16} />}
 												size="sm"
 												aria-label="edit"
 											/>

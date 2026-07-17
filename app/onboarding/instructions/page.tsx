@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Heading, Text, Button, Box, Badge } from "@optiaxiom/react";
-import { IconArrowRight, IconSparkles, IconRefresh, IconCheck } from "@tabler/icons-react";
+import {IconArrowRight, IconSparkles, IconArrowsRotate, IconCheck} from "@/app/lib/axiom-icons";
 import { useRouter } from "next/navigation";
 
 export default function InstructionsPage() {
@@ -123,7 +123,7 @@ export default function InstructionsPage() {
                 >
                     <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                         <Heading level="4">Output Comparison</Heading>
-                        <Button size="sm" appearance="subtle" icon={<IconRefresh size={14} />}>Regenerate</Button>
+                        <Button size="sm" appearance="subtle" icon={<IconArrowsRotate size={14} />}>Regenerate</Button>
                     </div>
 
                     <div className="grid grid-rows-2 h-full divide-y divide-slate-100">

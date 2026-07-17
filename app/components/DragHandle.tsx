@@ -1,7 +1,7 @@
 "use client";
 
 import {Box} from "@optiaxiom/react";
-import {IconArrowBarBoth} from "@tabler/icons-react";
+import {IconArrowBarBoth} from "@/app/lib/axiom-icons";
 import {useState, useEffect, useRef} from "react";
 
 interface DragHandleProps {

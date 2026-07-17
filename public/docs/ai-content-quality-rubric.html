@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI-Generated Page Quality Rubric</title>
+  <style>
+    :root {
+      --bg: #fff;
+      --fg: #1a1a2e;
+      --fg-secondary: #4f576e;
+      --border: #e2e4e9;
+      --accent: #6366f1;
+      --green: #16a34a;
+      --lime: #65a30d;
+      --yellow: #ca8a04;
+      --red: #dc2626;
+      --green-bg: #f0fdf4;
+      --lime-bg: #f7fee7;
+      --yellow-bg: #fefce8;
+      --red-bg: #fef2f2;
+      --header-bg: #f8f9fb;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--fg);
+      background: var(--bg);
+      line-height: 1.6;
+      padding: 48px 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 40px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--fg-secondary);
+      font-size: 15px;
+      max-width: 720px;
+    }
+
+    .meta {
+      display: flex;
+      gap: 24px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--fg-secondary);
+      flex-wrap: wrap;
+    }
+
+    .meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .meta strong { color: var(--fg); font-weight: 600; }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 40px 0 8px;
+    }
+
+    h2 + p {
+      color: var(--fg-secondary);
+      font-size: 14px;
+      margin-bottom: 20px;
+      max-width: 720px;
+    }
+
+    .scoring-guide {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .scoring-guide .level {
+      flex: 1;
+      min-width: 160px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 13px;
+    }
+
+    .scoring-guide .level h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .scoring-guide .level.excellent { border-left: 4px solid var(--green); background: var(--green-bg); }
+    .scoring-guide .level.good      { border-left: 4px solid var(--lime); background: var(--lime-bg); }
+    .scoring-guide .level.fair      { border-left: 4px solid var(--yellow); background: var(--yellow-bg); }
+    .scoring-guide .level.poor      { border-left: 4px solid var(--red); background: var(--red-bg); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-bottom: 40px;
+    }
+
+    thead th {
+      background: var(--header-bg);
+      text-align: left;
+      padding: 12px 16px;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--fg-secondary);
+      border-bottom: 2px solid var(--border);
+    }
+
+    thead th:first-child { border-radius: 8px 0 0 0; }
+    thead th:last-child  { border-radius: 0 8px 0 0; }
+
+    thead th.col-dimension { width: 13%; }
+    thead th.col-criterion { width: 13%; }
+    thead th.col-level     { width: 18.5%; }
+
+    tbody td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tbody td:first-child {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    tbody td:nth-child(2) {
+      font-weight: 500;
+    }
+
+    tbody td.excellent { background: var(--green-bg); }
+    tbody td.good      { background: var(--lime-bg); }
+    tbody td.fair      { background: var(--yellow-bg); }
+    tbody td.poor      { background: var(--red-bg); }
+
+    tbody tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+    tbody tr:last-child td:last-child  { border-radius: 0 0 8px 0; }
+
+    td ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    td li {
+      margin-bottom: 4px;
+      line-height: 1.5;
+    }
+
+    td li:last-child { margin-bottom: 0; }
+
+    .dimension-header td {
+      background: var(--header-bg) !important;
+      font-weight: 700 !important;
+      color: var(--fg) !important;
+      font-size: 15px;
+      border-bottom: 2px solid var(--border);
+      padding: 16px;
+    }
+
+    .key-indicators td {
+      font-style: italic;
+      color: var(--fg-secondary);
+      font-size: 13px;
+      border-bottom: 2px solid var(--border);
+      padding: 10px 16px;
+    }
+
+    .key-indicators td:first-child {
+      color: var(--fg-secondary);
+      font-weight: 500;
+      font-style: italic;
+    }
+
+    .weight {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .threshold-box {
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin: 32px 0;
+    }
+
+    .threshold-box h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .threshold-box ul {
+      padding-left: 20px;
+    }
+
+    .threshold-box li {
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .threshold-box li strong { color: var(--accent); }
+
+    .page-types {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .page-types .type-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .page-types .type-card h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .page-types .type-card p {
+      font-size: 13px;
+      color: var(--fg-secondary);
+      margin-bottom: 8px;
+    }
+
+    .page-types .type-card ul {
+      font-size: 13px;
+      padding-left: 18px;
+      color: var(--fg-secondary);
+    }
+
+    .page-types .type-card li { margin-bottom: 4px; }
+
+    footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--fg-secondary);
+    }
+
+    footer p { margin-bottom: 8px; }
+
+    @media (max-width: 1100px) {
+      body { padding: 24px 16px; }
+      table { font-size: 13px; }
+      thead th, tbody td { padding: 8px 10px; }
+      .page-types { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>AI-Generated Page Quality Rubric</h1>
+  <p>
+    A shared evaluation framework for assessing whether AI-generated pages meet production
+    quality. Measures how well the AI leverages brand packs, design system components, and
+    page type conventions to produce publishable content.
+  </p>
+  <div class="meta">
+    <span><strong>Scope:</strong> AI-generated pages &amp; experiences</span>
+    <span><strong>Version:</strong> 1.0</span>
+    <span><strong>Date:</strong> 2026-07-03</span>
+    <span><strong>Dimensions:</strong> 5</span>
+    <span><strong>Criteria:</strong> 16</span>
+  </div>
+</header>
+
+
+<!-- ───────── Page types ───────── -->
+<h2>What This Rubric Evaluates</h2>
+<p>AI-generated output falls into two categories. The rubric applies to both, with criteria weighted the same but expectations shaped by the type.</p>
+
+<div class="page-types">
+  <div class="type-card">
+    <h3>Page Types</h3>
+    <p>Structured, content-driven pages with a defined schema and repeatable format.</p>
+    <ul>
+      <li>Blog post</li>
+      <li>Product detail page</li>
+      <li>Article / news page</li>
+      <li>Help / knowledge base article</li>
+      <li>Event detail page</li>
+    </ul>
+  </div>
+  <div class="type-card">
+    <h3>Experience Types</h3>
+    <p>Marketing-driven compositions designed around a goal, audience, or campaign.</p>
+    <ul>
+      <li>Landing page</li>
+      <li>Campaign page</li>
+      <li>Email template</li>
+      <li>Social media content</li>
+      <li>Banner / hero section</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- ───────── Scoring guide ───────── -->
+<h2>Scoring Levels</h2>
+<p>Each criterion is scored on a four-point scale. Each level assumes all conditions of the level below are also met.</p>
+
+<div class="scoring-guide">
+  <div class="level excellent">
+    <h3>4 — Excellent</h3>
+    Exceeds expectations. Enhances the brand and could serve as a reference example for future pages.
+  </div>
+  <div class="level good">
+    <h3>3 — Good</h3>
+    Ready to publish. Matches the quality of existing hand-crafted pages on the same site.
+  </div>
+  <div class="level fair">
+    <h3>2 — Fair</h3>
+    Functional with minor issues. Usable after light editorial or design review.
+  </div>
+  <div class="level poor">
+    <h3>1 — Poor</h3>
+    Requires significant rework. Visual, structural, or content issues that block publication.
+  </div>
+</div>
+
+
+<!-- ───────── RUBRIC TABLE ───────── -->
+<h2>Quality Rubric</h2>
+<p>
+  16 criteria grouped into 5 dimensions. Weights reflect relative importance to overall page quality.
+  A page must meet the pass threshold defined below to be considered "good quality."
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th class="col-dimension">Dimension</th>
+      <th class="col-criterion">Criterion</th>
+      <th class="col-level">4 — Excellent</th>
+      <th class="col-level">3 — Good</th>
+      <th class="col-level">2 — Fair</th>
+      <th class="col-level">1 — Poor</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <!-- ═══ D1: Visual / Layout Correctness ═══ -->
+    <tr class="dimension-header">
+      <td colspan="6">1. Visual / Layout Correctness <span class="weight">25%</span></td>
+    </tr>
+    <tr class="key-indicators">
+      <td colspan="2">Key indicators</td>
+      <td>Pixel-perfect; matches existing pages exactly</td>
+      <td>Clean layout, proper spacing, clear visual hierarchy</td>
+      <td>Slight spacing or alignment inconsistencies</td>
+      <td>Broken layout, misaligned elements, visual hierarchy issues</td>
+    </tr>
+
+    <tr>
+      <td rowspan="3">Visual / Layout</td>
+      <td>Spacing &amp; alignment</td>
+      <td class="excellent">
+        <ul>
+          <li>Spacing is identical to the best existing pages on the site</li>
+          <li>Vertical rhythm creates a polished, magazine-quality feel</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>Spacing follows the design system's scale consistently</li>
+          <li>Even vertical rhythm between sections</li>
+          <li>All elements properly aligned within their containers</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Spacing is mostly consistent; 1&ndash;2 irregular gaps</li>
+          <li>Minor alignment issues that a designer would flag</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Irregular, inconsistent spacing throughout</li>
+          <li>Overlapping or clipped elements</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Visual hierarchy</td>
+      <td class="excellent">
+        <ul>
+          <li>Hierarchy guides the eye through a clear narrative arc with natural transitions</li>
+          <li>Size, weight, and color contrast work together to create unmistakable priority</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>Clear size/weight progression from headings to body text</li>
+          <li>Primary CTA is visually prominent; secondary actions are clearly subordinate</li>
+          <li>Content sections are visually distinct and easy to scan</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Hierarchy exists but some levels feel too similar in weight</li>
+          <li>CTA visible but doesn't stand out as the primary action</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>All text at similar visual weight; no clear reading order</li>
+          <li>CTA buried, missing, or competing with other elements</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Responsive design</td>
+      <td class="excellent">
+        <ul>
+          <li>Layout is polished at every viewport width, not just standard breakpoints</li>
+          <li>Content reflows elegantly; feels intentionally designed for each screen size</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>Page reflows cleanly from desktop to tablet to mobile</li>
+          <li>Images and media scale proportionally</li>
+          <li>No horizontal scroll or content overflow at any size</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Desktop looks correct; mobile has minor overflow or tight spacing</li>
+          <li>Some elements don't resize well between breakpoints</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Fixed layout that breaks on smaller screens</li>
+          <li>Content is cut off or inaccessible on mobile</li>
+        </ul>
+      </td>
+    </tr>
+
+    <!-- ═══ D2: Component Composition ═══ -->
+    <tr class="dimension-header">
+      <td colspan="6">2. Component Composition <span class="weight">25%</span></td>
+    </tr>
+    <tr class="key-indicators">
+      <td colspan="2">Key indicators</td>
+      <td>Innovative yet compliant component arrangements that elevate the design</td>
+      <td>Correct components, proper variants, follows design system guidelines</td>
+      <td>Components work but could be better organized or selected</td>
+      <td>Wrong components for content type, missing required elements</td>
+    </tr>
+
+    <tr>
+      <td rowspan="4">Component Composition</td>
+      <td>Component selection</td>
+      <td class="excellent">
+        <ul>
+          <li>Every component choice is optimal &mdash; the best variant for each context, not just a correct one</li>
+          <li>Creative use of existing components to solve novel layout needs without breaking conventions</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>Uses the design system's established components throughout (buttons, cards, heroes, forms, navigation)</li>
+          <li>Correct component variants selected for context (e.g., primary vs. ghost button, compact vs. standard card)</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Mostly correct components; 1&ndash;2 cases where a better component exists in the design system</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Wrong components for the content type (e.g., a data table used where cards are standard)</li>
+          <li>Inconsistent component choices across the page</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Design system compliance</td>
+      <td class="excellent">
+        <ul>
+          <li>100% design system coverage &mdash; no custom or one-off elements</li>
+          <li>Demonstrates mastery of the system's constraints and capabilities</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>All colors, spacing, typography, and border radii from the design system's token set</li>
+          <li>No custom styles that duplicate what a token or component already provides</li>
+          <li>Component configurations (sizes, appearances, states) are all valid</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Mostly uses design tokens; 1&ndash;2 custom values where a token exists</li>
+          <li>Components configured correctly but not optimally</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Custom colors, spacing, or typography that bypass the design system</li>
+          <li>Components used with invalid configurations</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Image &amp; media usage</td>
+      <td class="excellent">
+        <ul>
+          <li>Imagery is contextually perfect &mdash; reinforces the message and matches the brand's visual style</li>
+          <li>Media composition (cropping, placement, sizing) feels intentional and editorial</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>Images are relevant to the content and appropriately sized for their containers</li>
+          <li>No placeholder images, broken links, or stock-photo-obvious selections</li>
+          <li>Image style (photography, illustration, iconography) matches the site's visual identity</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Images display correctly but feel generic or loosely connected to content</li>
+          <li>Sizing is acceptable but not optimized for the layout</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Missing images, broken placeholders, or visually irrelevant media</li>
+          <li>Images clash with the site's visual style</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Interaction &amp; states</td>
+      <td class="excellent">
+        <ul>
+          <li>Hover, focus, active, and disabled states are all polished and consistent</li>
+          <li>Micro-interactions feel natural and enhance usability</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>Buttons, links, and interactive elements have appropriate hover and focus states</li>
+          <li>Form elements show clear validation feedback (error, success)</li>
+          <li>Loading and empty states are handled, not blank</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Primary interactions work; secondary states (hover, focus) are default or missing</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Interactive elements with no visible feedback on hover or click</li>
+          <li>Missing error, empty, or loading states</li>
+        </ul>
+      </td>
+    </tr>
+
+    <!-- ═══ D3: Page / Experience Type Fidelity ═══ -->
+    <tr class="dimension-header">
+      <td colspan="6">3. Page / Experience Type Fidelity <span class="weight">20%</span></td>
+    </tr>
+    <tr class="key-indicators">
+      <td colspan="2">Key indicators</td>
+      <td>Structure enhances content impact beyond the type's baseline conventions</td>
+      <td>All expected sections present, logical flow, type conventions followed</td>
+      <td>Mostly complete; minor ordering or section issues</td>
+      <td>Missing critical sections, wrong structure for the page type</td>
+    </tr>
+
+    <tr>
+      <td rowspan="3">Type Fidelity</td>
+      <td>Section structure</td>
+      <td class="excellent">
+        <ul>
+          <li>All required sections present and enhanced with contextually smart additions (e.g., related content, social proof, author bio on a blog post)</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>All expected sections for the page type are present (e.g., blog: hero, body, author, tags; landing page: hero, features, testimonials, CTA)</li>
+          <li>Section order follows the type's established convention</li>
+          <li>No empty, stub, or placeholder sections</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Required sections present; order slightly rearranged</li>
+          <li>One optional section missing or underdeveloped</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Missing critical sections for the type (e.g., a landing page with no CTA)</li>
+          <li>Placeholder text like "Lorem ipsum" or "[Add content here]"</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Type conventions</td>
+      <td class="excellent">
+        <ul>
+          <li>Page feels like a best-in-class example of its type</li>
+          <li>Conventions are followed and then elevated with smart design decisions</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>Page is immediately recognizable as its type (a blog post reads like a blog post, a landing page converts like a landing page)</li>
+          <li>Content zones, grid layouts, and media placements follow type norms</li>
+          <li>Metadata appropriate for the type (date, author, category for blog; hero, CTA, conversion focus for landing page)</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Generally follows type conventions; one element feels out of place</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Page doesn't follow the conventions of its declared type</li>
+          <li>A blog post that looks like a landing page, or vice versa</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Template fidelity</td>
+      <td class="excellent">
+        <ul>
+          <li>Template structure followed and thoughtfully adapted &mdash; content shapes the template, not the other way around</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>Output matches the selected template's layout, proportions, and content zones</li>
+          <li>Content types fill template slots correctly (image where image expected, text where text expected)</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Overall shape matches the template; minor deviations in proportions or zones</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Output doesn't match the selected template</li>
+          <li>Completely different layout than what was requested</li>
+        </ul>
+      </td>
+    </tr>
+
+    <!-- ═══ D4: Content Relevance ═══ -->
+    <tr class="dimension-header">
+      <td colspan="6">4. Content Relevance <span class="weight">15%</span></td>
+    </tr>
+    <tr class="key-indicators">
+      <td colspan="2">Key indicators</td>
+      <td>Content exceeds expectations and adds clear value beyond the brief</td>
+      <td>Content serves intended purpose effectively</td>
+      <td>Mostly relevant with minor misaligned sections</td>
+      <td>Content doesn't match page purpose or user needs</td>
+    </tr>
+
+    <tr>
+      <td rowspan="3">Content Relevance</td>
+      <td>Topical accuracy</td>
+      <td class="excellent">
+        <ul>
+          <li>Content demonstrates domain expertise; adds insight beyond what was prompted</li>
+          <li>No generic AI filler &mdash; every sentence is specific and purposeful</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>All copy is on-topic and specific to the subject matter</li>
+          <li>No hallucinated facts, fabricated statistics, or invented features</li>
+          <li>Claims are plausible and internally consistent across the page</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Mostly on-topic; 1&ndash;2 vague or generic sentences that could apply to anything</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Fabricated details or factually incorrect statements</li>
+          <li>Generic filler clearly unrelated to the intended topic</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Content depth</td>
+      <td class="excellent">
+        <ul>
+          <li>Content is rich enough to publish without editing</li>
+          <li>Includes supporting evidence, examples, or social proof beyond what was prompted</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>Body sections contain substantive detail, not just headlines</li>
+          <li>Feature or benefit descriptions include supporting context</li>
+          <li>Content length is appropriate for the page type (e.g., 300+ words for blog posts, concise for banners)</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Content is present but thin; some sections read like outlines rather than finished copy</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Headline-only content with no supporting detail</li>
+          <li>Significantly under expected length for the page type</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Audience &amp; goal fit</td>
+      <td class="excellent">
+        <ul>
+          <li>Content is clearly optimized for the target audience and conversion goal</li>
+          <li>Experience types: messaging drives toward a measurable action</li>
+          <li>Page types: content satisfies the reader's intent completely</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>Tone and complexity match the intended audience</li>
+          <li>Content supports the page's primary goal (inform, convert, engage)</li>
+          <li>CTAs are relevant and clearly tied to the value proposition</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Broadly appropriate but misses some audience or goal nuances</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Content written for the wrong audience or purpose</li>
+          <li>No clear connection between content and the page's goal</li>
+        </ul>
+      </td>
+    </tr>
+
+    <!-- ═══ D5: Brand Alignment ═══ -->
+    <tr class="dimension-header">
+      <td colspan="6">5. Brand Alignment <span class="weight">15%</span></td>
+    </tr>
+    <tr class="key-indicators">
+      <td colspan="2">Key indicators</td>
+      <td>Strengthens brand identity through excellent execution</td>
+      <td>Follows brand pack guidelines consistently</td>
+      <td>Minor brand guideline deviations</td>
+      <td>Wrong tone, off-brand colors/fonts, messaging conflicts</td>
+    </tr>
+
+    <tr>
+      <td rowspan="3">Brand Alignment</td>
+      <td>Tone &amp; voice</td>
+      <td class="excellent">
+        <ul>
+          <li>Voice is so consistent it enhances brand perception &mdash; reads as if written by the brand's best copywriter</li>
+          <li>Tone adapts naturally to context (empathetic for support, energetic for launches) while staying on-brand</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>Copy reflects the brand pack's defined tone keywords and voice rules</li>
+          <li>Voice is consistent throughout the page &mdash; no jarring shifts between sections</li>
+          <li>Avoids phrases flagged in the brand pack's "don't use" examples</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Tone is broadly on-brand but inconsistent between sections</li>
+          <li>Occasional phrasing that doesn't match the brand's style</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Tone contradicts the brand pack (e.g., stiff and corporate when brand is playful)</li>
+          <li>Generic AI-sounding copy with no distinct brand personality</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Visual brand</td>
+      <td class="excellent">
+        <ul>
+          <li>Color, typography, and imagery work together to create a cohesive, premium brand impression</li>
+          <li>The page strengthens the brand's visual identity</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>Colors match the brand pack palette (primary, secondary, accent applied correctly)</li>
+          <li>Typography uses the brand pack's configured heading and body fonts</li>
+          <li>Logo/wordmark present in the correct position and size</li>
+          <li>Imagery style matches the brand's visual identity</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Primary brand color correct; secondary/accent slightly off</li>
+          <li>Logo present but placement deviates from brand pack</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Colors unrelated to the brand pack palette</li>
+          <li>Wrong, missing, or distorted logo; off-brand imagery</li>
+        </ul>
+      </td>
+    </tr>
+
+    <tr>
+      <td>Brand pack compliance</td>
+      <td class="excellent">
+        <ul>
+          <li>Every brand rule followed and the result actively elevates the brand's market positioning</li>
+        </ul>
+      </td>
+      <td class="good">
+        <ul>
+          <li>All explicit rules in the brand pack are followed (color usage, logo clear space, messaging guidelines)</li>
+          <li>Content targets only approved channels defined in the brand pack</li>
+          <li>Messaging aligns with the brand's positioning and value proposition</li>
+        </ul>
+      </td>
+      <td class="fair">
+        <ul>
+          <li>Brand pack mostly followed; one non-critical rule missed</li>
+        </ul>
+      </td>
+      <td class="poor">
+        <ul>
+          <li>Brand pack rules ignored or contradicted</li>
+          <li>Messaging conflicts with brand positioning</li>
+        </ul>
+      </td>
+    </tr>
+
+  </tbody>
+</table>
+
+
+<!-- ───────── Pass threshold ───────── -->
+<div class="threshold-box">
+  <h3>Pass / Fail Threshold</h3>
+  <p style="margin-bottom: 12px; font-size: 14px; color: var(--fg-secondary);">
+    A generated page is considered <strong>"good quality"</strong> when all of the following are true:
+  </p>
+  <ul>
+    <li><strong>No criterion scores 1 (Poor)</strong> — any Poor score is a blocking defect that requires rework before publication.</li>
+    <li><strong>Weighted average &ge; 3.0</strong> — calculated as: <code>&sum;(dimension_avg &times; weight)</code>. A page averaging 2.0 (Fair) is functional but not publishable without significant review.</li>
+    <li><strong>Brand pack active</strong> — the page has an active brand pack with colors, typography, and tone/voice rules configured.</li>
+    <li><strong>Type requirements met</strong> — all mandatory sections for the selected page type or experience type are present and populated.</li>
+  </ul>
+</div>
+
+
+<!-- ───────── How to use ───────── -->
+<h2>How to Use This Rubric</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 20%;">Context</th>
+      <th style="width: 40%;">Method</th>
+      <th style="width: 40%;">Outcome</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Manual review</strong></td>
+      <td>Reviewer scores each of the 16 criteria 1&ndash;4 using the descriptors above. Takes 5&ndash;10 minutes per page.</td>
+      <td>Scorecard with per-dimension averages and overall weighted score. Pages &ge; 3.0 pass; others get a list of specific criteria to improve.</td>
+    </tr>
+    <tr>
+      <td><strong>Automated checks</strong></td>
+      <td>Criteria from dimensions 1&ndash;3 (Visual, Component, Type Fidelity) can be partially automated via design system linters, layout validators, and section-completeness checks.</td>
+      <td>Automated gate that flags low-scoring criteria before human review. Reduces manual effort to dimensions 4&ndash;5 (Content, Brand).</td>
+    </tr>
+    <tr>
+      <td><strong>AI self-evaluation</strong></td>
+      <td>Pass the rubric as context to the AI. After generation, the AI scores its own output and flags any criterion below 3.</td>
+      <td>Self-improvement loop: the AI re-generates sections that scored below 3, surfacing only passing pages to the human reviewer.</td>
+    </tr>
+    <tr>
+      <td><strong>A/B comparison</strong></td>
+      <td>Score both a hand-built page and an AI-generated version of the same content. Compare per-criterion deltas.</td>
+      <td>Identifies which quality dimensions the AI excels at vs. struggles with, informing prompt engineering and template design.</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<footer>
+  <p>
+    <strong>Methodology:</strong> Analytic rubric design based on Allen &amp; Tanner (2006),
+    "Rubrics: Tools for Making Learning Goals and Evaluation Criteria Explicit for Both Teachers and Learners,"
+    <em>CBE&mdash;Life Sciences Education</em>, 5(3), 197&ndash;203.
+    Criteria informed by design system best practices, brand pack configuration schemas,
+    and page type / experience type content standards.
+  </p>
+  <p>
+    <strong>Maintenance:</strong> Review and update this rubric quarterly or when significant changes
+    are made to brand packs, design system components, or page type definitions.
+    Add new criteria only when an existing dimension cannot capture a recurring quality issue.
+  </p>
+</footer>
+
+</body>
+</html>

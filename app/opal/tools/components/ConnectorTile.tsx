@@ -23,7 +23,7 @@ export function ConnectorTile({ connector, isConnected = false, isConfigured = f
             rounded="md"
             pt="16"
             px="16"
-            pb={isConnected ? "8" : "16"}
+            pb="16"
             display="flex"
             flexDirection="column"
             gap="12"
@@ -54,52 +54,48 @@ export function ConnectorTile({ connector, isConnected = false, isConfigured = f
                 {connector.description}
             </Text>
 
-            {isConnected && (
+            {isConnected ? (
+                <Box display="flex" alignItems="center" justifyContent="space-between" pt="8">
+                    <Button
+                        appearance="default"
+                        size="sm"
+                        onClick={() => onDetails(connector)}
+                    >
+                        Open
+                    </Button>
+                    <Box display="flex" alignItems="center" gap="6">
+                        <Box
+                            rounded="full"
+                            style={{ width: 8, height: 8, background: "var(--ax-colors-fg-success)", flexShrink: 0 }}
+                        />
+                        <Text fontSize="sm" color="fg.success">Connected</Text>
+                    </Box>
+                </Box>
+            ) : (
                 <Box
                     display="flex"
-                    alignItems="center"
                     gap="8"
-                    pt="10"
+                    className="opacity-0 group-hover:opacity-100"
+                    style={{ transition: "opacity 0.15s" }}
                 >
-                    <Box
-                        rounded="full"
-                        style={{
-                            width: 8,
-                            height: 8,
-                            background: "var(--ax-colors-fg-success)",
-                            flexShrink: 0,
-                        }}
-                    />
-                    <Text fontSize="sm" fontWeight="500" color="fg.success">
-                        Connected
-                    </Text>
+                    <Button
+                        appearance="subtle"
+                        size="sm"
+                        onClick={() => onDetails(connector)}
+                        style={{ flex: 1 }}
+                    >
+                        Details
+                    </Button>
+                    <Button
+                        appearance="primary"
+                        size="sm"
+                        onClick={() => onConfigure(connector)}
+                        style={{ flex: 1 }}
+                    >
+                        {showsConnectAction ? "Connect" : "Configure"}
+                    </Button>
                 </Box>
             )}
-
-            {/* Hover actions */}
-            <Box
-                display="flex"
-                gap="8"
-                className="opacity-0 group-hover:opacity-100"
-                style={{ transition: "opacity 0.15s" }}
-            >
-                <Button
-                    appearance="subtle"
-                    size="sm"
-                    onClick={() => onDetails(connector)}
-                    style={{ flex: 1 }}
-                >
-                    Details
-                </Button>
-                <Button
-                    appearance="primary"
-                    size="sm"
-                    onClick={() => onConfigure(connector)}
-                    style={{ flex: 1 }}
-                >
-                    {showsConnectAction ? "Connect" : "Configure"}
-                </Button>
-            </Box>
         </Box>
     );
 }

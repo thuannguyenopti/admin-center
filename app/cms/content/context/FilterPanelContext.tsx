@@ -43,7 +43,7 @@ export function FilterPanelProvider({ children }: { children: ReactNode }) {
   const hasAppliedUrlFilters = useRef(false);
 
   // Get content for filter state (pages is read/write for Option A tag persistence)
-  const [pages, setPages] = usePersistentState("pages_v6", initialPages) as [Page[], (value: Page[] | ((prev: Page[]) => Page[])) => void, boolean];
+  const [pages, setPages] = usePersistentState("pages_v5", initialPages) as [Page[], (value: Page[] | ((prev: Page[]) => Page[])) => void, boolean];
   const [contentTagOverrides, setContentTagOverrides] = usePersistentState("contentTagOverrides", {}) as [
     Record<string, string[]>,
     (value: Record<string, string[]> | ((prev: Record<string, string[]>) => Record<string, string[]>)) => void,

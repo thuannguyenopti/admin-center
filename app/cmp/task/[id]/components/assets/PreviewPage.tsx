@@ -3,15 +3,7 @@
 import { Badge, Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import {
-	IconCopy,
-	IconEye,
-	IconLink,
-	IconMaximize,
-	IconSearch,
-	IconUpload,
-	IconChevronRight,
-} from "@tabler/icons-react";
+import {IconCopy, IconEye, IconLink, IconMaximize, IconSearch, IconUpload, IconChevronRight} from "@/app/lib/axiom-icons";
 import type { AssetItem } from "../../types";
 
 type PreviewPageProps = {
@@ -40,7 +32,7 @@ export function PreviewPage({ asset, onAdd, onClose }: PreviewPageProps) {
 							</Text>
 						</Box>
 						<Box alignItems="center" display="flex" style={{ gap: 18 }}>
-							<img alt="brand" height={28} src="/opal-orb.png" width={28} />
+							<img alt="brand" height={28} src="/opal-orb.svg" width={28} />
 							<Box alignItems="center" display="flex" gap="8">
 								<IconCopy color="var(--ax-colors-fg-secondary)" size={16} />
 								<Text fontSize="lg">Share</Text>

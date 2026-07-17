@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getConversation, listThread, sendThreadReply } from "../lib/service";
-import { applyNameOverrides } from "../hooks/useIMData";
 import type { IMMessage } from "../lib/types";
 import { broadcastIMEvent, subscribeToIMEvents } from "../lib/broadcast";
 import { maybeReplyAsTeammate } from "../lib/virtualTeammates";
@@ -32,7 +31,7 @@ export function useIMThread(): UseIMThread {
     if (!conv || !pid) return;
     const resp = await listThread(conv, pid);
     setMessages(resp.messages);
-    setProfiles((prev) => applyNameOverrides({ ...prev, ...(resp.user_profiles ?? {}) }));
+    setProfiles((prev) => ({ ...prev, ...(resp.user_profiles ?? {}) }));
   }, []);
 
   const open = useCallback((conv: string, pid: string) => {

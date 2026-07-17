@@ -8,6 +8,7 @@ import { PageGenerationProgressBlock } from './PageGenerationProgressBlock';
 import { AgentQuestionSurveyBlock } from './AgentQuestionSurveyBlock';
 import { AgentDisplayCardBlock } from './AgentDisplayCardBlock';
 import { AgentInteractiveCardBlock } from './AgentInteractiveCardBlock';
+import { BriefWizardBlock } from './BriefWizardBlock';
 
 /**
  * Register all available adaptive block types
@@ -21,6 +22,7 @@ export function registerAllAdaptiveBlocks(): void {
   registerAdaptiveBlock('agent-question-survey', AgentQuestionSurveyBlock);
   registerAdaptiveBlock('agent-display-card', AgentDisplayCardBlock);
   registerAdaptiveBlock('agent-interactive-card', AgentInteractiveCardBlock);
+  registerAdaptiveBlock('brief-wizard-step', BriefWizardBlock);
 }
 
 // Auto-register blocks when this module is imported
@@ -34,3 +36,4 @@ export { PageGenerationProgressBlock } from './PageGenerationProgressBlock';
 export { AgentQuestionSurveyBlock } from './AgentQuestionSurveyBlock';
 export { AgentDisplayCardBlock } from './AgentDisplayCardBlock';
 export { AgentInteractiveCardBlock } from './AgentInteractiveCardBlock';
+export { BriefWizardBlock } from './BriefWizardBlock';

@@ -38,8 +38,8 @@ import {
   IconUpload,
   IconUser,
   IconXmark,
-} from "@/app/lib/axiom-icons";
-import { IconAgent } from "@optimizely/axiom-icons";
+  IconAgent,
+} from "@optiaxiom/icons";
 import { IconBuilding } from "@/app/lib/axiom-icons";
 import { IconMicrophone } from "@/app/lib/axiom-icons";
 import { KeyboardEvent, useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
@@ -154,8 +154,10 @@ type OpalInputProps = {
   contextContent?: string | null;
   onContextChipRemove?: () => void;
   imMode?: boolean;
-  /** IM quote-reply chip — rendered inside the input box above the textarea */
-  quoteContent?: React.ReactNode;
+  /** When provided in IM mode, the + menu "Upload from device" picks a file and calls this. */
+  onAttachFile?: (file: File) => void;
+  /** Optional node rendered inside the input container, above the textarea (e.g. quote chip). */
+  topContent?: React.ReactNode;
 };
 
 export function OpalInput({
@@ -177,8 +179,10 @@ export function OpalInput({
   contextContent,
   onContextChipRemove,
   imMode = false,
-  quoteContent,
+  onAttachFile,
+  topContent,
 }: OpalInputProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const featuredConnectorMenuIds = useMemo(
     () => ["figma", "google-docs", "google-sheets", "google-slides"],
     []
@@ -193,6 +197,7 @@ export function OpalInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const agentPillRef = useRef<HTMLSpanElement>(null);
+  const topContentRef = useRef<HTMLDivElement>(null);
 
   // Always track the input container's current width so the dropdown matches exactly
   useEffect(() => {
@@ -279,10 +284,10 @@ export function OpalInput({
       const isImCompact = imMode && !isFocused && value.trim() === '';
       const targetTextareaHeight = isImCompact ? minTextareaHeight : Math.max(naturalHeight, minTextareaHeight);
       const formatBarExtra = imMode && showFormatBar ? 38 : 0;
-      const quoteExtra = quoteContent ? 64 : 0;
-      const neededContainerHeight = targetTextareaHeight + offset + formatBarExtra + quoteExtra;
+      const topContentExtra = topContentRef.current ? topContentRef.current.offsetHeight + 8 : 0;
+      const neededContainerHeight = targetTextareaHeight + offset + formatBarExtra + topContentExtra;
       const finalContainerHeight = Math.round(Math.min(neededContainerHeight, maxContainerHeight));
-      const finalTextareaHeight = finalContainerHeight - offset - formatBarExtra - quoteExtra;
+      const finalTextareaHeight = finalContainerHeight - offset - formatBarExtra - topContentExtra;
 
       container.style.setProperty('height', `${finalContainerHeight}px`, 'important');
       textarea.style.setProperty('height', `${finalTextareaHeight}px`, 'important');
@@ -297,7 +302,7 @@ export function OpalInput({
       textarea.style.boxSizing = 'border-box';
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, contextChip, isFocused, imMode, showFormatBar, !!quoteContent]);
+  }, [value, contextChip, isFocused, imMode, showFormatBar, topContent]);
 
   // Filter mentionable agents based on text after @
   const mentionQuery = value.startsWith('@') ? value.slice(1).toLowerCase() : '';
@@ -316,14 +321,14 @@ export function OpalInput({
   }, [value, mentionableAgents]);
 
   // Slash command menu — auto-open when user types "/"
-  const showSlashMenu = imMode && value.startsWith('/') && !showAgentDropdown;
+  const showSlashMenu = value.startsWith('/') && !showAgentDropdown;
   const slashTriggerRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (showSlashMenu) setTimeout(() => slashTriggerRef.current?.click(), 10);
   }, [showSlashMenu]);
 
   const [focusedAgentIndex, setFocusedAgentIndex] = useState(0);
-  const allMentionItems = [...filteredUsers, ...filteredVAUs, ...filteredAgents];
+  const allMentionItems = [...filteredAgents, ...filteredVAUs, ...filteredUsers];
   const agentListLength = allMentionItems.length;
 
   useEffect(() => {
@@ -440,6 +445,7 @@ export function OpalInput({
         group: { hidden: true, label: "Primary actions", priority: 2 },
         key: "upload-device",
         label: "Upload from device",
+        execute: onAttachFile ? () => fileInputRef.current?.click() : undefined,
       },
       {
         addon: <IconBooks size={16} />,
@@ -447,9 +453,9 @@ export function OpalInput({
         key: "add-dam",
         label: "Add from DAM",
       },
-      ...(!imMode ? [{
+      {
         addon: <IconGrid2Plus size={16} />,
-        group: { hidden: true, label: "Connectors section", priority: 2, separator: true },
+        group: { hidden: true, label: "Primary actions", priority: 2, separator: true },
         key: "connector-submenu",
         label: "Connectors",
         subOptions: [
@@ -475,9 +481,9 @@ export function OpalInput({
             execute: () => { router.push("/opal/connectors?tab=connectors"); },
           },
         ],
-      }] as MenuOption[] : []),
+      },
     ],
-    [imMode, featuredConnectors, authenticatedConnectorIds, router]
+    [featuredConnectors, authenticatedConnectorIds, router, onAttachFile]
   );
 
   const agentMenuOptions = useMemo<MenuOption[]>(
@@ -748,13 +754,6 @@ export function OpalInput({
             zIndex: 1,
           }}
         >
-        {/* Quote/reply chip — IM reply-with-quote shown inside the input box */}
-        {quoteContent && (
-          <Box mb="8">
-            {quoteContent}
-          </Box>
-        )}
-
         {/* Active Context Chips */}
         {contextChip && (
           <Box display="flex" gap="8" mb="8" flexWrap="wrap">
@@ -782,6 +781,13 @@ export function OpalInput({
               </Box>
             </Box>
           </Box>
+        )}
+
+        {/* Top content slot (e.g. quote-reply chip) — sits inside the input container above the textarea */}
+        {topContent && (
+          <div ref={topContentRef} style={{ marginBottom: 8 }}>
+            {topContent}
+          </div>
         )}
 
         {/* Formatting toolbar — shown above textarea when active in IM mode */}
@@ -873,7 +879,7 @@ export function OpalInput({
           <textarea
             ref={textareaRef}
             placeholder={imMode
-              ? (isFocused || value ? "type / for commands, @ to tag your agents and teammates" : "Collaborate with your team")
+              ? (isLoading ? "Type a message to queue while working…" : (isFocused || value ? "type / for commands, @ to tag your agents and teammates" : "Collaborate with your team"))
               : "Ask Opal"
             }
             value={value}
@@ -903,8 +909,8 @@ export function OpalInput({
           />
         </Box>
 
-        {/* Slash command Menu — hidden anchor trigger, auto-opens when user types "/" in IM mode */}
-        {imMode && (
+        {/* Slash command Menu — hidden anchor trigger, auto-opens when user types "/" */}
+        {(
           <Menu options={slashCommandMenuOptions} size="sm">
             <MenuTrigger asChild>
               <button
@@ -933,6 +939,18 @@ export function OpalInput({
             />
           </Menu>
         )}
+
+        {/* Hidden file input for IM attach */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onAttachFile) onAttachFile(file);
+            e.target.value = "";
+          }}
+        />
 
         {/* Actions Row */}
         <Box
@@ -1047,7 +1065,7 @@ export function OpalInput({
                   backgroundColor: isLoading
                     ? 'var(--ax-colors-bg-secondary)'
                     : 'var(--ax-colors-bg-accent)',
-                  color: 'white',
+                  color: isLoading ? 'var(--ax-colors-fg-accent)' : '#202320',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1077,11 +1095,70 @@ export function OpalInput({
           }}
         >
           <Listbox>
+            {filteredAgents.length > 0 && (
+              <ListboxGroup>
+                <ListboxLabel px="12" pt="8" pb="4">Agents</ListboxLabel>
+                {filteredAgents.map((agent, i) => {
+                  const globalIdx = i;
+                  return (
+                    <ListboxItem
+                      key={agent.id}
+                      addonBefore={agent.emoji
+                        ? <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{agent.emoji}</span>
+                        : undefined}
+                      description={agent.subtitle}
+                      onClick={() => handleSelectAgent(agent)}
+                      onMouseEnter={() => setFocusedAgentIndex(globalIdx)}
+                      style={{ cursor: 'pointer', backgroundColor: globalIdx === focusedAgentIndex ? 'var(--ax-colors-bg-secondary)' : undefined }}
+                    >
+                      <Box display="flex" alignItems="center" gap="8">
+                        <Text fontSize="md" fontWeight="500" color="fg.default">{agent.name}</Text>
+                        <Badge variant="subtle" style={{ fontSize: 11, fontWeight: 400 }}>{agent.handle}</Badge>
+                      </Box>
+                    </ListboxItem>
+                  );
+                })}
+              </ListboxGroup>
+            )}
+            {filteredVAUs.length > 0 && (
+              <ListboxGroup>
+                <ListboxLabel px="12" pt="8" pb="4">Virtual Teammates</ListboxLabel>
+                {filteredVAUs.map((vau, i) => {
+                  const globalIdx = filteredAgents.length + i;
+                  const initials = vau.name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+                  return (
+                    <ListboxItem
+                      key={vau.id}
+                      addonBefore={
+                        <span style={{
+                          width: 28, height: 28, borderRadius: '50%',
+                          border: '2px solid var(--ax-colors-bg-default)',
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          overflow: 'hidden', flexShrink: 0,
+                          background: vau.avatar ? undefined : '#6d28d9',
+                          fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: '0.02em',
+                        }}>
+                          {vau.avatar
+                            ? <img src={vau.avatar} alt={vau.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            : initials}
+                        </span>
+                      }
+                      description={vau.email}
+                      onClick={() => handleSelectAgent(vau)}
+                      onMouseEnter={() => setFocusedAgentIndex(globalIdx)}
+                      style={{ cursor: 'pointer', backgroundColor: globalIdx === focusedAgentIndex ? 'var(--ax-colors-bg-secondary)' : undefined }}
+                    >
+                      <Text fontSize="md" fontWeight="500" color="fg.default">{vau.name}</Text>
+                    </ListboxItem>
+                  );
+                })}
+              </ListboxGroup>
+            )}
             {filteredUsers.length > 0 && (
               <ListboxGroup>
                 <ListboxLabel px="12" pt="8" pb="4">Teammates</ListboxLabel>
                 {filteredUsers.map((user, i) => {
-                  const globalIdx = i;
+                  const globalIdx = filteredAgents.length + filteredVAUs.length + i;
                   const initials = user.name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
                   return (
                     <ListboxItem
@@ -1106,65 +1183,6 @@ export function OpalInput({
                       style={{ cursor: 'pointer', backgroundColor: globalIdx === focusedAgentIndex ? 'var(--ax-colors-bg-secondary)' : undefined }}
                     >
                       <Text fontSize="md" fontWeight="500" color="fg.default">{user.name}</Text>
-                    </ListboxItem>
-                  );
-                })}
-              </ListboxGroup>
-            )}
-            {filteredVAUs.length > 0 && (
-              <ListboxGroup>
-                <ListboxLabel px="12" pt="8" pb="4">Virtual Teammates</ListboxLabel>
-                {filteredVAUs.map((vau, i) => {
-                  const globalIdx = filteredUsers.length + i;
-                  const initials = vau.name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
-                  return (
-                    <ListboxItem
-                      key={vau.id}
-                      addonBefore={
-                        <span style={{
-                          width: 28, height: 28, borderRadius: '50%',
-                          border: '2px solid var(--ax-colors-bg-default)',
-                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                          overflow: 'hidden', flexShrink: 0,
-                          background: vau.avatar ? undefined : 'var(--ax-colors-bg-avatar-purple)',
-                          fontSize: 10, fontWeight: 700, color: 'var(--ax-colors-fg-avatar-purple)', letterSpacing: '0.02em',
-                        }}>
-                          {vau.avatar
-                            ? <img src={vau.avatar} alt={vau.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                            : initials}
-                        </span>
-                      }
-                      description={vau.email}
-                      onClick={() => handleSelectAgent(vau)}
-                      onMouseEnter={() => setFocusedAgentIndex(globalIdx)}
-                      style={{ cursor: 'pointer', backgroundColor: globalIdx === focusedAgentIndex ? 'var(--ax-colors-bg-secondary)' : undefined }}
-                    >
-                      <Text fontSize="md" fontWeight="500" color="fg.default">{vau.name}</Text>
-                    </ListboxItem>
-                  );
-                })}
-              </ListboxGroup>
-            )}
-            {filteredAgents.length > 0 && (
-              <ListboxGroup>
-                <ListboxLabel px="12" pt="8" pb="4">Agents</ListboxLabel>
-                {filteredAgents.map((agent, i) => {
-                  const globalIdx = filteredUsers.length + filteredVAUs.length + i;
-                  return (
-                    <ListboxItem
-                      key={agent.id}
-                      addonBefore={agent.emoji
-                        ? <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{agent.emoji}</span>
-                        : undefined}
-                      description={agent.subtitle}
-                      onClick={() => handleSelectAgent(agent)}
-                      onMouseEnter={() => setFocusedAgentIndex(globalIdx)}
-                      style={{ cursor: 'pointer', backgroundColor: globalIdx === focusedAgentIndex ? 'var(--ax-colors-bg-secondary)' : undefined }}
-                    >
-                      <Box display="flex" alignItems="center" gap="8">
-                        <Text fontSize="md" fontWeight="500" color="fg.default">{agent.name}</Text>
-                        <Badge intent="neutral" style={{ fontSize: 11, fontWeight: 400 }}>{agent.handle}</Badge>
-                      </Box>
                     </ListboxItem>
                   );
                 })}

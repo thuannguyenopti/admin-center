@@ -1,0 +1,134 @@
+/* CMS-specific styles. Imported by app/globals.css. */
+
+
+/* Lenis parallax effect - only on desktop */
+@media screen and (min-width: 768px) {
+	[data-lenis-parallax] {
+		transform: translate3d(0, calc(var(--lenis-parallax, 0) * 1px), 0);
+		will-change: transform;
+	}
+}
+
+
+/* Visual Builder outline hover — reveal chevron on outline hover */
+.chevron {
+	visibility: hidden;
+}
+
+.vb-outline:hover .chevron {
+	visibility: visible;
+}
+
+/* Newly imported item highlight animation (CMS content / tags / categories) */
+.newly-imported {
+	animation: highlight-fade 2s ease-out;
+}
+
+@keyframes highlight-fade {
+	0% {
+		background-color: #d1fae5;
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+[data-theme="dark"] .newly-imported,
+html.dark .newly-imported,
+body.dark .newly-imported {
+	animation: highlight-fade-dark 2s ease-out;
+}
+
+@keyframes highlight-fade-dark {
+	0% {
+		background-color: rgba(16, 185, 129, 0.2);
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+
+.parent {
+	display: grid;
+	grid-template-columns: 0fr 1fr;
+	grid-template-rows: 0fr 1fr;
+	grid-column-gap: 0px;
+	grid-row-gap: 0px;
+}
+
+.div1 {
+	grid-area: 1 / 1 / 2 / 6;
+}
+
+.div2 {
+	grid-area: 2 / 1 / 6 / 2;
+}
+
+.div3 {
+	grid-area: 2 / 2 / 6 / 6;
+}
+
+.vt {
+	overflow: hidden;
+}
+
+.noSlide {
+	transform: translateX(0px);
+	transition: transform 0.7s cubic-bezier(0, 1, 0, 1);
+}
+
+.slidex {
+	animation: slide 0.7s both cubic-bezier(0, 1, 0, 1);
+}
+
+.extension-icon > svg {
+	width: 16px;
+	height: 16px;
+}
+
+@keyframes vb-slide-in-up {
+	from { transform: translateY(50%); opacity: 0; }
+	to   { transform: translateY(0); opacity: 1; }
+}
+@keyframes vb-slide-in-down {
+	from { transform: translateY(-50%); opacity: 0; }
+	to   { transform: translateY(0); opacity: 1; }
+}
+@keyframes vb-slide-out-up {
+	from { transform: translateY(0); opacity: 1; }
+	to   { transform: translateY(-50%); opacity: 0; }
+}
+@keyframes vb-slide-out-down {
+	from { transform: translateY(0); opacity: 1; }
+	to   { transform: translateY(50%); opacity: 0; }
+}
+.vb-slide-in-up    { animation: vb-slide-in-up    0.15s ease-out; }
+.vb-slide-in-down  { animation: vb-slide-in-down  0.15s ease-out; }
+.vb-slide-out-up   { animation: vb-slide-out-up   0.15s ease-in forwards; }
+.vb-slide-out-down { animation: vb-slide-out-down 0.15s ease-in forwards; }
+
+/* VT activity pulse — toolbar avatar ring */
+@keyframes vt-activity-pulse {
+	0%, 100% { box-shadow: 0 0 0 0 rgba(0, 55, 255, 0.4); }
+	50% { box-shadow: 0 0 0 4px rgba(0, 55, 255, 0); }
+}
+.vt-active-ring {
+	animation: vt-activity-pulse 2s ease-in-out infinite;
+	border-radius: 50%;
+}
+@keyframes vt-dot-pulse {
+	0%, 100% { opacity: 0.4; transform: scale(0.8); }
+	50% { opacity: 1; transform: scale(1); }
+}
+
+/* VT change row hover */
+.vt-change-row:hover {
+	border-color: var(--ax-colors-border-secondary) !important;
+}
+
+/* VB element picker — keep content mounted when closed so iframes stay alive */
+.vb-picker-content[data-state="closed"] {
+	visibility: hidden;
+	pointer-events: none;
+}

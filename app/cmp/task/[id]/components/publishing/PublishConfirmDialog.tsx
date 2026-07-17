@@ -12,7 +12,7 @@ import {
 	Separator,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconAlertTriangle, IconFileText } from "@tabler/icons-react";
+import {IconTriangleExclamation, IconFileLines} from "@/app/lib/axiom-icons";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
 import type { Application, Page } from "@/app/db/initialData";
 import type { PublishingChannel } from "../../types";
@@ -125,7 +125,7 @@ export function PublishConfirmDialog({ applications, channels, contentInstances,
 									</Text>
 									{contentInstances.map((instance) => (
 										<Box key={instance.id} alignItems="center" display="flex" gap="8" style={{ paddingLeft: 8 }}>
-											<IconFileText color="var(--ax-colors-fg-secondary)" size={14} />
+											<IconFileLines color="var(--ax-colors-fg-secondary)" size={14} />
 											<Text color="fg.default" style={{ fontSize: 13, lineHeight: "18px", maxWidth: "none" }}>
 												{getInstanceName(instance)}
 											</Text>
@@ -177,7 +177,7 @@ export function PublishConfirmDialog({ applications, channels, contentInstances,
 								<>
 									{(hasInstances || hasChannelsWithContent) && <Separator />}
 									<Box alignItems="start" display="flex" gap="8" p="12" rounded="sm" style={{ backgroundColor: "var(--ax-colors-bg-warning-subtle)" }}>
-										<IconAlertTriangle color="var(--ax-colors-fg-warning)" size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+										<IconTriangleExclamation color="var(--ax-colors-fg-warning)" size={16} style={{ flexShrink: 0, marginTop: 2 }} />
 										<Box display="flex" flexDirection="column" gap="4">
 											<Text color="fg.default" style={{ fontSize: 13, fontWeight: 500, lineHeight: "18px", maxWidth: "none" }}>
 												{unpublishedPages.length === 1 ? "1 CMS page" : `${unpublishedPages.length} CMS pages`} not assigned to a publishing channel

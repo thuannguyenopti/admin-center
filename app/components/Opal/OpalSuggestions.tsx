@@ -47,21 +47,6 @@ const cmsSuggestions = [
   },
 ];
 
-const agentPromptBuilderSuggestions = [
-  {
-    title: "Strengthen the role and task definition",
-    enhancedPrompt: "Review the selected section of my agent's prompt and help me write a clearer role and task definition. Make it more specific about what the agent does and who it serves.",
-  },
-  {
-    title: "Improve tone and output format",
-    enhancedPrompt: "Based on the selected section of my agent's prompt, suggest improvements to the tone instructions and output format. How should I specify the response style, length, and structure?",
-  },
-  {
-    title: "Add guardrails and constraints",
-    enhancedPrompt: "Review the selected section of my agent's prompt and help me add effective guardrails. What should the agent avoid doing, and what constraints will produce more reliable, consistent responses?",
-  },
-];
-
 const imageGenSuggestions = [
   {
     title: "Create a triathlon hero image",
@@ -87,9 +72,7 @@ export function OpalSuggestions({ onSuggestionClick, type = 'default' }: OpalSug
       ? cmsSuggestions
       : type === 'image-gen'
         ? imageGenSuggestions
-        : type === 'agent-prompt-builder'
-          ? agentPromptBuilderSuggestions
-          : defaultSuggestions;
+        : defaultSuggestions;
 
   return (
     <Box display="flex" flexDirection="column" gap="8" w="full">

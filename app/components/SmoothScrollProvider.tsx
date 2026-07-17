@@ -1,7 +1,6 @@
 "use client";
 
 import {useEffect} from "react";
-// @ts-ignore
 import Lenis from "lenis";
 
 /**
@@ -13,7 +12,7 @@ export default function SmoothScrollProvider() {
 		root.classList.add("lenis");
 		const lenis = new Lenis({
 			duration: 0,
-			easing: (t: number) => t, // Linear easing for native scroll feel
+			easing: (t) => t, // Linear easing for native scroll feel
 			smoothWheel: false,
 		});
 

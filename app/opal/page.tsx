@@ -1,23 +1,29 @@
 "use client";
 
-import { Box, Button as AxiomButton } from "@optiaxiom/react";
+import { Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconAgent, IconListCheck, IconCircleCheckSolid, IconArrowUpRightFromSquare } from "@optimizely/axiom-icons";
+import { IconAgent } from "@optimizely/axiom-icons";
+import { HintBannerWithToggle } from "./components/HintBanner";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useOpalContext } from "@/app/context/OpalContext";
 import { OpalInput } from "@/app/components/Opal/OpalInput";
 import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
-import { FEATURED_AGENTS, AGENT_PROMPTS } from "@/app/opal/opalAgents";
 import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { InlineEditorCard } from "@/app/components/Opal/InlineEditorCard";
-import { ApprovalActionCard as SharedApprovalActionCard } from "@/app/components/Opal/ApprovalActionCard";
+import { ApprovalActionCard } from "@/app/components/Opal/ApprovalActionCard";
+import { AskQuestionsActionCard } from "@/app/components/Opal/AskQuestionsActionCard";
+import { HeadlessTaskPanel, useTaskController } from "./components/HeadlessTaskPanel";
 import { GrabHandle } from "@/app/components/Opal/OpalChatView";
-import { HeadlessTaskPanel, useTaskController } from "@/app/opal/components/HeadlessTaskPanel";
 import { imToChatMessage } from "@/app/opal/im/lib/adapters";
 import type { IMMessage } from "@/app/opal/im/lib/types";
+import {
+  RESEARCH_ACTIVITY_SCRIPT,
+  IMAGE_GEN_ACTIVITY_SCRIPT,
+  ASK_QUESTIONS_ACTIVITY_SCRIPT,
+} from "@/app/opal/im/components/ActivityStreamBlock";
 
 // Loaded client-side only — contains @codemirror/*, @tiptap/*, yjs which are
 // browser-only and must not be included in the SSR bundle.
@@ -32,6 +38,24 @@ const OpalChatView = dynamic(
 const OpalLanding = dynamic(
   () => import("@/app/components/Opal/OpalLanding").then((mod) => mod.OpalLanding)
 );
+
+// ── Activity stream scripts ───────────────────────────────────────────────────
+
+const MOCK_RESEARCH_RESPONSE = `Great picks — ODP for C-Suite, covering conversion + post-launch, via blog/SEO. Let me put together a set of content angles that hit those marks.
+
+Here's your ODP content angles doc — 8 angles split across **Conversion** and **Post-Launch Retention**, each with a punchy hook, SEO targets, and format recommendations, plus a suggested 8-week content calendar.
+
+You can view and edit it here: [ODP Product Launch — Content Angles](/opal/artifacts)
+
+Want me to draft any of these angles into a full blog post, or adjust the calendar timing? 🎯`;
+
+const MOCK_IMAGE_RESPONSE = `Here's your illustration! I generated a simple, flat-style image of a unicorn riding a dinosaur — bright colors, minimal details, ready to use in your campaign assets.
+
+You can request variations, change the style, or generate additional sizes.`;
+
+function activityScriptTotalMs(script: { durationMs: number }[]) {
+  return script.reduce((sum, e) => sum + e.durationMs, 0) + 800;
+}
 
 // ── Landing page flow constants ───────────────────────────────────────────────
 
@@ -143,194 +167,7 @@ const VAU_PUBLISHED_MSG = `🚀 **discover-the-unknown-qa.md** is live.
 
 Published to the answer-engine surface just now. I'll monitor citation pickup over the next 24h and flag if anything looks off.`;
 
-type ApprovalState = 'pending' | 'approved' | 'changes' | 'requesting';
-
-function ApprovalActionCard({ state, changesMessage, noteValue, onApprove, onAskChanges, onNoteChange, onNoteSubmit, onNoteCancel, onOpenTask }: {
-  state: ApprovalState;
-  changesMessage?: string;
-  noteValue?: string;
-  onApprove: () => void;
-  onAskChanges: () => void;
-  onNoteChange: (v: string) => void;
-  onNoteSubmit: () => void;
-  onNoteCancel: () => void;
-  onOpenTask?: () => void;
-}) {
-  if (state === 'approved') {
-    return (
-      <Box display="flex" flexDirection="column" gap="4" p="16" rounded="xl" style={{ border: '1px solid var(--ax-colors-border-default)', background: 'var(--ax-colors-bg-default)', opacity: 0.6 }}>
-        <Text fontWeight="500" style={{ fontSize: 14, color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
-          Team approval needed for discover-the-unknown-qa.md
-        </Text>
-        <Text style={{ fontSize: 14, color: 'var(--ax-colors-fg-tertiary)', lineHeight: 1.43 }}>
-          Jamie Chen: Approved
-        </Text>
-      </Box>
-    );
-  }
-
-  if (state === 'requesting') {
-    return (
-      <Box
-        display="flex"
-        flexDirection="column"
-        gap="12"
-        p="16"
-        rounded="xl"
-        style={{
-          border: '1px solid var(--ax-colors-border-default)',
-          background: 'var(--ax-colors-bg-default)',
-        }}
-      >
-        <Box display="flex" flexDirection="column" gap="4">
-          <Text fontWeight="500" style={{ fontSize: 14, color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
-            Request changes
-          </Text>
-          <Text style={{ fontSize: 13, color: 'var(--ax-colors-fg-secondary)', lineHeight: 1.43 }}>
-            Let Frank know what needs to be updated before publishing.
-          </Text>
-        </Box>
-        <textarea
-          autoFocus
-          value={noteValue ?? ''}
-          onChange={e => onNoteChange(e.target.value)}
-          placeholder="Describe the changes needed…"
-          rows={3}
-          style={{
-            width: '100%',
-            resize: 'none',
-            border: '1px solid var(--ax-colors-border-default)',
-            borderRadius: 8,
-            padding: '8px 12px',
-            fontSize: 13,
-            lineHeight: 1.5,
-            color: 'var(--ax-colors-fg-default)',
-            background: 'var(--ax-colors-bg-page)',
-            outline: 'none',
-            fontFamily: 'inherit',
-            boxSizing: 'border-box',
-          }}
-        />
-        <Box display="flex" justifyContent="flex-end" gap="4">
-          <AxiomButton appearance="subtle" size="md" onClick={onNoteCancel}>Cancel</AxiomButton>
-          <AxiomButton appearance="primary" size="md" onClick={onNoteSubmit}>Send</AxiomButton>
-        </Box>
-      </Box>
-    );
-  }
-
-  if (state === 'changes') {
-    return (
-      <Box display="flex" flexDirection="column" gap="12" p="16" rounded="xl" style={{ border: '1px solid var(--ax-colors-border-default)', background: 'var(--ax-colors-bg-default)' }}>
-        <Box display="flex" alignItems="center" gap="8">
-          <Text fontWeight="500" style={{ fontSize: 14, color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
-            ✓ Changes requested
-          </Text>
-        </Box>
-        {changesMessage ? (
-          <Box p="12" rounded="lg" style={{ background: 'var(--ax-colors-bg-page)', borderLeft: '3px solid var(--ax-colors-border-focus)' }}>
-            <Text style={{ fontSize: 13, color: 'var(--ax-colors-fg-secondary)', lineHeight: 1.5, fontStyle: 'italic' }}>
-              &ldquo;{changesMessage}&rdquo;
-            </Text>
-            <Text style={{ fontSize: 12, color: 'var(--ax-colors-fg-tertiary)', marginTop: 4 }}>— Jamie Chen</Text>
-          </Box>
-        ) : null}
-        <Text style={{ fontSize: 13, color: 'var(--ax-colors-fg-tertiary)', lineHeight: 1.43 }}>
-          Frank will revise discover-the-unknown-qa.md based on your feedback.
-        </Text>
-      </Box>
-    );
-  }
-
-  // Default: full pending card
-  return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      gap="12"
-      p="20"
-      rounded="xl"
-      style={{
-        border: '1px solid var(--ax-colors-border-default)',
-        background: 'var(--ax-colors-bg-default)',
-      }}
-    >
-      {/* VAU product indicator */}
-      <Box display="flex" alignItems="center" gap="4">
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          rounded="sm"
-          style={{ width: 20, height: 20, background: 'var(--ax-colors-bg-secondary)', flexShrink: 0, overflow: 'hidden' }}
-        >
-          <Image src="/avatars/vau-frank.png" alt="GEO" width={14} height={14} />
-        </Box>
-        <Text style={{ fontSize: 12, fontWeight: 400, letterSpacing: '0.36px', textTransform: 'uppercase', color: 'var(--ax-colors-fg-tertiary)', lineHeight: 1.25 }}>
-          Frank
-        </Text>
-      </Box>
-
-      {/* File info */}
-      <Box display="flex" flexDirection="column" gap="4">
-        <Text fontWeight="600" style={{ fontSize: 16, lineHeight: 1.3, color: 'var(--ax-colors-fg-default)' }}>
-          discover-the-unknown-qa.md
-        </Text>
-        <Text style={{ fontSize: 14, letterSpacing: '0.28px', color: 'var(--ax-colors-fg-secondary)', lineHeight: 1.43 }}>
-          GEO Q&amp;A article
-        </Text>
-      </Box>
-
-      {/* Divider */}
-      <Box style={{ height: 1, background: 'var(--ax-colors-border-default)', width: '100%' }} />
-
-      {/* Key insight banner */}
-      <Box
-        display="flex"
-        flexDirection="column"
-        gap="8"
-        p="16"
-        rounded="md"
-        style={{ background: 'var(--ax-colors-bg-page)' }}
-      >
-        <Text fontWeight="500" style={{ fontSize: 14, letterSpacing: '0.28px', color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
-          Team approval needed
-        </Text>
-        <Text style={{ fontSize: 14, letterSpacing: '0.28px', color: 'var(--ax-colors-fg-secondary)', lineHeight: 1.43 }}>
-          Review the updated Q&amp;A article. Approve to proceed with publishing, or request further changes.
-        </Text>
-        {onOpenTask && (
-          <button
-            type="button"
-            onClick={onOpenTask}
-            style={{
-              alignSelf: 'flex-start',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              fontSize: 13,
-              fontWeight: 500,
-              color: 'var(--ax-colors-fg-accent)',
-            }}
-          >
-            <IconListCheck size={12} />
-            View Task
-          </button>
-        )}
-      </Box>
-
-      {/* Actions */}
-      <Box display="flex" justifyContent="flex-end" gap="4">
-        <AxiomButton appearance="subtle" size="md" onClick={onAskChanges}>Ask Changes</AxiomButton>
-        <AxiomButton appearance="primary" size="md" onClick={onApprove} icon={<IconCircleCheckSolid size={14} />}>Approve</AxiomButton>
-      </Box>
-    </Box>
-  );
-}
+type ApprovalState = 'pending' | 'approved' | 'changes';
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
@@ -360,10 +197,7 @@ export default function OpalPage() {
     handleSelectAgent,
     handleSendMessage,
     handleSuggestionClick: _handleSuggestionClick,
-    showAgents,
-    setShowAgents,
-    showAllAgents,
-    setShowAllAgents,
+
     collapsedSessionIds,
     handleExpandSession,
     opalDisclosureIds,
@@ -383,6 +217,27 @@ export default function OpalPage() {
   });
 
   const [editorOpen, setEditorOpen] = useState(false);
+  /** When true, canvas was opened from the research streaming flow — suppress IM thread sidebar */
+  const [editorFromStream, setEditorFromStream] = useState(false);
+  const activityCallbacksRef = useRef<Map<string, () => void>>(new Map());
+
+  // Open artifact preview when CanvasOutputCard is clicked (research streaming flow)
+  useEffect(() => {
+    const handler = () => { setEditorVersion('v2'); setEditorFromStream(true); setEditorOpen(true); };
+    window.addEventListener("opal-open-canvas", handler);
+    return () => window.removeEventListener("opal-open-canvas", handler);
+  }, []);
+
+  // Hint banner visibility — controlled by DemoResetButton toggle
+  const [showHintBanner, setShowHintBanner] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem("opal-demo-hint-banner") === "true"; } catch { return false; }
+  });
+  useEffect(() => {
+    const handler = (e: Event) => setShowHintBanner((e as CustomEvent<boolean>).detail);
+    window.addEventListener("opal-hint-banner-change", handler);
+    return () => window.removeEventListener("opal-hint-banner-change", handler);
+  }, []);
   const [editorVersion, setEditorVersion] = useState<'v1' | 'v2'>('v1');
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
   const [headlessTaskOpen, setHeadlessTaskOpen] = useState(false);
@@ -390,9 +245,12 @@ export default function OpalPage() {
   const handleTaskResize = useCallback((dx: number) => {
     setTaskPanelWidth(w => Math.max(320, Math.min(720, w + dx)));
   }, []);
-  const [approvalState, setApprovalState] = useState<ApprovalState>('pending');
-  const [approvalNote, setApprovalNote] = useState('');
-  const [approvalChangesNote, setApprovalChangesNote] = useState('');
+  const [approvalState, setApprovalState] = useState<ApprovalState>(() => {
+    try {
+      if (localStorage.getItem('geo-qa-approval') === 'approved') return 'approved';
+    } catch {}
+    return 'pending';
+  });
   const [landingPageReady, setLandingPageReady] = useState(() => {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('artifacts') === '1';
@@ -400,9 +258,8 @@ export default function OpalPage() {
   const isFirstMount = useRef(true);
   const hasSeededThread = useRef(false);
 
-  // Drive seeded/triggered messages through the IM module's adapter so avatars,
-  // timestamps, VAU template names, and any future imMode polish render
-  // identically to the live IM module — only the data is mocked here.
+  // Drive seeded/triggered messages through the IM adapter so avatars,
+  // timestamps, and VAU template names render identically to the live IM module.
   const GEO_PROFILES = useRef<Record<string, string>>({
     'vau-frank': 'Frank',
     'jamie': 'Jamie Chen',
@@ -411,7 +268,7 @@ export default function OpalPage() {
   const pushIMMessage = useCallback((
     senderId: string,
     content: string,
-    opts: { minutesAgo?: number; senderType?: 'agent' | 'user'; cardKey?: string } = {},
+    opts: { minutesAgo?: number; senderType?: 'agent' | 'user' } = {},
   ) => {
     const im: IMMessage = {
       id: crypto.randomUUID(),
@@ -431,7 +288,7 @@ export default function OpalPage() {
     const added = addMessage({
       role: chat.role,
       content: chat.content,
-      metadata: opts.cardKey ? { ...chat.metadata, cardKey: opts.cardKey } : chat.metadata,
+      metadata: chat.metadata,
     });
     updateMessage(added.id, { timestamp: chat.timestamp });
   }, [addMessage, updateMessage, GEO_PROFILES]);
@@ -441,7 +298,10 @@ export default function OpalPage() {
   const taskController = useTaskController('geo-qa', (stepId) => {
     if (stepId === '2') {
       setApprovalState('approved');
-      pushIMMessage('jamie', '✓ Approved');
+      try { localStorage.setItem('geo-qa-approval', 'approved'); } catch {}
+      pushIMMessage('jamie', '**Approved** — great work, Frank. This is ready to publish.');
+      pushIMMessage('vau-frank', "Perfect — I'll handle publishing now and send you the live link once it's indexed.", { senderType: 'agent' });
+      pushIMMessage('vau-frank', "Tracking. If you want, I can turn this into a serp shift digest — say the word.", { senderType: 'agent' });
     }
     if (stepId === '3') {
       pushIMMessage('vau-frank', VAU_PUBLISHED_MSG, { senderType: 'agent' });
@@ -459,16 +319,16 @@ export default function OpalPage() {
       hasSeededThread.current = true;
 
       const seedThread = () => {
-        pushIMMessage('vau-frank', VAU_MSG_1, { minutesAgo: 18, senderType: 'agent', cardKey: 'geo-initial' });
+        pushIMMessage('vau-frank', VAU_MSG_1, { minutesAgo: 18, senderType: 'agent' });
         pushIMMessage('jamie', JC_MSG, { minutesAgo: 14 });
         pushIMMessage('mary-anne', TEAMMATE_MSG, { minutesAgo: 10 });
-        pushIMMessage('vau-frank', VAU_MSG_2, { minutesAgo: 2, senderType: 'agent', cardKey: 'geo-updated' });
-        // Restore follow-up messages if the user already approved in this session
+        pushIMMessage('vau-frank', VAU_MSG_2, { minutesAgo: 2, senderType: 'agent' });
+        // If already approved (localStorage persisted from a prior session), re-seed the follow-up messages
         try {
           if (localStorage.getItem('geo-qa-approval') === 'approved') {
-            setApprovalState('approved');
-            pushIMMessage('jamie', '✓ Approved', { minutesAgo: 1 });
-            pushIMMessage('vau-frank', VAU_PUBLISHED_MSG, { senderType: 'agent' });
+            pushIMMessage('jamie', '**Approved** — great work, Frank. This is ready to publish.');
+            pushIMMessage('vau-frank', "Perfect — I'll handle publishing now and send you the live link once it's indexed.", { senderType: 'agent' });
+            pushIMMessage('vau-frank', "Tracking. If you want, I can turn this into a serp shift digest — say the word.", { senderType: 'agent' });
           }
         } catch {}
         setLandingPageReady(true);
@@ -489,28 +349,6 @@ export default function OpalPage() {
   const editorWasOpen = useRef(false);
 
   // ── Keep URL in sync with canvas open/closed state ────────────────────────
-  // Restore follow-up messages when returning to an already-approved session.
-  // Runs once after the seed messages appear (messages.length > 0 + landingPageReady).
-  // Guards with frankSent so seedThread's inline restoration doesn't double-seed.
-  const approvalMsgsRestored = useRef(false);
-  useEffect(() => {
-    if (!landingPageReady || messages.length === 0 || approvalMsgsRestored.current) return;
-    try {
-      if (localStorage.getItem('geo-qa-approval') === 'approved') {
-        // Skip if either follow-up msg is already present (seeded by seedThread or taskController)
-        const alreadySeeded = messages.some((m) => m.content?.includes('is live') || m.content?.includes('✓ Approved'));
-        if (alreadySeeded) { approvalMsgsRestored.current = true; return; }
-        approvalMsgsRestored.current = true;
-        setApprovalState('approved');
-        setTimeout(() => {
-          pushIMMessage('jamie', '✓ Approved', { minutesAgo: 1 });
-          pushIMMessage('vau-frank', VAU_PUBLISHED_MSG, { senderType: 'agent' });
-        }, 100);
-      }
-    } catch {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [landingPageReady, messages.length]);
-
   useEffect(() => {
     if (editorOpen) {
       editorWasOpen.current = true;
@@ -519,6 +357,7 @@ export default function OpalPage() {
       const qs = params.toString();
       window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
     } else if (editorWasOpen.current) {
+      setEditorFromStream(false);
       // Closing canvas → navigate to artifacts page
       window.location.href = '/opal/artifacts';
     }
@@ -557,6 +396,91 @@ export default function OpalPage() {
     setEditorOpen(true);
   }, [addMessage, updateMessage]);
 
+  // Activity streaming flow — shown for regular Opal chat prompts
+  const handleActivityStreamTrigger = useCallback(async (userPrompt: string, scriptOverride?: typeof RESEARCH_ACTIVITY_SCRIPT) => {
+    const isAskQuestions = /ask.*question|question.*me/i.test(userPrompt);
+    const isImageRequest = /\b(generat|creat|draw|make|image|photo|picture|illustrat|render)\b/i.test(userPrompt);
+
+    const askQuestionsScript = [
+      ...ASK_QUESTIONS_ACTIVITY_SCRIPT.slice(0, 2).map((phase, i) =>
+        i === 1
+          ? {
+              ...phase,
+              actionCard: (onContinue: () => void) => (
+                <AskQuestionsActionCard
+                  title="A few quick questions"
+                  description="Help me personalise your content before I get started."
+                  submitLabel="Let's go"
+                  questions={[
+                    {
+                      id: "tone",
+                      label: "What tone should I use?",
+                      options: [
+                        { value: "professional", label: "Professional", description: "Formal, polished, brand-safe" },
+                        { value: "conversational", label: "Conversational", description: "Friendly and approachable" },
+                        { value: "bold", label: "Bold", description: "Direct, punchy, high-impact" },
+                      ],
+                    },
+                    {
+                      id: "length",
+                      label: "How long should it be?",
+                      options: [
+                        { value: "short", label: "Short", description: "Under 150 words" },
+                        { value: "medium", label: "Medium", description: "150–300 words" },
+                        { value: "long", label: "Long", description: "300+ words" },
+                      ],
+                    },
+                  ]}
+                  onSubmit={(_answers) => onContinue()}
+                />
+              ),
+            }
+          : phase
+      ),
+      ...ASK_QUESTIONS_ACTIVITY_SCRIPT.slice(2),
+    ];
+
+    const script = scriptOverride ?? (isAskQuestions ? askQuestionsScript : isImageRequest ? IMAGE_GEN_ACTIVITY_SCRIPT : RESEARCH_ACTIVITY_SCRIPT);
+    const mockResponse = isImageRequest ? MOCK_IMAGE_RESPONSE : MOCK_RESEARCH_RESPONSE;
+
+    addMessage({ role: 'user', content: userPrompt });
+
+    const loadingMsg = addMessage({
+      role: 'assistant',
+      content: '',
+      isLoading: true,
+      activityScript: script,
+      showOpalHeader: true,
+    } as any);
+
+    // Store callback — response only shown after ActivityStreamBlock calls onComplete
+    const showCanvas = !isImageRequest && !isAskQuestions;
+    activityCallbacksRef.current.set(loadingMsg.id, () => {
+      updateMessage(loadingMsg.id, { isLoading: false, content: mockResponse, showCanvasCard: showCanvas } as any);
+    });
+  }, [addMessage, updateMessage]);
+
+  // Called by ActivityStreamBlock via OpalMessage → OpalChat → OpalChatView when the stream finishes
+  const handleActivityComplete = useCallback((messageId: string) => {
+    const cb = activityCallbacksRef.current.get(messageId);
+    if (cb) { cb(); activityCallbacksRef.current.delete(messageId); }
+  }, []);
+
+  // Regenerate: re-run the activity stream for the preceding user message
+  const handleRegenerate = useCallback((assistantMessageId: string) => {
+    const idx = messages.findIndex(m => m.id === assistantMessageId);
+    if (idx < 0) return;
+    const userMsg = [...messages].slice(0, idx).reverse().find(m => m.role === 'user');
+    if (!userMsg) return;
+    const isImageRequest = /\b(generat|creat|draw|make|image|photo|picture|illustrat|render)\b/i.test(userMsg.content);
+    const script = isImageRequest ? IMAGE_GEN_ACTIVITY_SCRIPT : RESEARCH_ACTIVITY_SCRIPT;
+    const mockResponse = isImageRequest ? MOCK_IMAGE_RESPONSE : MOCK_RESEARCH_RESPONSE;
+    updateMessage(assistantMessageId, { content: '', isLoading: true, activityScript: script, timestamp: Date.now() } as any);
+    activityCallbacksRef.current.set(assistantMessageId, () => {
+      updateMessage(assistantMessageId, { isLoading: false, content: mockResponse } as any);
+    });
+  }, [messages, updateMessage]);
+
   // Clicking "Create a landing page" prefills the input — user fills variables, then submits
   const handleSuggestionClick = useCallback((suggestion: string) => {
     if (suggestion === '__landing_page__') {
@@ -583,8 +507,9 @@ export default function OpalPage() {
       setApprovalState('pending');
       return;
     }
-    handleSendMessage(text ?? "");
-  }, [handleLandingPageTrigger, handleSendMessage, setApprovalState, setInputValue]);
+    setInputValue('');
+    handleActivityStreamTrigger(text ?? "");
+  }, [handleLandingPageTrigger, handleSendMessage, handleActivityStreamTrigger, setApprovalState, setInputValue]);
 
   // Reset canvas state when chat is cleared (e.g. "New chat")
   // Skip initial mount — messages start empty but landingPageReady may be true from deep link
@@ -601,52 +526,58 @@ export default function OpalPage() {
 
   const messageCards = landingPageReady ? {
     'geo-initial': (
-      <InlineEditorCard
-        filename="discover-the-unknown-qa.md"
-        description="GEO Q&A article · 7 Q&A pairs · v1"
-        vauName="Frank"
-        vauAvatar="/avatars/im-telescope.png"
-        onOpen={() => { setEditorVersion('v1'); setEditorOpen(true); }}
-        dimmed={true}
-      />
+      <Box display="flex" flexDirection="column" gap="12">
+        <InlineEditorCard
+          filename="discover-the-unknown-qa.md"
+          description="GEO Q&A article · 7 Q&A pairs · v1"
+          onOpen={() => { setEditorVersion('v1'); setEditorOpen(true); }}
+          selected={editorOpen && editorVersion === 'v1'}
+        />
+        <ApprovalActionCard
+          authorName="Frank"
+          authorAvatar="/avatars/vau-frank.png"
+          isVAU
+          fileName="discover-the-unknown-qa.md"
+          fileSubtitle="GEO Q&A article · 7 Q&A pairs · v1"
+          approvalTitle="Team approval needed"
+          approvalDescription="Review the updated Q&A article. Approve to proceed with publishing, or request further changes."
+          onApprove={() => {}}
+          onRequestChanges={() => {}}
+          onViewTask={() => setHeadlessTaskOpen(true)}
+        />
+      </Box>
     ),
     'geo-updated': (
-      <SharedApprovalActionCard
-        authorName="Frank"
-        authorAvatar="/avatars/im-telescope.png"
-        isVAU
-        badge="UPDATED"
-        fileName="discover-the-unknown-qa.md"
-        fileSubtitle="GEO Q&A article · 7 Q&A pairs · updated"
-        onPreview={() => { setEditorVersion('v2'); setEditorOpen(true); }}
-        onViewTask={() => setHeadlessTaskOpen(true)}
-        approvalTitle="Team approval needed"
-        approvalDescription="Review the updated Q&A article. Approve to proceed with publishing, or request further changes."
-        onApprove={handleApprove}
-        onRequestChanges={() => setApprovalState('requesting')}
-        selected={editorOpen && editorVersion === 'v2'}
-        persistKey="geo-qa-approval"
-      />
+      <Box display="flex" flexDirection="column" gap="12">
+        <InlineEditorCard
+          filename="discover-the-unknown-qa.md"
+          description="GEO Q&A article · 7 Q&A pairs · updated"
+          onOpen={() => { setEditorVersion('v2'); setEditorOpen(true); }}
+          selected={editorOpen && editorVersion === 'v2'}
+          onRegenerate={() => {
+            const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+            if (lastAssistant) handleRegenerate(lastAssistant.id);
+          }}
+        />
+        <ApprovalActionCard
+          authorName="Frank"
+          authorAvatar="/avatars/vau-frank.png"
+          isVAU
+          badge="UPDATED"
+          fileName="discover-the-unknown-qa.md"
+          fileSubtitle="GEO Q&A article · 7 Q&A pairs · updated"
+          approvalTitle="Team approval needed"
+          approvalDescription="Review the updated Q&A article. Approve to proceed with publishing, or request further changes."
+          onApprove={handleApprove}
+          onRequestChanges={() => { setApprovalState('changes'); }}
+          onViewTask={() => setHeadlessTaskOpen(true)}
+          persistKey="geo-qa-approval"
+        />
+      </Box>
     ),
   } : undefined;
 
-
   const hasMessages = messages.length > 0;
-
-  const openInMessagingButton = landingPageReady ? (
-    <AxiomButton
-      appearance="subtle"
-      size="sm"
-      aria-label="View in Messaging"
-      onClick={() => {
-        try { sessionStorage.setItem('im-initial-chat', 'demo-geo-qa'); } catch {}
-        window.location.href = '/opal/im';
-      }}
-      style={{ padding: 0, minWidth: 'auto', width: 32, height: 32 }}
-    >
-      <IconArrowUpRightFromSquare size={15} />
-    </AxiomButton>
-  ) : undefined;
 
   // Once a conversation starts, hand off to the full chat view
   if (hasMessages) {
@@ -663,6 +594,13 @@ export default function OpalPage() {
         <OpalChatView
           variant="home"
           streamingMode="expanded"
+          headerTitle={undefined}
+          imThreadName={(!editorFromStream && (editorOpen || headlessTaskOpen)) ? "Frank" : undefined}
+          imIsVAU={(!editorFromStream && (editorOpen || headlessTaskOpen)) || undefined}
+          imTemplateName={(!editorFromStream && (editorOpen || headlessTaskOpen)) ? "GEO Content Strategist" : undefined}
+          imThreadAvatar={(!editorFromStream && (editorOpen || headlessTaskOpen)) ? "/avatars/vau-frank.png" : undefined}
+          imSimplified={!editorFromStream && (editorOpen || headlessTaskOpen)}
+          onImThreadNameClick={landingPageReady ? () => { try { sessionStorage.setItem('im-initial-chat', 'conv-demo-geo-qa'); } catch {} window.location.href = '/opal/im'; } : undefined}
           messages={messages}
           inputValue={inputValue}
           isLoading={isLoading}
@@ -680,7 +618,8 @@ export default function OpalPage() {
           onDeleteChat={opalContext.history.deleteChat}
           onSelectChat={opalContext.history.selectChat}
           onMessageEdit={() => {}}
-          onRegenerate={regenerate}
+          onRegenerate={handleRegenerate}
+          onActivityComplete={handleActivityComplete}
           onMessageVersionChange={switchVersion}
           agentBar={agentBarElement}
           collapsedSessionIds={collapsedSessionIds}
@@ -697,16 +636,17 @@ export default function OpalPage() {
           inputAgentCtx={agentSession ? { name: agentSession.agent.name, handle: agentSession.agent.handle } : null}
           disabled={isResuming}
           onSubmitBlocked={triggerResumeHighlight}
-          chatHeaderRight={openInMessagingButton}
-          contextualActionCard={atlassianActionCard ?? undefined}
+          contextualActionCard={
+            approvalState === 'approved'
+              ? undefined
+              : landingPageReady
+              ? <ApprovalActionCard authorName="Frank" authorAvatar="/avatars/vau-frank.png" isVAU badge="UPDATED" fileName="discover-the-unknown-qa.md" fileSubtitle="GEO Q&A article · 7 Q&A pairs · updated" approvalTitle="Team approval needed" approvalDescription="Review the updated Q&A article. Approve to proceed with publishing, or request further changes." onApprove={handleApprove} onRequestChanges={() => { setApprovalState('changes'); }} onViewTask={() => setHeadlessTaskOpen(true)} persistKey="geo-qa-approval" />
+              : (atlassianActionCard ?? undefined)
+          }
           messageCards={messageCards}
           canvasMode={editorOpen || headlessTaskOpen}
           chatPanelVisible={chatPanelVisible}
           onCloseChat={(editorOpen || headlessTaskOpen) ? () => setChatPanelVisible(false) : undefined}
-          imThreadName={(editorOpen || headlessTaskOpen) ? "Frank" : undefined}
-          imThreadAvatar={(editorOpen || headlessTaskOpen) ? "/avatars/im-telescope.png" : undefined}
-          imIsVAU={(editorOpen || headlessTaskOpen) ? true : undefined}
-          imSimplified={editorOpen || headlessTaskOpen}
           leftCanvas={
             editorOpen || headlessTaskOpen ? (
               <Box display="flex" flexDirection="row" h="full" w="full" style={{ minHeight: 0 }}>
@@ -756,10 +696,10 @@ export default function OpalPage() {
 
   // Landing state
   return (
-    <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
+    <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0, backgroundColor: 'var(--opal-bg-page)' }}>
       {modalElement}
       <OpalLanding
-        topSlot={null}
+        topSlot={<HintBannerWithToggle onAddToPrompt={setInputValue} showConfig={showHintBanner} />}
         inputSlot={
           <OpalInput
             value={inputValue}

@@ -10,8 +10,6 @@ import {
     DisclosureTrigger,
     DisclosureContent,
     Tabs,
-    TabsList,
-    TabsTrigger,
     TabsContent,
     Tooltip,
     Link,
@@ -21,7 +19,7 @@ import {
     HoverCardTrigger,
     HoverCardContent,
 } from "@optiaxiom/react/unstable";
-import { IconCopy } from "@tabler/icons-react";
+import { IconCopy } from "@optiaxiom/icons";
 import { useState, useRef, useEffect } from "react";
 import AgentIcon from "@/app/assets/agent-icon.svg";
 import CloseIcon from "@/app/assets/close-icon.svg";
@@ -52,7 +50,6 @@ const GuardrailHoverCardContent = ({ status, mode, isHelp }: { status?: string, 
                     href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents"
                     target="_blank"
                     fontSize="sm"
-                    color="fg.accent"
                 >
                     Learn more
                 </Link>
@@ -83,7 +80,6 @@ const GuardrailHoverCardContent = ({ status, mode, isHelp }: { status?: string, 
                 href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents"
                 target="_blank"
                 fontSize="sm"
-                color="fg.accent"
             >
                 Learn more
             </Link>
@@ -107,7 +103,6 @@ const QualityScoreHoverCardContent = ({ score, baseScore, isHelp, isPassed: isPa
                     href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents#h_01KACEGNBW103Q3S521AN6YA5R"
                     target="_blank"
                     fontSize="sm"
-                    color="fg.accent"
                 >
                     Learn more
                 </Link>
@@ -137,7 +132,6 @@ const QualityScoreHoverCardContent = ({ score, baseScore, isHelp, isPassed: isPa
                 href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents#h_01KACEGNBW103Q3S521AN6YA5R"
                 target="_blank"
                 fontSize="sm"
-                color="fg.accent"
             >
                 Learn more
             </Link>
@@ -151,6 +145,7 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
     const [isResizing, setIsResizing] = useState(false);
     const [openSections, setOpenSections] = useState<string[]>([]);
     const [isMounted, setIsMounted] = useState(false);
+    const [activeTab, setActiveTab] = useState("details");
     const outputRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -271,12 +266,22 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
 
             {/* Content */}
             <Box flex="1" overflowY="auto">
-                <Tabs defaultValue="details">
-                    <Box px="16" borderB="1" borderColor="border.tertiary">
-                        <TabsList borderB="0">
-                            <TabsTrigger value="details">Details</TabsTrigger>
-                            <TabsTrigger value="trace">Trace</TabsTrigger>
-                        </TabsList>
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <Box px="16" display="flex" gap="24" borderB="1" borderColor="border.tertiary">
+                        {(["details", "trace"] as const).map((tab) => (
+                            <Box
+                                key={tab}
+                                pb="12"
+                                cursor="pointer"
+                                borderB={activeTab === tab ? "2" : "0"}
+                                onClick={() => setActiveTab(tab)}
+                                style={activeTab === tab ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
+                            >
+                                <Text fontWeight={activeTab === tab ? "500" : "400"} color={activeTab === tab ? "fg.default" : "fg.secondary"}>
+                                    {tab === "details" ? "Details" : "Trace"}
+                                </Text>
+                            </Box>
+                        ))}
                     </Box>
 
                     <Box p="16">

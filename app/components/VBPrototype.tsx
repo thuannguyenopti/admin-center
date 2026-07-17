@@ -2,7 +2,22 @@
 
 import type {SEOBlock, ContentType} from "@/app/db/initialData";
 
-import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip, Spinner, Field, Select, SelectTrigger, SelectContent} from "@optiaxiom/react";
+import {
+	Box,
+	Button,
+	Text,
+	Heading,
+	Menu,
+	MenuTrigger,
+	MenuContent,
+	Tooltip,
+	Spinner,
+	Field,
+	Select,
+	SelectTrigger,
+	SelectContent,
+	toaster,
+} from "@optiaxiom/react";
 import React, {useEffect, useRef, useState, useCallback} from "react";
 import {
 	IconPlus,
@@ -11,11 +26,11 @@ import {
 	IconSparkles,
 	IconSquare,
 	IconSection,
-	IconDots,
-	IconSettings,
+	IconEllipsisSolid,
+	IconGear,
 	IconChevronLeft,
 	IconCopy,
-} from "@tabler/icons-react";
+} from "@/app/lib/axiom-icons";
 
 import {EleMap} from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
@@ -28,14 +43,12 @@ import {PreviewSettings} from "./vb/PreviewSettings";
 import VersionHistory from "./vb/versionHistory/VersionHistory";
 import {useBrandTone} from "./ai/BrandToneProvider";
 import {usePreflightContext} from "./ai/PreflightContext";
+import {useLayout} from "@/app/context/LayoutContext";
 
 import {getExtensionById} from "@/app/extensions/registry";
 
 import styles from "./VBPrototype.module.css";
-import PropertiesPanel, {
-	PageProperties,
-	PropertySection,
-} from "./vb/PropertiesPanel";
+import PropertiesPanel, {PageProperties, PropertySection} from "./vb/PropertiesPanel";
 import OutlineTree from "./vb/OutlineTree";
 import ExtensionPanel from "./ExtensionPanel";
 import ConnectionStatus from "./ConnectionStatus";
@@ -47,6 +60,10 @@ import type {useVersionHistory} from "@/app/hooks/useVersionHistory";
 import DragHandle from "@/app/components/DragHandle";
 import {getCompatibleInstances} from "@/app/lib/contentConnection";
 import {initialContentTypes} from "@/app/db/initialData";
+import {usePreflightWorkflow} from "@/app/hooks/useVTApprovalWorkflow";
+import {mockNotifications} from "@/app/opal/notifications/mockData";
+import {ApprovalActionCard} from "./Opal/ApprovalActionCard";
+import {IconArrowLeft} from "@optiaxiom/icons";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
@@ -89,39 +106,6 @@ const stripTransientFlags = (nodes: any[]): any[] => {
 	});
 };
 
-// Unwrap {value: ...} nested structures to direct values (used in both Case A and B)
-const unwrapProperties = (properties: any): any => {
-	if (!properties || typeof properties !== 'object') return properties;
-
-	const unwrapped: any = {};
-	let hadNestedValues = false;
-	for (const [key, val] of Object.entries(properties)) {
-		if (val && typeof val === 'object' && 'value' in val && !Array.isArray(val)) {
-			// Unwrap {value: x} to x (even if there are other keys, just take the value)
-			unwrapped[key] = val.value;
-			hadNestedValues = true;
-		} else {
-			unwrapped[key] = val;
-		}
-	}
-	if (hadNestedValues) {
-		console.log('[unwrapProperties] Unwrapped properties:', { before: properties, after: unwrapped });
-	}
-	return unwrapped;
-};
-
-// Unwrap all elements in theEles map
-const unwrapEles = (theEles: EleMap): EleMap => {
-	const unwrapped: EleMap = {};
-	for (const [id, ele] of Object.entries(theEles)) {
-		unwrapped[id] = {
-			type: ele.type,
-			properties: unwrapProperties(ele.properties),
-		};
-	}
-	return unwrapped;
-};
-
 const normalizePage = (input: any): NormalizeResult => {
 	// Case A: already split
 	if (
@@ -132,7 +116,7 @@ const normalizePage = (input: any): NormalizeResult => {
 	) {
 		return {
 			data: ensureOpen(stripTransientFlags((input as SplitPayload).data)),
-			theEles: unwrapEles((input as SplitPayload).theEles || {}),
+			theEles: (input as SplitPayload).theEles || {},
 		};
 	}
 
@@ -158,13 +142,9 @@ const normalizePage = (input: any): NormalizeResult => {
 								: p.label.toLowerCase().includes("image")
 									? "src"
 									: p.label.toLowerCase().replace(/\s+/g, "");
-					properties[key] = p.value;  // Direct value, not {value: ...}
+					properties[key] = p.value;
 				});
 			}
-
-			// Unwrap any {value: ...} structures
-			properties = unwrapProperties(properties);
-
 			theEles[node.id] = {
 				type: node.type,
 				properties: properties || {},
@@ -285,6 +265,10 @@ export default function VBPrototype({
 	contentType,
 	onSave,
 	onPublish,
+	onUnpublish,
+	onSchedule,
+	onCancelSchedule,
+	scheduledDate,
 	pageName,
 	pageId,
 	pageStatus,
@@ -300,9 +284,9 @@ export default function VBPrototype({
 	isOpalGenerating,
 	hasPendingGeneration,
 	onConnectContent,
+	onSyncContent,
 	onDisconnectContent,
 	hasConnection,
-	boundPropertyIds,
 	onAddToTask,
 	onRemoveFromTask,
 	currentTaskId,
@@ -311,6 +295,10 @@ export default function VBPrototype({
 	contentType?: ContentType | null;
 	onSave?: (page: PageInput) => void;
 	onPublish?: () => void;
+	onUnpublish?: () => void;
+	onSchedule?: (date: string) => void;
+	onCancelSchedule?: () => void;
+	scheduledDate?: string;
 	onTrash?: () => void;
 	pageName?: string;
 	pageId?: string;
@@ -334,9 +322,9 @@ export default function VBPrototype({
 	isOpalGenerating?: boolean;
 	hasPendingGeneration?: boolean;
 	onConnectContent?: () => void;
+	onSyncContent?: () => void;
 	onDisconnectContent?: () => void;
 	hasConnection?: boolean;
-	boundPropertyIds?: Set<string>;
 	onAddToTask?: (taskId: string, taskName: string) => void;
 	onRemoveFromTask?: () => void;
 	currentTaskId?: string | null;
@@ -359,6 +347,182 @@ export default function VBPrototype({
 	// Load persistent state for CMP connection
 	const [cmpContentInstances] = usePersistentState("cmpContentInstances", []);
 	const [persistentContentTypes] = usePersistentState("contentTypes", initialContentTypes);
+
+	const {opalPanelControls, setOpalActionCard} = useLayout();
+	const vtMessageIds = useRef<Record<string, string>>({});
+	const vtNotified = useRef<Set<string>>(new Set());
+	const preflightSummaryPosted = useRef(false);
+
+	const {
+		activities: vtActivities,
+		preflightStatus,
+		allComplete: preflightAllComplete,
+		startPreflight,
+		undoAllChanges: vtUndoAll,
+	} = usePreflightWorkflow(
+		pageId || "unknown",
+		pageName || "New Page",
+	);
+
+	const handlePublishConfirm = useCallback(
+		(options: { scheduledAt: string | null; runPreflight: boolean }) => {
+			if (options.runPreflight) {
+				vtMessageIds.current = {};
+				vtNotified.current = new Set();
+				preflightSummaryPosted.current = false;
+				setOpalActionCard(null);
+				startPreflight();
+				if (opalPanelControls) {
+					opalPanelControls.createNewChat();
+					opalPanelControls.openPanel();
+					opalPanelControls.addMessage({
+						role: "user",
+						content: `Run preflight review of "${pageName || "New Page"}"`,
+					});
+					opalPanelControls.addMessage({
+						role: "assistant",
+						content: "Starting preflight review...\n\n**Reviewers:** Frank (SEO Expert), Henry (Brand Expert), Lena (Legal Expert)",
+						authorName: "Opal",
+					});
+				}
+			} else if (options.scheduledAt) {
+				onSchedule?.(options.scheduledAt);
+			} else {
+				onPublish?.();
+			}
+		},
+		[startPreflight, onPublish, opalPanelControls, pageName]
+	);
+
+	useEffect(() => {
+		if (!opalPanelControls || preflightStatus === "idle") return;
+
+		for (const activity of vtActivities) {
+			const existingMsgId = vtMessageIds.current[activity.vtId];
+
+			if (!existingMsgId && activity.status === "analyzing") {
+				const msg = opalPanelControls.addMessage({
+					role: "assistant",
+					content: "Analyzing...",
+					authorName: activity.vtName,
+					authorAvatar: activity.vtAvatar,
+					authorTitle: activity.vtTemplateName,
+					authorInlineAvatar: true,
+				});
+				vtMessageIds.current[activity.vtId] = msg.id;
+			} else if (existingMsgId) {
+				if (activity.status === "optimizing") {
+					opalPanelControls.updateMessage(existingMsgId, {
+						content: "Reviewing...",
+					});
+				} else if (activity.status === "complete" && activity.changes) {
+					const changeSummary = activity.changes
+						.map((c) => `- **${c.field}**: ~~${c.oldValue}~~ → ${c.newValue}`)
+						.join("\n");
+					opalPanelControls.updateMessage(existingMsgId, {
+						content: `${activity.operation} complete\n\n${changeSummary}`,
+					});
+					if (!vtNotified.current.has(activity.vtId)) {
+						vtNotified.current.add(activity.vtId);
+						toaster.create(
+							`${activity.vtName} completed ${activity.operation}`,
+							{intent: "success"}
+						);
+						const now = new Date();
+						mockNotifications.unshift({
+							id: `n-preflight-${activity.vtId}-${Date.now()}`,
+							userId: "u1",
+							type: "agent_execution_autonomous",
+							title: `${activity.operation} complete`,
+							message: `${activity.vtName} completed ${activity.operation} on ${pageName || "New Page"} — ${activity.changes.length} changes applied.`,
+							status: "unread",
+							priority: "medium",
+							category: "agent_execution",
+							agentId: `vau-${activity.vtId}`,
+							agentName: activity.vtName,
+							deepLink: `/cms/edit/${pageId}`,
+							actionRequired: false,
+							createdAt: now,
+							timestamp: now.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}),
+							date: now.toLocaleDateString(),
+							executionStatus: "success",
+						});
+					}
+				}
+			}
+		}
+	}, [vtActivities, opalPanelControls, preflightStatus, pageId, pageName]);
+
+	const handlePreflightPublish = useCallback(() => {
+		onPublish?.();
+		setOpalActionCard(null);
+		opalPanelControls?.addMessage({
+			role: "assistant",
+			content: "Published successfully.",
+			authorName: "Opal",
+		});
+	}, [onPublish, setOpalActionCard, opalPanelControls]);
+
+	const handlePreflightUndo = useCallback(() => {
+		vtUndoAll();
+		setOpalActionCard(null);
+		opalPanelControls?.addMessage({
+			role: "assistant",
+			content: "All preflight changes have been reverted.",
+			authorName: "Opal",
+		});
+	}, [vtUndoAll, setOpalActionCard, opalPanelControls]);
+
+	useEffect(() => {
+		if (preflightAllComplete && opalPanelControls && !preflightSummaryPosted.current) {
+			preflightSummaryPosted.current = true;
+			const totalChanges = vtActivities.reduce(
+				(sum, a) => sum + (a.changes?.length ?? 0),
+				0
+			);
+			opalPanelControls.addMessage({
+				role: "assistant",
+				content: `All ${vtActivities.length} reviews complete. ${totalChanges} changes applied.`,
+				authorName: "Opal",
+			});
+			const now = new Date();
+			mockNotifications.unshift({
+				id: `n-preflight-complete-${Date.now()}`,
+				userId: "u1",
+				type: "approval_required",
+				title: `Preflight complete: ${pageName || "New Page"}`,
+				message: `All ${vtActivities.length} VT reviews finished — ${totalChanges} changes applied. Ready to publish.`,
+				status: "unread",
+				priority: "high",
+				category: "agent_execution",
+				agentId: "vau-frank",
+				agentName: "Frank",
+				deepLink: `/cms/edit/${pageId}`,
+				actionRequired: true,
+				approvalRequired: true,
+				approvalType: "cmp_workflow",
+				createdAt: now,
+				timestamp: now.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}),
+				date: now.toLocaleDateString(),
+				executionStatus: "success",
+			});
+			setOpalActionCard(
+				<ApprovalActionCard
+					authorName="Opal"
+					isVAU
+					fileName={pageName || "New Page"}
+					fileSubtitle={`${totalChanges} changes from preflight review`}
+					approvalTitle="Ready to publish"
+					approvalDescription="Review the changes above, then publish or undo all."
+					approveLabel="Publish"
+					rejectLabel="Undo all"
+					onApprove={handlePreflightPublish}
+					onRequestChanges={handlePreflightUndo}
+					cta
+				/>
+			);
+		}
+	}, [preflightAllComplete, vtActivities, opalPanelControls, setOpalActionCard, pageName, handlePreflightPublish, handlePreflightUndo]);
 
 	// Brand Tone integration - provide setCurrentEle to BrandToneProvider
 	const brandTone = useBrandTone();
@@ -462,16 +626,14 @@ export default function VBPrototype({
 		return getCompatibleInstances(
 			{contentTypeId: initialData.contentTypeId} as any,
 			cmpContentInstances,
-			persistentContentTypes,
-			[]
+			persistentContentTypes
 		).length;
 	}, [initialData?.contentTypeId, onConnectContent, cmpContentInstances, persistentContentTypes]);
 
-	const [preview, setPreview] = useState<PreviewSettings>({
-		mode: "responsive",
-		width: 1100,
-		maxWidth: 1100,
-	});
+	const [preview, setPreview] = usePersistentState("cms-preview-settings", {
+		mode: "scale",
+		width: 1440,
+	}) as [PreviewSettings, React.Dispatch<React.SetStateAction<PreviewSettings>>];
 
 	const onPreviewChange = (patch: Partial<PreviewSettings>) => {
 		setPreview((p) => ({...p, ...patch}));
@@ -568,23 +730,10 @@ export default function VBPrototype({
 	const [currentEle, setCurrentEle] = useState<string>("none");
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
 	const [styleEditorEle, setStyleEditorEle] = useState<string | null>(null);
-	const [styleEditorSource, setStyleEditorSource] = useState<"outline" | "elementEditor" | null>(null);
-	const [scrollToSectionId, setScrollToSectionId] = useState<string | null>(null);
-	const [currentSection, setCurrentSection] = useState<string | null>(null);
-	const [currentHoverSection, setCurrentHoverSection] = useState<string | null>(null);
-	const [scrollToOutlineSectionId, setScrollToOutlineSectionId] = useState<string | null>(null);
-	const [currentRow, setCurrentRow] = useState<string | null>(null);
-	const [currentHoverRow, setCurrentHoverRow] = useState<string | null>(null);
-	const [currentColumn, setCurrentColumn] = useState<string | null>(null);
-	const [currentHoverColumn, setCurrentHoverColumn] = useState<string | null>(null);
-	const [scrollToRowId, setScrollToRowId] = useState<string | null>(null);
-	const [scrollToColumnId, setScrollToColumnId] = useState<string | null>(null);
-	const [scrollToPreviewSectionId, setScrollToPreviewSectionId] = useState<string | null>(null);
-
-	// Wrapper to trigger scroll when section is added
-	const handleSectionAdded = useCallback((sectionId: string) => {
-		setScrollToSectionId(sectionId);
-	}, []);
+	const [outlineHidden, setOutlineHidden] = useState(true);
+	const [styleEditorSource, setStyleEditorSource] = useState<"outline" | "elementEditor" | null>(
+		null
+	);
 
 	// VIEW STATE
 	const [sidebarTab, setSidebarTab] = useState<SidebarTab>(() => {
@@ -634,6 +783,23 @@ export default function VBPrototype({
 	const isMulti = outlines.length > 1; // View 1/2
 	const isEditingElement = currentEle !== "none" || styleEditorEle !== null;
 
+	useEffect(() => {
+		const onKeyDown = (e: KeyboardEvent) => {
+			if (e.key !== "Escape") return;
+			const tag = (e.target as HTMLElement)?.tagName;
+			if (tag === "INPUT" || tag === "TEXTAREA") return;
+			if (isEditingElement) {
+				setCurrentEle("none");
+				setStyleEditorEle(null);
+				setStyleEditorSource(null);
+			} else {
+				setOutlineHidden((h) => !h);
+			}
+		};
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, [isEditingElement]);
+
 	const activeOutline = activeOutlineId
 		? (outlines.find((o) => o.id === activeOutlineId) ?? null)
 		: null;
@@ -682,53 +848,52 @@ export default function VBPrototype({
 		return null;
 	};
 
-	const findOutlineIdForSection = (sectionId: string) => {
-		for (const o of outlines) {
-			const sections = o.tree ?? [];
-			if (sections.some((s: any) => s.id === sectionId)) {
-				return o.id;
+	const setCurrentEleSmart = useCallback(
+		(value: React.SetStateAction<string>) => {
+			const eleId = typeof value === "function" ? value(currentEle) : value;
+
+			console.log("[VBPrototype] setCurrentEleSmart called with:", eleId);
+
+			setCurrentEle(eleId);
+
+			if (!eleId || eleId === "none") return;
+
+			// Auto-show outline panel when selecting an element
+			setOutlineHidden(false);
+
+			// ✅ Always drill down from View 1 -> View 2 when multi-outline
+			// (even if the element belongs to the currently active outline)
+			if (isMulti) {
+				setSidebarTab("outlines"); // keep your View 2 layout expectations
+				setOutlineView("tree");
 			}
-		}
-		return null;
-	};
 
-	const setCurrentEleSmart = useCallback((value: React.SetStateAction<string>) => {
-		const eleId = typeof value === "function" ? value(currentEle) : value;
-
-		setCurrentEle(eleId);
-
-		if (!eleId || eleId === "none") return;
-
-		// ✅ Always drill down from View 1 -> View 2 when multi-outline
-		// (even if the element belongs to the currently active outline)
-		if (isMulti) {
-			setSidebarTab("outlines"); // keep your View 2 layout expectations
-			setOutlineView("tree");
-		}
-
-		const owner = findOutlineIdForElement(eleId);
-		if (owner && owner !== activeOutlineId) {
-			setActiveOutlineId(owner);
-		}
-	}, [currentEle, isMulti, activeOutlineId, findOutlineIdForElement]);
+			const owner = findOutlineIdForElement(eleId);
+			if (owner && owner !== activeOutlineId) {
+				console.log("[VBPrototype] Switching to outline:", owner);
+				setActiveOutlineId(owner);
+			}
+		},
+		[currentEle, isMulti, activeOutlineId, findOutlineIdForElement]
+	);
 
 	// Wire up Brand Tone provider with scroll-to functionality
 	useEffect(() => {
+		console.log("[VBPrototype] Registering scroll function with Brand Tone");
 		brandTone.registerScrollFunction(setCurrentEleSmart);
 	}, [brandTone, setCurrentEleSmart]);
 
 	// Wire up Preflight Audit context with scroll-to functionality
 	useEffect(() => {
+		console.log("[VBPrototype] Registering scroll function with Preflight Audit");
 		registerPreflightScroll(setCurrentEleSmart);
 	}, [registerPreflightScroll, setCurrentEleSmart]);
 
 	const addSectionToEndOfActiveOutline = () => {
-		const t = Date.now();
-		const newSectionId = "section-" + t;
-
 		setData((prev) => {
+			const t = Date.now();
 			const mkSection = () => ({
-				id: newSectionId,
+				id: "section-" + t,
 				open: true,
 				children: [
 					{
@@ -747,9 +912,6 @@ export default function VBPrototype({
 
 			return [...(prev ?? []), mkSection()];
 		});
-
-		// Trigger scroll to new section
-		handleSectionAdded(newSectionId);
 	};
 
 	const addRandomBlockToEndOfActiveOutline = () => {
@@ -782,37 +944,15 @@ export default function VBPrototype({
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [activeRightTool, setActiveRightTool] = usePersistentState("active-right-tool", null);
 
-	const onInputChange = useCallback((value: any, keyOrIndex: string | number) => {
-		if (currentEle === "none") return;
+	const onInputChange = useCallback(
+		(value: any, keyOrIndex: string | number) => {
+			if (currentEle === "none") return;
 
-		// Update theEles state
-		setTheEles((prev) => {
-			// Check if currentEle exists in the previous state
-			if (!prev[currentEle]) return prev;
+			setTheEles((prev) => {
+				// Check if currentEle exists in the previous state
+				if (!prev[currentEle]) return prev;
 
-			const ele = prev[currentEle];
-			const properties = {...(ele.properties || {})};
-
-			if (typeof keyOrIndex === "string") {
-				// Store value directly (not wrapped in { value: ... })
-				properties[keyOrIndex] = value;
-			}
-
-			return {
-				...prev,
-				[currentEle]: {
-					...ele,
-					properties,
-				},
-			};
-		});
-
-		// Also update outlines.elements so PreviewCanvas shows the changes
-		setOutlines((prev) => {
-			return prev.map((outline) => {
-				if (!outline.elements[currentEle]) return outline;
-
-				const ele = outline.elements[currentEle];
+				const ele = prev[currentEle];
 				const properties = {...(ele.properties || {})};
 
 				if (typeof keyOrIndex === "string") {
@@ -820,18 +960,16 @@ export default function VBPrototype({
 				}
 
 				return {
-					...outline,
-					elements: {
-						...outline.elements,
-						[currentEle]: {
-							...ele,
-							properties,
-						},
+					...prev,
+					[currentEle]: {
+						...ele,
+						properties,
 					},
 				};
 			});
-		});
-	}, [currentEle, setTheEles, setOutlines]);
+		},
+		[currentEle, setTheEles]
+	);
 
 	// Style editor handlers
 	const onOpenStyleEditorFromOutline = useCallback((elementId: string) => {
@@ -847,228 +985,195 @@ export default function VBPrototype({
 		setStyleEditorSource("elementEditor");
 	}, [currentEle]);
 
-	// Helper to find a section in outlines
-	const findSection = useCallback((sectionId: string) => {
-		for (const outline of outlines) {
-			for (const section of outline.tree) {
-				if (section.id === sectionId) {
-					return { outline, section };
-				}
-			}
-		}
-		return null;
-	}, [outlines]);
-
-	const onStyleChange = useCallback((templateKey: string) => {
-		if (!styleEditorEle) return;
-
-		// Import display template utilities
-		const { applyDefaultSettings } = require("./vb/blocks/displayTemplateUtils");
-
-		// Update theEles state
+	const removeCurrentEle = useCallback(() => {
+		if (currentEle === "none") return;
+		const id = currentEle;
+		setData((prev) =>
+			prev.map((section: any) => ({
+				...section,
+				children: (section.children || []).map((row: any) => ({
+					...row,
+					children: (row.children || []).map((col: any) => {
+						const cur = (col.elements || col.children || []) as any[];
+						const nextElements = cur.filter((ele: any) => ele.id !== id);
+						const {children: _old, ...rest} = col;
+						return {...rest, elements: nextElements};
+					}),
+				})),
+			}))
+		);
+		setOutlines((prev) =>
+			prev.map((outline) => {
+				if (!outline.elements[id]) return outline;
+				const {[id]: _gone, ...rest} = outline.elements;
+				return {...outline, elements: rest};
+			})
+		);
 		setTheEles((prev) => {
-			if (!prev[styleEditorEle]) return prev;
-
-			const ele = prev[styleEditorEle];
-			const properties = {...(ele.properties || {})};
-
-			// Set displayTemplateKey and apply default settings
-			properties.displayTemplateKey = templateKey;
-			properties.displaySettings = applyDefaultSettings(templateKey);
-
-			return {
-				...prev,
-				[styleEditorEle]: {
-					...ele,
-					properties,
-				},
-			};
+			if (!prev[id]) return prev;
+			const {[id]: _gone, ...rest} = prev;
+			return rest;
 		});
+		setCurrentEle("none");
+		setCurrentHoverEle("none");
+		setStyleEditorEle(null);
+		setStyleEditorSource(null);
+	}, [currentEle, setData, setOutlines, setTheEles]);
 
-		// Also update outlines.elements so PreviewCanvas shows the changes
-		setOutlines((prev) => {
-			return prev.map((outline) => {
-				if (!outline.elements[styleEditorEle]) return outline;
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key !== "Delete") return;
+			if (currentEle === "none") return;
+			const target = e.target as HTMLElement;
+			if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+				const el = target as HTMLInputElement | HTMLTextAreaElement;
+				if (el.selectionStart !== el.value.length || el.selectionEnd !== el.value.length)
+					return;
+			} else if (target.isContentEditable) {
+				const sel = window.getSelection();
+				if (!sel || sel.rangeCount === 0) return;
+				const range = sel.getRangeAt(0);
+				if (!range.collapsed) return;
+				if (
+					range.endContainer !== target ||
+					range.endOffset !== (target.textContent?.length ?? 0)
+				)
+					return;
+			}
+			e.preventDefault();
+			removeCurrentEle();
+		};
+		document.addEventListener("keydown", handleKeyDown);
+		return () => document.removeEventListener("keydown", handleKeyDown);
+	}, [currentEle, removeCurrentEle]);
 
-				const ele = outline.elements[styleEditorEle];
+	const onStyleChange = useCallback(
+		(templateKey: string) => {
+			if (!styleEditorEle) return;
+
+			setTheEles((prev) => {
+				if (!prev[styleEditorEle]) return prev;
+
+				const ele = prev[styleEditorEle];
 				const properties = {...(ele.properties || {})};
-
 				properties.displayTemplateKey = templateKey;
-				properties.displaySettings = applyDefaultSettings(templateKey);
 
 				return {
-					...outline,
-					elements: {
-						...outline.elements,
-						[styleEditorEle]: {
-							...ele,
-							properties,
-						},
-					},
+					...prev,
+					[styleEditorEle]: {...ele, properties},
 				};
 			});
-		});
-	}, [styleEditorEle, setTheEles, setOutlines]);
 
-	const onSectionStyleChange = useCallback((templateKey: string) => {
-		if (!styleEditorEle) return;
+			setOutlines((prev) =>
+				prev.map((outline) => {
+					if (!outline.elements[styleEditorEle]) return outline;
+					const ele = outline.elements[styleEditorEle];
+					const properties = {...(ele.properties || {})};
+					properties.displayTemplateKey = templateKey;
+					return {
+						...outline,
+						elements: {...outline.elements, [styleEditorEle]: {...ele, properties}},
+					};
+				})
+			);
+		},
+		[styleEditorEle, setTheEles, setOutlines]
+	);
 
-		console.log("[VBPrototype] onSectionStyleChange:", { styleEditorEle, templateKey });
+	const onSettingChange = useCallback(
+		(settingKey: string, value: string) => {
+			if (!styleEditorEle) return;
 
-		// Import display template utilities
-		const { applyDefaultSettings } = require("./vb/blocks/displayTemplateUtils");
-		const defaultSettings = applyDefaultSettings(templateKey);
-
-		console.log("[VBPrototype] Applying default settings:", defaultSettings);
-
-		setOutlines((prev) => {
-			return prev.map((outline) => ({
-				...outline,
-				tree: outline.tree.map((section) => {
-					if (section.id === styleEditorEle) {
-						return {
-							...section,
-							displayTemplateKey: templateKey,
-							displaySettings: defaultSettings,
-						};
-					}
-					return section;
-				}),
-			}));
-		});
-	}, [styleEditorEle, setOutlines]);
-
-	// Handle element setting changes (spacing, color, etc.)
-	const onSettingChange = useCallback((settingKey: string, value: string) => {
-		if (!styleEditorEle) return;
-
-		// Update theEles state
-		setTheEles((prev) => {
-			if (!prev[styleEditorEle]) return prev;
-
-			const ele = prev[styleEditorEle];
-			const properties = {...(ele.properties || {})};
-			const displaySettings = [...(properties.displaySettings || [])];
-
-			// Update or add the setting
-			const existingIndex = displaySettings.findIndex(s => s.key === settingKey);
-			if (existingIndex >= 0) {
-				displaySettings[existingIndex] = { key: settingKey, value };
-			} else {
-				displaySettings.push({ key: settingKey, value });
-			}
-
-			properties.displaySettings = displaySettings;
-
-			return {
-				...prev,
-				[styleEditorEle]: {
-					...ele,
-					properties,
-				},
-			};
-		});
-
-		// Also update outlines.elements so PreviewCanvas shows the changes
-		setOutlines((prev) => {
-			return prev.map((outline) => {
-				if (!outline.elements[styleEditorEle]) return outline;
-
-				const ele = outline.elements[styleEditorEle];
+			setTheEles((prev) => {
+				if (!prev[styleEditorEle]) return prev;
+				const ele = prev[styleEditorEle];
 				const properties = {...(ele.properties || {})};
 				const displaySettings = [...(properties.displaySettings || [])];
+				const idx = displaySettings.findIndex((s) => s.key === settingKey);
+				if (idx >= 0) displaySettings[idx] = {key: settingKey, value};
+				else displaySettings.push({key: settingKey, value});
+				properties.displaySettings = displaySettings;
+				return {...prev, [styleEditorEle]: {...ele, properties}};
+			});
 
-				const existingIndex = displaySettings.findIndex(s => s.key === settingKey);
-				if (existingIndex >= 0) {
-					displaySettings[existingIndex] = { key: settingKey, value };
-				} else {
-					displaySettings.push({ key: settingKey, value });
+			setOutlines((prev) =>
+				prev.map((outline) => {
+					if (!outline.elements[styleEditorEle]) return outline;
+					const ele = outline.elements[styleEditorEle];
+					const properties = {...(ele.properties || {})};
+					const displaySettings = [...(properties.displaySettings || [])];
+					const idx = displaySettings.findIndex((s) => s.key === settingKey);
+					if (idx >= 0) displaySettings[idx] = {key: settingKey, value};
+					else displaySettings.push({key: settingKey, value});
+					properties.displaySettings = displaySettings;
+					return {
+						...outline,
+						elements: {...outline.elements, [styleEditorEle]: {...ele, properties}},
+					};
+				})
+			);
+		},
+		[styleEditorEle, setTheEles, setOutlines]
+	);
+
+	const onSectionSettingChange = useCallback(
+		(settingKey: string, value: string) => {
+			if (!styleEditorEle) return;
+
+			setOutlines((prev) =>
+				prev.map((outline) => ({
+					...outline,
+					tree: outline.tree.map((section) => {
+						if (section.id !== styleEditorEle) return section;
+						const displaySettings = [...(section.displaySettings || [])];
+						const idx = displaySettings.findIndex((s) => s.key === settingKey);
+						if (idx >= 0) displaySettings[idx] = {key: settingKey, value};
+						else displaySettings.push({key: settingKey, value});
+						return {
+							...section,
+							displayTemplateKey: section.displayTemplateKey || "defaultSection",
+							displaySettings,
+						};
+					}),
+				}))
+			);
+		},
+		[styleEditorEle, setOutlines]
+	);
+
+	// Update element by ID (for Brand Tone suggestions)
+	const onUpdateElementById = useCallback(
+		(elementId: string, propertyKey: string, value: string) => {
+			console.log("[VBPrototype] Updating element:", elementId, propertyKey, value);
+
+			setTheEles((prev) => {
+				if (!prev[elementId]) {
+					console.warn("[VBPrototype] Element not found:", elementId);
+					return prev;
 				}
 
-				properties.displaySettings = displaySettings;
+				const ele = prev[elementId];
+				const properties = {...(ele.properties || {})};
+
+				properties[propertyKey] = value;
 
 				return {
-					...outline,
-					elements: {
-						...outline.elements,
-						[styleEditorEle]: {
-							...ele,
-							properties,
-						},
+					...prev,
+					[elementId]: {
+						...ele,
+						properties,
 					},
 				};
 			});
-		});
-	}, [styleEditorEle, setTheEles, setOutlines]);
-
-	// Handle section setting changes
-	const onSectionSettingChange = useCallback((settingKey: string, value: string) => {
-		if (!styleEditorEle) return;
-
-		console.log("[VBPrototype] onSectionSettingChange:", { styleEditorEle, settingKey, value });
-
-		setOutlines((prev) => {
-			return prev.map((outline) => ({
-				...outline,
-				tree: outline.tree.map((section) => {
-					if (section.id === styleEditorEle) {
-						const displaySettings = [...(section.displaySettings || [])];
-
-						const existingIndex = displaySettings.findIndex(s => s.key === settingKey);
-						if (existingIndex >= 0) {
-							displaySettings[existingIndex] = { key: settingKey, value };
-						} else {
-							displaySettings.push({ key: settingKey, value });
-						}
-
-						console.log("[VBPrototype] Updated section displaySettings:", displaySettings);
-
-						// Ensure displayTemplateKey is set (default to "defaultSection" if missing)
-						const displayTemplateKey = section.displayTemplateKey || "defaultSection";
-						console.log("[VBPrototype] Ensuring displayTemplateKey:", displayTemplateKey);
-
-						return {
-							...section,
-							displayTemplateKey,
-							displaySettings,
-						};
-					}
-					return section;
-				}),
-			}));
-		});
-	}, [styleEditorEle, setOutlines]);
-
-	// Update element by ID (for Brand Tone suggestions)
-	const onUpdateElementById = useCallback((elementId: string, propertyKey: string, value: string) => {
-		console.log("[VBPrototype] Updating element:", elementId, propertyKey, value);
-
-		setTheEles((prev) => {
-			if (!prev[elementId]) {
-				console.warn("[VBPrototype] Element not found:", elementId);
-				return prev;
-			}
-
-			const ele = prev[elementId];
-			const properties = {...(ele.properties || {})};
-
-			properties[propertyKey] = {...properties[propertyKey], value};
-
-			return {
-				...prev,
-				[elementId]: {
-					...ele,
-					properties,
-				},
-			};
-		});
-	}, [setTheEles]);
+		},
+		[setTheEles]
+	);
 
 	// Header actions (Generate only in Categories & Tags + plus-menu)
 	const showGenerateInHeader =
 		sidebarTab === "properties" && activePropertiesSection === "categories-tags";
 	const HeaderActions = (
-		<Box display="flex" alignItems="center" gap="2" className="relative">
+		<Box display="flex" alignItems="center" gap="2" className="relative" pr="8">
 			{showGenerateInHeader && (
 				<Tooltip content="Generate tag and category suggestions using Opal">
 					<Button
@@ -1114,22 +1219,28 @@ export default function VBPrototype({
 				<Menu
 					options={[
 						{
-							addon: <IconSettings size={16} />,
+							addon: <IconGear size={16} />,
 							label: "Properties",
 							execute: () => {
 								setSidebarTab("properties");
 								setEditingSectionId(null);
 							},
 						},
-						...(onConnectContent ? [{
-							addon: <IconPlus size={16} />,
-							label: hasConnection ? "Change connected content..." : "Connect content...",
-							execute: onConnectContent,
-						}] : []),
+						...(onConnectContent
+							? [
+									{
+										addon: <IconPlus size={16} />,
+										label: hasConnection
+											? "Change connected content..."
+											: "Connect content...",
+										execute: onConnectContent,
+									},
+								]
+							: []),
 					]}
 				>
 					<MenuTrigger
-						icon={<IconDots size={16} />}
+						icon={<IconEllipsisSolid size={16} />}
 						aria-label="more"
 						appearance="subtle"
 						size="sm"
@@ -1610,7 +1721,6 @@ export default function VBPrototype({
 		return (
 			<div className="select-none" style={{height: "100%"}}>
 				<Box
-					bg="bg.page"
 					w="full"
 					className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
 					style={{height: "100%", overflow: "hidden"}}
@@ -1620,7 +1730,6 @@ export default function VBPrototype({
 						pageId={pageId}
 						lastSaved={lastSaved}
 						pageStatus={pageStatus}
-						onPublish={onPublish}
 						onViewOnWebsite={onViewOnWebsite}
 						onShowVersionHistory={() => setIsVersionHistoryOpen(true)}
 						contentTypeIcon={<IconFile size={16} />}
@@ -1637,13 +1746,22 @@ export default function VBPrototype({
 						pageElements={{}}
 						onUpdateElement={onUpdateElementById}
 						onConnectContent={onConnectContent}
+						onSyncContent={onSyncContent}
 						onDisconnectContent={onDisconnectContent}
 						hasConnection={hasConnection}
 						compatibleInstancesCount={compatibleInstancesCount}
 						onAddToTask={onAddToTask}
 						onRemoveFromTask={onRemoveFromTask}
 						currentTaskId={currentTaskId}
-					/>
+						onPublishConfirm={handlePublishConfirm}
+						onUnpublish={onUnpublish}
+						scheduledDate={scheduledDate}
+						onCancelSchedule={onCancelSchedule}
+						preflightStatus={preflightStatus}
+						preflightRanRecently={preflightStatus === "done"}
+						lastPublishedAt={pageStatus === "Published" || pageStatus === "Changed" ? "Jun 28, 2026" : null}
+						lastPublishedBy={pageStatus === "Published" || pageStatus === "Changed" ? "Jamie Chen" : null}
+											/>
 
 					{/* LEFT SIDEBAR (Properties only) */}
 					<Box
@@ -1651,7 +1769,16 @@ export default function VBPrototype({
 						w="auto"
 						className="vb-outline"
 						bg="bg.page"
-						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative", height: "100%"}}
+						style={{
+							width: outlineHidden ? 8 : 324,
+							minWidth: outlineHidden ? 8 : 180,
+							maxWidth: 600,
+							overflow: "hidden",
+							flexShrink: 0,
+							position: "relative",
+							height: "100%",
+							transition: "width 0.2s ease, min-width 0.2s ease",
+						}}
 					>
 						<DragHandle position="right" minWidth={180} maxWidth={600} />
 
@@ -1667,7 +1794,6 @@ export default function VBPrototype({
 									pageName={pageName ?? undefined}
 									pageId={initialData?.id}
 									contentTypeId={contentType?.id}
-									boundPropertyIds={boundPropertyIds}
 									onRegisterGenerateTrigger={(fn) => {
 										generateTriggerRef.current = fn;
 									}}
@@ -1683,7 +1809,9 @@ export default function VBPrototype({
 						style={{height: "100%", overflow: "hidden"}}
 					>
 						{/* Check if this is a property-based page (has data but no outlines) */}
-						{outlines.length === 0 && contentType?.id && Object.keys(properties).length > 0 ? (
+						{outlines.length === 0 &&
+						contentType?.id &&
+						Object.keys(properties).length > 0 ? (
 							<PropertyBasedPreview
 								contentTypeId={contentType.id}
 								properties={properties}
@@ -1699,79 +1827,6 @@ export default function VBPrototype({
 								setCurrentHoverEle={setCurrentHoverEle}
 								setOutlines={setOutlines as any}
 								preview={preview}
-								scrollToSectionId={scrollToSectionId}
-								onScrollComplete={() => setScrollToSectionId(null)}
-								currentSection={currentSection}
-								currentHoverSection={currentHoverSection}
-								setCurrentSection={setCurrentSection}
-								setCurrentHoverSection={setCurrentHoverSection}
-								onSectionClick={(sectionId) => {
-									// Find which outline this section belongs to
-									const ownerOutlineId = findOutlineIdForSection(sectionId);
-
-									// Clear element and section selection
-									setCurrentEle("none");
-									setCurrentHoverEle("none");
-									setEditingSectionId(null);
-									setStyleEditorEle(null);
-
-									// Switch to the outline if needed
-									if (ownerOutlineId && ownerOutlineId !== activeOutlineId) {
-										setActiveOutlineId(ownerOutlineId);
-									}
-
-									// If multi-outline, switch to tree view
-									if (isMulti) {
-										setSidebarTab("outlines");
-										setOutlineView("tree");
-									} else {
-										// Single outline mode - switch to outline view
-										setSidebarTab("outline");
-									}
-
-									// Trigger scroll after transition completes
-									setTimeout(() => setScrollToOutlineSectionId(sectionId), 350);
-								}}
-								currentRow={currentRow}
-								currentHoverRow={currentHoverRow}
-								setCurrentRow={setCurrentRow}
-								setCurrentHoverRow={setCurrentHoverRow}
-								onRowClick={(rowId) => {
-									setCurrentEle("none");
-									setCurrentHoverEle("none");
-
-									// Switch to tree view if multi-outline
-									if (isMulti) {
-										setSidebarTab("outlines");
-										setOutlineView("tree");
-									} else {
-										setSidebarTab("outline");
-									}
-
-									setTimeout(() => setScrollToRowId(rowId), 350);
-								}}
-								currentColumn={currentColumn}
-								currentHoverColumn={currentHoverColumn}
-								setCurrentColumn={setCurrentColumn}
-								setCurrentHoverColumn={setCurrentHoverColumn}
-								onColumnClick={(columnId) => {
-									setCurrentEle("none");
-									setCurrentHoverEle("none");
-
-									// Switch to tree view if multi-outline
-									if (isMulti) {
-										setSidebarTab("outlines");
-										setOutlineView("tree");
-									} else {
-										setSidebarTab("outline");
-									}
-
-									setTimeout(() => setScrollToColumnId(columnId), 350);
-								}}
-								scrollToRowId={scrollToRowId}
-								scrollToColumnId={scrollToColumnId}
-								onRowScrollComplete={() => setScrollToRowId(null)}
-								onColumnScrollComplete={() => setScrollToColumnId(null)}
 								contentTypeId={contentType?.id}
 							/>
 						)}
@@ -1819,13 +1874,14 @@ export default function VBPrototype({
 				w="full"
 				className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
 				style={{height: "100%", overflow: "hidden"}}
+				borderL="1"
+				borderColor="border.secondary"
 			>
 				<CMSToolbar
 					pageName={pageName || "New Page"}
 					pageId={pageId}
 					lastSaved={lastSaved}
 					pageStatus={pageStatus}
-					onPublish={onPublish}
 					onViewOnWebsite={onViewOnWebsite}
 					onShowVersionHistory={() => setIsVersionHistoryOpen(true)}
 					contentTypeIcon={<IconFile size={16} />}
@@ -1845,12 +1901,21 @@ export default function VBPrototype({
 					pageElements={theEles}
 					onUpdateElement={onUpdateElementById}
 					onConnectContent={onConnectContent}
+					onSyncContent={onSyncContent}
 					onDisconnectContent={onDisconnectContent}
 					hasConnection={hasConnection}
 					compatibleInstancesCount={compatibleInstancesCount}
 					onAddToTask={onAddToTask}
 					onRemoveFromTask={onRemoveFromTask}
 					currentTaskId={currentTaskId}
+					onPublishConfirm={handlePublishConfirm}
+					onUnpublish={onUnpublish}
+					scheduledDate={scheduledDate}
+					onCancelSchedule={onCancelSchedule}
+					preflightStatus={preflightStatus}
+					preflightRanRecently={preflightStatus === "done"}
+					lastPublishedAt={pageStatus === "Published" || pageStatus === "Changed" ? "Jun 28, 2026" : null}
+					lastPublishedBy={pageStatus === "Published" || pageStatus === "Changed" ? "Jamie Chen" : null}
 				/>
 
 				{/* LEFT SIDEBAR */}
@@ -1859,8 +1924,16 @@ export default function VBPrototype({
 					pr="0"
 					w="auto"
 					className="vb-outline"
-					bg="bg.page"
-					style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
+					style={{
+						width: outlineHidden ? 8 : 324,
+						minWidth: outlineHidden ? 8 : 180,
+						maxWidth: 600,
+						overflow: "hidden",
+						flexShrink: 0,
+						opacity: outlineHidden ? 0 : 1,
+						position: "relative",
+						transition: "width 0.2s ease, min-width 0.2s ease, opacity 0.2s ease",
+					}}
 				>
 					<DragHandle position="right" minWidth={180} maxWidth={600} />
 
@@ -1890,7 +1963,7 @@ export default function VBPrototype({
 													<Menu
 														options={[
 															{
-																addon: <IconSettings size={16} />,
+																addon: <IconGear size={16} />,
 																label: "Properties",
 																execute: () => {
 																	setSidebarTab("properties");
@@ -1900,7 +1973,7 @@ export default function VBPrototype({
 														]}
 													>
 														<MenuTrigger
-															icon={<IconDots size={16} />}
+															icon={<IconEllipsisSolid size={16} />}
 															aria-label="more"
 															appearance="subtle"
 															size="sm"
@@ -1938,20 +2011,20 @@ export default function VBPrototype({
 									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
 										<div className="pt-4 pb-2">
 											{activeOutline ? (
-												<div className="pl-6 pr-6 flex flex-col gap-1">
-													<Text
-														fontSize="sm"
-														fontWeight="400"
-														color="fg.accent"
-														className="cursor-pointer"
+												<div className="pl-6 pr-6 gap-1">
+													<Button
+														className="-translate-x-2"
+														appearance="subtle"
+														icon={<IconArrowLeft />}
+														size="sm"
 														onClick={() => {
 															setOutlineView("list");
 															setCurrentEle("none");
 															setCurrentHoverEle("none");
 														}}
 													>
-														← Page
-													</Text>
+														Page
+													</Button>
 
 													<div className="flex items-center gap-2">
 														<Heading level="4">
@@ -1989,24 +2062,6 @@ export default function VBPrototype({
 														setEditingSectionId(id);
 													}}
 													onOpenStyleEditor={onOpenStyleEditorFromOutline}
-													onSectionAdded={handleSectionAdded}
-													scrollToSectionId={scrollToOutlineSectionId}
-													onScrollComplete={() => setScrollToOutlineSectionId(null)}
-													currentSection={currentSection}
-													setCurrentHoverSection={setCurrentHoverSection}
-													currentRow={currentRow}
-													setCurrentHoverRow={setCurrentHoverRow}
-													currentColumn={currentColumn}
-													setCurrentHoverColumn={setCurrentHoverColumn}
-													onScrollToSection={(sectionId, outlineId) => {
-														if (outlineId !== activeOutlineId) {
-															setActiveOutlineId(outlineId);
-														}
-														setScrollToSectionId(sectionId);
-													}}
-													onScrollToRow={setScrollToRowId}
-													onScrollToColumn={setScrollToColumnId}
-													outlineId={activeOutline?.id}
 												/>
 											) : null}
 										</div>
@@ -2016,59 +2071,39 @@ export default function VBPrototype({
 									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
 										{!editingSectionId && (
 											<div className="pl-6 pr-6 pt-4 pb-2">
-												<div
-													className="relative mb-1"
-													style={{height: "20px"}}
-												>
-													<Text
-														fontSize="sm"
-														fontWeight="400"
-														color="fg.accent"
-														className="cursor-pointer absolute top-0 left-0"
-														onClick={() => {
-															setActivePropertiesSection("menu");
-														}}
-														style={{
-															visibility:
-																activePropertiesSection === "menu"
-																	? "hidden"
-																	: "visible",
-															pointerEvents:
-																activePropertiesSection === "menu"
-																	? "none"
-																	: "auto",
-														}}
-													>
-														← Properties
-													</Text>
-													<Text
-														fontSize="sm"
-														fontWeight="400"
-														color="fg.accent"
-														className="cursor-pointer absolute top-0 left-0"
-														onClick={() => {
-															setSidebarTab("outlines");
-															setOutlineView("list");
-															setEditingSectionId(null);
-														}}
-														style={{
-															visibility:
-																activePropertiesSection !== "menu"
-																	? "hidden"
-																	: "visible",
-															pointerEvents:
-																activePropertiesSection !== "menu"
-																	? "none"
-																	: "auto",
-														}}
-													>
-														← Main
-													</Text>
+												<div className="mb-1">
+													{activePropertiesSection !== "menu" && (
+														<Button
+															className="-translate-x-2"
+															appearance="subtle"
+															icon={<IconArrowLeft />}
+															size="sm"
+															onClick={() => {
+																setActivePropertiesSection("menu");
+															}}
+														>
+															Properties
+														</Button>
+													)}
+
+													{activePropertiesSection === "menu" && (
+														<Button
+															className="-translate-x-2"
+															appearance="subtle"
+															icon={<IconArrowLeft />}
+															size="sm"
+															onClick={() => {
+																setSidebarTab("outlines");
+																setOutlineView("list");
+																setEditingSectionId(null);
+															}}
+														>
+															Main
+														</Button>
+													)}
 												</div>
 												<div className="flex items-center gap-2">
-													<Heading level="4">
-														Properties
-													</Heading>
+													<Heading level="4">Properties</Heading>
 													<div className="flex-1" />
 												</div>
 											</div>
@@ -2076,33 +2111,37 @@ export default function VBPrototype({
 										<div className="flex-1 overflow-y-auto">
 											{editingSectionId ? (
 												<Box p="24">
-													<Text
-														fontSize="sm"
-														fontWeight="400"
-														color="fg.accent"
-														className="cursor-pointer mb-1"
+													<Button
+														className="-translate-x-2"
+														size="sm"
+														appearance="subtle"
+														icon={<IconArrowLeft />}
 														onClick={() => {
 															setSidebarTab("outlines");
 															setOutlineView("tree");
 															setEditingSectionId(null);
 														}}
 													>
-														← {activeOutline?.title || "Page"}
-													</Text>
+														{activeOutline?.title || "Page"}
+													</Button>
 													<Heading level="4" mb="16">
 														Section Properties
 													</Heading>
 													{(() => {
-														const currentSectionType = activeOutline?.sectionType || "content";
+														const currentSectionType =
+															activeOutline?.sectionType || "content";
 														const sectionTypeOptions = [
-															{ label: "Hero", value: "hero" },
-															{ label: "Features", value: "features" },
-															{ label: "Benefits", value: "benefits" },
-															{ label: "Testimonials", value: "testimonials" },
-															{ label: "Pricing", value: "pricing" },
-															{ label: "Call to Action", value: "cta" },
-															{ label: "FAQ", value: "faq" },
-															{ label: "Content", value: "content" },
+															{label: "Hero", value: "hero"},
+															{label: "Features", value: "features"},
+															{label: "Benefits", value: "benefits"},
+															{
+																label: "Testimonials",
+																value: "testimonials",
+															},
+															{label: "Pricing", value: "pricing"},
+															{label: "Call to Action", value: "cta"},
+															{label: "FAQ", value: "faq"},
+															{label: "Content", value: "content"},
 														];
 
 														return (
@@ -2111,13 +2150,21 @@ export default function VBPrototype({
 																	<Select
 																		value={currentSectionType}
 																		options={sectionTypeOptions}
-																		onValueChange={(value: string) => {
+																		onValueChange={(
+																			value: string
+																		) => {
 																			// Update section type in active outline
 																			setOutlines((prev) =>
-																				prev.map((outline) =>
-																					outline.id === activeOutlineId
-																						? {...outline, sectionType: value}
-																						: outline
+																				prev.map(
+																					(outline) =>
+																						outline.id ===
+																						activeOutlineId
+																							? {
+																									...outline,
+																									sectionType:
+																										value,
+																								}
+																							: outline
 																				)
 																			);
 																		}}
@@ -2126,7 +2173,11 @@ export default function VBPrototype({
 																		<SelectContent />
 																	</Select>
 																</Field>
-																<Text fontSize="sm" color="fg.secondary" mt="8">
+																<Text
+																	fontSize="sm"
+																	color="fg.secondary"
+																	mt="8"
+																>
 																	Section ID: {editingSectionId}
 																</Text>
 															</Box>
@@ -2142,7 +2193,6 @@ export default function VBPrototype({
 													pageName={pageName ?? undefined}
 													pageId={initialData?.id}
 													contentTypeId={contentType?.id}
-													boundPropertyIds={boundPropertyIds}
 													onRegisterGenerateTrigger={(fn) => {
 														generateTriggerRef.current = fn;
 													}}
@@ -2155,37 +2205,31 @@ export default function VBPrototype({
 									{/* PANE 4: Element Editor or Style Editor */}
 									<div className="min-w-[25%] w-[25%] h-full">
 										<div className="h-full overflow-y-auto">
-											{styleEditorEle && (theEles[styleEditorEle] || findSection(styleEditorEle)) ? (
-												(() => {
-													const isSection = !theEles[styleEditorEle];
-													const sectionData = isSection ? findSection(styleEditorEle) : null;
-
-													return (
-														<StyleEditor
-															outlineTitle={
-																styleEditorSource === "elementEditor"
-																	? (theEles[styleEditorEle]?.type || "Element")
-																	: (activeOutline?.title || "Outline")
-															}
-															elementType={isSection ? undefined : (theEles[styleEditorEle]?.type || "")}
-															currentEle={styleEditorEle}
-															properties={isSection ? sectionData?.section : theEles[styleEditorEle]?.properties}
-															isSectionMode={isSection}
-															sectionType={isSection ? (sectionData?.section.type || "ct-section") : undefined}
-															onBack={() => {
-																setStyleEditorEle(null);
-																setStyleEditorSource(null);
-																// Only clear currentEle if coming from outline
-																if (styleEditorSource === "outline") {
-																	setCurrentEle("none");
-																	setCurrentHoverEle("none");
-																}
-															}}
-															onStyleChange={isSection ? onSectionStyleChange : onStyleChange}
-															onSettingChange={isSection ? onSectionSettingChange : onSettingChange}
-														/>
-													);
-												})()
+											{styleEditorEle && theEles[styleEditorEle] ? (
+												<StyleEditor
+													outlineTitle={
+														styleEditorSource === "elementEditor"
+															? theEles[styleEditorEle]?.type ||
+																"Element"
+															: activeOutline?.title || "Outline"
+													}
+													elementType={
+														theEles[styleEditorEle]?.type || ""
+													}
+													currentEle={styleEditorEle}
+													properties={theEles[styleEditorEle]?.properties}
+													onBack={() => {
+														setStyleEditorEle(null);
+														setStyleEditorSource(null);
+														// Only clear currentEle if coming from outline
+														if (styleEditorSource === "outline") {
+															setCurrentEle("none");
+															setCurrentHoverEle("none");
+														}
+													}}
+													onStyleChange={onStyleChange}
+													onSettingChange={onSettingChange}
+												/>
 											) : (
 												<ElementEditor
 													outlineTitle={activeOutline?.title || "Outline"}
@@ -2204,6 +2248,11 @@ export default function VBPrototype({
 													onOpenStyleEditor={
 														currentEle !== "none"
 															? onOpenStyleEditorFromElementEditor
+															: undefined
+													}
+													onRemove={
+														currentEle !== "none"
+															? removeCurrentEle
 															: undefined
 													}
 												/>
@@ -2255,24 +2304,6 @@ export default function VBPrototype({
 													setEditingSectionId(id);
 												}}
 												onOpenStyleEditor={onOpenStyleEditorFromOutline}
-												onSectionAdded={handleSectionAdded}
-												scrollToSectionId={scrollToOutlineSectionId}
-												onScrollComplete={() => setScrollToOutlineSectionId(null)}
-												currentSection={currentSection}
-												setCurrentHoverSection={setCurrentHoverSection}
-												currentRow={currentRow}
-												setCurrentHoverRow={setCurrentHoverRow}
-												currentColumn={currentColumn}
-												setCurrentHoverColumn={setCurrentHoverColumn}
-												onScrollToSection={(sectionId, outlineId) => {
-													if (outlineId !== activeOutlineId) {
-														setActiveOutlineId(outlineId);
-													}
-													setScrollToSectionId(sectionId);
-												}}
-												onScrollToRow={setScrollToRowId}
-												onScrollToColumn={setScrollToColumnId}
-												outlineId={activeOutline?.id}
 											/>
 										</div>
 									</div>
@@ -2288,7 +2319,7 @@ export default function VBPrototype({
 													<Text
 														fontSize="sm"
 														fontWeight="400"
-														color="fg.accent"
+														color="fg.default"
 														className="cursor-pointer absolute top-0 left-0"
 														onClick={() => {
 															setActivePropertiesSection("menu");
@@ -2309,7 +2340,7 @@ export default function VBPrototype({
 													<Text
 														fontSize="sm"
 														fontWeight="400"
-														color="fg.accent"
+														color="fg.default"
 														className="cursor-pointer absolute top-0 left-0"
 														onClick={() => {
 															setSidebarTab("outline");
@@ -2330,9 +2361,7 @@ export default function VBPrototype({
 													</Text>
 												</div>
 												<div className="flex items-center gap-2">
-													<Heading level="4">
-														Properties
-													</Heading>
+													<Heading level="4">Properties</Heading>
 													<div className="flex-1" />
 												</div>
 											</div>
@@ -2340,18 +2369,18 @@ export default function VBPrototype({
 										<div className="flex-1 overflow-y-auto">
 											{editingSectionId ? (
 												<Box p="24">
-													<Text
-														fontSize="sm"
-														fontWeight="400"
-														color="fg.accent"
-														className="cursor-pointer mb-1"
+													<Button
+														className="-translate-x-2"
+														size="sm"
+														appearance="subtle"
+														icon={<IconArrowLeft />}
 														onClick={() => {
 															setSidebarTab("outline");
 															setEditingSectionId(null);
 														}}
 													>
-														← {activeOutline?.title || "Page"}
-													</Text>
+														{activeOutline?.title || "Page"}
+													</Button>
 													<Heading level="4" mb="16">
 														Section Properties
 													</Heading>
@@ -2363,14 +2392,25 @@ export default function VBPrototype({
 												</Box>
 											) : (
 												<>
-													{hasConnection && initialData?.cmpConnection && (
-														<ConnectionStatus
-															instanceId={initialData.cmpConnection.instanceId}
-															syncStatus={initialData.cmpConnection.syncStatus}
-															lastSyncedAt={initialData.cmpConnection.lastSyncedAt}
-															onDisconnect={onDisconnectContent}
-														/>
-													)}
+													{hasConnection &&
+														initialData?.cmpConnection && (
+															<ConnectionStatus
+																instanceId={
+																	initialData.cmpConnection
+																		.instanceId
+																}
+																syncStatus={
+																	initialData.cmpConnection
+																		.syncStatus
+																}
+																lastSyncedAt={
+																	initialData.cmpConnection
+																		.lastSyncedAt
+																}
+																onSync={onSyncContent}
+																onDisconnect={onDisconnectContent}
+															/>
+														)}
 													<PropertiesPanel
 														value={properties}
 														onChange={setPropertiesPatch}
@@ -2379,7 +2419,6 @@ export default function VBPrototype({
 														pageName={pageName ?? undefined}
 														pageId={initialData?.id}
 														contentTypeId={contentType?.id}
-														boundPropertyIds={boundPropertyIds}
 														onRegisterGenerateTrigger={(fn) => {
 															generateTriggerRef.current = fn;
 														}}
@@ -2393,37 +2432,31 @@ export default function VBPrototype({
 									{/* PANE 3: Element Editor or Style Editor */}
 									<div className="min-w-[33.333%] w-[33.333%] h-full">
 										<div className="h-full overflow-y-auto">
-											{styleEditorEle && (theEles[styleEditorEle] || findSection(styleEditorEle)) ? (
-												(() => {
-													const isSection = !theEles[styleEditorEle];
-													const sectionData = isSection ? findSection(styleEditorEle) : null;
-
-													return (
-														<StyleEditor
-															outlineTitle={
-																styleEditorSource === "elementEditor"
-																	? (theEles[styleEditorEle]?.type || "Element")
-																	: (activeOutline?.title || "Outline")
-															}
-															elementType={isSection ? undefined : (theEles[styleEditorEle]?.type || "")}
-															currentEle={styleEditorEle}
-															properties={isSection ? sectionData?.section : theEles[styleEditorEle]?.properties}
-															isSectionMode={isSection}
-															sectionType={isSection ? (sectionData?.section.type || "ct-section") : undefined}
-															onBack={() => {
-																setStyleEditorEle(null);
-																setStyleEditorSource(null);
-																// Only clear currentEle if coming from outline
-																if (styleEditorSource === "outline") {
-																	setCurrentEle("none");
-																	setCurrentHoverEle("none");
-																}
-															}}
-															onStyleChange={isSection ? onSectionStyleChange : onStyleChange}
-															onSettingChange={isSection ? onSectionSettingChange : onSettingChange}
-														/>
-													);
-												})()
+											{styleEditorEle && theEles[styleEditorEle] ? (
+												<StyleEditor
+													outlineTitle={
+														styleEditorSource === "elementEditor"
+															? theEles[styleEditorEle]?.type ||
+																"Element"
+															: activeOutline?.title || "Outline"
+													}
+													elementType={
+														theEles[styleEditorEle]?.type || ""
+													}
+													currentEle={styleEditorEle}
+													properties={theEles[styleEditorEle]?.properties}
+													onBack={() => {
+														setStyleEditorEle(null);
+														setStyleEditorSource(null);
+														// Only clear currentEle if coming from outline
+														if (styleEditorSource === "outline") {
+															setCurrentEle("none");
+															setCurrentHoverEle("none");
+														}
+													}}
+													onStyleChange={onStyleChange}
+													onSettingChange={onSettingChange}
+												/>
 											) : (
 												<ElementEditor
 													outlineTitle={activeOutline?.title || "Outline"}
@@ -2442,6 +2475,11 @@ export default function VBPrototype({
 													onOpenStyleEditor={
 														currentEle !== "none"
 															? onOpenStyleEditorFromElementEditor
+															: undefined
+													}
+													onRemove={
+														currentEle !== "none"
+															? removeCurrentEle
 															: undefined
 													}
 												/>
@@ -2468,79 +2506,6 @@ export default function VBPrototype({
 						setCurrentHoverEle={setCurrentHoverEle}
 						setOutlines={setOutlines as any}
 						preview={preview}
-						scrollToSectionId={scrollToSectionId}
-						onScrollComplete={() => setScrollToSectionId(null)}
-						currentSection={currentSection}
-						currentHoverSection={currentHoverSection}
-						setCurrentSection={setCurrentSection}
-						setCurrentHoverSection={setCurrentHoverSection}
-						onSectionClick={(sectionId) => {
-							// Find which outline this section belongs to
-							const ownerOutlineId = findOutlineIdForSection(sectionId);
-
-							// Clear element and section selection
-							setCurrentEle("none");
-							setCurrentHoverEle("none");
-							setEditingSectionId(null);
-							setStyleEditorEle(null);
-
-							// Switch to the outline if needed
-							if (ownerOutlineId && ownerOutlineId !== activeOutlineId) {
-								setActiveOutlineId(ownerOutlineId);
-							}
-
-							// If multi-outline, switch to tree view
-							if (isMulti) {
-								setSidebarTab("outlines");
-								setOutlineView("tree");
-							} else {
-								// Single outline mode - switch to outline view
-								setSidebarTab("outline");
-							}
-
-							// Trigger scroll after transition completes
-							setTimeout(() => setScrollToOutlineSectionId(sectionId), 350);
-						}}
-						currentRow={currentRow}
-						currentHoverRow={currentHoverRow}
-						setCurrentRow={setCurrentRow}
-						setCurrentHoverRow={setCurrentHoverRow}
-						onRowClick={(rowId) => {
-							setCurrentEle("none");
-							setCurrentHoverEle("none");
-
-							// Switch to tree view if multi-outline
-							if (isMulti) {
-								setSidebarTab("outlines");
-								setOutlineView("tree");
-							} else {
-								setSidebarTab("outline");
-							}
-
-							setTimeout(() => setScrollToRowId(rowId), 350);
-						}}
-						currentColumn={currentColumn}
-						currentHoverColumn={currentHoverColumn}
-						setCurrentColumn={setCurrentColumn}
-						setCurrentHoverColumn={setCurrentHoverColumn}
-						onColumnClick={(columnId) => {
-							setCurrentEle("none");
-							setCurrentHoverEle("none");
-
-							// Switch to tree view if multi-outline
-							if (isMulti) {
-								setSidebarTab("outlines");
-								setOutlineView("tree");
-							} else {
-								setSidebarTab("outline");
-							}
-
-							setTimeout(() => setScrollToColumnId(columnId), 350);
-						}}
-						scrollToRowId={scrollToRowId}
-						scrollToColumnId={scrollToColumnId}
-						onRowScrollComplete={() => setScrollToRowId(null)}
-						onColumnScrollComplete={() => setScrollToColumnId(null)}
 						contentTypeId={contentType?.id}
 					/>
 
@@ -2554,10 +2519,8 @@ export default function VBPrototype({
 								? (activeExtension as any).manifest
 								: activeExtension;
 
-						// Ensure "original" exists in variations for extensions
 						const safeVariations = [...(variations || [])];
 						if (!safeVariations.find((v) => v.id === "original")) {
-							// fallback: construct "original" from top-level legacy outlines
 							safeVariations.unshift({
 								id: "original",
 								name: "Original",
@@ -2572,7 +2535,6 @@ export default function VBPrototype({
 							pageStatus,
 							variations: safeVariations,
 							selectedVariation,
-							// mutation hooks
 							onSelectVariation: setSelectedVariation,
 							onAddVariation,
 						};
@@ -2713,12 +2675,17 @@ export default function VBPrototype({
 				<Text>This action will unpublish the page and move it to the trash.</Text>
 			</AbstractDialog>
 
+
 			{isVersionHistoryOpen && (
 				<VersionHistory
 					variations={variations}
 					pageOutlines={outlines}
 					onClose={() => setIsVersionHistoryOpen(false)}
-					initialPreviewMode={preview.mode === "fixed" || preview.mode === "scale" ? "fixed" : "responsive"}
+					initialPreviewMode={
+						preview.mode === "fixed" || preview.mode === "scale"
+							? "fixed"
+							: "responsive"
+					}
 					versionHistory={versionHistory}
 					pageId={pageId}
 					onRestore={onRestoreVersion}

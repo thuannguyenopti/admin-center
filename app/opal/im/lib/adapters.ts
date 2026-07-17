@@ -5,8 +5,9 @@ import type {
   IMMessage,
 } from "./types";
 import { getCurrentUserId } from "./currentUser";
-import { avatarFor, statusFor } from "./avatars";
+import { avatarFor } from "./avatars";
 import { getVAU } from "./virtualTeammates";
+import { getPresence } from "./presence";
 
 /**
  * Active user ID at module-load time. Prefer `getCurrentUserId()` when you
@@ -50,9 +51,7 @@ export function imToChatMessage(
       authorTitle: vau?.template_name,
       authorInlineAvatar: !isOwn,
       isVAU: !!vau,
-      reactions: m.reactions ?? {},
-      currentUserId: getCurrentUserId(),
-      authorStatus: statusFor(m.sender_id),
+      presenceStatus: !vau ? getPresence(m.sender_id) : undefined,
     },
   };
 }
@@ -96,8 +95,8 @@ export function conversationToHistoryItem(
       if (vau) {
         item.isVAU = true;
         item.vauTemplateName = vau.template_name;
-      } else if (c.other_participant_status) {
-        item.presenceStatus = c.other_participant_status;
+      } else {
+        item.presenceStatus = getPresence(other);
       }
     } else {
       // group — stack up to 3 other participants
@@ -105,7 +104,7 @@ export function conversationToHistoryItem(
         .slice(0, 3)
         .map((id) => ({ name: profiles[id] ?? id, url: avatarFor(id) }));
     }
-  } // end else (non-channel)
+  }
   return item;
 }
 

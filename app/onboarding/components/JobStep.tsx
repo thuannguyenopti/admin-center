@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Heading, Text, Button, Checkbox, Box } from "@optiaxiom/react";
-import { IconArrowLeft, IconCheck } from "@tabler/icons-react";
+import {IconArrowLeft, IconCheck} from "@/app/lib/axiom-icons";
 import { motion } from "framer-motion";
 
 type JobStepProps = {

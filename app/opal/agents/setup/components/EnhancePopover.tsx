@@ -89,7 +89,7 @@ export function EnhancePopover({ anchorEl, isOpen, onClose, onSubmit }: EnhanceP
                 {/* Header */}
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box display="flex" alignItems="center" gap="8">
-                        <Image src="/opal-orb.png" alt="Opal" width={18} height={18} />
+                        <Image src="/opal-orb.svg" alt="Opal" width={18} height={18} />
                         <Text fontWeight="600" fontSize="md" style={{ color: "#080736" }}>
                             Ask Opal to help you build
                         </Text>

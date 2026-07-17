@@ -7,7 +7,7 @@ import {
     IconEnvelope,
     IconPaintRoller,
     IconToggleOff,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 import { usePathname } from "next/navigation";
 
 // ─── Settings sub-nav ─────────────────────────────────────────────────────────

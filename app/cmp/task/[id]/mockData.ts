@@ -353,7 +353,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
 	{
 		id: "blog-cms",
 		icon: "tag",
-		name: "Blog Post to CMS",
+		name: "Add blog post to Stride.com (production)",
 		subtitle: "Write, review, and prepare blog content",
 		steps: [
 			{ id: "blog-1", title: "1. Draft", date: "Apr 21" },

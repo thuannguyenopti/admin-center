@@ -12,7 +12,7 @@ import {
 	Button,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconChevronDown, IconChevronRight, IconPlus } from "@tabler/icons-react";
+import {IconChevronDown, IconChevronRight, IconPlus} from "@/app/lib/axiom-icons";
 import { StatusBadge, StepBadge } from "./StatusBadge";
 import type { PlanItem } from "../types";
 
@@ -26,7 +26,7 @@ type ListViewProps = {
 export function ListView({ data, expandedGroups, toggleGroup, onRowClick }: ListViewProps) {
 	return (
 		<Box style={{ position: "absolute", inset: 0, overflow: "auto" }}>
-			<Box bg="bg.default">
+			<Box bg="bg.default" border="1" borderColor="border.tertiary" rounded="md" style={{ overflow: "hidden", width: "fit-content" }}>
 				<Table className="[&_td]:!align-middle [&_th]:!align-middle [&_tr]:h-[52px]" style={{ minWidth: "max-content" }}>
 					<TableHeader>
 						<TableRow className="align-middle">
@@ -72,7 +72,7 @@ export function ListView({ data, expandedGroups, toggleGroup, onRowClick }: List
 									</Box>
 								</TableCell>
 								<TableCell px="16" py="12" className="align-middle" style={{ width: "280px", minWidth: "280px" }}>
-									<Box display="flex" alignItems="center" gap="8">
+									<Box display="flex" alignItems="center" gap="8" style={item.parentCampaign ? {paddingLeft: 52} : undefined}>
 										{item.isGroup && (
 											<Button
 												appearance="subtle"

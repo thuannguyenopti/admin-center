@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Box, Tooltip } from "@optiaxiom/react";
-import { Button } from "@/app/components/Button";
-import { Text } from "@/app/components/Text";
-import { IconCheck, IconChevronDown, IconPencil, IconX } from "@tabler/icons-react";
-import type { AssetItem } from "../types";
-import { AssetBadge, ScoreBadge } from "./shared/AssetBadge";
-import { AssetTooltipContent } from "./shared/AssetTooltipContent";
+import {useEffect, useMemo, useState} from "react";
+import {Box, Tooltip} from "@optiaxiom/react";
+import {Button} from "@/app/components/Button";
+import {Text} from "@/app/components/Text";
+import {IconCheck, IconChevronDown, IconPen, IconXmark} from "@/app/lib/axiom-icons";
+import type {AssetItem} from "../types";
+import {AssetBadge, ScoreBadge} from "./shared/AssetBadge";
+import {AssetTooltipContent} from "./shared/AssetTooltipContent";
 
 function PanelAssetCard({
 	asset,
@@ -41,37 +41,50 @@ function PanelAssetCard({
 						position: "relative",
 					}}
 				>
-						<button
-							aria-label={asset.selected ? `Deselect ${asset.title}` : `Select ${asset.title}`}
-							onClick={onToggleSelect}
-							style={{
-								alignItems: "center",
-								background: asset.selected ? "var(--ax-colors-bg-accent)" : "var(--ax-colors-bg-default)",
-								border: asset.selected ? "none" : "1px solid var(--ax-colors-border-control)",
-								borderRadius: 4,
-								boxShadow: asset.selected ? "0 0 0 1px rgba(0,0,0,0.02)" : "0 1px 2px rgba(16,24,40,0.12)",
-								cursor: "pointer",
-								display: "flex",
-								height: 18,
-								justifyContent: "center",
-								opacity: isHovered || asset.selected ? 1 : 0,
-								padding: 0,
-								pointerEvents: isHovered || asset.selected ? "auto" : "none",
-								position: "absolute",
-								right: 8,
-								top: 8,
-								transition: "opacity 120ms ease",
-								width: 18,
-								zIndex: 1,
-							}}
+					<button
+						aria-label={
+							asset.selected ? `Deselect ${asset.title}` : `Select ${asset.title}`
+						}
+						onClick={onToggleSelect}
+						style={{
+							alignItems: "center",
+							background: asset.selected
+								? "var(--ax-colors-bg-default-pressed)"
+								: "var(--ax-colors-bg-default)",
+							border: asset.selected
+								? "none"
+								: "1px solid var(--ax-colors-border-control)",
+							borderRadius: 4,
+							boxShadow: asset.selected
+								? "0 0 0 1px rgba(0,0,0,0.02)"
+								: "0 1px 2px rgba(16,24,40,0.12)",
+							cursor: "pointer",
+							display: "flex",
+							height: 18,
+							justifyContent: "center",
+							opacity: isHovered || asset.selected ? 1 : 0,
+							padding: 0,
+							pointerEvents: isHovered || asset.selected ? "auto" : "none",
+							position: "absolute",
+							right: 8,
+							top: 8,
+							transition: "opacity 120ms ease",
+							width: 18,
+							zIndex: 1,
+						}}
 						type="button"
 					>
 						{asset.selected && <IconCheck color="white" size={12} stroke={3} />}
 					</button>
-					<Box alignItems="center" display="flex" gap="8" style={{ left: 8, bottom: 8, position: "absolute" }}>
-					<AssetBadge label={asset.label} kind={asset.label} />
-					<ScoreBadge score={asset.match} />
-				</Box>
+					<Box
+						alignItems="center"
+						display="flex"
+						gap="8"
+						style={{left: 8, bottom: 8, position: "absolute"}}
+					>
+						<AssetBadge label={asset.label} kind={asset.label} />
+						<ScoreBadge score={asset.match} />
+					</Box>
 				</Box>
 			</Tooltip>
 		</Box>
@@ -120,8 +133,8 @@ export function SuggestedAssetsPanel({
 	}, [visibleAssets]);
 
 	return (
-			<Box display="flex" flexDirection="column" style={{ gap: 16, padding: 20 }}>
-				<Box alignItems="start" display="flex" justifyContent="space-between">
+		<Box display="flex" flexDirection="column" style={{gap: 16, padding: 20}}>
+			<Box alignItems="start" display="flex" justifyContent="space-between">
 				<Box display="flex" flexDirection="column" gap="4">
 					<Text
 						color="fg.default"
@@ -136,9 +149,17 @@ export function SuggestedAssetsPanel({
 					>
 						Suggested Assets
 					</Text>
-					<Text color="fg.tertiary" fontSize="md">Based on your brief</Text>
+					<Text color="fg.tertiary" fontSize="md">
+						Based on your brief
+					</Text>
 				</Box>
-				<Button appearance="subtle" aria-label="Close" icon={<IconX size={18} />} onClick={onClose} size="sm" />
+				<Button
+					appearance="subtle"
+					aria-label="Close"
+					icon={<IconXmark size={18} />}
+					onClick={onClose}
+					size="sm"
+				/>
 			</Box>
 
 			{selectedAssetsCount > 0 && (
@@ -155,12 +176,13 @@ export function SuggestedAssetsPanel({
 								maxWidth: "none",
 							}}
 						>
-							{selectedAssetsCount} {selectedAssetsCount === 1 ? "asset" : "assets"} selected
+							{selectedAssetsCount} {selectedAssetsCount === 1 ? "asset" : "assets"}{" "}
+							selected
 						</Text>
 						<Button
 							appearance="subtle"
 							aria-label="Clear selected assets"
-							icon={<IconX size={16} />}
+							icon={<IconXmark size={16} />}
 							onClick={onClearSelection}
 							size="sm"
 						/>
@@ -174,44 +196,59 @@ export function SuggestedAssetsPanel({
 			<Box
 				display="grid"
 				gap="10"
-				style={{ gridTemplateColumns: "repeat(10, minmax(0, 1fr))" }}
+				style={{gridTemplateColumns: "repeat(10, minmax(0, 1fr))"}}
 			>
 				{masonryRows.flatMap((row, rowIndex) =>
 					row.map((asset, itemIndex) => {
 						const useNarrowCard = rowIndex % 2 === itemIndex;
 
-							return (
-								<PanelAssetCard
-									key={asset.id}
-									asset={asset}
-									onToggleSelect={() => onToggleSelect(asset.id)}
-									span={useNarrowCard ? 4 : 6}
-								/>
-							);
-					}),
+						return (
+							<PanelAssetCard
+								key={asset.id}
+								asset={asset}
+								onToggleSelect={() => onToggleSelect(asset.id)}
+								span={useNarrowCard ? 4 : 6}
+							/>
+						);
+					})
 				)}
 			</Box>
 
-				<Box alignItems="center" display="flex" justifyContent="space-between" pt="6" style={{ gap: 12 }}>
-					<Box alignItems="center" display="flex" gap="8" style={{ minHeight: 32 }}>
-						{hasMoreAssets && (
-							<Button
-								appearance="subtle"
-								icon={<IconChevronDown size={16} />}
-								iconPosition="end"
-								onClick={() => setVisibleCount((current) => Math.min(current + pageSize, assets.length))}
-								size="sm"
-							>
-								Show more
-							</Button>
-						)}
-					</Box>
-					<Box alignItems="center" display="flex" gap="8">
-						<Button appearance="subtle" icon={<IconPencil size={16} />} onClick={onEditSearch} size="sm">
-							Edit Search
+			<Box
+				alignItems="center"
+				display="flex"
+				justifyContent="space-between"
+				pt="6"
+				style={{gap: 12}}
+			>
+				<Box alignItems="center" display="flex" gap="8" style={{minHeight: 32}}>
+					{hasMoreAssets && (
+						<Button
+							appearance="subtle"
+							icon={<IconChevronDown size={16} />}
+							iconPosition="end"
+							onClick={() =>
+								setVisibleCount((current) =>
+									Math.min(current + pageSize, assets.length)
+								)
+							}
+							size="sm"
+						>
+							Show more
 						</Button>
-					</Box>
+					)}
+				</Box>
+				<Box alignItems="center" display="flex" gap="8">
+					<Button
+						appearance="subtle"
+						icon={<IconPen size={16} />}
+						onClick={onEditSearch}
+						size="sm"
+					>
+						Edit Search
+					</Button>
 				</Box>
 			</Box>
-		);
+		</Box>
+	);
 }

@@ -10,6 +10,7 @@ interface ConnectionStatusProps {
 	syncStatus?: "synced" | "out-of-sync" | "manual-override";
 	lastSyncedAt?: string;
 	onDisconnect?: () => void;
+	onSync?: () => void;
 }
 
 export default function ConnectionStatus({
@@ -47,7 +48,7 @@ export default function ConnectionStatus({
 	};
 
 	return (
-		<Box p="12" bg="bg.accent.subtle" rounded="md" mb="16" border="1" borderColor="border.secondary">
+		<Box p="12" bg="bg.information.subtle" rounded="md" mb="16" border="1" borderColor="border.secondary">
 			<Box display="flex" alignItems="center" gap="8" mb="8">
 				<IconLink size={16} />
 				<Text fontSize="sm" fontWeight="600">

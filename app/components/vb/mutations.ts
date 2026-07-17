@@ -86,7 +86,7 @@ const defaultProps: Record<string, EleDef["properties"]> = {
 	"ct-text": { text: { value: "" } },
 	"ct-heading": { text: { value: "Heading" } },
 	"ct-rich-text": { richtext: { value: "" } },
-	"ct-button": { label: { value: "Button" } },
+	"ct-button": { label: { value: "" } },
 	"ct-input": {
 		label: { value: "Label" },
 		placeholder: { value: "" },

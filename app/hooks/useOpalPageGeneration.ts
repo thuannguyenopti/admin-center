@@ -3,7 +3,6 @@
 import {useEffect, useState, useRef} from "react";
 import {useLayout} from "@/app/context/LayoutContext";
 import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
-import {getContentType} from "@/app/db/initialData";
 
 // Helper function to convert File[] to base64 data URLs
 // Only processes image files to match backend validation
@@ -127,33 +126,8 @@ export function useOpalPageGeneration(
 					types: fileData.map((f) => f.type),
 				});
 
-				// Determine if content type uses outlines or properties
-				const contentType = getContentType(contentTypeId);
-				const hasOutlineProperties = contentType?.properties?.some(
-					(prop) => prop.type === "outline"
-				);
-
-				// Build currentContent based on content type
-				const currentContent: any = hasOutlineProperties
-					? {
-						outlines: [{
-							id: "ol-main",
-							title: "Main",
-							tree: [],
-							elements: {}
-						}]
-					}
-					: {
-						data: {} // Empty data for property-based content types
-					};
-
-				console.log("[useOpalPageGeneration] Content type strategy:", {
-					contentTypeId,
-					hasOutlineProperties,
-					strategy: hasOutlineProperties ? "outline-based" : "property-based"
-				});
-
 				// Connect to SSE stream with abort signal
+				// Use edit-page/stream with empty outline for generation from scratch
 				const response = await fetch("/api/edit-page/stream", {
 					method: "POST",
 					headers: {"Content-Type": "application/json"},
@@ -161,7 +135,14 @@ export function useOpalPageGeneration(
 						pageId,
 						instructions: pendingData.instructions,
 						contentTypeId,
-						currentContent,
+						currentContent: {
+							outlines: [{
+								id: "ol-main",
+								title: "Main",
+								tree: [],
+								elements: {}
+							}]
+						},
 						files: fileData,
 					}),
 					signal: abortController.signal,

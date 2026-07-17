@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { Popover, PopoverTrigger, PopoverContent, Box, Text, Button } from "@optiaxiom/react";
-import { IconCheck } from "@tabler/icons-react";
+import {IconCheck} from "@/app/lib/axiom-icons";
 import type { GrammarError } from "./ProofreadingProvider";
 import styles from "./ErrorUnderline.module.css";
 

@@ -12,13 +12,15 @@ import {
 } from "@optiaxiom/react";
 import { Input } from "@/app/components/Input"; // Using local Input wrapper as seen in page.tsx
 import {
+    IconXmark,
+    IconChevronRight,
+} from "@optiaxiom/icons";
+import {
     IconPlay,
     IconArrowsRotate,
-    IconChevronRight,
-} from "@optimizely/axiom-icons";
+} from "@/app/lib/axiom-icons";
 import { useState } from "react";
 import { OpalLoaderV5 } from "@/app/opal/components/OpalLoaderV5";
-import { ResizableDetailsTray } from "./ResizableDetailsTray";
 
 interface Variable {
     name: string;
@@ -87,16 +89,50 @@ export function TestRunTray({
     const hasInputs = Object.values(inputValues).some(val => val.length > 0);
 
     return (
-        <ResizableDetailsTray
-            isOpen={isOpen}
-            onClose={onClose}
-            title="Test Run"
-            defaultWidth={400}
-            minWidth={360}
-            maxWidth={720}
-            bodyPadding="16"
+        <Box
+            style={{
+                width: isOpen ? "400px" : "0px",
+                transition: "width 0.3s ease-in-out",
+                overflow: "hidden",
+                borderLeft: isOpen ? "1px solid var(--ax-colors-border-secondary)" : "none",
+                backgroundColor: "var(--ax-colors-bg-default)",
+                display: "flex",
+                flexDirection: "column",
+                flexShrink: 0,
+            }}
         >
-                    <Box display="flex" flexDirection="column" gap="16">
+            {isOpen && (
+                <>
+                    {/* Header */}
+                    <Box
+                        px="16"
+                        py="12"
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                    >
+                        <Text fontWeight="600" fontSize="md">
+                            Test Run
+                        </Text>
+                        <Button
+                            appearance="subtle"
+                            size="sm"
+                            icon={<IconXmark size={16} />}
+                            aria-label="Close"
+                            onClick={onClose}
+                        />
+                    </Box>
+
+                    {/* Content */}
+                    <Box
+                        flex="1"
+                        overflowY="auto"
+                        px="16"
+                        py="4"
+                        display="flex"
+                        flexDirection="column"
+                        gap="16"
+                    >
                         {/* Input Section */}
                         <Disclosure defaultOpen onOpenChange={setIsInputOpen} bg="bg.secondary" rounded="md" px="16" pt="4" pb="12">
                             <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
@@ -271,6 +307,8 @@ export function TestRunTray({
                             </Disclosure>
                         ) : null}
                     </Box>
-        </ResizableDetailsTray>
+                </>
+            )}
+        </Box>
     );
 }

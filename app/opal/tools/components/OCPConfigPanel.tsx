@@ -14,7 +14,7 @@ import {
     Switch,
     Text,
 } from "@optiaxiom/react";
-import { IconXmark } from "@optimizely/axiom-icons";
+import { IconXmark } from "@optiaxiom/icons";
 import type { Connector } from "../data/connectors";
 import { ConnectorAvatar } from "./ConnectorAvatar";
 

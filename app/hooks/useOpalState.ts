@@ -58,6 +58,20 @@ export type ChatMessage = {
   eventType?: 'agent-start' | 'agent-end';
   agentEmoji?: string;
   agentName?: string;
+  // Per-message author identity (for multi-user mock threads)
+  authorName?: string;
+  authorAvatar?: string;
+  /** Subtitle shown on avatar hover — e.g. VAU template name */
+  authorTitle?: string;
+  /** When true, render the author's avatar inline to the left of the bubble
+   * (Slack-style) instead of in a header row above it. */
+  authorInlineAvatar?: boolean;
+  /** Optional key used to look up an inline card rendered below this message */
+  cardAfterKey?: string;
+  /** When set, renders the activity-streaming loading UI (from Opal's agentic responses) */
+  activityScript?: import("@/app/opal/im/components/ActivityStreamBlock").ActivityPhase[];
+  /** When true, renders a CanvasOutputCard below the response text */
+  showCanvasCard?: boolean;
 };
 
 export type OpalState = {
@@ -420,9 +434,9 @@ export function useOpalState({
       // Get current page from persistent storage
       let pages: any[] = [];
       try {
-        pages = JSON.parse(localStorage.getItem('pages_v6') || '[]');
+        pages = JSON.parse(localStorage.getItem('pages_v5') || '[]');
       } catch (parseError) {
-        console.error('[useOpalState] Failed to parse pages_v6 from localStorage', parseError);
+        console.error('[useOpalState] Failed to parse pages_v5 from localStorage', parseError);
         setError('Cannot edit page right now because saved page data is invalid. Please refresh and try again.');
         return;
       }
@@ -453,6 +467,39 @@ export function useOpalState({
       return;
     }
 
+    // Detect brief/content generation on CMP task pages
+    const lower = trimmed.toLowerCase();
+    const isBriefRequest = (lower.includes('generate') || lower.includes('create')) && lower.includes('brief');
+    const isOnTaskPage = typeof window !== 'undefined' && /^\/cmp\/task\//.test(window.location.pathname);
+
+    if (isBriefRequest && isOnTaskPage) {
+      const taskId = window.location.pathname.split('/cmp/task/')[1]?.split('/')[0] || '';
+      let taskTitle = "Task";
+      try {
+        const tasks = JSON.parse(localStorage.getItem('cmpTasks') || '[]');
+        taskTitle = tasks.find((t: any) => t.id === taskId)?.title || "Task";
+      } catch { /* use default */ }
+
+      addMessage({
+        role: 'user',
+        content: trimmed,
+        authorName: 'Jamie Chen',
+      });
+
+      addMessage({
+        role: 'assistant',
+        content: `Let's create a brief for "${taskTitle}". Fill in the details below.`,
+        messageType: 'brief-wizard-step',
+        metadata: {
+          blockType: 'brief-wizard-step',
+          taskId,
+          taskTitle,
+        },
+      });
+
+      return;
+    }
+
     const isExperimentCreationRun = trimmed.startsWith('Run the Experiment Creation agent');
     const isSummarizeRequest =
       optimizationId != null &&
@@ -465,6 +512,7 @@ export function useOpalState({
     addMessage({
       role: 'user',
       content: trimmed,
+      authorName: 'Jamie Chen',
     });
 
     if (onMessageSent) {

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {useEffect, useMemo, useState} from "react";
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import {useParams, useRouter, useSearchParams} from "next/navigation";
 import {
 	Box,
 	Text as AxiomText,
@@ -18,19 +18,19 @@ import {
 	IconCode,
 	IconCopy,
 	IconDeviceDesktop,
-	IconHandFinger,
+	IconHandPointer,
 	IconLayoutNavbar,
 	IconLink,
 	IconList,
 	IconMinus,
-	IconPencil,
+	IconPen,
 	IconPlus,
 	IconTrash,
-	IconX,
-} from "@tabler/icons-react";
-import { IconAgent, IconEllipsisSolid } from "@optimizely/axiom-icons";
-import { Button } from "@/app/components/Button";
-import { getDynamicOptimizationById } from "@/app/web-experimentation/optimizations/dynamicOptimizationStorage";
+	IconXmark,
+} from "@/app/lib/axiom-icons";
+import {IconAgent, IconEllipsisSolid} from "@optimizely/axiom-icons";
+import {Button} from "@/app/components/Button";
+import {getDynamicOptimizationById} from "@/app/web-experimentation/optimizations/dynamicOptimizationStorage";
 import {
 	addRemovedVariationKey,
 	appendStoredExtraVariation,
@@ -38,8 +38,11 @@ import {
 	getStoredExtraVariations,
 	removeStoredExtraVariation,
 } from "@/app/web-experimentation/optimizations/optimizationVariationsStorage";
-import { getOptimizationById } from "@/app/web-experimentation/optimizations/mockData";
-import { resolveExperimentVariations, type VariationRow } from "@/app/web-experimentation/optimizations/variationSets";
+import {getOptimizationById} from "@/app/web-experimentation/optimizations/mockData";
+import {
+	resolveExperimentVariations,
+	type VariationRow,
+} from "@/app/web-experimentation/optimizations/variationSets";
 
 const STROKE = 1.5;
 const MENU_ICON_SIZE = 16;
@@ -100,7 +103,7 @@ export default function VisualEditorPage() {
 
 	const variations = useMemo(
 		() => (id ? resolveExperimentVariations(id, persistedExtras, removedKeys) : []),
-		[id, persistedExtras, removedKeys],
+		[id, persistedExtras, removedKeys]
 	);
 
 	const variationParam = searchParams.get("variation");
@@ -115,7 +118,7 @@ export default function VisualEditorPage() {
 	const setVariationInUrl = (key: string) => {
 		if (!id) return;
 		router.replace(
-			`/web-experimentation/optimizations/${id}/visual-editor?variation=${encodeURIComponent(key)}`,
+			`/web-experimentation/optimizations/${id}/visual-editor?variation=${encodeURIComponent(key)}`
 		);
 	};
 
@@ -162,21 +165,26 @@ export default function VisualEditorPage() {
 		const after = resolveExperimentVariations(
 			id,
 			getStoredExtraVariations(id),
-			getRemovedVariationKeys(id),
+			getRemovedVariationKeys(id)
 		);
 		if (activeKey === keyToDelete && after[0]) {
 			setVariationInUrl(after[0].key);
 		}
 	};
 
-	const variationsHref = id ? `/web-experimentation/optimizations/${id}` : "/web-experimentation/optimizations";
+	const variationsHref = id
+		? `/web-experimentation/optimizations/${id}`
+		: "/web-experimentation/optimizations";
 
 	if (!id || !optimization) {
 		return (
-			<Box display="flex" flexDirection="column" gap="16" p="24" style={{ maxWidth: "480px" }}>
+			<Box display="flex" flexDirection="column" gap="16" p="24" style={{maxWidth: "480px"}}>
 				<Heading level="3">Experiment not found</Heading>
 				<AxiomText color="fg.secondary">No optimization matches this link.</AxiomText>
-				<Link href="/web-experimentation/optimizations" style={{ color: "var(--ax-colors-fg-accent)" }}>
+				<Link
+					href="/web-experimentation/optimizations"
+					style={{color: "var(--ax-colors-fg-default)"}}
+				>
 					← Back to Optimizations
 				</Link>
 			</Box>
@@ -249,7 +257,7 @@ export default function VisualEditorPage() {
 						gap="8"
 						flex="1"
 						alignSelf="end"
-						style={{ minWidth: 0, overflowX: "auto" }}
+						style={{minWidth: 0, overflowX: "auto"}}
 					>
 						{variations.map((row) => {
 							const selected = row.key === activeKey;
@@ -271,7 +279,9 @@ export default function VisualEditorPage() {
 									}}
 									style={{
 										borderRadius: "8px 8px 0 0",
-										backgroundColor: selected ? CHROME_PANEL_SURFACE : "transparent",
+										backgroundColor: selected
+											? CHROME_PANEL_SURFACE
+											: "transparent",
 										/* Selected: no borders (they cause a hairline vs toolbar); overlap toolbar 1px */
 										...(selected
 											? {
@@ -305,7 +315,7 @@ export default function VisualEditorPage() {
 										<AxiomText
 											fontSize="sm"
 											fontWeight="600"
-											style={{ flexShrink: 0, margin: 0, lineHeight: 1.2 }}
+											style={{flexShrink: 0, margin: 0, lineHeight: 1.2}}
 										>
 											{row.letter}
 										</AxiomText>
@@ -327,7 +337,7 @@ export default function VisualEditorPage() {
 									<Box
 										display="flex"
 										alignItems="center"
-										style={{ paddingRight: "6px", flexShrink: 0 }}
+										style={{paddingRight: "6px", flexShrink: 0}}
 										onClick={(e) => e.stopPropagation()}
 									>
 										<Menu
@@ -340,35 +350,56 @@ export default function VisualEditorPage() {
 												{
 													label: "Rename",
 													addon: (
-														<IconPencil size={MENU_ICON_SIZE} stroke={STROKE} color="var(--ax-colors-fg-secondary)" />
+														<IconPen
+															size={MENU_ICON_SIZE}
+															stroke={STROKE}
+															color="var(--ax-colors-fg-secondary)"
+														/>
 													),
 													execute: () => {},
 												},
 												{
 													label: "Duplicate",
 													addon: (
-														<IconCopy size={MENU_ICON_SIZE} stroke={STROKE} color="var(--ax-colors-fg-secondary)" />
+														<IconCopy
+															size={MENU_ICON_SIZE}
+															stroke={STROKE}
+															color="var(--ax-colors-fg-secondary)"
+														/>
 													),
 													execute: () => {},
 												},
 												{
 													label: "Delete",
 													addon: (
-														<IconTrash size={MENU_ICON_SIZE} stroke={STROKE} color="var(--ax-colors-fg-secondary)" />
+														<IconTrash
+															size={MENU_ICON_SIZE}
+															color="var(--ax-colors-fg-secondary)"
+														/>
 													),
 													execute: () => deleteVariation(row.key),
 												},
 												{
-													group: { label: "", hidden: true, separator: true },
+													group: {
+														label: "",
+														hidden: true,
+														separator: true,
+													},
 													label: "Generate Variation",
 													addon: (
-														<IconAgent size={TOOLBAR_ICON_SIZE} style={row2TablerIconStyle} />
+														<IconAgent
+															size={TOOLBAR_ICON_SIZE}
+															style={row2TablerIconStyle}
+														/>
 													),
 													execute: () => {},
 												},
 											]}
 										>
-											<Tooltip content={`More options for variation ${row.letter}`} side="bottom">
+											<Tooltip
+												content={`More options for variation ${row.letter}`}
+												side="bottom"
+											>
 												<MenuTrigger asChild>
 													<Button
 														type="button"
@@ -380,7 +411,7 @@ export default function VisualEditorPage() {
 															minWidth: "28px",
 															minHeight: "28px",
 															padding: "2px",
-															color: "var(--ax-colors-fg-accent)",
+															color: "var(--ax-colors-fg-secondary)",
 														}}
 													/>
 												</MenuTrigger>
@@ -405,7 +436,7 @@ export default function VisualEditorPage() {
 											fontSize="sm"
 											fontWeight="700"
 											color="fg.default"
-											style={{ minWidth: "1em", textAlign: "center" }}
+											style={{minWidth: "1em", textAlign: "center"}}
 										>
 											{nextVariationLetter}
 										</AxiomText>
@@ -415,7 +446,10 @@ export default function VisualEditorPage() {
 								{
 									label: "Generate Variation",
 									addon: (
-										<IconAgent size={TOOLBAR_ICON_SIZE} style={row2TablerIconStyle} />
+										<IconAgent
+											size={TOOLBAR_ICON_SIZE}
+											style={row2TablerIconStyle}
+										/>
 									),
 									execute: () => {
 										setAddVariationMenuOpen(false);
@@ -449,7 +483,7 @@ export default function VisualEditorPage() {
 						alignItems="center"
 						gap="8"
 						alignSelf="center"
-						style={{ flexShrink: 0 }}
+						style={{flexShrink: 0}}
 					>
 						<Tooltip content="Minimize editor" side="bottom">
 							<Button
@@ -474,7 +508,7 @@ export default function VisualEditorPage() {
 									type="button"
 									appearance="default"
 									size="sm"
-									icon={<IconX size={TOOLBAR_ICON_SIZE} stroke={STROKE} />}
+									icon={<IconXmark size={TOOLBAR_ICON_SIZE} stroke={STROKE} />}
 									aria-label="Close visual editor"
 								/>
 							</Link>
@@ -499,17 +533,21 @@ export default function VisualEditorPage() {
 					<Tooltip content="Back to Variations" side="bottom">
 						<Link
 							href={variationsHref}
-							style={{ display: "inline-flex", flexShrink: 0, alignItems: "stretch" }}
+							style={{display: "inline-flex", flexShrink: 0, alignItems: "stretch"}}
 						>
 							<Button
 								type="button"
 								appearance="default"
 								size="lg"
 								icon={
-									<IconArrowLeft size={TOOLBAR_ICON_SIZE} stroke={STROKE} style={row2TablerIconStyle} />
+									<IconArrowLeft
+										size={TOOLBAR_ICON_SIZE}
+										stroke={STROKE}
+										style={row2TablerIconStyle}
+									/>
 								}
 								aria-label="Back to Variations"
-								style={{ height: "100%" }}
+								style={{height: "100%"}}
 							/>
 						</Link>
 					</Tooltip>
@@ -523,7 +561,7 @@ export default function VisualEditorPage() {
 								<IconChevronDown
 									size={TOOLBAR_ICON_SIZE}
 									stroke={STROKE}
-									style={{ ...row2TablerIconStyle, opacity: 0.65 }}
+									style={{...row2TablerIconStyle, opacity: 0.65}}
 								/>
 							}
 							iconPosition="end"
@@ -539,42 +577,47 @@ export default function VisualEditorPage() {
 								alignSelf: "stretch",
 							}}
 						>
-						<Box
-							display="flex"
-							flexDirection="row"
-							flexWrap="nowrap"
-							alignItems="center"
-							gap="12"
-							style={{ minWidth: 0, flex: 1, textAlign: "left", overflow: "hidden" }}
-						>
-							<AxiomText
-								fontSize="md"
-								fontWeight="600"
+							<Box
+								display="flex"
+								flexDirection="row"
+								flexWrap="nowrap"
+								alignItems="center"
+								gap="12"
 								style={{
-									color: "var(--ax-colors-fg-accent)",
-									margin: 0,
-									lineHeight: 1.15,
-									flexShrink: 0,
-								}}
-							>
-								Stride Homepage
-							</AxiomText>
-							<AxiomText
-								fontSize="sm"
-								color="fg.secondary"
-								style={{
-									margin: 0,
-									lineHeight: 1.2,
-									flex: 1,
 									minWidth: 0,
+									flex: 1,
+									textAlign: "left",
 									overflow: "hidden",
-									textOverflow: "ellipsis",
-									whiteSpace: "nowrap",
 								}}
 							>
-								https://www.stridefitness.com
-							</AxiomText>
-						</Box>
+								<AxiomText
+									fontSize="md"
+									fontWeight="600"
+									style={{
+										color: "var(--ax-colors-fg-default)",
+										margin: 0,
+										lineHeight: 1.15,
+										flexShrink: 0,
+									}}
+								>
+									Stride Homepage
+								</AxiomText>
+								<AxiomText
+									fontSize="sm"
+									color="fg.secondary"
+									style={{
+										margin: 0,
+										lineHeight: 1.2,
+										flex: 1,
+										minWidth: 0,
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+									}}
+								>
+									https://www.stridefitness.com
+								</AxiomText>
+							</Box>
 						</Button>
 					</Tooltip>
 
@@ -588,7 +631,7 @@ export default function VisualEditorPage() {
 								<IconChevronDown
 									size={TOOLBAR_ICON_SIZE}
 									stroke={STROKE}
-									style={{ ...row2TablerIconStyle, opacity: 0.65 }}
+									style={{...row2TablerIconStyle, opacity: 0.65}}
 								/>
 							}
 							iconPosition="end"
@@ -605,7 +648,6 @@ export default function VisualEditorPage() {
 						>
 							<IconDeviceDesktop
 								size={TOOLBAR_ICON_SIZE}
-								stroke={STROKE}
 								style={row2TablerIconStyle}
 							/>
 						</Button>
@@ -617,14 +659,18 @@ export default function VisualEditorPage() {
 							appearance="default"
 							size="lg"
 							icon={
-								<IconHandFinger size={TOOLBAR_ICON_SIZE} stroke={STROKE} style={row2TablerIconStyle} />
+								<IconHandPointer
+									size={TOOLBAR_ICON_SIZE}
+									stroke={STROKE}
+									style={row2TablerIconStyle}
+								/>
 							}
 							aria-label="Interaction mode"
-							style={{ alignSelf: "stretch" }}
+							style={{alignSelf: "stretch"}}
 						/>
 					</Tooltip>
 
-					<Box flex="1" style={{ minWidth: "8px" }} />
+					<Box flex="1" style={{minWidth: "8px"}} />
 
 					<Box
 						display="flex"
@@ -632,14 +678,20 @@ export default function VisualEditorPage() {
 						alignItems="stretch"
 						gap="8"
 						flexWrap="wrap"
-						style={{ justifyContent: "flex-end" }}
+						style={{justifyContent: "flex-end"}}
 					>
 						<Tooltip content="Changes" side="bottom">
 							<Button
 								type="button"
 								appearance="default"
 								size="lg"
-								icon={<IconList size={TOOLBAR_ICON_SIZE} stroke={STROKE} style={row2TablerIconStyle} />}
+								icon={
+									<IconList
+										size={TOOLBAR_ICON_SIZE}
+										stroke={STROKE}
+										style={row2TablerIconStyle}
+									/>
+								}
 								iconPosition="start"
 							>
 								Changes
@@ -650,7 +702,13 @@ export default function VisualEditorPage() {
 								type="button"
 								appearance="default"
 								size="lg"
-								icon={<IconCode size={TOOLBAR_ICON_SIZE} stroke={STROKE} style={row2TablerIconStyle} />}
+								icon={
+									<IconCode
+										size={TOOLBAR_ICON_SIZE}
+										stroke={STROKE}
+										style={row2TablerIconStyle}
+									/>
+								}
 								iconPosition="start"
 							>
 								Code Editor
@@ -662,7 +720,11 @@ export default function VisualEditorPage() {
 								appearance="default"
 								size="lg"
 								icon={
-									<IconLayoutNavbar size={TOOLBAR_ICON_SIZE} stroke={STROKE} style={row2TablerIconStyle} />
+									<IconLayoutNavbar
+										size={TOOLBAR_ICON_SIZE}
+										stroke={STROKE}
+										style={row2TablerIconStyle}
+									/>
 								}
 								iconPosition="start"
 							>
@@ -674,7 +736,13 @@ export default function VisualEditorPage() {
 								type="button"
 								appearance="default"
 								size="lg"
-								icon={<IconLink size={TOOLBAR_ICON_SIZE} stroke={STROKE} style={row2TablerIconStyle} />}
+								icon={
+									<IconLink
+										size={TOOLBAR_ICON_SIZE}
+										stroke={STROKE}
+										style={row2TablerIconStyle}
+									/>
+								}
 								iconPosition="start"
 							>
 								Redirect
@@ -685,7 +753,12 @@ export default function VisualEditorPage() {
 								type="button"
 								appearance="default-opal"
 								size="lg"
-								icon={<IconAgent size={TOOLBAR_ICON_SIZE} style={row2TablerIconStyle} />}
+								icon={
+									<IconAgent
+										size={TOOLBAR_ICON_SIZE}
+										style={row2TablerIconStyle}
+									/>
+								}
 								iconPosition="start"
 							>
 								Build Variation

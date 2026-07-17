@@ -85,8 +85,8 @@ type OpalChatViewProps = {
     onMessageEdit?: (id: string, newContent: string) => void;
     onRegenerate?: (id: string) => void;
     onMessageVersionChange?: (id: string, versionIndex: number, content: string) => void;
+    onActivityComplete?: (messageId: string) => void;
     agentBar?: ReactNode;
-    chatHeaderRight?: ReactNode;
     collapsedSessionIds?: Set<string>;
     onExpandSession?: (sessionStartId: string) => void;
     opalDisclosureIds?: Set<string>;
@@ -97,36 +97,52 @@ type OpalChatViewProps = {
     onCloseOpalRange?: (agentEndId: string) => void;
     mentionableAgents?: MentionableAgent[];
     onMentionSelect?: (agent: MentionableAgent) => void;
-    activeAgentCtx?: { emoji: string; name: string; avatar?: string; templateName?: string } | null;
+    activeAgentCtx?: { emoji: string; name: string } | null;
     inputAgentCtx?: { name: string; handle?: string } | null;
     /** Disables the input independently of isLoading (e.g. during resume flow). */
     disabled?: boolean;
     /** Called when the user tries to submit while blocked (e.g. resume flow). */
     onSubmitBlocked?: () => void;
     contextualActionCard?: ReactNode;
+    /** Per-message cards keyed by cardAfterKey */
+    messageCards?: Record<string, ReactNode>;
     /** When provided, renders as a full-width canvas on the left with chat as a right sidebar. */
     leftCanvas?: ReactNode;
-    /** V3 inline message cards — accepted for compat, not rendered in V2. */
-    messageCards?: Record<string, ReactNode>;
-    /** V3 canvas mode flag — accepted for compat. */
+    /** When true, IM mode defaults to on (canvas is open). */
     canvasMode?: boolean;
-    /** V3 chat panel visibility — accepted for compat. */
+    /** Controls visibility of the right chat sidebar when leftCanvas is active. Defaults to true. */
     chatPanelVisible?: boolean;
-    /** Quick-close handler for the chat panel header (X on the upper left). */
+    /** Current user id — surfaces in IM mode for reactions. */
+    currentUserId?: string;
+    /** Reactions keyed by message id. */
+    messageReactions?: Record<string, Record<string, string[]>>;
+    /** Toggle reaction handler. */
+    onToggleReaction?: (messageId: string, emoji: string) => void;
+    /** Reply-in-thread handler — opens a thread panel for the message id. */
+    onReplyInThread?: (messageId: string) => void;
+    /** Quote-reply handler — pins a message as quote in the main composer. */
+    onQuoteReply?: (messageId: string) => void;
+    /** Node rendered just above the message composer (e.g. a quote chip). */
+    aboveInputContent?: React.ReactNode;
+    /** When provided, replaces the OpalInput entirely (e.g. a blocking action card). */
+    inputOverride?: React.ReactNode;
+    /** When provided in IM mode, the + menu "Upload from device" picks a file and calls this. */
+    onAttachFile?: (file: File) => void;
+    /** When set, overrides the "Opal" dropdown trigger in the header with static text. */
+    headerTitle?: string;
+    /** Label for the new-chat button (sidebar + header). Defaults to "New chat". */
+    newChatLabel?: string;
+    /** When provided, sidebar section headers render a + button that calls this with the section label. */
+    onCreateInSection?: (sectionLabel: string) => void;
+    /** Per-section tooltip labels for the + button. Keyed by section label. */
+    sectionAddTooltips?: Record<string, string>;
+    /** When provided, renders an X close button at the top-left of the chat sidebar (canvas mode only). */
     onCloseChat?: () => void;
-    /** IM mode: toggle an emoji reaction on a message */
-    onReaction?: (messageId: string, emoji: string) => void;
-    /** IM mode: quote/reply to a message */
-    onQuote?: (messageId: string) => void;
-    /** Content rendered just above the input box (e.g. quote chip) */
-    preInputContent?: ReactNode;
-    /** Force IM mode on — overrides URL-based detection */
-    imMode?: boolean;
     /** IM mode: active thread/conversation name */
     imThreadName?: string;
     /** IM mode: true when talking to a VAU (adds Activities tab) */
     imIsVAU?: boolean;
-    /** IM mode: true when viewing a channel (renders rounded-square avatar) */
+    /** IM mode: true when viewing a channel */
     imIsChannel?: boolean;
     /** IM mode: avatar URL for the thread header */
     imThreadAvatar?: string;
@@ -134,10 +150,12 @@ type OpalChatViewProps = {
     imTemplateName?: string;
     /** IM mode: simplified header — X instead of hamburger, no tabs */
     imSimplified?: boolean;
-    /** IM mode: when set, clicking the avatar+name row navigates (e.g. artifact → /opal/im) */
+    /** IM mode: extra actions on the right side of the simplified header */
+    imHeaderRight?: React.ReactNode;
+    /** IM mode: when set, clicking the avatar+name navigates */
     onImThreadNameClick?: () => void;
-    /** IM mode: open the VAU's primary artifact (e.g. CoS daily brief) from the Activities tab */
-    onOpenBrief?: () => void;
+    /** IM mode: when set, the first file in the Files tab opens the artifact preview */
+    onOpenArtifact?: () => void;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -168,9 +186,8 @@ export function OpalChatView({
     onMessageEdit,
     onRegenerate,
     onMessageVersionChange,
+    onActivityComplete,
     agentBar,
-    chatHeaderRight,
-    messageCards,
     collapsedSessionIds,
     onExpandSession,
     opalDisclosureIds,
@@ -186,34 +203,45 @@ export function OpalChatView({
     disabled,
     onSubmitBlocked,
     contextualActionCard,
+    messageCards,
     leftCanvas,
-    chatPanelVisible,
+    canvasMode = false,
+    chatPanelVisible = true,
+    currentUserId,
+    messageReactions,
+    onToggleReaction,
+    onReplyInThread,
+    onQuoteReply,
+    aboveInputContent,
+    inputOverride,
+    onAttachFile,
+    headerTitle,
+    newChatLabel,
+    onCreateInSection,
+    sectionAddTooltips,
     onCloseChat,
-    onReaction,
-    onQuote,
-    preInputContent,
-    imMode: imModeProp,
     imThreadName,
     imIsVAU,
     imIsChannel,
     imThreadAvatar,
     imTemplateName,
     imSimplified,
+    imHeaderRight,
     onImThreadNameClick,
-    onOpenBrief,
+    onOpenArtifact,
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
     const [chatWidth, setChatWidth] = useState(400);
-    const [imMode, setImMode] = useState(() => {
-        if (imModeProp !== undefined) return imModeProp;
-        if (typeof window === 'undefined') return false;
-        if (window.location.pathname.startsWith('/opal/im')) return true;
-        return new URLSearchParams(window.location.search).get('artifacts') === '1';
-    });
+    const [imMode, setImMode] = useState(canvasMode);
     const [imActiveTab, setImActiveTab] = useState<'messages' | 'files' | 'activities'>('messages');
 
-    // Reset to Messages tab whenever the selected conversation changes.
+    // Reset to Messages tab when the selected conversation changes.
     useEffect(() => { setImActiveTab('messages'); }, [activeChat]);
+
+    // Sync imMode on when canvas opens
+    useEffect(() => {
+        if (canvasMode) setImMode(true);
+    }, [canvasMode]);
 
     const handleResize = useCallback((dx: number) => {
         // Dragging right = canvas grows, chat shrinks; left = canvas shrinks, chat grows
@@ -240,43 +268,42 @@ export function OpalChatView({
                     {leftCanvas}
                 </Box>
 
-                {/* Drag handle */}
-                <GrabHandle onResize={handleResize} />
+                {/* Drag handle — only when chat panel is visible */}
+                {chatPanelVisible && <GrabHandle onResize={handleResize} />}
 
-                {/* Right chat sidebar — animates width in/out */}
+                {/* Right chat sidebar — hidden when chatPanelVisible is false */}
                 <Box
                     display="flex"
                     flexDirection="column"
                     style={{
-                        width: chatPanelVisible === false ? 0 : chatWidth,
+                        width: chatPanelVisible ? chatWidth : 0,
                         flexShrink: 0,
                         height: '100%',
                         minHeight: 0,
                         overflow: 'hidden',
-                        borderLeft: chatPanelVisible === false ? 'none' : '1px solid var(--ax-colors-border-secondary)',
-                        transition: 'width 0.25s ease, border 0.25s ease',
-                        animation: chatPanelVisible !== false ? 'chatSlideIn 0.35s cubic-bezier(0.16,1,0.3,1) both' : undefined,
+                        borderLeft: chatPanelVisible ? '1px solid var(--ax-colors-border-secondary)' : 'none',
+                        animation: 'chatSlideIn 0.35s cubic-bezier(0.16,1,0.3,1) both',
+                        transition: 'width 0.25s cubic-bezier(0.16,1,0.3,1)',
                     }}
                 >
                     {variant === 'home' && (
                         <Box style={{ flexShrink: 0 }}>
                             <OpalHeader
                                 onToggleHistory={onToggleHistory || (() => {})}
-                                onNewChat={onNewChat}
+                                onNewChat={isHistoryVisible ? undefined : onNewChat}
                                 imMode={imMode}
-                                isHistoryVisible={isHistoryVisible}
-                                onToggleImMode={() => setImMode(v => !v)}
+                                onImModeChange={setImMode}
+                                titleOverride={headerTitle}
+                                newChatLabel={newChatLabel}
+                                leadingClose={onCloseChat}
                                 imThreadName={imThreadName}
+                                imThreadAvatar={imThreadAvatar}
                                 imIsVAU={imIsVAU}
                                 imIsChannel={imIsChannel}
                                 imTemplateName={imTemplateName}
                                 imSimplified={imSimplified}
-                                imThreadAvatar={imThreadAvatar}
+                                imHeaderRight={imHeaderRight}
                                 onImThreadNameClick={onImThreadNameClick}
-                                onCloseLeft={onCloseChat}
-                                rightActions={chatHeaderRight}
-                                imActiveTab={imActiveTab}
-                                onImTabChange={setImActiveTab}
                             />
                         </Box>
                     )}
@@ -292,6 +319,7 @@ export function OpalChatView({
                             threadKey={activeChat}
                             onRegenerate={onRegenerate}
                             onVersionChange={onMessageVersionChange}
+                            onActivityComplete={onActivityComplete}
                             hideSuggestions
                             variant="assistant"
                             collapsedSessionIds={collapsedSessionIds}
@@ -304,9 +332,12 @@ export function OpalChatView({
                             onCloseOpalRange={onCloseOpalRange}
                             activeAgentCtx={activeAgentCtx}
                             contextualActionCard={contextualActionCard}
-                            onReaction={onReaction}
-                            onQuote={onQuote}
                             messageCards={messageCards}
+                            imMode={imMode}
+                            currentUserId={currentUserId}
+                            messageReactions={messageReactions}
+                            onToggleReaction={onToggleReaction}
+                            onReplyInThread={onReplyInThread}
                         />
                     </Box>
                     <Box style={{ flexShrink: 0, padding: '12px' }}>
@@ -319,12 +350,12 @@ export function OpalChatView({
                             isLoading={isLoading}
                             error={error}
                             agentBar={agentBar}
+                            inputAgentCtx={inputAgentCtx}
                             mentionableAgents={mentionableAgents}
                             onMentionSelect={onMentionSelect}
                             onSubmitBlocked={onSubmitBlocked}
-                            inputAgentCtx={inputAgentCtx}
                             imMode={imMode}
-                            quoteContent={preInputContent}
+                            onAttachFile={onAttachFile}
                         />
                     </Box>
                 </Box>
@@ -333,8 +364,8 @@ export function OpalChatView({
         );
     }
 
-    // ── No-canvas landing (home variant, no messages, no active chat) ───────────
-    if (variant === 'home' && !hasMessages && !activeChat) {
+    // ── No-canvas landing (home variant, no messages) ─────────────────────────
+    if (variant === 'home' && !hasMessages) {
         return (
             <Box display="flex" flexDirection="row" h="full" w="full" overflow="hidden">
                 <OpalHistorySidebar
@@ -347,6 +378,9 @@ export function OpalChatView({
                     onDeleteChat={onDeleteChat || (() => { })}
                     mode="docked"
                     isVisible={!!isHistoryVisible}
+                    newChatLabel={newChatLabel}
+                    onCreateInSection={onCreateInSection}
+                    sectionAddTooltips={sectionAddTooltips}
                 />
                 <Box display="flex" flexDirection="column" h="full" style={{ flex: 1, minWidth: 0 }}>
                     <Box
@@ -367,11 +401,10 @@ export function OpalChatView({
                             error={error}
                             enableAI={enableAI}
                             onEnableAIChange={onEnableAIChange}
+                            inputAgentCtx={inputAgentCtx}
                             mentionableAgents={mentionableAgents}
                             onMentionSelect={onMentionSelect}
                             onSubmitBlocked={onSubmitBlocked}
-                            inputAgentCtx={inputAgentCtx}
-                            imMode={imMode}
                         />
                         {emptyState}
                     </Box>
@@ -402,6 +435,9 @@ export function OpalChatView({
                     onDeleteChat={onDeleteChat || (() => { })}
                     mode="docked"
                     isVisible={!!isHistoryVisible}
+                    newChatLabel={newChatLabel}
+                    onCreateInSection={onCreateInSection}
+                    sectionAddTooltips={sectionAddTooltips}
                 />
             )}
             <Box
@@ -413,19 +449,20 @@ export function OpalChatView({
                     <Box style={{ flexShrink: 0, width: '100%' }}>
                         <OpalHeader
                             onToggleHistory={onToggleHistory || (() => { })}
-                            onNewChat={onNewChat}
+                            onNewChat={isHistoryVisible ? undefined : onNewChat}
                             imMode={imMode}
-                            isHistoryVisible={isHistoryVisible}
-                            onToggleImMode={() => setImMode(v => !v)}
+                            onImModeChange={setImMode}
+                            titleOverride={headerTitle}
+                            newChatLabel={newChatLabel}
+                            leadingClose={onCloseChat}
                             imThreadName={imThreadName}
                             imIsVAU={imIsVAU}
                             imIsChannel={imIsChannel}
+                            imThreadAvatar={imThreadAvatar}
                             imTemplateName={imTemplateName}
                             imSimplified={imSimplified}
-                            imThreadAvatar={imThreadAvatar}
+                            imHeaderRight={imHeaderRight}
                             onImThreadNameClick={onImThreadNameClick}
-                            onCloseLeft={onCloseChat}
-                            rightActions={chatHeaderRight}
                             imActiveTab={imActiveTab}
                             onImTabChange={setImActiveTab}
                         />
@@ -434,16 +471,16 @@ export function OpalChatView({
 
                 {/* Activities tab */}
                 {imMode && imIsVAU && imActiveTab === 'activities' && (
-                    <IMActivityFeed vauName={imThreadName} vauTemplateKey={imTemplateName} onOpenBrief={onOpenBrief} />
+                    <IMActivityFeed vauName={imThreadName} />
                 )}
 
-                {/* Files tab */}
-                {imMode && imIsVAU && imActiveTab === 'files' && (
-                    <IMFilesList vauName={imThreadName} />
+                {/* Files tab — available for all IM conversations */}
+                {imMode && imActiveTab === 'files' && (
+                    <IMFilesList vauName={imThreadName} onOpenArtifact={onOpenArtifact} />
                 )}
 
-                {/* Messages tab (default) */}
-                {(!imMode || !imIsVAU || imActiveTab === 'messages') && (
+                {/* Messages tab (default) — hidden when on a non-messages tab */}
+                {(!imMode || imActiveTab === 'messages') && (
                 <Box
                     display="flex"
                     flexDirection="column"
@@ -464,6 +501,7 @@ export function OpalChatView({
                         threadKey={activeChat}
                         onRegenerate={onRegenerate}
                         onVersionChange={onMessageVersionChange}
+                        onActivityComplete={onActivityComplete}
                         hideSuggestions={!!emptyState}
                         variant={variant}
                         collapsedSessionIds={collapsedSessionIds}
@@ -475,15 +513,19 @@ export function OpalChatView({
                         onOpenOpalRange={onOpenOpalRange}
                         onCloseOpalRange={onCloseOpalRange}
                         activeAgentCtx={activeAgentCtx}
-                        contextualActionCard={contextualActionCard && !disabled ? contextualActionCard : undefined}
-                        onReaction={onReaction}
-                        onQuote={onQuote}
+                        contextualActionCard={contextualActionCard}
                         messageCards={messageCards}
+                        imMode={imMode}
+                        currentUserId={currentUserId}
+                        messageReactions={messageReactions}
+                        onToggleReaction={onToggleReaction}
+                        onReplyInThread={onReplyInThread}
+                        onQuoteReply={onQuoteReply}
                     />
                 </Box>
                 )}
 
-                {(!imMode || !imIsVAU || imActiveTab === 'messages') && (
+                {(!imMode || imActiveTab === 'messages') && (
                 <Box
                     w="full"
                     style={{ flexShrink: 0, display: 'flex', justifyContent: 'center', width: '100%' }}
@@ -494,8 +536,8 @@ export function OpalChatView({
                         gap="16"
                         style={{ width: '100%', maxWidth: variant === 'home' ? '800px' : 'none', minWidth: 0, paddingLeft: imMode ? '24px' : undefined, paddingRight: imMode ? '24px' : undefined }}
                     >
-                        {contextualActionCard && disabled ? (
-                            contextualActionCard
+                        {inputOverride ? (
+                            inputOverride
                         ) : (
                             <OpalInput
                                 variant={variant}
@@ -508,12 +550,13 @@ export function OpalChatView({
                                 enableAI={enableAI}
                                 onEnableAIChange={onEnableAIChange}
                                 agentBar={agentBar}
+                                inputAgentCtx={inputAgentCtx}
                                 mentionableAgents={mentionableAgents}
                                 onMentionSelect={onMentionSelect}
                                 onSubmitBlocked={onSubmitBlocked}
-                                inputAgentCtx={inputAgentCtx}
                                 imMode={imMode}
-                                quoteContent={preInputContent}
+                                onAttachFile={onAttachFile}
+                                topContent={aboveInputContent}
                             />
                         )}
                     </Box>

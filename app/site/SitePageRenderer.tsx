@@ -140,10 +140,14 @@ function renderOutlineTree(outline: Outline, isMobile = false) {
 								// Only apply column mask for community sections (single app preview)
 								const applyColumnMask = isCommunitySection && hasAppPreviewInCol;
 
+								const colTemplateClasses = col.displayTemplateKey
+									? getDisplayTemplateClasses(col.displayTemplateKey, col.displaySettings || [])
+									: "";
+
 								return (
 									<div
 										key={col.id ?? cIndex}
-										className={hasAppPreview ? "basis-0 grow" : ""}
+										className={`${hasAppPreview ? "basis-0 grow" : ""} ${colTemplateClasses}`}
 										style={applyColumnMask ? {
 											marginTop: '-10%',
 											WebkitMaskImage: 'linear-gradient(#000 40%, transparent 75%)',

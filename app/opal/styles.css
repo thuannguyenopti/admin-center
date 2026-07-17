@@ -1,0 +1,215 @@
+/* Opal-specific styles. Imported by app/globals.css. */
+
+/* Message highlight pulse — used when navigating to a search result */
+@keyframes msgHighlight {
+  0%   { background: transparent; }
+  15%  { background: var(--ax-colors-bg-success-subtle); }
+  70%  { background: var(--ax-colors-bg-success-subtle); }
+  100% { background: transparent; }
+}
+.msg-highlight {
+  animation: msgHighlight 1.8s ease forwards;
+  border-radius: 8px;
+}
+
+/* Opal Generate button: sparkle icon turns brand green on hover (details panel + modals) */
+.opalGenerateButton:hover svg {
+	color: var(--ax-colors-fg-accent);
+}
+
+/* VAU card hover — shadow + accent border */
+.vau-card {
+	transition:
+		box-shadow 0.15s ease,
+		border-color 0.15s ease;
+}
+.vau-card:hover {
+	box-shadow: var(--ax-shadows-lg);
+	border-color: var(--ax-colors-border-default);
+}
+
+/* Pinned artifact cards — hover reveals actions + extras footer */
+.pinned-card .pinned-actions {
+	opacity: 0;
+	transition: opacity 150ms ease;
+	pointer-events: none;
+}
+.pinned-card .pinned-extras {
+	max-height: 0;
+	opacity: 0;
+	overflow: hidden;
+	transition:
+		max-height 220ms ease,
+		opacity 150ms ease,
+		margin-top 220ms ease;
+	margin-top: 0;
+}
+.pinned-card:hover .pinned-actions,
+.pinned-card:focus-within .pinned-actions {
+	opacity: 1;
+	pointer-events: auto;
+}
+.pinned-card:hover .pinned-extras,
+.pinned-card:focus-within .pinned-extras {
+	max-height: 56px;
+	opacity: 1;
+	margin-top: 8px;
+	pointer-events: auto;
+}
+.pinned-card .pinned-pin-inactive {
+	opacity: 0;
+	transition: opacity 150ms ease;
+	pointer-events: none;
+}
+.pinned-card:hover .pinned-pin-inactive,
+.pinned-card:focus-within .pinned-pin-inactive {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* VAT detail secondary sidebar nav items */
+.vat-nav-item {
+	transition: background 0.1s;
+}
+.vat-nav-item:not([data-active]):hover {
+	background: var(--ax-colors-bg-secondary);
+}
+
+/* VAT work — hover states for cards and table rows */
+.vat-work-card {
+	transition: box-shadow 0.15s, background 0.15s;
+}
+.vat-work-card:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	background: var(--ax-colors-bg-secondary);
+}
+
+.vat-work-row {
+	transition: background 0.1s;
+}
+.vat-work-row:hover {
+	background: var(--ax-colors-bg-secondary);
+}
+
+/* VAT needs-review rows */
+.vat-review-row {
+	transition: background 0.1s ease;
+}
+.vat-review-row:hover {
+	background: var(--ax-colors-bg-secondary);
+}
+
+/* VAT approvals — fade-in for newly expanded items */
+@keyframes vat-approval-in {
+	from { opacity: 0; transform: translateY(6px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+.vat-approval-appear {
+	animation: vat-approval-in 0.2s ease forwards;
+}
+
+/* Personality preset pills — hover + selected states */
+.personality-pill {
+	transition: background 0.1s ease;
+}
+.personality-pill:not(.personality-pill--selected):hover {
+	background: var(--ax-colors-bg-secondary) !important;
+}
+
+/* Archetype template cards */
+.archetype-card {
+	transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.archetype-card:hover {
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+	border-color: var(--ax-colors-border-secondary) !important;
+}
+.archetype-card--selected:hover {
+	border-color: var(--ax-colors-border-default) !important;
+}
+
+/* Trait pills (active — with X) */
+.trait-pill-active {
+	transition: background 0.1s ease, border-color 0.1s ease;
+}
+.trait-pill-active:hover {
+	background: var(--ax-colors-bg-tertiary) !important;
+	border-color: var(--ax-colors-border-secondary) !important;
+}
+
+/* Trait / value suggestion pills (+ add) */
+.trait-pill-suggest {
+	transition: background 0.1s ease, border-color 0.1s ease, color 0.1s ease;
+}
+.trait-pill-suggest:hover {
+	background: var(--ax-colors-bg-secondary) !important;
+	border-color: var(--ax-colors-border-secondary) !important;
+	color: var(--ax-colors-fg-default) !important;
+}
+.trait-pill-suggest.preview-prompt--active:hover {
+	background: var(--ax-colors-bg-secondary) !important;
+}
+
+/* Tone of voice option buttons */
+.tone-option {
+	transition: background 0.1s ease, border-color 0.1s ease;
+}
+.tone-option:not([data-selected="true"]):hover {
+	background: var(--ax-colors-bg-secondary) !important;
+	border-color: var(--ax-colors-border-secondary) !important;
+}
+
+/* Personality tab — range slider */
+.opal-personality-slider {
+	-webkit-appearance: none;
+	appearance: none;
+	height: 4px;
+	border-radius: 2px;
+	outline: none;
+	cursor: pointer;
+	display: block;
+	border: none;
+}
+.opal-personality-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--ax-colors-fg-default);
+	cursor: pointer;
+	margin-top: -5px;
+}
+.opal-personality-slider::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--ax-colors-fg-default);
+	cursor: pointer;
+	border: none;
+}
+
+/* Deactivate dialog — warm gray overlay */
+[data-state="open"][data-aria-hidden="true"][data-axiom] {
+	background: rgba(160, 158, 148, 0.75) !important;
+}
+
+/* Completed tasks — artifact link hover */
+.vat-artifact-link {
+	transition: color 0.1s ease;
+}
+.vat-artifact-link:hover {
+	text-decoration: underline;
+	text-decoration-color: var(--ax-colors-border-default);
+}
+
+/* File card hover — pin button reveal */
+.file-card .file-hover-pin {
+	opacity: 0;
+	transition: opacity 150ms ease;
+	pointer-events: none;
+}
+.file-card:hover .file-hover-pin,
+.file-card:focus-within .file-hover-pin {
+	opacity: 1;
+	pointer-events: auto;
+}

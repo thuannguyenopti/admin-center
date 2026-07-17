@@ -15,7 +15,7 @@ import {
 	DisclosureTrigger,
 	DisclosureContent,
 } from "@optiaxiom/react";
-import {IconCheck, IconAlertCircle, IconSparkles, IconX} from "@tabler/icons-react";
+import {IconCheck, IconCircleExclamation, IconSparkles, IconXmark} from "@/app/lib/axiom-icons";
 import usePersistentState from "@/app/usePersistentState";
 
 export interface BrandToneIssue {
@@ -64,9 +64,9 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 		};
 
 		checkMobile();
-		window.addEventListener('resize', checkMobile);
+		window.addEventListener("resize", checkMobile);
 
-		return () => window.removeEventListener('resize', checkMobile);
+		return () => window.removeEventListener("resize", checkMobile);
 	}, []);
 
 	const hasFieldLevelIssues = result?.issues.some((issue) => issue.fieldId);
@@ -117,9 +117,11 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 	};
 
 	// Sort issues by severity (most severe first)
-	const sortedIssues = result?.issues ? [...result.issues].sort((a, b) => {
-		return getSeverityOrder(a.severity) - getSeverityOrder(b.severity);
-	}) : [];
+	const sortedIssues = result?.issues
+		? [...result.issues].sort((a, b) => {
+				return getSeverityOrder(a.severity) - getSeverityOrder(b.severity);
+			})
+		: [];
 
 	// Resize handlers
 	const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -150,35 +152,44 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 		};
 	}, [isResizing, setPanelWidth]);
 
-	const handleIssueCardClick = useCallback((fieldId?: string) => {
-		console.log("[BrandToneSidePanel] Issue card clicked:", {
-			fieldId,
-			hasOnSelectField: !!onSelectField,
-		});
-
-		if (fieldId && onSelectField) {
-			console.log("[BrandToneSidePanel] Calling onSelectField with:", fieldId);
-			onSelectField(fieldId);
-		} else {
-			console.log("[BrandToneSidePanel] Not calling onSelectField:", {
-				hasFieldId: !!fieldId,
+	const handleIssueCardClick = useCallback(
+		(fieldId?: string) => {
+			console.log("[BrandToneSidePanel] Issue card clicked:", {
+				fieldId,
 				hasOnSelectField: !!onSelectField,
 			});
-		}
-	}, [onSelectField]);
 
-	const handleApplyClick = useCallback((index: number, suggestion: string, fieldId?: string) => {
-		if (onApply) {
-			onApply(suggestion, fieldId);
-			setAppliedIssues(prev => new Set(prev).add(index));
-		}
-	}, [onApply]);
+			if (fieldId && onSelectField) {
+				console.log("[BrandToneSidePanel] Calling onSelectField with:", fieldId);
+				onSelectField(fieldId);
+			} else {
+				console.log("[BrandToneSidePanel] Not calling onSelectField:", {
+					hasFieldId: !!fieldId,
+					hasOnSelectField: !!onSelectField,
+				});
+			}
+		},
+		[onSelectField]
+	);
+
+	const handleApplyClick = useCallback(
+		(index: number, suggestion: string, fieldId?: string) => {
+			if (onApply) {
+				onApply(suggestion, fieldId);
+				setAppliedIssues((prev) => new Set(prev).add(index));
+			}
+		},
+		[onApply]
+	);
 
 	const handleApplyAllClick = useCallback(() => {
 		if (!result || !onApplyAll) return;
 
 		const changes = result.issues
-			.filter((issue, index) => issue.fieldId && checkedIssues.has(index) && !appliedIssues.has(index))
+			.filter(
+				(issue, index) =>
+					issue.fieldId && checkedIssues.has(index) && !appliedIssues.has(index)
+			)
 			.map((issue) => ({
 				fieldId: issue.fieldId!,
 				suggestion: issue.suggestion,
@@ -188,7 +199,7 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 			onApplyAll(changes);
 
 			// Mark all checked issues as applied
-			setAppliedIssues(prev => {
+			setAppliedIssues((prev) => {
 				const newApplied = new Set(prev);
 				result.issues.forEach((issue, index) => {
 					if (issue.fieldId && checkedIssues.has(index)) {
@@ -238,7 +249,10 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 							top: 0,
 							bottom: 0,
 							width: "2px",
-							backgroundColor: (isResizing || isResizeHandleHovered) ? "var(--ax-colors-border-accent)" : "transparent",
+							backgroundColor:
+								isResizing || isResizeHandleHovered
+									? "var(--ax-colors-border-default)"
+									: "transparent",
 							transition: "background-color 0.2s",
 						}}
 						onMouseEnter={() => setIsResizeHandleHovered(true)}
@@ -265,8 +279,8 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 								result.score >= 80
 									? "success"
 									: result.score >= 60
-									? "warning"
-									: "danger"
+										? "warning"
+										: "danger"
 							}
 						>
 							{result.score}
@@ -280,7 +294,7 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 				<Button
 					appearance="subtle"
 					size="sm"
-					icon={<IconX size={16} />}
+					icon={<IconXmark size={16} />}
 					onClick={onClose}
 					aria-label="Close"
 				/>
@@ -290,7 +304,13 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 			<Box flex="1" overflow="auto" p="16">
 				{isLoading && (
 					<Box display="flex" flexDirection="column" gap="16">
-						<Box display="flex" alignItems="center" justifyContent="center" gap="12" py="24">
+						<Box
+							display="flex"
+							alignItems="center"
+							justifyContent="center"
+							gap="12"
+							py="24"
+						>
 							<Spinner />
 							<Text color="fg.secondary">Analyzing brand tone...</Text>
 						</Box>
@@ -348,9 +368,19 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 									</Button>
 								</DisclosureTrigger>
 								<DisclosureContent>
-									<ul style={{listStyleType: 'disc', display: 'block', paddingLeft: '20px', marginTop: '8px'}}>
+									<ul
+										style={{
+											listStyleType: "disc",
+											display: "block",
+											paddingLeft: "20px",
+											marginTop: "8px",
+										}}
+									>
 										{result.strengths.map((strength, index) => (
-											<li key={index} style={{display: 'list-item', marginBottom: '4px'}}>
+											<li
+												key={index}
+												style={{display: "list-item", marginBottom: "4px"}}
+											>
 												<Text fontSize="sm">{strength}</Text>
 											</li>
 										))}
@@ -381,62 +411,131 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 													key={index}
 													p="12"
 													border="1"
-													borderColor={isApplied ? "border.success" : isChecked ? "border.accent" : "border.default"}
+													borderColor={
+														isApplied
+															? "border.success"
+															: "border.default"
+													}
+													bg={
+														isChecked && !isApplied
+															? "bg.default.pressed"
+															: undefined
+													}
 													style={{
 														cursor: isClickable ? "pointer" : "default",
 														opacity: isApplied ? 0.7 : 1,
 													}}
-													onClick={() => handleIssueCardClick(issue.fieldId)}
+													onClick={() =>
+														handleIssueCardClick(issue.fieldId)
+													}
 												>
-													<Box display="flex" alignItems="center" gap="8" mb="8">
+													<Box
+														display="flex"
+														alignItems="center"
+														gap="8"
+														mb="8"
+													>
 														{isApplied ? (
-															<Box display="flex" alignItems="center" gap="4">
-																<IconCheck size={16} color="var(--ax-colors-fg-success)" />
-																<Badge variant="subtle" intent="success">Applied</Badge>
+															<Box
+																display="flex"
+																alignItems="center"
+																gap="4"
+															>
+																<IconCheck
+																	size={16}
+																	color="var(--ax-colors-fg-success)"
+																/>
+																<Badge
+																	variant="subtle"
+																	intent="success"
+																>
+																	Applied
+																</Badge>
 															</Box>
-														) : canApplyAll && (
-															<Checkbox
-																checked={isChecked}
-																onClick={(e) => e.stopPropagation()}
-																onChange={(e) => {
-																	e.stopPropagation();
-																	const newChecked = new Set(checkedIssues);
-																	if (e.currentTarget.checked) {
-																		newChecked.add(originalIndex);
-																	} else {
-																		newChecked.delete(originalIndex);
+														) : (
+															canApplyAll && (
+																<Checkbox
+																	checked={isChecked}
+																	onClick={(e) =>
+																		e.stopPropagation()
 																	}
-																	setCheckedIssues(newChecked);
-																}}
-															/>
+																	onChange={(e) => {
+																		e.stopPropagation();
+																		const newChecked = new Set(
+																			checkedIssues
+																		);
+																		if (
+																			e.currentTarget.checked
+																		) {
+																			newChecked.add(
+																				originalIndex
+																			);
+																		} else {
+																			newChecked.delete(
+																				originalIndex
+																			);
+																		}
+																		setCheckedIssues(
+																			newChecked
+																		);
+																	}}
+																/>
+															)
 														)}
-														<Badge variant="subtle" intent={getSeverityIntent(issue.severity) as any}>
+														<Badge
+															variant="subtle"
+															intent={
+																getSeverityIntent(
+																	issue.severity
+																) as any
+															}
+														>
 															{issue.severity}
 														</Badge>
-														<Badge variant="subtle" intent="neutral">{issue.type}</Badge>
+														<Badge variant="subtle" intent="neutral">
+															{issue.type}
+														</Badge>
 														{issue.fieldLabel && (
-															<Badge variant="subtle" intent="neutral">
+															<Badge
+																variant="subtle"
+																intent="neutral"
+															>
 																{issue.fieldLabel}
 															</Badge>
 														)}
 													</Box>
 													<Box mb="12">
 														<Text fontSize="sm" fontWeight="500" mb="4">
-															<IconAlertCircle
+															<IconCircleExclamation
 																size={14}
-																style={{display: "inline", marginRight: "4px"}}
+																style={{
+																	display: "inline",
+																	marginRight: "4px",
+																}}
 															/>
 															{issue.message}
 														</Text>
 													</Box>
-													<Box display="flex" flexDirection="column" gap="8">
+													<Box
+														display="flex"
+														flexDirection="column"
+														gap="8"
+													>
 														<Box>
-															<Text fontSize="xs" color="fg.secondary" mb="2">
+															<Text
+																fontSize="xs"
+																color="fg.secondary"
+																mb="2"
+															>
 																Original:
 															</Text>
 															<Card
 																p="8"
-																bg={isApplied ? "bg.default" : "bg.error.subtle"}
+																bg={
+																	isApplied
+																		? "bg.default"
+																		: "bg.error.subtle"
+																}
 																fontSize="md"
 																color="fg.default"
 															>
@@ -444,8 +543,14 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 															</Card>
 														</Box>
 														<Box>
-															<Text fontSize="xs" color="fg.secondary" mb="2">
-																{isApplied ? "Applied:" : "Suggestion:"}
+															<Text
+																fontSize="xs"
+																color="fg.secondary"
+																mb="2"
+															>
+																{isApplied
+																	? "Applied:"
+																	: "Suggestion:"}
 															</Text>
 															<Box
 																display="flex"
@@ -456,7 +561,11 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 																<Card
 																	flex="1"
 																	p="8"
-																	bg={isApplied ? "bg.default" : "bg.success.subtle"}
+																	bg={
+																		isApplied
+																			? "bg.default"
+																			: "bg.success.subtle"
+																	}
 																	fontSize="md"
 																	color="fg.default"
 																>
@@ -468,15 +577,27 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 																		appearance="primary"
 																		onClick={(e) => {
 																			e.stopPropagation();
-																			handleApplyClick(originalIndex, issue.suggestion, issue.fieldId);
+																			handleApplyClick(
+																				originalIndex,
+																				issue.suggestion,
+																				issue.fieldId
+																			);
 																		}}
 																	>
 																		Apply
 																	</Button>
 																)}
 																{isApplied && (
-																	<Box display="flex" alignItems="center" gap="4" px="8">
-																		<IconCheck size={16} color="var(--ax-colors-fg-success)" />
+																	<Box
+																		display="flex"
+																		alignItems="center"
+																		gap="4"
+																		px="8"
+																	>
+																		<IconCheck
+																			size={16}
+																			color="var(--ax-colors-fg-success)"
+																		/>
 																	</Box>
 																)}
 															</Box>
@@ -501,7 +622,8 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 								<IconCheck size={48} color="var(--ax-fg-success)" />
 								<Heading level="4">Perfect Brand Alignment!</Heading>
 								<Text color="fg.secondary" textAlign="center">
-									No issues found. Your content matches the brand voice guidelines.
+									No issues found. Your content matches the brand voice
+									guidelines.
 								</Text>
 							</Box>
 						)}
@@ -510,42 +632,39 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 			</Box>
 
 			{/* Footer (sticky) */}
-			{!isLoading && result && (() => {
-				// Calculate how many checked issues are not yet applied
-				const unappliedCheckedCount = Array.from(checkedIssues).filter(
-					index => !appliedIssues.has(index)
-				).length;
+			{!isLoading &&
+				result &&
+				(() => {
+					// Calculate how many checked issues are not yet applied
+					const unappliedCheckedCount = Array.from(checkedIssues).filter(
+						(index) => !appliedIssues.has(index)
+					).length;
 
-				const showApplyButton = canApplyAll && unappliedCheckedCount > 0;
+					const showApplyButton = canApplyAll && unappliedCheckedCount > 0;
 
-				return (
-					<Box
-						p="16"
-						borderT="1"
-						borderColor="border.tertiary"
-						bg="bg.default"
-						display="flex"
-						justifyContent="flex-end"
-						gap="8"
-						style={{flexShrink: 0}}
-					>
-						<Button
-							appearance="subtle"
-							onClick={onClose}
+					return (
+						<Box
+							p="16"
+							borderT="1"
+							borderColor="border.tertiary"
+							bg="bg.default"
+							display="flex"
+							justifyContent="flex-end"
+							gap="8"
+							style={{flexShrink: 0}}
 						>
-							Close
-						</Button>
-						{showApplyButton && (
-							<Button
-								appearance="primary"
-								onClick={handleApplyAllClick}
-							>
-								Apply {unappliedCheckedCount} Change{unappliedCheckedCount !== 1 ? "s" : ""}
+							<Button appearance="subtle" onClick={onClose}>
+								Close
 							</Button>
-						)}
-					</Box>
-				);
-			})()}
+							{showApplyButton && (
+								<Button appearance="primary" onClick={handleApplyAllClick}>
+									Apply {unappliedCheckedCount} Change
+									{unappliedCheckedCount !== 1 ? "s" : ""}
+								</Button>
+							)}
+						</Box>
+					);
+				})()}
 		</Box>
 	);
 };

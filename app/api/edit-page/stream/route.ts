@@ -124,16 +124,6 @@ AVAILABLE ACTIONS:
              "columnId": "col-features-1",
              "elements": [
                {
-                 "elementId": "ele-feature-image",
-                 "type": "ct-image-block",
-                 "properties": {
-                   "imagePrompt": {
-                     "prompt": "Detailed DALL-E prompt for image generation",
-                     "alt": "Image description"
-                   }
-                 }
-               },
-               {
                  "elementId": "ele-feature-heading",
                  "type": "ct-heading",
                  "properties": {
@@ -154,11 +144,6 @@ AVAILABLE ACTIONS:
          ]
        }
      ]
-   }
-
-   IMPORTANT: For ct-image-block elements in create_section, include imagePrompt property:
-   "properties": {
-     "imagePrompt": {"prompt": "Detailed DALL-E prompt", "alt": "Description"}
    }
 
 VISUAL STYLES (template property):
@@ -227,34 +212,18 @@ CRITICAL RULES:
 	console.log("[Edit Page] AI returned actions:", parsed.actions);
 
 	// Count image actions for checklist
-	let imageCount = 0;
-
-	// Count direct image actions
-	imageCount += parsed.actions.filter(
+	const imageActions = parsed.actions.filter(
 		(a) => a.action === "add_image" || a.action === "update_image"
-	).length;
-
-	// Count images in create_section actions
-	parsed.actions.forEach((action) => {
-		if (action.action === "create_section") {
-			(action as any).rows?.forEach((row: any) => {
-				row.columns?.forEach((col: any) => {
-					col.elements?.forEach((el: any) => {
-						if (el.type === "ct-image-block" && el.properties?.imagePrompt) {
-							imageCount++;
-						}
-					});
-				});
-			});
-		}
-	});
+	);
 
 	// Add image generation steps to checklist
-	if (imageCount > 0) {
-		checklist.push({
-			label: imageCount === 1 ? "Generating image" : `Generating ${imageCount} images`,
-			status: "pending",
-		});
+	if (imageActions.length > 0) {
+		for (let i = 0; i < imageActions.length; i++) {
+			checklist.push({
+				label: `Generating image ${i + 1} of ${imageActions.length}`,
+				status: "pending",
+			});
+		}
 		checklist.push({label: "Finalizing changes", status: "pending"});
 		sendEvent("checklist", {items: checklist});
 		await delay(500);
@@ -272,13 +241,9 @@ async function editPropertyContent(
 	contentType: any
 ) {
 	const dataText = JSON.stringify(currentData, null, 2);
-	const isCreating = !currentData || Object.keys(currentData).length === 0;
 
 	const propertyDescriptions = contentType.properties
-		?.map((p: any) => {
-			const required = p.required ? " [REQUIRED]" : "";
-			return `- ${p.id} (${p.name}): ${p.type}${required}`;
-		})
+		?.map((p: any) => `- ${p.id} (${p.name}): ${p.type}`)
 		.join("\n");
 
 	const completion = await openai!.chat.completions.create({
@@ -286,39 +251,28 @@ async function editPropertyContent(
 		messages: [
 			{
 				role: "system",
-				content: `You are ${isCreating ? 'creating' : 'editing'} a ${contentType.displayName || contentType.name}'s content properties.
+				content: `You are editing a page's content properties.
 
 ${STRIDE_SHORT_CONTEXT}
 
 Content type schema:
 ${propertyDescriptions}
 
-${isCreating ? 'The page is empty. Generate all content based on the instructions.' : `Current content:\n${dataText}`}
+Current content:
+${dataText}
 
-${isCreating
-	? `Generate COMPLETE content for all required fields and relevant optional fields based on the user's instructions.
-- Populate all [REQUIRED] fields
-- Include optional fields when they make sense for the content
-- Generate rich, detailed content appropriate for the content type`
-	: `Apply the user's requested changes and return the COMPLETE updated data as JSON.
+Apply the user's requested changes and return the COMPLETE updated data as JSON.
 - Preserve all fields not affected by the change
-- Only modify what's explicitly requested`
-}
+- Only modify what's explicitly requested
 
-IMPORTANT: For image/media fields:
-- If generating new content or the user asks to UPDATE/GENERATE an image, return an "imagePrompt" field with: {"prompt": "detailed DALL-E prompt", "alt": "alt text", "fieldName": "name of the image field to populate"}
-- If editing and the user wants to keep the existing image, return the current image value as-is
+IMPORTANT: For image fields:
+- If the user asks to UPDATE or GENERATE an image, return an "imagePrompt" field with: {"prompt": "detailed DALL-E prompt", "alt": "alt text", "fieldName": "name of the image field"}
+- If the user wants to keep the existing image, return the current image value as-is
 - Do NOT make up image URLs
-- For Blog Post content, if the user mentions video, set heroType to "video" or "image-video"
-
-CONTENT TYPE SPECIFIC GUIDANCE:
-- Blog Post (title, subtitle, body, heroType, author, etc.): Generate engaging article content with proper structure
-- XhtmlString fields (body): Use semantic HTML tags like <h2>, <h3>, <p>, <ul>, <strong>
-- ContentReference fields (author, seo, featuredImage): Leave empty string for now unless specific data provided
 
 Return format (valid JSON only):
 {
-  "data": {/* complete data object with all populated fields */},
+  "data": {/* complete data object with all properties */},
   "imagePrompt": {/* only if generating/updating an image */}
 }`,
 			},
@@ -327,7 +281,7 @@ Return format (valid JSON only):
 				content: instructions,
 			},
 		],
-		temperature: 0.7, // Higher for creative content generation
+		temperature: 0.3,
 		response_format: {type: "json_object"},
 	});
 

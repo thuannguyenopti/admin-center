@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import Skill — Variant A</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "DI Grotesk B", Arial, Helvetica, sans-serif;
+      background: #EFF5EB;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .modal {
+      background: #FFFFFF;
+      border-radius: 12px;
+      width: 560px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+
+    /* Header */
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 24px 18px;
+      border-bottom: 1px solid #E4F0DA;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #202320;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #616755;
+      font-size: 16px;
+      line-height: 1;
+      padding: 4px 6px;
+      border-radius: 6px;
+    }
+    .close-btn:hover { background: #EFF5EB; color: #202320; }
+
+    /* Body */
+    .modal-body { padding: 20px 24px; }
+
+    /* Create as */
+    .create-as-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .create-as-label {
+      font-size: 13px;
+      color: #484E46;
+    }
+
+    .radio-group { display: flex; gap: 16px; }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #202320;
+      user-select: none;
+    }
+
+    .radio-option input[type="radio"] {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid #D8E4CB;
+      border-radius: 50%;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+      background: #fff;
+      transition: border-color 0.1s, background 0.1s;
+    }
+
+    .radio-option input[type="radio"]:checked {
+      background: #ABFF44;
+      border-color: #ABFF44;
+    }
+
+    .radio-option input[type="radio"]:checked::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #202320;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #E4F0DA;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: #616755;
+      padding: 0 2px 10px;
+      margin-right: 20px;
+      cursor: pointer;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      background: none;
+      transition: color 0.1s;
+    }
+
+    .tab.active {
+      color: #202320;
+      border-bottom-color: #202320;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Textarea */
+    .json-textarea {
+      width: 100%;
+      height: 144px;
+      border: 1.5px solid #D8E4CB;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #202320;
+      resize: vertical;
+      outline: none;
+      margin-bottom: 16px;
+      background: #fff;
+    }
+    .json-textarea::placeholder { color: #A1AC8D; }
+    .json-textarea:focus { border-color: #ABFF44; box-shadow: 0 0 0 3px rgba(171,255,68,0.25); }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      color: #616755;
+      font-size: 13px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #E4F0DA;
+    }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 1.5px dashed #D8E4CB;
+      border-radius: 8px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .drop-zone:hover { background: #EFF5EB; }
+
+    .upload-icon { color: #484E46; margin-bottom: 10px; }
+
+    .drop-text {
+      font-size: 13px;
+      color: #484E46;
+      line-height: 1.7;
+      margin-bottom: 10px;
+    }
+
+    .drop-text code {
+      background: #EFF5EB;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 12px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      color: #202320;
+    }
+
+    .browse-btn {
+      background: none;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: #202320;
+      cursor: pointer;
+    }
+    .browse-btn:hover { text-decoration: underline; }
+
+    /* GitHub URL tab */
+    .field-label {
+      display: block;
+      font-size: 13px;
+      color: #484E46;
+      margin-bottom: 6px;
+    }
+
+    .url-input {
+      width: 100%;
+      border: 1.5px solid #D8E4CB;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #202320;
+      outline: none;
+      background: #fff;
+    }
+    .url-input::placeholder { color: #A1AC8D; }
+    .url-input:focus { border-color: #ABFF44; box-shadow: 0 0 0 3px rgba(171,255,68,0.25); }
+
+    /* Footer */
+    .modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 16px 24px;
+      border-top: 1px solid #E4F0DA;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-cancel { background: none; color: #202320; }
+    .btn-cancel:hover { background: #EFF5EB; }
+
+    .btn-import {
+      background: #D8E4CB;
+      color: #8A9880;
+      cursor: not-allowed;
+    }
+    .btn-import.enabled {
+      background: #ABFF44;
+      color: #202320;
+      cursor: pointer;
+    }
+    .btn-import.enabled:hover { background: #9AEE33; }
+  </style>
+</head>
+<body>
+
+<div class="modal">
+
+  <div class="modal-header">
+    <span class="modal-title">Import Skill</span>
+    <button class="close-btn">&#x2715;</button>
+  </div>
+
+  <div class="modal-body">
+
+    <div class="create-as-row">
+      <span class="create-as-label">Create as</span>
+      <div class="radio-group">
+        <label class="radio-option">
+          <input type="radio" name="createAs" value="personal" checked>
+          Personal
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="createAs" value="organization">
+          Organization
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="createAs" value="system">
+          System
+        </label>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('direct', this)">Direct upload</button>
+      <button class="tab" onclick="switchTab('github', this)">GitHub URL</button>
+    </div>
+
+    <div id="panel-direct" class="tab-panel active">
+      <textarea
+        class="json-textarea"
+        placeholder="Paste your skill JSON data here..."
+        oninput="checkImport()"
+      ></textarea>
+
+      <div class="divider">or</div>
+
+      <div class="drop-zone">
+        <div class="upload-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="drop-text">
+          Drop a <code>skill.json</code>, <code>SKILL.md</code>, <code>.zip</code>,
+          <code>.skill</code>, or folder here
+        </div>
+        <button class="browse-btn">Browse files</button>
+      </div>
+    </div>
+
+    <div id="panel-github" class="tab-panel">
+      <label class="field-label">GitHub URL</label>
+      <input
+        type="url"
+        class="url-input"
+        placeholder="https://github.com/owner/repo/blob/main/skill.json"
+        oninput="checkImport()"
+      />
+    </div>
+
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-cancel">Cancel</button>
+    <button class="btn btn-import" id="import-btn">Import</button>
+  </div>
+
+</div>
+
+<script>
+  let activeTab = 'direct';
+
+  function switchTab(tab, el) {
+    activeTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+    checkImport();
+  }
+
+  function checkImport() {
+    const directVal = document.querySelector('.json-textarea')?.value.trim();
+    const githubVal = document.querySelector('.url-input')?.value.trim();
+    const can = activeTab === 'direct' ? directVal : githubVal;
+    document.getElementById('import-btn').classList.toggle('enabled', !!can);
+  }
+</script>
+
+</body>
+</html>

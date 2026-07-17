@@ -1,26 +1,314 @@
-// Backward-compat shim for code that imports from @/app/lib/axiom-icons.
-// New code should import directly from @optimizely/axiom-icons.
-// The real @optimizely/axiom-icons package is installed — no webpack alias needed.
+import * as TablerIcons from "@tabler/icons-react";
+import Head from "next/head";
+import type {ComponentType, SVGProps} from "react";
 
-export * from "@optimizely/axiom-icons";
+type CompatIconProps = Omit<SVGProps<SVGSVGElement>, "stroke"> & {
+	size?: number | string;
+	stroke?: number | string;
+};
 
-// Compatibility aliases for icons renamed/missing in the Axiom package
-export { IconHouse as IconHome } from "@optimizely/axiom-icons";
-export { IconCircleQuestion as IconHelp } from "@optimizely/axiom-icons";
-export { IconSparkles as IconWand } from "@optimizely/axiom-icons";
-export { IconArrowsLeftRight as IconArrowRightArrowLeft } from "@optimizely/axiom-icons";
+const fallbackIcon = TablerIcons.IconCircle;
 
-// Sort caret icons — not in Axiom package, Tabler fallbacks
-export { IconCaretUp, IconCaretDown, IconCaretUpDown } from "@tabler/icons-react";
+// Custom SVG component matching the real @optimizely/axiom-icons IconAgent
+function AxiomIconAgent({
+	size = 16,
+	width,
+	height,
+	style,
+	className,
+	stroke: _stroke,
+	...rest
+}: CompatIconProps) {
+	const w = width ?? size;
+	const h = height ?? size;
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 20 16"
+			width={w}
+			height={h}
+			fill="currentColor"
+			style={style}
+			className={className}
+			{...rest}
+		>
+			<path d="M9.434 6.727c.15-.043.359-.005.505.051l7.983 2.76a.659.659 0 0 1 .38.414.714.714 0 0 1-.5.896l-3.114 1.127c-.744.238-.766.644-.766.644l-.965 3a.628.628 0 0 1-.424.35c-.393.112-.745-.084-.857-.478l-2.733-7.84c-.111-.393.097-.813.49-.924ZM14.774 0a2.01 2.01 0 0 1 2.016 2.017v3.528c0 .252-.252.504-.504.504a.518.518 0 0 1-.504-.504V2.017c0-.567-.472-1.009-1.008-1.01H3.686a.996.996 0 0 0-1.01 1.01v11.088c0 .536.443 1.008 1.01 1.008h3.528c.252 0 .504.22.504.504 0 .252-.252.504-.504.504H3.686a2.01 2.01 0 0 1-2.017-2.016V2.018C1.669.883 2.551 0 3.686 0h11.088Zm-2.45 14.291.63-1.956c.008-.03.014-.064.025-.098.046-.139.122-.297.242-.457.24-.32.612-.582 1.126-.753l2.344-.85L10.096 7.9l2.228 6.392ZM4.55 8.01l2.15.676c.269.084.43.371.346.64a.518.518 0 0 1-.64.345l-2.151-.676c-.269-.084-.407-.394-.345-.64.085-.27.394-.408.64-.345Zm1.503-3.615a.518.518 0 0 1 .713-.012l1.45 1.401c.18.175.186.53.012.712a.518.518 0 0 1-.713.013l-1.45-1.402a.498.498 0 0 1-.012-.712Zm3.93-2.146a.518.518 0 0 1 .652.323l.749 2.126a.518.518 0 0 1-.322.653.518.518 0 0 1-.653-.324L9.66 2.901c-.07-.243.058-.558.323-.652Z" />
+		</svg>
+	);
+}
 
-// Notification icons — aliases to Axiom equivalents
-export { IconXmark as IconX } from "@optimizely/axiom-icons";
-export { IconCheckDouble as IconChecks } from "@optimizely/axiom-icons";
-export { IconBullhorn as IconSpeakerphone } from "@optimizely/axiom-icons";
-export { IconSpinner as IconLoader2 } from "@optimizely/axiom-icons";
+const iconMap: Record<string, string[]> = {
+	IconAgent: ["IconSparkles"], // fallback only; IconAgent is overridden below
+	IconAlignLeft: ["IconAlignLeft"],
+	IconAngleDown: ["IconChevronDown"],
+	IconArrowLeft: ["IconArrowLeft"],
+	IconArrowRotateLeft: ["IconRotate", "IconHistory"],
+	IconArrowRotateRight: ["IconRotateClockwise", "IconRefresh"],
+	IconArrowUpRightFromSquare: ["IconExternalLink", "IconArrowUpRight"],
+	IconArrowsLeftRight: ["IconArrowsLeftRight"],
+	IconArrowsMaximize: ["IconArrowsMaximize"],
+	IconArrowsMinimize: ["IconArrowsMinimize"],
+	IconArrowsRepeat: ["IconRepeat"],
+	IconArrowsRotate: ["IconRefresh", "IconRotate"],
+	IconArrowUp: ["IconArrowUp"],
+	IconBars: ["IconMenu2", "IconMenu"],
+	IconBell: ["IconBell"],
+	IconBold: ["IconBold"],
+	IconBolt: ["IconBolt"],
+	IconBook: ["IconBook"],
+	IconBracketsCurly: ["IconBraces"],
+	IconBracketsSquare: ["IconBrackets"],
+	IconBrowser: ["IconBrowser"],
+	IconCalendar: ["IconCalendar"],
+	IconChartColumn: ["IconChartBar"],
+	IconChartLine: ["IconChartLine"],
+	IconCheck: ["IconCheck"],
+	IconCheckCircleSolid: ["IconCircleCheckFilled", "IconCircleCheck"],
+	IconChevronDown: ["IconChevronDown"],
+	IconChevronLeft: ["IconChevronLeft"],
+	IconChevronRight: ["IconChevronRight"],
+	IconCircleCheck: ["IconCircleCheck"],
+	IconCircleDot: ["IconCircleDot"],
+	IconCircleExclamation: ["IconAlertCircle"],
+	IconCircleInfo: ["IconInfoCircle", "IconAlertCircle"],
+	IconCirclePause: ["IconPlayerPause"],
+	IconCirclePlus: ["IconCirclePlus"],
+	IconCircleQuestion: ["IconHelpCircle"],
+	IconCircleStop: ["IconPlayerStop", "IconCircleX"],
+	IconClock: ["IconClock"],
+	IconClockRotateLeft: ["IconHistory"],
+	IconCode: ["IconCode"],
+	IconCodeBranch: ["IconGitBranch", "IconCodeDots"],
+	IconColumns3: ["IconColumns3"],
+	IconComments: ["IconMessages"],
+	IconCopy: ["IconCopy"],
+	IconEllipsisSolid: ["IconDots"],
+	IconEllipsisStroke: ["IconDots"],
+	IconEnvelope: ["IconMail"],
+	IconEye: ["IconEye"],
+	IconEyeSlash: ["IconEyeOff"],
+	IconFile: ["IconFile"],
+	IconFileArrowUp: ["IconFileUpload", "IconUpload"],
+	IconFileImage: ["IconPhoto", "IconFileTypeJpg"],
+	IconFileImport: ["IconFileImport", "IconFileArrowLeft"],
+	IconFileLines: ["IconFileText"],
+	IconFilePdf: ["IconFileTypePdf"],
+	IconFileSpreadsheet: ["IconFileTypeXls", "IconTable"],
+	IconFileWord: ["IconFileTypeDoc"],
+	IconFloppyDisk: ["IconDeviceFloppy"],
+	IconFolder: ["IconFolder"],
+	IconFolderArrowDown: ["IconFolderDown"],
+	IconFolderImage: ["IconFolderOpen", "IconFolder"],
+	IconFolderOpen: ["IconFolderOpen"],
+	IconGear: ["IconSettings"],
+	IconGrid: ["IconGrid3x3", "IconLayoutGrid"],
+	IconGrid2Plus: ["IconLayoutGridAdd", "IconGridDots"],
+	IconGripVertical: ["IconGripVertical"],
+	IconHandPointer: ["IconHandFinger", "IconPointer"],
+	IconHashtag: ["IconHash"],
+	IconHorizontalRule: ["IconSeparatorHorizontal", "IconMinus"],
+	IconImage: ["IconPhoto", "IconImageInPicture"],
+	IconInboxFull: ["IconInbox"],
+	IconInputNumeric: ["Icon123", "IconNumbers"],
+	IconInputText: ["IconTypography", "IconLetterT"],
+	IconItalic: ["IconItalic"],
+	IconLaptopMobile: ["IconDevices", "IconDeviceLaptop"],
+	IconLink: ["IconLink"],
+	IconList: ["IconList"],
+	IconListOl: ["IconListNumbers"],
+	IconListUl: ["IconList"],
+	IconLocationDot: ["IconMapPin"],
+	IconLock: ["IconLock"],
+	IconMegaphone: ["IconSpeakerphone"],
+	IconPaintRoller: ["IconPaint"],
+	IconPaperPlaneTop: ["IconSend"],
+	IconPen: ["IconPencil"],
+	IconPenLine: ["IconPencil"],
+	IconPlay: ["IconPlayerPlay"],
+	IconPlus: ["IconPlus"],
+	IconPopOut: ["IconExternalLink"],
+	IconPresentationScreen: ["IconPresentation"],
+	IconQuoteRight: ["IconBlockquote"],
+	IconShareNodes: ["IconShare"],
+	IconShieldCheck: ["IconShieldCheck"],
+	IconSortSolid: ["IconSelector", "IconArrowsUpDown"],
+	IconSparkles: ["IconSparkles", "IconSparklesFilled"],
+	IconSpinner: ["IconLoader"],
+	IconSplit: ["IconLayoutColumns", "IconGitBranch"],
+	IconStrikethrough: ["IconStrikethrough"],
+	IconTableCells: ["IconTable"],
+	IconTag: ["IconTag"],
+	IconTerminal: ["IconTerminal2", "IconTerminal"],
+	IconText: ["IconLetterT", "IconTypography"],
+	IconThumbsDown: ["IconThumbDown"],
+	IconThumbsUp: ["IconThumbUp"],
+	IconThumbtack: ["IconPin"],
+	IconToggleOff: ["IconToggleLeft"],
+	IconTrashCan: ["IconTrash"],
+	IconTriangleExclamation: ["IconAlertTriangle"],
+	IconUser: ["IconUser"],
+	IconUserCheck: ["IconUserCheck"],
+	IconUserGroup: ["IconUsersGroup", "IconUsers"],
+	IconUsers: ["IconUsers"],
+	IconXmark: ["IconX"],
+};
+
+function resolveIcon(name: string): ComponentType<CompatIconProps> {
+	const candidates = iconMap[name] ?? [];
+
+	for (const candidate of candidates) {
+		const component = (
+			TablerIcons as unknown as Record<string, ComponentType<CompatIconProps> | undefined>
+		)[candidate];
+		if (component) {
+			return component;
+		}
+	}
+
+	return fallbackIcon as ComponentType<CompatIconProps>;
+}
+
+function createIcon(name: string) {
+	const CompatIcon = (props: CompatIconProps) => {
+		const Component = resolveIcon(name);
+		return <Component {...props} />;
+	};
+
+	CompatIcon.displayName = name;
+	return CompatIcon;
+}
+
+export const IconAgent = AxiomIconAgent;
+export const IconAlignLeft = createIcon("IconAlignLeft");
+export const IconAngleDown = createIcon("IconAngleDown");
+export const IconArrowLeft = createIcon("IconArrowLeft");
+export const IconArrowRotateLeft = createIcon("IconArrowRotateLeft");
+export const IconArrowRotateRight = createIcon("IconArrowRotateRight");
+export const IconArrowUpRightFromSquare = createIcon("IconArrowUpRightFromSquare");
+export const IconArrowsLeftRight = createIcon("IconArrowsLeftRight");
+export const IconArrowsMaximize = createIcon("IconArrowsMaximize");
+export const IconArrowsMinimize = createIcon("IconArrowsMinimize");
+export const IconArrowsRepeat = createIcon("IconArrowsRepeat");
+export const IconArrowsRotate = createIcon("IconArrowsRotate");
+export const IconArrowUp = createIcon("IconArrowUp");
+export const IconBars = createIcon("IconBars");
+export const IconBell = createIcon("IconBell");
+export const IconBold = createIcon("IconBold");
+export const IconBook = createIcon("IconBook");
+export const IconBracketsCurly = createIcon("IconBracketsCurly");
+export const IconBracketsSquare = createIcon("IconBracketsSquare");
+export const IconBrowser = createIcon("IconBrowser");
+export const IconCalendar = createIcon("IconCalendar");
+export const IconCaretDown = TablerIcons.IconCaretDown;
+export const IconCaretUp = TablerIcons.IconCaretUp;
+export const IconCaretUpDown = TablerIcons.IconCaretUpDown;
+export const IconChartColumn = createIcon("IconChartColumn");
+export const IconChartLine = createIcon("IconChartLine");
+export const IconCheck = createIcon("IconCheck");
+export const IconCheckCircleSolid = createIcon("IconCheckCircleSolid");
+export const IconChevronDown = createIcon("IconChevronDown");
+export const IconChevronLeft = createIcon("IconChevronLeft");
+export const IconChevronRight = createIcon("IconChevronRight");
+export const IconCircleCheck = createIcon("IconCircleCheck");
+export const IconCircleDot = createIcon("IconCircleDot");
+export const IconCircleExclamation = createIcon("IconCircleExclamation");
+export const IconCircleInfo = createIcon("IconCircleInfo");
+export const IconCirclePause = createIcon("IconCirclePause");
+export const IconCirclePlus = createIcon("IconCirclePlus");
+export const IconCircleQuestion = createIcon("IconCircleQuestion");
+export const IconCircleStop = createIcon("IconCircleStop");
+export const IconClock = createIcon("IconClock");
+export const IconClockRotateLeft = createIcon("IconClockRotateLeft");
+export const IconCode = createIcon("IconCode");
+export const IconCodeBranch = createIcon("IconCodeBranch");
+export const IconColumns3 = createIcon("IconColumns3");
+export const IconComments = createIcon("IconComments");
+export const IconCopy = createIcon("IconCopy");
+export const IconEllipsisSolid = createIcon("IconEllipsisSolid");
+export const IconEllipsisStroke = createIcon("IconEllipsisStroke");
+export const IconEnvelope = createIcon("IconEnvelope");
+export const IconEye = createIcon("IconEye");
+export const IconEyeSlash = createIcon("IconEyeSlash");
+export const IconFile = createIcon("IconFile");
+export const IconFileArrowUp = createIcon("IconFileArrowUp");
+export const IconFileImage = createIcon("IconFileImage");
+export const IconFileImport = createIcon("IconFileImport");
+export const IconFileLines = createIcon("IconFileLines");
+export const IconFilePdf = createIcon("IconFilePdf");
+export const IconFileSpreadsheet = createIcon("IconFileSpreadsheet");
+export const IconFileWord = createIcon("IconFileWord");
+export const IconFloppyDisk = createIcon("IconFloppyDisk");
+export const IconBolt = createIcon("IconBolt");
+export const IconFolder = createIcon("IconFolder");
+export const IconFolderArrowDown = createIcon("IconFolderArrowDown");
+export const IconFolderImage = createIcon("IconFolderImage");
+export const IconFolderOpen = createIcon("IconFolderOpen");
+export const IconGear = createIcon("IconGear");
+export const IconGrid = createIcon("IconGrid");
+export const IconGrid2Plus = createIcon("IconGrid2Plus");
+export const IconGripVertical = createIcon("IconGripVertical");
+export const IconHandPointer = createIcon("IconHandPointer");
+export const IconHashtag = createIcon("IconHashtag");
+export const IconHorizontalRule = createIcon("IconHorizontalRule");
+export const IconImage = createIcon("IconImage");
+export const IconInboxFull = createIcon("IconInboxFull");
+export const IconInputNumeric = createIcon("IconInputNumeric");
+export const IconInputText = createIcon("IconInputText");
+export const IconItalic = createIcon("IconItalic");
+export const IconLaptopMobile = createIcon("IconLaptopMobile");
+export const IconLink = createIcon("IconLink");
+export const IconList = createIcon("IconList");
+export const IconListOl = createIcon("IconListOl");
+export const IconListUl = createIcon("IconListUl");
+export const IconLocationDot = createIcon("IconLocationDot");
+export const IconLock = createIcon("IconLock");
+export const IconMegaphone = createIcon("IconMegaphone");
+export const IconPaintRoller = createIcon("IconPaintRoller");
+export const IconPaperPlaneTop = createIcon("IconPaperPlaneTop");
+export const IconPen = createIcon("IconPen");
+export const IconPenLine = createIcon("IconPenLine");
+export const IconPlay = createIcon("IconPlay");
+export const IconPlus = createIcon("IconPlus");
+export const IconPopOut = createIcon("IconPopOut");
+export const IconPresentationScreen = createIcon("IconPresentationScreen");
+export const IconQuoteRight = createIcon("IconQuoteRight");
+export const IconShareNodes = createIcon("IconShareNodes");
+export const IconShieldCheck = createIcon("IconShieldCheck");
+export const IconSortSolid = createIcon("IconSortSolid");
+export const IconSparkles = createIcon("IconSparkles");
+export const IconSpinner = createIcon("IconSpinner");
+export const IconSplit = createIcon("IconSplit");
+export const IconStrikethrough = createIcon("IconStrikethrough");
+export const IconTableCells = createIcon("IconTableCells");
+export const IconTag = createIcon("IconTag");
+export const IconTerminal = createIcon("IconTerminal");
+export const IconText = createIcon("IconText");
+export const IconThumbsDown = createIcon("IconThumbsDown");
+export const IconThumbsUp = createIcon("IconThumbsUp");
+export const IconThumbtack = createIcon("IconThumbtack");
+export const IconToggleOff = createIcon("IconToggleOff");
+export const IconTrashCan = createIcon("IconTrashCan");
+export const IconTriangleExclamation = createIcon("IconTriangleExclamation");
+export const IconUser = createIcon("IconUser");
+export const IconUserCheck = createIcon("IconUserCheck");
+export const IconUserGroup = createIcon("IconUserGroup");
+export const IconUsers = createIcon("IconUsers");
+export const IconXmark = createIcon("IconXmark");
 
 // Icons not yet in Axiom package — Tabler fallbacks
-export { IconPlug, IconTicket, IconMicrophone, IconBuilding, IconMoon, IconApps, IconTarget, IconTemplate, IconFileDownload, IconActivity, IconCloud, IconWebhook, IconFileText, IconTools } from "@tabler/icons-react";
+export {IconPlug, IconTicket, IconMicrophone} from "@tabler/icons-react";
+export {IconFaceId} from "@tabler/icons-react";
+
+// Additional Axiom icons — Tabler fallback mappings
+export {IconUpload, IconDownload, IconSearch, IconChevronUp} from "@tabler/icons-react";
+export {IconGrid3x3 as IconGrid2} from "@tabler/icons-react";
+export {IconArrowsLeftRight as IconArrowRightArrowLeft} from "@tabler/icons-react";
+export {IconCircleCheckFilled as IconCircleCheckSolid} from "@tabler/icons-react";
+export {IconTool as IconScrewdriverWrench} from "@tabler/icons-react";
+export {IconUser as IconCircleUser} from "@tabler/icons-react";
+export {IconFile as IconFileZipper} from "@tabler/icons-react";
+export {IconBuilding} from "@tabler/icons-react";
+export {IconAt} from "@tabler/icons-react";
 
 // Brand icons — Tabler fallbacks (Axiom package only ships IconGoogle)
 export {
@@ -31,24 +319,134 @@ export {
 	IconBrandGithub,
 	IconBrandAsana,
 	IconBrandGoogle,
-	IconBrandTeams,
 } from "@tabler/icons-react";
 
 // Axiom rename aliases (icon exists under a different name)
-export { IconSunBright as IconSunFilled } from "@optimizely/axiom-icons";
-export { IconDesktop as IconDeviceDesktop } from "@optimizely/axiom-icons";
-export { IconCodeBranch as IconGitBranch } from "@optimizely/axiom-icons";
-export { IconTrashCan as IconTrash } from "@optimizely/axiom-icons";
-export { IconShareNodes as IconShare } from "@optimizely/axiom-icons";
-export { IconEnvelope as IconMail } from "@optimizely/axiom-icons";
+export {IconSunBright as IconSunFilled} from "@optimizely/axiom-icons";
+export {IconDesktop as IconDeviceDesktop} from "@optimizely/axiom-icons";
+export {IconCodeBranch as IconGitBranch} from "@optimizely/axiom-icons";
+export {IconTrashCan as IconTrash} from "@optimizely/axiom-icons";
+export {IconShareNodes as IconShare} from "@optimizely/axiom-icons";
+export {IconEnvelope as IconMail} from "@optimizely/axiom-icons";
 
-// Custom inline icons (not in Axiom or Tabler)
-export function IconTeamsCustom({ size = 18, ...props }: React.SVGProps<SVGSVGElement> & { size?: number }) {
-	const w = size;
-	const h = Math.round((size * 16) / 20);
-	return (
-		<svg width={w} height={h} viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-			<path d="M5.33089 5.375C4.55939 5.375 3.86771 4.96484 3.46865 4.28125C3.09621 3.625 3.09621 2.77734 3.46865 2.09375C3.86771 1.4375 4.55939 1 5.33089 1C6.07579 1 6.76748 1.4375 7.16653 2.09375C7.53898 2.77734 7.53898 3.625 7.16653 4.28125C6.76748 4.96484 6.07579 5.375 5.33089 5.375ZM15.121 5.375C14.3495 5.375 13.6578 4.96484 13.2587 4.28125C12.8863 3.625 12.8863 2.77734 13.2587 2.09375C13.6578 1.4375 14.3495 1 15.121 1C15.8659 1 16.5575 1.4375 16.9566 2.09375C17.329 2.77734 17.329 3.625 16.9566 4.28125C16.5575 4.96484 15.8659 5.375 15.121 5.375ZM1.5 9.17578C1.5 7.5625 2.75036 6.25 4.31996 6.25H5.46391C5.88957 6.25 6.28862 6.35938 6.63446 6.52344C6.60786 6.71484 6.60786 6.93359 6.60786 7.125C6.60786 8.19141 7.03351 9.12109 7.75181 9.75H2.05867C1.73943 9.75 1.5 9.50391 1.5 9.17578ZM12.2478 9.75C12.9661 9.12109 13.3917 8.19141 13.3917 7.125C13.3917 6.93359 13.3917 6.71484 13.3651 6.52344C13.711 6.35938 14.11 6.25 14.5357 6.25H15.6796C17.2492 6.25 18.5262 7.5625 18.4996 9.17578C18.4996 9.50391 18.2602 9.75 17.9409 9.75H12.2478ZM10.0131 5.8125C9.53424 5.8125 9.13518 6.08594 8.89575 6.46875C8.65632 6.87891 8.65632 7.39844 8.89575 7.78125C9.13518 8.19141 9.53424 8.4375 10.0131 8.4375C10.4654 8.4375 10.8644 8.19141 11.1038 7.78125C11.3433 7.39844 11.3433 6.87891 11.1038 6.46875C10.8644 6.08594 10.4654 5.8125 10.0131 5.8125ZM10.0131 9.75C9.08198 9.75 8.25727 9.25781 7.77841 8.4375C7.32615 7.64453 7.32615 6.63281 7.77841 5.8125C8.25727 5.01953 9.08198 4.5 10.0131 4.5C10.9176 4.5 11.7423 5.01953 12.2212 5.8125C12.6734 6.63281 12.6734 7.64453 12.2212 8.4375C11.7423 9.25781 10.9176 9.75 10.0131 9.75ZM8.4435 11.9375C7.37936 11.9375 6.50144 12.7031 6.23541 13.6875H13.7642C13.4981 12.7031 12.6202 11.9375 11.5561 11.9375H8.4435ZM8.4435 10.625H11.5561C13.5248 10.625 15.121 12.2656 15.121 14.2891C15.121 14.6992 14.8017 15 14.4027 15H5.59693C5.19788 15 4.90524 14.6719 4.90524 14.2891C4.90524 12.2656 6.47484 10.625 8.4435 10.625Z" fill="currentColor"/>
-		</svg>
-	);
-}
+// Tabler passthroughs — icons with no curated Axiom mapping yet. Kept under
+// Tabler names so callers stay working; map each to an @optimizely/axiom-icons
+// equivalent above as the design system catches up.
+export {
+	IconAbc,
+	IconActivity,
+	IconAdjustmentsHorizontal,
+	IconAnalyze,
+	IconApi,
+	IconApps,
+	IconArchive,
+	IconArrowBackUp,
+	IconArrowBarBoth,
+	IconArrowDown,
+	IconArrowForwardUp,
+	IconArrowRight,
+	IconArrowsExchange,
+	IconArrowsSort,
+	IconArticle,
+	IconBlocks,
+	IconBox,
+	IconBrain,
+	IconBrandFacebook,
+	IconBrandProducthunt,
+	IconBrandTwitter,
+	IconBrandWordpress,
+	IconBrandYoutube,
+	IconBroadcast,
+	IconBulb,
+	IconCalendarBolt,
+	IconCalendarCheck,
+	IconCalendarX,
+	IconCategory,
+	IconChecklist,
+	IconChecks,
+	IconCircle,
+	IconClipboard,
+	IconCloud,
+	IconCloudDownload,
+	IconCongruentTo,
+	IconCursorText,
+	IconCut,
+	IconEdit,
+	IconFileCheck,
+	IconFileDownload,
+	IconFilePlus,
+	IconFileTypeCsv,
+	IconFilter,
+	IconFlask,
+	IconFolderPlus,
+	IconForms,
+	IconGitFork,
+	IconGlobe,
+	IconGlobeFilled,
+	IconHeading,
+	IconHelp,
+	IconHome,
+	IconKey,
+	IconLayout,
+	IconLayout2,
+	IconLayoutGrid,
+	IconLayoutList,
+	IconLayoutNavbar,
+	IconListDetails,
+	IconListTree,
+	IconLoader2,
+	IconMaximize,
+	IconMessage,
+	IconMinus,
+	IconMoon,
+	IconNews,
+	IconPackage,
+	IconPalette,
+	IconPhotoPin,
+	IconPilcrow,
+	IconPinEnd,
+	IconPinInvoke,
+	IconPinned,
+	IconPlugConnected,
+	IconPower,
+	IconPuzzle,
+	IconQuote,
+	IconRectangle,
+	IconReport,
+	IconReportSearch,
+	IconRestore,
+	IconRocket,
+	IconRowInsertBottom,
+	IconRowInsertTop,
+	IconSection,
+	IconSend2,
+	IconSendOff,
+	IconServer,
+	IconSettingsAutomation,
+	IconSettingsSearch,
+	IconShare2,
+	IconShare3,
+	IconShieldOff,
+	IconShieldPlus,
+	IconShoppingBag,
+	IconShoppingCart,
+	IconSquare,
+	IconStack2,
+	IconStar,
+	IconTarget,
+	IconTemplate,
+	IconTrendingDown,
+	IconTrendingUp,
+	IconUserPlus,
+	IconVersions,
+	IconVideo,
+	IconWand,
+	IconWebhook,
+	IconWifi,
+	IconWifiOff,
+	IconWorld,
+	IconWorldBolt,
+	IconWorldCheck,
+	IconWorldOff,
+	IconWorldX,
+} from "@tabler/icons-react";

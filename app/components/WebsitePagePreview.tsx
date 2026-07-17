@@ -4,7 +4,6 @@ import React from "react";
 import type { Page } from "@/app/db/initialData";
 import type { Outline } from "@/app/db/initialData";
 import StrideHeader from "@/app/site/StrideHeader";
-import StrideFooter from "@/app/site/StrideFooter";
 import SitePageRenderer from "@/app/site/SitePageRenderer";
 import PropertyBasedPageRenderer from "@/app/site/PropertyBasedPageRenderer";
 
@@ -48,7 +47,6 @@ export default function WebsitePagePreview({ page, outlines }: WebsitePagePrevie
 					<p className="text-gray-400 text-lg">This page has no content yet.</p>
 				</div>
 			)}
-			<StrideFooter />
 		</div>
 	);
 }

@@ -124,7 +124,7 @@ const FILES_BY_VAU: Record<string, IMFile[]> = {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function IMFilesList({ vauName }: { vauName?: string }) {
+export function IMFilesList({ vauName, onOpenArtifact }: { vauName?: string; onOpenArtifact?: () => void }) {
   const key = vauName?.toLowerCase() ?? "";
   const files = FILES_BY_VAU[key] ?? FRANK_FILES;
 
@@ -136,16 +136,20 @@ export function IMFilesList({ vauName }: { vauName?: string }) {
     >
       <Box style={{ maxWidth: 720, width: "100%", margin: "0 auto" }}>
 
-      {files.map((file) => (
+      {files.map((file) => {
+        const isArtifactFile = file.id === "f1" && !!onOpenArtifact;
+        return (
         <Box
           key={file.id}
           display="flex"
           alignItems="center"
           gap="12"
+          onClick={isArtifactFile ? onOpenArtifact : undefined}
           style={{
             padding: "10px 24px",
             borderBottom: "1px solid var(--ax-colors-border-secondary)",
             minHeight: 56,
+            cursor: isArtifactFile ? "pointer" : "default",
           }}
         >
           <FileTypeIcon type={file.type} />
@@ -189,7 +193,8 @@ export function IMFilesList({ vauName }: { vauName?: string }) {
             <IconArrowUpRightFromSquare size={14} />
           </Button>
         </Box>
-      ))}
+        );
+      })}
       </Box>
     </Box>
   );

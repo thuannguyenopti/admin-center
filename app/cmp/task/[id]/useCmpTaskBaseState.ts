@@ -14,7 +14,7 @@ import type { TaskWorkflowState } from "./workflowTypes";
 import { formatInitialBriefHtml } from "./utils";
 
 export function useCmpTaskBaseState(taskId: string) {
-	const taskBriefHtml = formatInitialBriefHtml(taskBriefContents[taskId] ?? initialBriefContent);
+	const taskBriefHtml = formatInitialBriefHtml(taskBriefContents[taskId] ?? "");
 	const [scene, setScene] = useState<Scene>("brief");
 	const [selectedAsset, setSelectedAsset] = useState<AssetItem>(suggestedAssets[6]);
 	const [selectedTaskAssetId, setSelectedTaskAssetId] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export function useCmpTaskBaseState(taskId: string) {
 	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
 	const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
 	const [suggestedPanelOpen, setSuggestedPanelOpen] = useState(false);
-	const [pages, setPages] = usePersistentState("pages_v6", initialPages) as [
+	const [pages, setPages] = usePersistentState("pages_v5", initialPages) as [
 		Page[],
 		React.Dispatch<React.SetStateAction<Page[]>>,
 	];

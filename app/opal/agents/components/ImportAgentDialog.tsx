@@ -19,7 +19,7 @@ import {
     IconFileZipper,
     IconUpload,
     IconXmark,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
 	Box,
 	Text,
@@ -82,6 +82,16 @@ function generateContextualMessage(
  * Component that renders page generation progress with collapsible details
  * Displays a friendly message with expandable technical details
  */
+const THINKING_MESSAGES = [
+	"Analyzing brief and campaign context",
+	"Crafting content structure",
+	"Writing engaging copy",
+	"Optimizing for target audience",
+	"Applying brand voice guidelines",
+	"Generating visual assets",
+	"Polishing final output",
+];
+
 export function PageGenerationProgress({
 	checklist,
 	contextualMessage,
@@ -90,21 +100,29 @@ export function PageGenerationProgress({
 	isCompleted = false
 }: PageGenerationProgressProps) {
 	const [isExpanded, setIsExpanded] = useState(false);
+	const [thinkingIndex, setThinkingIndex] = useState(0);
+
+	// Rotate thinking messages while generating
+	useEffect(() => {
+		if (isCompleted) return;
+		const interval = setInterval(() => {
+			setThinkingIndex((prev) => (prev + 1) % THINKING_MESSAGES.length);
+		}, 3000);
+		return () => clearInterval(interval);
+	}, [isCompleted]);
 
 	// Derive skills from active checklist items
 	const activeSkills = deriveSkills(checklist);
 
 	// Generate contextual message if not provided
-	const message = contextualMessage || generateContextualMessage(pageType, sections, checklist);
+	const baseMessage = contextualMessage || generateContextualMessage(pageType, sections, checklist);
+	const message = isCompleted ? baseMessage : THINKING_MESSAGES[thinkingIndex];
 
 	return (
 		<Box
 			p="16"
 			bg="bg.default"
 			rounded="lg"
-			style={{
-				border: '1px solid var(--ax-colors-border-secondary)',
-			}}
 		>
 			{/* Header - always visible */}
 			<Box
@@ -135,7 +153,16 @@ export function PageGenerationProgress({
 				{!isExpanded && (
 					<>
 						<Box style={{ fontSize: '16px', lineHeight: '1' }} aria-hidden="true">✍️</Box>
-						<Text fontSize="sm" fontWeight="500" color="fg.default" style={{ flex: 1 }}>
+						<Text
+							key={message}
+							fontSize="sm"
+							fontWeight="500"
+							color="fg.default"
+							style={{
+								flex: 1,
+								animation: isCompleted ? undefined : 'fadeIn 0.4s ease-in',
+							}}
+						>
 							{message}
 						</Text>
 					</>

@@ -2,7 +2,7 @@
 
 import { Avatar, Box } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconCalendar, IconCheck, IconChevronRight } from "@tabler/icons-react";
+import {IconCalendar, IconCheck, IconChevronRight} from "@/app/lib/axiom-icons";
 import { initialUsers } from "@/app/db/initialData";
 import type { TaskWorkflowStep } from "../../workflowTypes";
 import { DashedCircle } from "../shared/DashedCircle";

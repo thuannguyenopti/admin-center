@@ -3,7 +3,8 @@
 import { Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconDots } from "@tabler/icons-react";
+import {IconEllipsisSolid} from "@/app/lib/axiom-icons";
+import { IconBolt } from "@/app/lib/axiom-icons";
 import type { TaskTab } from "../../types";
 import { BriefBody } from "./BriefBody";
 import { PageHeader } from "../shared/PageHeader";
@@ -25,7 +26,7 @@ export function BriefPage({ activeTab, briefContent, onOpenEdit, onTabChange, ta
 					<Text color="fg.default" fontSize="xl" fontWeight="500" style={{ maxWidth: "none" }}>
 						Brief - {taskTitle}
 					</Text>
-					<Button appearance="subtle" aria-label="More" icon={<IconDots size={18} />} size="sm" />
+					<Button appearance="subtle" aria-label="More" icon={<IconEllipsisSolid size={18} />} size="sm" />
 				</Box>
 
 				<Box
@@ -44,8 +45,8 @@ export function BriefPage({ activeTab, briefContent, onOpenEdit, onTabChange, ta
 							onClick={onOpenEdit}
 							style={{
 								alignItems: "center",
-								background:
-									"radial-gradient(375.64% 231.08% at 4.42% 18.63%, #f5f3ff 5.25%, #e5efff 61%, #ddd6fe 85%)",
+								background: "var(--ax-colors-bg-secondary)",
+								border: "1px solid var(--ax-colors-border-tertiary)",
 								borderRadius: 8,
 								cursor: "pointer",
 								height: 52,
@@ -58,8 +59,8 @@ export function BriefPage({ activeTab, briefContent, onOpenEdit, onTabChange, ta
 								Opal can suggest existing assets that meet the goals of your brief
 							</Text>
 							<Button
-								appearance="primary-opal"
-								icon={<img alt="Opal" height={18} src="/opal-orb.png" width={18} />}
+								appearance="primary"
+								icon={<IconBolt size={14} />}
 								onClick={(event) => {
 									event.stopPropagation();
 									onOpenEdit();

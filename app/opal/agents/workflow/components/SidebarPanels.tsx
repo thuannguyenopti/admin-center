@@ -2,6 +2,7 @@
 
 import {
     Box,
+    Badge,
     Heading,
     Text,
     Button,
@@ -10,9 +11,7 @@ import {
     SelectTrigger,
     SelectContent,
     Tabs,
-    TabsTrigger,
     TabsContent,
-    TabsList,
     Switch,
     Field,
     Disclosure,
@@ -36,7 +35,6 @@ import {
     IconClock,
     IconCodeBranch,
     IconCalendar,
-    IconSparkles,
     IconXmark,
     IconEllipsisSolid,
     IconTrashCan,
@@ -47,7 +45,8 @@ import {
     IconChevronDown,
     IconChevronRight,
     IconCode,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
+import { IconSparkles } from "@optimizely/axiom-icons";
 import { useReactFlow, MarkerType } from "@xyflow/react";
 import { useState, useEffect } from "react";
 
@@ -584,10 +583,22 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                     </Field>
 
                     <Tabs value={activeTab} onValueChange={setActiveTab}>
-                        <TabsList style={{ width: "100%", display: "flex" }}>
-                            <TabsTrigger value="standard" style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>Standard</TabsTrigger>
-                            <TabsTrigger value="advanced" style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>Advanced (Cron)</TabsTrigger>
-                        </TabsList>
+                        <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">
+                            {(["standard", "advanced"] as const).map((tab) => (
+                                <Box
+                                    key={tab}
+                                    pb="12"
+                                    cursor="pointer"
+                                    borderB={activeTab === tab ? "2" : "0"}
+                                    onClick={() => setActiveTab(tab)}
+                                    style={activeTab === tab ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
+                                >
+                                    <Text fontWeight={activeTab === tab ? "500" : "400"} color={activeTab === tab ? "fg.default" : "fg.secondary"}>
+                                        {tab === "standard" ? "Standard" : "Advanced (Cron)"}
+                                    </Text>
+                                </Box>
+                            ))}
+                        </Box>
                         <TabsContent value="standard">
                             <Box bg="bg.avatar.neutral" p="16" rounded="sm" display="flex" flexDirection="column" gap="24" mt="16">
                                 <Field label="Recur every">
@@ -803,6 +814,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
     const [detailsOpen, setDetailsOpen] = useState(true);
     const [inputOpen, setInputOpen] = useState(true);
     const [outputOpen, setOutputOpen] = useState(false);
+    const [activeNodeTab, setActiveNodeTab] = useState("setup");
 
     // Mock data based on node, falling back to defaults
     const name = node?.data?.label || "Agent Name";
@@ -838,12 +850,22 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                 </Box>
 
                 <Box mt="16">
-                    <Tabs defaultValue="setup">
-                        <TabsList style={{ width: '100%' }}>
-                            <TabsTrigger value="setup" style={{ flex: 1 }}>Setup</TabsTrigger>
-                            <TabsTrigger value="trace" style={{ flex: 1 }}>Trace</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
+                    <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">
+                        {(["setup", "trace"] as const).map((tab) => (
+                            <Box
+                                key={tab}
+                                pb="12"
+                                cursor="pointer"
+                                borderB={activeNodeTab === tab ? "2" : "0"}
+                                onClick={() => setActiveNodeTab(tab)}
+                                style={activeNodeTab === tab ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
+                            >
+                                <Text fontWeight={activeNodeTab === tab ? "500" : "400"} color={activeNodeTab === tab ? "fg.default" : "fg.secondary"}>
+                                    {tab === "setup" ? "Setup" : "Trace"}
+                                </Text>
+                            </Box>
+                        ))}
+                    </Box>
                 </Box>
             </DetailsPanelHeader>
 
@@ -874,7 +896,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                         isOpen={inputOpen}
                         onToggle={() => setInputOpen(!inputOpen)}
                     >
-                        <Field label="Prompt Template" info="Define the system instructions">
+                        <Field label="Prompt Template" info="Define the agent skills">
                             <Textarea
                                 defaultValue={`Role: You are a marketing copy expert. Generate content for ${name}...`}
                                 className="h-32"
@@ -891,7 +913,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                                         <Text fontSize="sm" color="fg.secondary">what the email is about</Text>
                                     </Box>
                                     <Box display="flex" gap="8" alignItems="center">
-                                        <Box bg="bg.accent.subtle" px="8" py="2" rounded="full"><Text fontSize="xs" color="fg.accent">Required</Text></Box>
+                                        <Badge>Required</Badge>
                                         <Text fontSize="sm" color="fg.secondary">String</Text>
                                     </Box>
                                 </Box>
@@ -901,7 +923,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                                         <Text fontSize="sm" color="fg.secondary">target audience of the email</Text>
                                     </Box>
                                     <Box display="flex" gap="8" alignItems="center">
-                                        <Box bg="bg.accent.subtle" px="8" py="2" rounded="full"><Text fontSize="xs" color="fg.accent">Required</Text></Box>
+                                        <Badge>Required</Badge>
                                         <Text fontSize="sm" color="fg.secondary">String</Text>
                                     </Box>
                                 </Box>

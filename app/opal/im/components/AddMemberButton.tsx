@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@optiaxiom/react";
-import { IconUserPlus } from "@optimizely/axiom-icons";
+import { IconUserPlus } from "@optiaxiom/icons";
 import { AddMemberDialog } from "./AddMemberDialog";
 
 type Props = {

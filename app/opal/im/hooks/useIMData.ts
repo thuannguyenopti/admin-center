@@ -23,22 +23,6 @@ import type {
 // instantly, so we just need to catch any missed events (e.g. browser sleep).
 const POLL_INTERVAL_MS = 10000;
 
-// Overlay any sessionStorage im-name-override:* keys on top of API-supplied
-// profiles so custom names survive Vercel cold-starts (ephemeral filesystem).
-export function applyNameOverrides(profiles: Record<string, string>): Record<string, string> {
-  if (typeof window === "undefined") return profiles;
-  try {
-    const overrides = Object.fromEntries(
-      Object.entries(sessionStorage)
-        .filter(([k]) => k.startsWith("im-name-override:"))
-        .map(([k, v]) => [k.slice("im-name-override:".length), v]),
-    );
-    return { ...profiles, ...overrides };
-  } catch {
-    return profiles;
-  }
-}
-
 export type UseIMData = {
   conversations: ConversationIndexEntry[];
   profiles: Record<string, string>;
@@ -60,10 +44,10 @@ export type UseIMData = {
   isLoading: boolean;
 };
 
-export function useIMData(initialConvId?: string): UseIMData {
+export function useIMData(): UseIMData {
   const [conversations, setConversations] = useState<ConversationIndexEntry[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
-  const [selectedId, setSelectedIdState] = useState<string | null>(initialConvId ?? null);
+  const [selectedId, setSelectedIdState] = useState<string | null>(null);
   const [messages, setMessages] = useState<IMMessage[]>([]);
   const [selectedConv, setSelectedConv] = useState<Awaited<ReturnType<typeof getConversation>> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,7 +55,7 @@ export function useIMData(initialConvId?: string): UseIMData {
   const [currentUserId, setCurrentUserIdState] = useState<string>(() =>
     getCurrentUserId(),
   );
-  const selectedIdRef = useRef<string | null>(initialConvId ?? null);
+  const selectedIdRef = useRef<string | null>(null);
 
   // Keep currentUserId in sync with localStorage changes (e.g. another tab).
   useEffect(() => subscribeToCurrentUser((id) => setCurrentUserIdState(id)), []);
@@ -79,7 +63,7 @@ export function useIMData(initialConvId?: string): UseIMData {
   const refreshConversations = useCallback(async () => {
     const resp = await listConversations();
     setConversations(resp.conversations);
-    setProfiles((prev) => applyNameOverrides({ ...prev, ...(resp.user_profiles ?? {}) }));
+    setProfiles((prev) => ({ ...prev, ...(resp.user_profiles ?? {}) }));
     return resp.conversations;
   }, []);
 
@@ -89,16 +73,20 @@ export function useIMData(initialConvId?: string): UseIMData {
     // shows root messages (those without a thread_id).
     const rootMessages = resp.messages.filter((m) => !m.thread_id);
     setMessages(rootMessages);
-    setProfiles((prev) => applyNameOverrides({ ...prev, ...(resp.user_profiles ?? {}) }));
+    setProfiles((prev) => ({ ...prev, ...(resp.user_profiles ?? {}) }));
   }, []);
 
   // Initial load — pick first conversation (or a sessionStorage hint set by
   // the "Reset demo" button so a refresh can deep-link to a specific chat).
   useEffect(() => {
+    let cancelled = false;
     void (async () => {
       const convs = await refreshConversations();
+      if (cancelled) return;
       if (convs.length > 0 && !selectedIdRef.current) {
-        let initial = convs[0].conversation_id;
+        let initial =
+          convs.find((c) => c.conversation_id === "conv-jamie-frank")?.conversation_id ??
+          convs[0].conversation_id;
         try {
           const hint = sessionStorage.getItem("im-initial-chat");
           if (hint && convs.some((c) => c.conversation_id === hint)) {
@@ -112,6 +100,9 @@ export function useIMData(initialConvId?: string): UseIMData {
       }
       setIsLoading(false);
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [refreshConversations]);
 
   // On selection change: load messages + conv details + mark read

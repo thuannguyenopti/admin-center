@@ -77,9 +77,6 @@ export function pickResponder(
   // Bots don't reply to bots
   if (isVAU(incoming.sender_id)) return null;
 
-  // CoS interview replies are handled server-side with keyword matching
-  if (["conv-vau-chief-of-staff", "conv-vau-cos-empathetic", "conv-vau-cos-analytic"].includes(conversation.id)) return null;
-
   const vauParticipants = conversation.participants
     .map((p) => getVAU(p.user_id))
     .filter((v): v is VirtualTeammate => !!v);

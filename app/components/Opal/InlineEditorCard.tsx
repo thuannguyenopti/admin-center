@@ -1,211 +1,136 @@
 "use client";
 
-import { useState } from "react";
-import { Badge, Box } from "@optiaxiom/react";
+import { Box } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { Button } from "../Button";
 import {
   IconCode,
-  IconArrowUpRightFromSquare,
-  IconCircleCheckSolid,
-  IconArrowLeft,
-  IconSparkles,
-} from "@optimizely/axiom-icons";
+  IconPen,
+  IconArrowsMaximize,
+  IconArrowsRotate,
+  IconCopy,
+  IconDownload,
+  IconThumbsUp,
+  IconThumbsDown,
+} from "@optiaxiom/icons";
 
-const THUMB_GRADIENT =
-  "radial-gradient(ellipse at 20% 20%, rgba(245,243,255,1) 5%, rgba(229,239,255,1) 61%, rgba(221,214,254,1) 85%)";
+// Unselected thumb: brand/50 lime green (Figma node 146:8608)
+const THUMB_BG = "#eeffd9";
+const THUMB_COLOR = "#262b37";
+
+// Selected thumb: sage palette
+const THUMB_SELECTED_BG = "#d2dec2";
+const THUMB_SELECTED_COLOR = "#071a14";
+const CARD_SELECTED_BG = "#eff5eb";
+const CARD_SELECTED_BORDER = "1.5px solid #d2dec2";
+
+const BORDER_DEFAULT = "1px solid var(--ax-colors-border-secondary)";
 
 type InlineEditorCardProps = {
   filename: string;
   description?: string;
-  badge?: string;
   onOpen: () => void;
-  onApprove?: () => void;
-  onAskChanges?: () => void;
-  onOpenTask?: () => void;
-  approved?: boolean;
   selected?: boolean;
-  dimmed?: boolean;
-  vauName?: string;
-  vauAvatar?: string;
+  onRegenerate?: () => void;
 };
 
-export function InlineEditorCard({
-  filename,
-  description,
-  badge,
-  onOpen,
-  onApprove,
-  onAskChanges,
-  onOpenTask,
-  approved = false,
-  selected = false,
-  dimmed = false,
-  vauName,
-  vauAvatar,
-}: InlineEditorCardProps) {
-  const [hoverOpen, setHoverOpen] = useState(false);
-
+export function InlineEditorCard({ filename, description, onOpen, selected, onRegenerate }: InlineEditorCardProps) {
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      onMouseEnter={() => setHoverOpen(true)}
-      onMouseLeave={() => setHoverOpen(false)}
-      style={{
-        width: "100%",
-        border: selected
-          ? "1.5px solid var(--ax-colors-border-accent)"
-          : "1px solid var(--ax-colors-border-default)",
-        borderRadius: 12,
-        overflow: "hidden",
-        background: "var(--ax-colors-bg-default)",
-        opacity: dimmed ? 0.4 : 1,
-        pointerEvents: dimmed ? "none" : undefined,
-      }}
-    >
-      {/* File header */}
-      <Box display="flex" flexDirection="column" gap="8" p="16" style={{ cursor: "pointer" }} onClick={onOpen}>
-        {/* VAU eyebrow */}
-        {vauName && (
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Box display="flex" alignItems="center" gap="6">
-              {vauAvatar ? (
-                <img src={vauAvatar} alt={vauName} width={16} height={16} style={{ borderRadius: "50%", display: "block", flexShrink: 0 }} />
-              ) : null}
-              <Text style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", color: "var(--ax-colors-fg-tertiary)", textTransform: "uppercase" }}>
-                {vauName}
-              </Text>
-              <IconSparkles size={10} style={{ color: "var(--ax-colors-fg-accent)", flexShrink: 0 }} />
-            </Box>
-            {badge && (
-              <Badge intent="information" variant="subtle">
-                {badge}
-              </Badge>
-            )}
-          </Box>
-        )}
-        <Box display="flex" alignItems="center" gap="12">
-        {/* Icon thumb */}
+    <Box display="flex" flexDirection="column" gap="8" style={{ width: "100%" }}>
+      {/* Artifact card — matches IslandContentTile design */}
+      <Box
+        display="flex"
+        alignItems="center"
+        gap="8"
+        p="16"
+        style={{
+          border: selected ? CARD_SELECTED_BORDER : BORDER_DEFAULT,
+          borderRadius: 12,
+          overflow: "hidden",
+          cursor: "pointer",
+          background: selected ? CARD_SELECTED_BG : "var(--ax-colors-bg-default)",
+        }}
+        onClick={onOpen}
+      >
+        {/* Icon thumb with gradient */}
         <Box
           display="flex"
           alignItems="center"
           justifyContent="center"
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 8,
-            background: THUMB_GRADIENT,
+            padding: "8px 12px",
+            borderRadius: 6,
+            background: selected ? THUMB_SELECTED_BG : THUMB_BG,
             flexShrink: 0,
-            color: "#080736",
+            color: selected ? THUMB_SELECTED_COLOR : THUMB_COLOR,
           }}
         >
           <IconCode size={20} />
         </Box>
 
-        {/* Filename + badge + description */}
-        <Box display="flex" flexDirection="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
-          <Box display="flex" alignItems="center" gap="8" style={{ flexWrap: "wrap" }}>
-            <Text
-              fontWeight="600"
-              style={{
-                fontSize: 15,
-                lineHeight: "22px",
-                letterSpacing: "-0.2px",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {filename}
-            </Text>
-
-          </Box>
+        {/* Text */}
+        <Box display="flex" flexDirection="column" style={{ flex: 1, minWidth: 0 }}>
+          <Text
+            fontWeight="600"
+            style={{
+              fontSize: 14,
+              lineHeight: "24px",
+              letterSpacing: "-0.154px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {filename}
+          </Text>
           {description && (
             <Text
               color="fg.secondary"
-              style={{ fontSize: 13, lineHeight: 1.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+              style={{
+                fontSize: 14,
+                lineHeight: 1.6,
+                letterSpacing: "-0.21px",
+                overflow: "hidden",
+                display: "-webkit-box",
+                WebkitBoxOrient: "vertical",
+                WebkitLineClamp: 2,
+              }}
             >
               {description}
             </Text>
           )}
         </Box>
 
-        {/* External link — "Preview" label appears on card hover */}
-        <Box
-          style={{ display: "inline-flex", flexShrink: 0, alignSelf: "flex-start" }}
-          onClick={(e) => { e.stopPropagation(); onOpen(); }}
-        >
-          <button
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              background: "none",
-              border: "none",
-              borderRadius: 6,
-              padding: "4px 6px",
-              cursor: "pointer",
-              fontSize: 13,
-              fontWeight: 500,
-              color: "var(--ax-colors-fg-secondary)",
-            }}
-          >
-            {hoverOpen && <span>Preview</span>}
-            <IconArrowUpRightFromSquare size={14} />
-          </button>
-        </Box>
+        {/* Expand button */}
+        <Box style={{ display: "inline-flex", flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); onOpen(); }}>
+          <Button
+            appearance="subtle"
+            size="sm"
+            icon={<IconArrowsMaximize size={14} />}
+            aria-label="Open in canvas"
+          />
         </Box>
       </Box>
 
-      {/* Approval section — only shown when onApprove is wired */}
-      {onApprove && (
-        <Box
-          display="flex"
-          flexDirection="column"
-          gap="12"
-          p="16"
-          style={{ borderTop: "1px solid var(--ax-colors-border-default)" }}
+      {/* Consolidated quick-actions row */}
+      <Box display="flex" alignItems="center" gap="4">
+        <Button
+          appearance="subtle"
+          size="sm"
+          onClick={onOpen}
+          disabled={selected}
+          icon={<IconPen size={13} />}
         >
-          <Box display="flex" flexDirection="column" gap="4">
-            <Text fontWeight="500" style={{ fontSize: 14, color: "var(--ax-colors-fg-default)", lineHeight: 1.43 }}>
-              Team approval needed
-            </Text>
-            <Text style={{ fontSize: 14, color: "var(--ax-colors-fg-secondary)", lineHeight: 1.5 }}>
-              Review the updated Q&amp;A article. Approve to proceed with publishing, or request further changes.
-            </Text>
-          </Box>
-
-          {onOpenTask && (
-            <button
-              onClick={onOpenTask}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                fontSize: 13,
-                fontWeight: 500,
-                color: "var(--ax-colors-fg-accent)",
-                width: "fit-content",
-              }}
-            >
-              <IconArrowLeft size={12} />
-              View Task
-            </button>
-          )}
-
-          <Box display="flex" justifyContent="end" gap="4">
-            <Button appearance="subtle" size="md" onClick={onAskChanges} disabled={approved}>Ask Changes</Button>
-            <Button appearance="primary" size="md" icon={<IconCircleCheckSolid size={14} />} onClick={onApprove} disabled={approved}>
-              Approve
-            </Button>
-          </Box>
-        </Box>
-      )}
+          Edit in Canvas
+        </Button>
+        <Box style={{ width: 1, height: 14, background: "var(--ax-colors-border-secondary)", margin: "0 2px", flexShrink: 0 }} />
+        <Button appearance="subtle" size="sm" icon={<IconArrowsRotate size={13} />} aria-label="Regenerate" onClick={onRegenerate} />
+        <Button appearance="subtle" size="sm" icon={<IconCopy size={13} />} aria-label="Copy" />
+        <Button appearance="subtle" size="sm" icon={<IconDownload size={13} />} aria-label="Download" />
+        <Box style={{ flex: 1 }} />
+        <Button appearance="subtle" size="sm" icon={<IconThumbsUp size={13} />} aria-label="Thumbs up" />
+        <Button appearance="subtle" size="sm" icon={<IconThumbsDown size={13} />} aria-label="Thumbs down" />
+      </Box>
     </Box>
   );
 }

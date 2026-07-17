@@ -3,7 +3,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Button, Group, Heading, Text } from "@optiaxiom/react";
 import { useRouter } from "next/navigation";
-import { IconArrowLeft, IconSparkles, IconPlugConnected, IconRobot } from "@tabler/icons-react";
+import {IconArrowLeft, IconSparkles, IconRobot} from "@optimizely/axiom-icons";
+import {IconPlugConnected} from "@/app/lib/axiom-icons";
 import { IconAgent } from "@optimizely/axiom-icons";
 import { OpalChatView } from "@/app/components/Opal/OpalChatView";
 import type { ChatMessage } from "@/app/hooks/useOpalState";
@@ -337,8 +338,7 @@ export function BuildWithOpalPage() {
   return (
     <Box display="flex" flexDirection="column" h="full" overflow="hidden">
       <Box px="24" pt="24" pb="12" borderB="1" borderColor="border.tertiary">
-        <Button appearance="subtle" size="sm" onClick={() => router.push("/opal/agents")}>
-          <IconArrowLeft size={14} />
+        <Button appearance="subtle" size="sm" onClick={() => router.push("/opal/agents")} icon={<IconArrowLeft />}>
           Back to Agents
         </Button>
         <Box mt="12">

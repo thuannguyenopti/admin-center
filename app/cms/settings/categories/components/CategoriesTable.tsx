@@ -3,7 +3,7 @@ import { Category } from '../types';
 import { Table, Tr, Th, Td } from '@/app/components/Table';
 import { CategoryRow } from './CategoryRow';
 import { getChildren } from '../utils';
-import { IconChevronUp, IconChevronDown } from '@tabler/icons-react';
+import {IconChevronUp, IconChevronDown} from "@/app/lib/axiom-icons";
 
 interface CategoriesTableProps {
   categories: Category[];

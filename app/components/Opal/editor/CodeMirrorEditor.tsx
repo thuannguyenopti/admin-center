@@ -11,8 +11,8 @@ import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { yCollab } from "y-codemirror.next";
 import type { CollabDoc } from "./useCollabDoc";
-import { createBlameExtensions, setBlameData } from "./blame-cm-extension";
-import type { BlameSegment } from "./blame-engine";
+import { createBlameExtensions, setBlameData } from "./collab/blame-cm-extension";
+import type { BlameSegment } from "./collab/blame-engine";
 
 export type CodeMirrorLanguage = "markdown" | "html" | "javascript" | "python";
 
@@ -26,25 +26,11 @@ const LANGUAGE_EXTS: Record<CodeMirrorLanguage, ReturnType<typeof markdown>> = {
 const CM_STYLES = `
 .cm-editor {
   height: 100%;
-  font-size: 12px;
+  font-size: 13px;
   font-family: var(--ax-fonts-mono, 'JetBrains Mono', 'Fira Code', monospace);
 }
 .cm-editor.cm-focused { outline: none; }
 .cm-scroller { height: 100%; }
-.cm-gutters {
-  width: 48px !important;
-  min-width: 48px !important;
-  max-width: 48px !important;
-  border-right: 1px solid var(--ax-colors-border-secondary) !important;
-  background: transparent !important;
-  box-sizing: border-box;
-}
-.cm-gutters .cm-gutter { border: none !important; }
-.cm-lineNumbers .cm-gutterElement {
-  padding: 0 8px 0 0;
-  text-align: right;
-  color: var(--ax-colors-fg-tertiary);
-}
 `;
 
 type CodeMirrorEditorProps = {

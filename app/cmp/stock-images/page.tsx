@@ -4,11 +4,7 @@ import { useMemo, useState } from "react";
 import { Box, Badge, Heading, SearchInput } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
-import {
-	IconChevronLeft,
-	IconChevronRight,
-	IconDownload,
-} from "@tabler/icons-react";
+import {IconChevronLeft, IconChevronRight, IconDownload} from "@/app/lib/axiom-icons";
 
 interface StockImage {
 	id: number;

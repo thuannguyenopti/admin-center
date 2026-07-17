@@ -22,10 +22,8 @@ export type ElementTemplates = {
 };
 
 export type SectionTemplates = {
-    [sectionType: string]: {
-        defaultTemplate: string;
-        templates: TemplateDefinition[];
-    };
+    defaultTemplate: string;
+    templates: TemplateDefinition[];
 };
 
 /**
@@ -33,29 +31,55 @@ export type SectionTemplates = {
  * Each element type has multiple visual templates that can be swapped
  */
 export const ELEMENT_TEMPLATES: ElementTemplates = {
+    "ct-hero": {
+        defaultTemplate: "default",
+        templates: [
+            {
+                id: "default",
+                label: "Standard",
+                description: "Left-aligned text with app mockup on right",
+                semanticTags: ["default", "standard", "homepage"],
+                cssClasses: "",
+            },
+            {
+                id: "centered",
+                label: "Centered",
+                description: "Centered text over background image",
+                semanticTags: ["centered", "product", "features"],
+                cssClasses: "",
+            },
+            {
+                id: "event",
+                label: "Event",
+                description: "White text on dark background, no mockup",
+                semanticTags: ["event", "dark", "marathon", "campaign"],
+                cssClasses: "",
+            },
+        ],
+    },
     "ct-heading": {
         defaultTemplate: "default",
         templates: [
             {
                 id: "default",
                 label: "Default",
-                description: "Standard heading style - Figma design system",
+                description: "Standard heading style",
                 semanticTags: ["default", "normal", "standard"],
-                cssClasses: "text-stride-2xl md:text-stride-3xl font-stride-semibold leading-tight font-stride-sans",
+                cssClasses: "text-3xl md:text-4xl font-semibold leading-tight",
                 conditionalClasses: (props) => {
                     const { hasBgImage } = props;
-                    return hasBgImage ? "text-white" : "text-stride-dark";
+                    return hasBgImage ? "text-white" : "text-gray-900";
                 }
             },
             {
                 id: "prominent",
                 label: "Prominent",
-                description: "Large, hero-style heading - 48px Figma spec",
+                description: "Large, hero-style heading",
                 semanticTags: ["prominent", "large", "hero", "big", "emphasize", "bold"],
-                cssClasses: "text-stride-5xl font-stride-semibold font-stride-sans",
+                cssClasses: "text-5xl md:text-6xl font-bold leading-tight",
                 conditionalClasses: (props) => {
                     const { hasBgImage } = props;
-                    return hasBgImage ? "text-white" : "text-stride-dark";
+                    return hasBgImage ? "text-white" : "text-gray-900";
                 }
             },
             {
@@ -63,10 +87,10 @@ export const ELEMENT_TEMPLATES: ElementTemplates = {
                 label: "Subtle",
                 description: "Smaller, understated heading",
                 semanticTags: ["subtle", "small", "minimal", "quiet", "de-emphasize"],
-                cssClasses: "text-stride-lg font-stride-medium leading-tight font-stride-sans",
+                cssClasses: "text-xl font-medium leading-tight",
                 conditionalClasses: (props) => {
                     const { hasBgImage } = props;
-                    return hasBgImage ? "text-white/90" : "text-stride-dark/80";
+                    return hasBgImage ? "text-white/90" : "text-gray-700";
                 }
             },
             {
@@ -74,7 +98,7 @@ export const ELEMENT_TEMPLATES: ElementTemplates = {
                 label: "Red Accent",
                 description: "Red color accent",
                 semanticTags: ["red", "danger", "alert", "warning", "urgent"],
-                cssClasses: "text-red-600 font-stride-semibold leading-tight font-stride-sans",
+                cssClasses: "text-red-600 font-semibold leading-tight",
                 conditionalClasses: () => ""
             },
             {
@@ -82,7 +106,7 @@ export const ELEMENT_TEMPLATES: ElementTemplates = {
                 label: "Blue Accent",
                 description: "Blue color accent",
                 semanticTags: ["blue", "primary", "brand", "cool"],
-                cssClasses: "text-stride-blue font-stride-semibold leading-tight font-stride-sans",
+                cssClasses: "text-blue-600 font-semibold leading-tight",
                 conditionalClasses: () => ""
             }
         ]
@@ -94,12 +118,12 @@ export const ELEMENT_TEMPLATES: ElementTemplates = {
             {
                 id: "default",
                 label: "Default",
-                description: "Standard paragraph text - Figma design system",
+                description: "Standard paragraph text",
                 semanticTags: ["default", "normal", "standard"],
-                cssClasses: "text-stride-base font-stride-medium font-stride-sans leading-relaxed",
+                cssClasses: "text-base leading-relaxed",
                 conditionalClasses: (props) => {
                     const { hasBgImage } = props;
-                    return hasBgImage ? "text-white/90" : "text-stride-dark/70";
+                    return hasBgImage ? "text-white/90" : "text-gray-600";
                 }
             },
             {
@@ -107,10 +131,10 @@ export const ELEMENT_TEMPLATES: ElementTemplates = {
                 label: "Prominent",
                 description: "Larger, emphasized text",
                 semanticTags: ["prominent", "large", "emphasis", "important"],
-                cssClasses: "text-stride-lg md:text-stride-xl leading-relaxed font-stride-medium font-stride-sans",
+                cssClasses: "text-lg md:text-xl leading-relaxed font-medium",
                 conditionalClasses: (props) => {
                     const { hasBgImage } = props;
-                    return hasBgImage ? "text-white" : "text-stride-dark";
+                    return hasBgImage ? "text-white" : "text-gray-800";
                 }
             },
             {
@@ -118,19 +142,11 @@ export const ELEMENT_TEMPLATES: ElementTemplates = {
                 label: "Subtle",
                 description: "Smaller, secondary text",
                 semanticTags: ["subtle", "small", "secondary", "muted", "quiet"],
-                cssClasses: "text-sm leading-relaxed font-stride-medium font-stride-sans",
+                cssClasses: "text-sm leading-relaxed",
                 conditionalClasses: (props) => {
                     const { hasBgImage } = props;
-                    return hasBgImage ? "text-white/70" : "text-stride-dark/60";
+                    return hasBgImage ? "text-white/80" : "text-gray-500";
                 }
-            },
-            {
-                id: "accent-blue",
-                label: "Blue Accent",
-                description: "Blue color accent for labels",
-                semanticTags: ["blue", "primary", "brand", "accent"],
-                cssClasses: "text-xs font-semibold uppercase tracking-wider font-stride-sans",
-                conditionalClasses: () => "text-[#0980F6]"
             }
         ]
     },
@@ -141,9 +157,9 @@ export const ELEMENT_TEMPLATES: ElementTemplates = {
             {
                 id: "primary",
                 label: "Primary",
-                description: "Main call-to-action button - Figma design system",
+                description: "Main call-to-action button",
                 semanticTags: ["primary", "main", "cta", "prominent", "important"],
-                cssClasses: "bg-stride-blue text-white px-6 py-3 rounded-stride-lg text-stride-base font-stride-semibold font-stride-sans hover:bg-stride-blue-dark transition-colors shadow-sm",
+                cssClasses: "bg-[#194BFF] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#0037DD] transition-colors shadow-sm",
                 conditionalClasses: () => ""
             },
             {
@@ -151,7 +167,7 @@ export const ELEMENT_TEMPLATES: ElementTemplates = {
                 label: "Secondary",
                 description: "Outline style button",
                 semanticTags: ["secondary", "outline", "ghost", "alternative"],
-                cssClasses: "border-2 border-stride-dark/20 text-stride-dark px-6 py-3 rounded-stride-lg text-stride-base font-stride-semibold font-stride-sans hover:border-stride-dark/40 hover:bg-stride-dark/5 transition-colors",
+                cssClasses: "border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:border-gray-400 hover:bg-gray-50 transition-colors",
                 conditionalClasses: () => ""
             },
             {
@@ -159,51 +175,7 @@ export const ELEMENT_TEMPLATES: ElementTemplates = {
                 label: "Subtle",
                 description: "Text-link style button",
                 semanticTags: ["subtle", "text", "link", "minimal"],
-                cssClasses: "text-stride-blue px-3 py-2 text-stride-base font-stride-semibold font-stride-sans hover:text-stride-blue-dark transition-colors underline-offset-2 hover:underline",
-                conditionalClasses: () => ""
-            }
-        ]
-    },
-
-    "ct-card": {
-        defaultTemplate: "default",
-        templates: [
-            {
-                id: "default",
-                label: "Default",
-                description: "Card with backdrop blur, gradient overlay, and arrow button",
-                semanticTags: ["default", "normal", "standard", "complex", "fancy"],
-                cssClasses: "",
-                conditionalClasses: () => ""
-            },
-            {
-                id: "simple",
-                label: "Simple",
-                description: "Simple card with just image, title, and description",
-                semanticTags: ["simple", "clean", "minimal", "basic", "plain"],
-                cssClasses: "",
-                conditionalClasses: () => ""
-            }
-        ]
-    },
-
-    "ct-hero": {
-        defaultTemplate: "default",
-        templates: [
-            {
-                id: "default",
-                label: "Default",
-                description: "Hero with app mockup on right, buttons, left-aligned content",
-                semanticTags: ["default", "normal", "standard", "homepage", "app"],
-                cssClasses: "",
-                conditionalClasses: () => ""
-            },
-            {
-                id: "centered",
-                label: "Centered",
-                description: "Centered hero with badge and no buttons",
-                semanticTags: ["centered", "simple", "clean", "features"],
-                cssClasses: "",
+                cssClasses: "text-blue-600 px-3 py-2 font-semibold hover:text-blue-700 transition-colors underline-offset-2 hover:underline",
                 conditionalClasses: () => ""
             }
         ]
@@ -215,31 +187,22 @@ export const ELEMENT_TEMPLATES: ElementTemplates = {
  * Control background, theme, and overall section appearance
  */
 export const SECTION_TEMPLATES: SectionTemplates = {
-    "ct-section": {
-        defaultTemplate: "default",
-        templates: [
+    defaultTemplate: "default",
+    templates: [
         {
             id: "default",
             label: "Default",
-            description: "Standard section with padding",
-            semanticTags: ["default", "normal", "standard"],
-            cssClasses: "py-12",
-            conditionalClasses: () => ""
-        },
-        {
-            id: "compact",
-            label: "Compact",
-            description: "Minimal padding for tight spacing",
-            semanticTags: ["compact", "tight", "minimal", "landing"],
-            cssClasses: "pb-12",
+            description: "Standard white background",
+            semanticTags: ["default", "normal", "standard", "white"],
+            cssClasses: "bg-white",
             conditionalClasses: () => ""
         },
         {
             id: "light-gray",
-            label: "Light Blue Background",
-            description: "Subtle blue background with standard padding",
-            semanticTags: ["gray", "grey", "subtle", "light", "blue"],
-            cssClasses: "py-12 bg-stride-bg",
+            label: "Light Gray",
+            description: "Subtle gray background",
+            semanticTags: ["gray", "grey", "subtle", "light"],
+            cssClasses: "bg-gray-50",
             conditionalClasses: () => ""
         },
         {
@@ -247,7 +210,31 @@ export const SECTION_TEMPLATES: SectionTemplates = {
             label: "Dark",
             description: "Dark background with light text",
             semanticTags: ["dark", "black", "night", "inverse"],
-            cssClasses: "py-12 bg-stride-dark text-white",
+            cssClasses: "bg-gray-900 text-white",
+            conditionalClasses: () => ""
+        },
+        {
+            id: "blue-accent",
+            label: "Blue Accent",
+            description: "Blue branded background",
+            semanticTags: ["blue", "brand", "primary", "accent"],
+            cssClasses: "bg-blue-50",
+            conditionalClasses: () => ""
+        },
+        {
+            id: "gradient-blue",
+            label: "Blue Gradient",
+            description: "Blue gradient background",
+            semanticTags: ["gradient", "blue-gradient", "modern", "dynamic"],
+            cssClasses: "bg-gradient-to-br from-blue-50 to-indigo-100",
+            conditionalClasses: () => ""
+        },
+        {
+            id: "compact",
+            label: "Compact",
+            description: "Reduced padding for tighter spacing",
+            semanticTags: ["compact", "tight", "small-padding", "condensed"],
+            cssClasses: "bg-white py-8",
             conditionalClasses: () => ""
         },
         {
@@ -255,9 +242,8 @@ export const SECTION_TEMPLATES: SectionTemplates = {
             label: "Spacious",
             description: "Extra padding for breathing room",
             semanticTags: ["spacious", "large-padding", "airy", "relaxed"],
-            cssClasses: "py-24",
+            cssClasses: "bg-white py-24",
             conditionalClasses: () => ""
         }
-        ]
-    }
+    ]
 };

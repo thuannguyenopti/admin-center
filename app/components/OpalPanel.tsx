@@ -38,6 +38,10 @@ type OpalPanelProps = {
   contextChip?: string | null;
   contextContent?: string | null;
   onContextChipRemove?: () => void;
+  mentionableAgents?: import("./Opal/OpalInput").MentionableAgent[];
+  onMentionSelect?: (agent: import("./Opal/OpalInput").MentionableAgent) => void;
+  agentBar?: React.ReactNode;
+  inputAgentCtx?: { name: string; handle?: string } | null;
 };
 
 export function OpalPanel({
@@ -65,8 +69,12 @@ export function OpalPanel({
   contextChip,
   contextContent,
   onContextChipRemove,
+  mentionableAgents,
+  onMentionSelect,
+  agentBar,
+  inputAgentCtx,
 }: OpalPanelProps) {
-  const { setOpalPanelWidth } = useLayout();
+  const { setOpalPanelWidth, opalActionCard } = useLayout();
   const pathname = usePathname();
   const [customWidth, setCustomWidth] = useState<number | null>(null);
   const [isResizing, setIsResizing] = useState(false);
@@ -76,7 +84,9 @@ export function OpalPanel({
   const handleSend = (content?: string) => {
     const msg = content ?? inputValue;
     if (msg.trim() && !isLoading && !isInputDisabled) {
-      sendMessage(msg);
+      const prefixed = inputAgentCtx?.handle ? `${inputAgentCtx.handle} ${msg}` : msg;
+      setInputValue('');
+      sendMessage(prefixed);
     }
   };
 
@@ -210,7 +220,7 @@ export function OpalPanel({
           threadKey={activeChat}
           onRegenerate={regenerate}
           contextChip={contextChip}
-          contextualActionCard={atlassianActionCard}
+          contextualActionCard={opalActionCard ?? atlassianActionCard}
         />
         <div style={{ flexShrink: 0 }}>
           <OpalInput
@@ -223,6 +233,10 @@ export function OpalPanel({
             contextChip={contextChip}
             contextContent={contextContent}
             onContextChipRemove={onContextChipRemove}
+            mentionableAgents={mentionableAgents}
+            onMentionSelect={onMentionSelect}
+            agentBar={agentBar}
+            inputAgentCtx={inputAgentCtx}
           />
         </div>
       </Box>

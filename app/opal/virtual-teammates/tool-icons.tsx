@@ -1,12 +1,5 @@
-import {
-	IconBrandFigma,
-	IconBrandGoogle,
-	IconBrandSlack,
-	IconBrandNotion,
-	IconBrandAirtable,
-	IconBrandGithub,
-	IconBrandAsana,
-} from "@/app/lib/axiom-icons";
+import {IconBrandFigma, IconBrandSlack, IconBrandNotion, IconBrandAirtable, IconBrandGithub, IconBrandAsana} from "@/app/lib/axiom-icons";
+import { IconGoogle } from "@optimizely/axiom-icons";
 
 export type ToolMeta = {
 	icon: React.ReactNode;
@@ -17,7 +10,7 @@ export type ToolMeta = {
 
 export const TOOL_ICONS: Record<string, ToolMeta> = {
 	figma:      { icon: <IconBrandFigma size={16} />,    color: "#9b59b6", name: "Figma" },
-	google:     { icon: <IconBrandGoogle size={16} />,   color: "#4285F4", name: "Google" },
+	google:     { icon: <IconGoogle size={16} />,        color: "#4285F4", name: "Google" },
 	slack:      { icon: <IconBrandSlack size={16} />,    color: "#4A154B", name: "Slack" },
 	notion:     { icon: <IconBrandNotion size={16} />,   color: "#000000", name: "Notion" },
 	airtable:   { icon: <IconBrandAirtable size={16} />, color: "#18BFFF", name: "Airtable" },

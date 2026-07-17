@@ -7,7 +7,9 @@ import type {PreviewSettings} from "./PreviewSettings";
 import {BlockRegistry} from "./blocks";
 import StrideHeaderContent from "../../site/StrideHeaderContent";
 import StrideHeaderWrapper from "../../site/StrideHeaderWrapper";
-import {IconMenu2, IconX} from "@tabler/icons-react";
+import StrideFooter from "../../site/StrideFooter";
+import StrideColumnGrid from "../../site/StrideColumnGrid";
+import {IconBars, IconXmark} from "@/app/lib/axiom-icons";
 
 const MOBILE_BP = 1024;
 
@@ -47,6 +49,7 @@ export default function PropertyBasedPreview({
 
 	return (
 		<Box
+			bg="bg.tertiary"
 			mt="8"
 			mr="8"
 			rounded="xl"
@@ -58,7 +61,6 @@ export default function PropertyBasedPreview({
 				minHeight: 0,
 				overflow: "hidden",
 				zIndex: 50,
-				background: "#F2F8FC",
 				boxShadow: "inset 0 0 40px rgba(0,0,0,0.1), 0 20px 70px 0px rgba(0,0,0,0.05), 0 1px 1px 0 rgba(0,0,0,0.01)",
 			}}
 		>
@@ -70,27 +72,32 @@ export default function PropertyBasedPreview({
 				className="h-full min-h-0"
 				contentRef={scrollRef}
 			>
-				{/* Header */}
-				<StrideHeaderWrapper positioning="sticky" useMaxWidth={false}>
-					<StrideHeaderContent
-						isMobile={isMobileViewport}
-						menuIcon={<IconMenu2 size={24} />}
-						closeIcon={<IconX size={24} />}
-					/>
-				</StrideHeaderWrapper>
+				<div className="relative w-full h-full flex flex-col">
+					{/* Header — same transparent style as site */}
+					<StrideHeaderWrapper positioning="absolute" useMaxWidth={true}>
+						<StrideHeaderContent
+							isMobile={isMobileViewport}
+							menuIcon={<IconBars size={24} />}
+							closeIcon={<IconXmark size={24} />}
+						/>
+					</StrideHeaderWrapper>
 
-				{/* Content */}
-				{BlockComponent ? (
-					<div className="flex-1 bg-[#F2F8FC]">
-						<BlockComponent properties={properties} />
+					{/* Content */}
+					<div className="w-full font-stride-sans relative" style={{background: "#F2F8FC"}}>
+						<StrideColumnGrid />
+						{BlockComponent ? (
+							<BlockComponent properties={properties} />
+						) : (
+							<div className="flex-1 flex items-center justify-center py-32">
+								<p className="text-gray-400 text-lg">
+									No preview available for this content type.
+								</p>
+							</div>
+						)}
 					</div>
-				) : (
-					<div className="flex-1 flex items-center justify-center py-32 bg-[#F2F8FC]">
-						<p className="text-gray-400 text-lg">
-							No preview available for this content type.
-						</p>
-					</div>
-				)}
+
+					<StrideFooter />
+				</div>
 			</PreviewWrapper>
 		</Box>
 	);

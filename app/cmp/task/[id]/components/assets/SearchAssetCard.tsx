@@ -1,11 +1,11 @@
 "use client";
 
-import { Box, Tooltip } from "@optiaxiom/react";
-import { IconCheck } from "@tabler/icons-react";
-import { useState } from "react";
-import type { SearchAssetItem } from "../../types";
-import { AssetTooltipContent } from "../shared/AssetTooltipContent";
-import { AssetBadge, ScoreBadge } from "../shared/AssetBadges";
+import {Box, Tooltip} from "@optiaxiom/react";
+import {IconCheck} from "@/app/lib/axiom-icons";
+import {useState} from "react";
+import type {SearchAssetItem} from "../../types";
+import {AssetTooltipContent} from "../shared/AssetTooltipContent";
+import {AssetBadge, ScoreBadge} from "../shared/AssetBadges";
 
 type SearchAssetCardProps = {
 	asset: SearchAssetItem;
@@ -46,13 +46,25 @@ export function SearchAssetCard({
 				<img
 					alt={asset.title}
 					src={asset.thumbnailSrc}
-					style={{ height: "100%", inset: 0, objectFit: "cover", position: "absolute", width: "100%" }}
+					style={{
+						height: "100%",
+						inset: 0,
+						objectFit: "cover",
+						position: "absolute",
+						width: "100%",
+					}}
 				/>
 			)}
 			<img
 				alt={asset.title}
 				src={asset.src}
-				style={{ height: "100%", inset: 0, objectFit: "cover", position: "absolute", width: "100%" }}
+				style={{
+					height: "100%",
+					inset: 0,
+					objectFit: "cover",
+					position: "absolute",
+					width: "100%",
+				}}
 			/>
 			<button
 				aria-label={asset.selected ? `Deselect ${asset.title}` : `Select ${asset.title}`}
@@ -62,10 +74,14 @@ export function SearchAssetCard({
 				}}
 				style={{
 					alignItems: "center",
-					background: asset.selected ? "var(--ax-colors-bg-accent)" : "var(--ax-colors-bg-default)",
+					background: asset.selected
+						? "var(--ax-colors-bg-default-pressed)"
+						: "var(--ax-colors-bg-default)",
 					border: asset.selected ? "none" : "1px solid var(--ax-colors-border-control)",
 					borderRadius: 4,
-					boxShadow: asset.selected ? "0 0 0 1px rgba(0,0,0,0.02)" : "0 1px 2px rgba(16,24,40,0.12)",
+					boxShadow: asset.selected
+						? "0 0 0 1px rgba(0,0,0,0.02)"
+						: "0 1px 2px rgba(16,24,40,0.12)",
 					cursor: "pointer",
 					display: "flex",
 					height: 18,
@@ -84,7 +100,12 @@ export function SearchAssetCard({
 			>
 				{asset.selected && <IconCheck color="white" size={11} stroke={3} />}
 			</button>
-			<Box alignItems="center" display="flex" gap="8" style={{ bottom: 16, left: 16, position: "absolute" }}>
+			<Box
+				alignItems="center"
+				display="flex"
+				gap="8"
+				style={{bottom: 16, left: 16, position: "absolute"}}
+			>
 				<AssetBadge kind={asset.label} label={asset.label} />
 				<ScoreBadge score={asset.match} />
 			</Box>

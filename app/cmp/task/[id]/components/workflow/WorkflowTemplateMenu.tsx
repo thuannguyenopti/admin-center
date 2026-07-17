@@ -3,7 +3,7 @@
 import { Box } from "@optiaxiom/react";
 import { Input } from "@/app/components/Input";
 import { Text } from "@/app/components/Text";
-import { IconSearch } from "@tabler/icons-react";
+import {IconSearch} from "@/app/lib/axiom-icons";
 import { forwardRef } from "react";
 import type { WorkflowTemplate } from "../../types";
 import { WorkflowTemplateIcon } from "./WorkflowTemplateIcon";

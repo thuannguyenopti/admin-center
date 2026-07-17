@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Heading, Text, Button, Box } from "@optiaxiom/react";
-import { IconArrowLeft, IconWorld, IconBook, IconLoader2 } from "@tabler/icons-react";
+import {IconArrowLeft, IconWorld, IconBook, IconLoader2} from "@/app/lib/axiom-icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/app/components/Input";
 

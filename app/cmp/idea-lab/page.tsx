@@ -17,7 +17,7 @@ import {
 import { Text } from "@/app/components/Text";
 import { Input } from "@/app/components/Input";
 import { Button } from "@/app/components/Button";
-import { IconChevronDown, IconDownload } from "@tabler/icons-react";
+import {IconChevronDown, IconDownload} from "@/app/lib/axiom-icons";
 
 const countries = [
 	{ label: "United States", value: "United States" },

@@ -1,6 +1,7 @@
 "use client";
 
-import { Alert, Avatar, Box, Disclosure, DisclosureContent, DisclosureTrigger, Text as AxiomText } from "@optiaxiom/react";
+import { Box, Disclosure, DisclosureContent, DisclosureTrigger, Link as AxiomLink, Text as AxiomText, Tooltip } from "@optiaxiom/react";
+import { IconSparkles } from "@optimizely/axiom-icons";
 import {
   IconPen,
   IconArrowsRotate,
@@ -8,21 +9,20 @@ import {
   IconDownload,
   IconThumbsUp,
   IconThumbsDown,
-  IconSparkles,
-  IconFaceSmile,
-  IconEllipsisStroke,
-  IconReply,
-  IconThumbtack,
-  IconPaperPlaneTop,
-  IconLink,
-} from "@optimizely/axiom-icons";
-import {
   IconCheck,
   IconChevronDown,
   IconChevronRight,
-  IconFileText,
-  IconTools,
-} from "@/app/lib/axiom-icons";
+  IconFileLines as IconFileText,
+  IconScrewdriverWrench as IconTools,
+  IconFaceSmile,
+  IconQuoteRight,
+  IconEllipsisStroke,
+  IconShareNodes,
+  IconThumbtack,
+  IconLink,
+  IconBolt,
+  IconSparkles as IconWand,
+} from "@optiaxiom/icons";
 import { Text } from "../Text";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ExperimentSummaryBlock } from "./ExperimentSummaryBlock";
@@ -36,7 +36,7 @@ import "../ai/blocks"; // Auto-register all blocks
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { opalTypography } from "@/app/styles/opalTypography";
-import React, { useState, useEffect, useRef, CSSProperties } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { OpalLoaderV5 } from "@/app/opal/components/OpalLoaderV5";
 import { OpalLoader } from "@/app/opal/components/OpalLoader";
 import { OpalLoaderV2 } from "@/app/opal/components/OpalLoaderV2";
@@ -44,7 +44,24 @@ import { OpalLoaderV3 } from "@/app/opal/components/OpalLoaderV3";
 import { OpalLoaderV4 } from "@/app/opal/components/OpalLoaderV4";
 import { useLoaderDev } from "@/app/opal/components/useLoaderDev";
 import type { LoaderSequenceOption } from "@/app/opal/components/useLoaderDev";
-import { IMEditEditor } from "@/app/opal/im/components/IMEditEditor";
+import { ActivityStreamBlock, type ActivityPhase } from "@/app/opal/im/components/ActivityStreamBlock";
+
+/** Static collapsed view of all phases — used when the stream has already completed to prevent re-animation on remount */
+function StaticActivitySummary({ script }: { script: ActivityPhase[] }) {
+  return (
+    <Box display="flex" flexDirection="column" gap="4">
+      {script.map((phase, i) => (
+        <Box key={i} display="flex" alignItems="center" gap="6" style={{ padding: "2px 0" }}>
+          <AxiomText fontSize="md" color="fg.tertiary">{phase.summary}</AxiomText>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--ax-colors-fg-tertiary)" }}>
+            <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+import { CanvasOutputCard } from "@/app/opal/im/components/CanvasOutputCard";
 
 /** Borders / strokes — Opal greys (no product blue accent). */
 const OPAL_STEP_BORDER = "var(--opal-border-secondary)";
@@ -121,7 +138,7 @@ function OpalProcessingStepCard({
                   justifyContent: "center",
                 }}
               >
-                <IconCheck size={12} color="white" aria-hidden />
+                <IconCheck size={12} stroke="3" color="white" aria-hidden />
               </Box>
             ) : isActive ? (
               <Box
@@ -170,7 +187,7 @@ function OpalProcessingStepCard({
           alignItems="center"
           aria-hidden
         >
-          <IconChevronRight size={18} color={OPAL_ICON_MUTED} />
+          <IconChevronRight size={18} stroke="2" color={OPAL_ICON_MUTED} />
         </Box>
       </Box>
       <Box
@@ -196,7 +213,7 @@ function OpalProcessingStepCard({
                 [
                   {
                     label: "Stride Business Context",
-                    icon: <IconFileText size={14} stroke={1.5} color={OPAL_ICON_MUTED} />,
+                    icon: <IconFileText size={14} stroke="1.5" color={OPAL_ICON_MUTED} />,
                   },
                   {
                     label: "@experiment_summary",
@@ -204,7 +221,7 @@ function OpalProcessingStepCard({
                   },
                   {
                     label: "search_optimizely_docs",
-                    icon: <IconTools size={14} stroke={1.5} color={OPAL_ICON_MUTED} />,
+                    icon: <IconTools size={14} stroke="1.5" color={OPAL_ICON_MUTED} />,
                   },
                 ] as const
               ).map((chip) => (
@@ -244,93 +261,423 @@ type OpalMessageProps = {
   onStreamingExpandedChange?: (open: boolean) => void;
   isOpalLoading?: boolean;
   onEdit?: (id: string, newContent: string) => void;
+  onActivityComplete?: (messageId: string) => void;
   onRegenerate?: (id: string) => void;
   onVersionChange?: (id: string, versionIndex: number, content: string) => void;
-  agentContext?: { emoji: string; name: string; avatar?: string; templateName?: string } | null;
+  agentContext?: { emoji: string; name: string; avatar?: string } | null;
   showOpalHeader?: boolean;
   /** Hides the quick-actions bar (used when a contextualActionCard below already provides consolidated actions) */
   hideActionBar?: boolean;
-  /** IM mode: toggle an emoji reaction on this message */
-  onReaction?: (messageId: string, emoji: string) => void;
-  /** IM mode: quote/reply to this message */
-  onQuote?: (messageId: string) => void;
+  /** When true, render the IM-flavored action bar (emoji picker + edit/copy) and reaction pills. */
+  imMode?: boolean;
+  /** Current user's id — used to determine reaction "is-mine" state in IM mode. */
+  currentUserId?: string;
+  /** Existing reactions: emoji → array of user ids. */
+  reactions?: Record<string, string[]>;
+  /** Called when the user toggles a reaction in IM mode. */
+  onToggleReaction?: (messageId: string, emoji: string) => void;
+  /** Called when the user clicks "Reply in thread" in IM mode. */
+  onReplyInThread?: (messageId: string) => void;
+  /** Called when the user clicks "Quote reply" in IM mode. */
+  onQuoteReply?: (messageId: string) => void;
 };
 
-// Agent header row with inline tooltip (avoids Radix portal positioning issues)
-function AgentHeaderRow({ agentContext }: {
-  agentContext: { emoji: string; name: string; avatar?: string; templateName?: string };
-}) {
-  const [hovered, setHovered] = useState(false);
-  const hasTemplate = !!agentContext.templateName && agentContext.templateName !== agentContext.name;
-
-  return (
-    <div
-      style={{ position: 'relative', display: 'inline-flex', marginBottom: 4, paddingLeft: 8 }}
-      onMouseEnter={() => hasTemplate && setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+// Helper component for action buttons
+const ActionButton = ({ icon: Icon, onClick, tooltip }: { icon: any, onClick?: () => void, tooltip?: string }) => {
+  const btn = (
+    <button
+      onClick={onClick}
+      style={{
+        background: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '4px',
+        color: 'var(--opal-text-tertiary)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: '4px',
+        transition: 'color 0.2s, background-color 0.2s',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = 'var(--opal-text-body)';
+        e.currentTarget.style.backgroundColor = 'var(--opal-bg-sidebar)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = 'var(--opal-text-tertiary)';
+        e.currentTarget.style.backgroundColor = 'transparent';
+      }}
     >
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'default' }}>
-        {agentContext.avatar ? (
-          <span style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#d1fae5', flexShrink: 0 }}>
-            <img src={agentContext.avatar} alt={agentContext.name} width={28} height={28} style={{ display: 'block', objectFit: 'cover' }} />
-          </span>
-        ) : (
-          <span style={{ fontSize: 15, lineHeight: 1 }}>{agentContext.emoji}</span>
-        )}
-        <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'Inter, sans-serif' }}>{agentContext.name}</span>
-      </div>
-      {hovered && hasTemplate && (
-        <div style={{
-          position: 'absolute',
-          top: 'calc(100% + 4px)',
-          left: 0,
-          background: '#1f2937',
-          color: 'white',
-          fontSize: 12,
-          lineHeight: 1.4,
-          padding: '4px 8px',
-          borderRadius: 6,
-          whiteSpace: 'nowrap',
-          zIndex: 50,
-          pointerEvents: 'none',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-        }}>
-          {agentContext.templateName}
+      <Icon size={16} />
+    </button>
+  );
+  if (!tooltip) return btn;
+  return <Tooltip content={tooltip} delayDuration={400}><span style={{ display: 'inline-flex' }}>{btn}</span></Tooltip>;
+};
+
+// IM mode quick-action bar: 3 MRU emoji shortcuts + full picker + (edit, own only) + copy.
+// MRU is persisted in localStorage and updates whenever the user reacts.
+const MRU_STORAGE_KEY = "opal-im-mru-emojis";
+const DEFAULT_MRU: string[] = ["👍", "👀", "✅"];
+const MAX_MRU = 3;
+const MORE_EMOJIS = [
+  "❤️", "😄", "🎉", "😢", "🤔", "🙌",
+  "🔥", "👏", "🙏", "💯", "😍", "🚀",
+  "👀", "✨", "💪", "😅", "😎", "🤯",
+];
+
+let mruCache: string[] | null = null;
+const mruListeners = new Set<() => void>();
+
+function loadMRU(): string[] {
+  if (mruCache) return mruCache;
+  if (typeof window === "undefined") return [...DEFAULT_MRU];
+  try {
+    const raw = window.localStorage.getItem(MRU_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.every((x) => typeof x === "string")) {
+        const list = parsed.slice(0, MAX_MRU);
+        for (const fallback of DEFAULT_MRU) {
+          if (list.length >= MAX_MRU) break;
+          if (!list.includes(fallback)) list.push(fallback);
+        }
+        mruCache = list;
+        return mruCache;
+      }
+    }
+  } catch {
+    /* fall through to default */
+  }
+  mruCache = [...DEFAULT_MRU];
+  return mruCache;
+}
+
+function pushMRU(emoji: string) {
+  const current = loadMRU();
+  const next = [emoji, ...current.filter((e) => e !== emoji)].slice(0, MAX_MRU);
+  for (const fallback of DEFAULT_MRU) {
+    if (next.length >= MAX_MRU) break;
+    if (!next.includes(fallback)) next.push(fallback);
+  }
+  mruCache = next;
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(MRU_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore quota errors */
+    }
+  }
+  for (const l of mruListeners) l();
+}
+
+function useMRUEmojis(): string[] {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const listener = () => setTick((t) => t + 1);
+    mruListeners.add(listener);
+    return () => {
+      mruListeners.delete(listener);
+    };
+  }, []);
+  return loadMRU();
+}
+
+function EmojiShortcutButton({
+  emoji,
+  onClick,
+}: {
+  emoji: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`React with ${emoji}`}
+      style={{
+        width: 28,
+        height: 28,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "transparent",
+        border: "none",
+        cursor: "pointer",
+        padding: 0,
+        fontSize: 16,
+        borderRadius: 6,
+        lineHeight: 1,
+        transition: "background 0.15s",
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+    >
+      {emoji}
+    </button>
+  );
+}
+
+function IMQuickActions({
+  messageId,
+  isOwn,
+  onEdit,
+  onCopy,
+  onToggleReaction,
+  onQuoteReply,
+}: {
+  messageId: string;
+  isOwn: boolean;
+  onEdit?: () => void;
+  onCopy?: () => void;
+  onToggleReaction?: (messageId: string, emoji: string) => void;
+  onQuoteReply?: (messageId: string) => void;
+}) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const mruEmojis = useMRUEmojis();
+  const handleReact = (emoji: string) => {
+    pushMRU(emoji);
+    onToggleReaction?.(messageId, emoji);
+  };
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "2px", position: "relative" }}>
+      {mruEmojis.map((emoji) => (
+        <EmojiShortcutButton
+          key={emoji}
+          emoji={emoji}
+          onClick={() => handleReact(emoji)}
+        />
+      ))}
+      <ActionButton
+        icon={IconFaceSmile}
+        tooltip="More reactions"
+        onClick={() => setPickerOpen((v) => !v)}
+      />
+      {isOwn ? (
+        onEdit && <ActionButton icon={IconPen} tooltip="Edit" onClick={onEdit} />
+      ) : (
+        onQuoteReply && (
+          <ActionButton
+            icon={IconQuoteRight}
+            tooltip="Reply with quote"
+            onClick={() => onQuoteReply(messageId)}
+          />
+        )
+      )}
+      <IMOverflowMenu
+        isOwn={isOwn}
+        onQuoteReply={onQuoteReply ? () => onQuoteReply(messageId) : undefined}
+        onCopyLink={onCopy}
+      />
+      {pickerOpen && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: isOwn ? "auto" : 0,
+            right: isOwn ? 0 : "auto",
+            marginTop: 4,
+            background: "var(--ax-colors-bg-default)",
+            border: "1px solid var(--ax-colors-border-secondary)",
+            borderRadius: 8,
+            padding: "4px 6px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            display: "flex",
+            gap: 4,
+            zIndex: 10,
+          }}
+          onMouseLeave={() => setPickerOpen(false)}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(6, 1fr)",
+              gap: 2,
+            }}
+          >
+            {MORE_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => {
+                  handleReact(emoji);
+                  setPickerOpen(false);
+                }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 6,
+                  fontSize: 18,
+                  borderRadius: 4,
+                  lineHeight: 1,
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")
+                }
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-// Helper component for action buttons
-const ActionButton = ({ icon: Icon, onClick, tooltip }: { icon: any, onClick?: () => void, tooltip?: string }) => (
-  <button
-    onClick={onClick}
-    title={tooltip}
-    style={{
-      background: 'transparent',
-      border: 'none',
-      cursor: 'pointer',
-      padding: '4px',
-      color: 'var(--opal-text-tertiary)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: '4px',
-      transition: 'color 0.2s, background-color 0.2s',
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.color = 'var(--opal-text-body)';
-      e.currentTarget.style.backgroundColor = 'var(--opal-bg-sidebar)';
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.color = 'var(--opal-text-tertiary)';
-      e.currentTarget.style.backgroundColor = 'transparent';
-    }}
-  >
-    <Icon size={16} />
-  </button>
-);
+function IMOverflowMenu({
+  isOwn,
+  onQuoteReply,
+  onCopyLink,
+}: {
+  isOwn: boolean;
+  onQuoteReply?: () => void;
+  onCopyLink?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const items: { label: string; icon: ReactNode; onClick: () => void }[] = [];
+  if (isOwn && onQuoteReply) {
+    items.push({ label: "Reply with quote", icon: <IconQuoteRight size={14} />, onClick: onQuoteReply });
+  }
+  items.push({ label: "Forward", icon: <IconShareNodes size={14} />, onClick: () => {} });
+  items.push({ label: "Pin", icon: <IconThumbtack size={14} />, onClick: () => {} });
+  if (onCopyLink) {
+    items.push({ label: "Copy link", icon: <IconLink size={14} />, onClick: onCopyLink });
+  }
+
+  return (
+    <div ref={containerRef} style={{ position: "relative", display: "inline-flex" }}>
+      <ActionButton
+        icon={IconEllipsisStroke}
+        tooltip="More"
+        onClick={() => setOpen((v) => !v)}
+      />
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            right: 0,
+            marginTop: 4,
+            background: "var(--ax-colors-bg-default)",
+            border: "1px solid var(--ax-colors-border-secondary)",
+            borderRadius: 8,
+            padding: 4,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            minWidth: 180,
+            zIndex: 20,
+          }}
+        >
+          {items.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => {
+                item.onClick();
+                setOpen(false);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                width: "100%",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                padding: "7px 10px",
+                borderRadius: 6,
+                fontSize: 13,
+                color: "var(--ax-colors-fg-default)",
+                textAlign: "left",
+                transition: "background 0.12s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <span style={{ display: "inline-flex", color: "var(--ax-colors-fg-secondary)" }}>{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReactionPills({
+  messageId,
+  reactions,
+  currentUserId,
+  alignRight,
+  onToggleReaction,
+}: {
+  messageId: string;
+  reactions: Record<string, string[]>;
+  currentUserId?: string;
+  alignRight: boolean;
+  onToggleReaction?: (messageId: string, emoji: string) => void;
+}) {
+  const entries = Object.entries(reactions).filter(([, ids]) => ids.length > 0);
+  if (entries.length === 0) return null;
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 4,
+        marginTop: 4,
+        justifyContent: alignRight ? "flex-end" : "flex-start",
+        marginRight: alignRight ? 32 : 0,
+        marginLeft: alignRight ? 0 : 8,
+      }}
+    >
+      {entries.map(([emoji, ids]) => {
+        const mine = !!currentUserId && ids.includes(currentUserId);
+        return (
+          <button
+            key={emoji}
+            type="button"
+            onClick={() => onToggleReaction?.(messageId, emoji)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              padding: "2px 8px",
+              borderRadius: 999,
+              background: mine
+                ? "var(--ax-colors-bg-accent-subtle, var(--ax-colors-bg-secondary))"
+                : "var(--ax-colors-bg-secondary)",
+              border: mine
+                ? "1px solid var(--ax-colors-border-accent, var(--ax-colors-border-default))"
+                : "1px solid var(--ax-colors-border-secondary)",
+              cursor: "pointer",
+              fontSize: 12,
+              lineHeight: 1.2,
+            }}
+          >
+            <span>{emoji}</span>
+            <span style={{ color: "var(--ax-colors-fg-tertiary)" }}>{ids.length}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 const MarkdownContent = ({ content }: { content: string }) => {
   return (
@@ -354,15 +701,15 @@ const MarkdownContent = ({ content }: { content: string }) => {
             ),
           strong: ({ node, ...props }) => <strong style={{ fontWeight: 600 }} {...props} />,
           em: ({ node, ...props }) => <em style={{ fontStyle: 'italic' }} {...props} />,
-          a: ({ node, href, ...props }) => {
+          a: ({ node, href, children }) => {
             const isInternal = typeof href === 'string' && href.startsWith('/');
             return (
-              <a
-                href={href}
-                style={{ color: 'var(--axiom-fg-accent, #7C3AED)', textDecoration: 'underline' }}
-                {...(isInternal ? {} : { target: "_blank", rel: "noopener noreferrer" })}
-                {...props}
-              />
+              <AxiomLink
+                href={href ?? '#'}
+                {...(!isInternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              >
+                {children}
+              </AxiomLink>
             );
           },
         }}
@@ -375,12 +722,12 @@ const MarkdownContent = ({ content }: { content: string }) => {
 
 // ── Dev-mode loading sequence ─────────────────────────────────────────────────
 
-const PURPLE = "#7C3AED";
+const PURPLE = "var(--ax-colors-fg-accent)";
 const PHASE1_MS = 4000;      // how long to show the big V5 loader
 const ACTIVITY_INTERVAL = 3500; // ms between each activity row appearing
-const SHIMMER_PURPLE_1 = "#7C3AED";
-const SHIMMER_PURPLE_2 = "#9D74F5";
-const SHIMMER_PURPLE_3 = "#C2A8FA";
+const SHIMMER_PURPLE_1 = "var(--ax-colors-fg-accent)";
+const SHIMMER_PURPLE_2 = "var(--ax-colors-bg-accent-light, #6A8FFC)";
+const SHIMMER_PURPLE_3 = "var(--ax-colors-bg-accent-subtle, #B3C3FF)";
 
 const ACTIVITY_LABELS = [
   "thinking",
@@ -463,385 +810,6 @@ function DevLoadingState({ sequence }: { sequence: LoaderSequenceOption }) {
   );
 }
 
-// ── IM message row (Teams-style chat bubble with hover actions + reactions) ────
-
-const IM_RECENT_KEY = 'im-recent-emojis';
-const IM_EMOJI_DEFAULTS = ['👍', '❤️', '😂'];
-
-function getRecentEmojis(): string[] {
-  if (typeof window === 'undefined') return IM_EMOJI_DEFAULTS;
-  try {
-    const s = localStorage.getItem(IM_RECENT_KEY);
-    return s ? JSON.parse(s) : IM_EMOJI_DEFAULTS;
-  } catch { return IM_EMOJI_DEFAULTS; }
-}
-
-function addRecentEmoji(emoji: string): string[] {
-  const next = [emoji, ...getRecentEmojis().filter((e) => e !== emoji)].slice(0, 3);
-  try { localStorage.setItem(IM_RECENT_KEY, JSON.stringify(next)); } catch {}
-  return next;
-}
-
-const imActionBtnStyle: CSSProperties = {
-  background: 'transparent',
-  border: 'none',
-  cursor: 'pointer',
-  padding: 0,
-  width: 30,
-  height: 30,
-  flexShrink: 0,
-  color: 'var(--ax-colors-fg-tertiary)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: 6,
-  lineHeight: 1,
-  transition: 'background 0.12s',
-};
-
-function IMActionBtn({ icon: Icon, tooltip, onClick }: { icon: any, tooltip: string, onClick?: () => void }) {
-  return (
-    <button
-      title={tooltip}
-      onClick={onClick}
-      style={imActionBtnStyle}
-      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--ax-colors-bg-tertiary)')}
-      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-    >
-      <Icon size={16} />
-    </button>
-  );
-}
-
-function IMMessageRow({
-  message,
-  onReaction,
-  onQuote,
-  onEdit,
-}: {
-  message: ChatMessage;
-  onReaction?: (messageId: string, emoji: string) => void;
-  onQuote?: (messageId: string) => void;
-  onEdit?: (id: string, newContent: string) => void;
-}) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [recentEmojis, setRecentEmojis] = useState<string[]>(IM_EMOJI_DEFAULTS);
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Hydrate recent emojis from localStorage after mount
-  useEffect(() => { setRecentEmojis(getRecentEmojis()); }, []);
-
-  const authorName: string = message.metadata?.authorName ?? '';
-  const authorAvatar: string | undefined = message.metadata?.authorAvatar;
-  const authorStatus: 'online' | 'away' | 'offline' | undefined = message.metadata?.authorStatus;
-  const time = formatChatTime(message.timestamp);
-  const isUser = message.role === 'user';
-  const isVAU: boolean = !!message.metadata?.isVAU;
-  const reactions: Record<string, string[]> = message.metadata?.reactions ?? {};
-  const currentUserId: string = message.metadata?.currentUserId ?? '';
-
-  const initials = authorName
-    .split(/\s+/)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
-  const statusDot = (!isVAU && authorStatus) ? (
-    <span style={{
-      position: 'absolute', bottom: 0, right: 0,
-      width: 10, height: 10, borderRadius: '50%',
-      background: authorStatus === 'online' ? '#22c55e' : authorStatus === 'away' ? '#f59e0b' : '#9ca3af',
-      border: '1px solid var(--ax-colors-bg-default)',
-      boxSizing: 'border-box',
-    }} />
-  ) : null;
-
-  const vauBadge = isVAU ? (
-    <span style={{
-      position: 'absolute',
-      bottom: 0,
-      right: 0,
-      width: 10,
-      height: 10,
-      borderRadius: '50%',
-      background: '#7c5cff',
-      border: '1px solid var(--ax-colors-bg-default)',
-      boxSizing: 'border-box',
-      pointerEvents: 'none',
-    }} />
-  ) : null;
-
-
-  const avatarEl = (
-    <span style={{ position: 'relative', width: 32, height: 32, flexShrink: 0, display: 'inline-flex' }}>
-      {authorAvatar ? (
-        <span style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', display: 'inline-flex' }}>
-          <img src={authorAvatar} alt={authorName} width={32} height={32} style={{ display: 'block', objectFit: 'cover' }} />
-        </span>
-      ) : (
-        <span style={{ width: 32, height: 32, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ax-colors-bg-tertiary)', color: 'var(--ax-colors-fg-secondary)', fontSize: 12, fontWeight: 600 }}>
-          {initials}
-        </span>
-      )}
-      {statusDot}
-      {vauBadge}
-    </span>
-  );
-
-  const bubbleBg = isVAU ? 'var(--ax-colors-bg-secondary)' : 'var(--ax-colors-bg-accent-subtle)';
-  const showActions = isHovered || moreOpen || pickerOpen;
-
-  const reactionEntries = Object.entries(reactions).filter(([, users]) => users.length > 0);
-
-  const handleQuickEmoji = (emoji: string) => {
-    onReaction?.(message.id, emoji);
-    setRecentEmojis(addRecentEmoji(emoji));
-  };
-
-  const handleEditCancel = () => {
-    setIsEditing(false);
-  };
-
-  // Action bar — absolutely positioned below the bubble, anchored to the outer message row
-  const hoverBar = (showActions && !isEditing) ? (
-    <div style={{
-      position: 'absolute',
-      bottom: 4,
-      ...(isUser ? { right: 36 } : { left: 40 }),
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 2,
-      background: 'var(--ax-colors-bg-default)',
-      border: '1px solid var(--ax-colors-border-secondary)',
-      borderRadius: 10,
-      padding: '4px 6px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-      zIndex: 10,
-    }}>
-      {recentEmojis.slice(0, 3).map((emoji) => (
-        <button
-          key={emoji}
-          title={emoji}
-          onClick={() => handleQuickEmoji(emoji)}
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, borderRadius: 6, fontSize: 14, lineHeight: 1, transition: 'background 0.12s', width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--ax-colors-bg-secondary)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-        >
-          {emoji}
-        </button>
-      ))}
-      <div style={{ position: 'relative' }}>
-        <IMActionBtn icon={IconFaceSmile} tooltip="Add reaction" onClick={() => { setPickerOpen((v) => !v); setMoreOpen(false); }} />
-        {pickerOpen && (
-          <>
-            <div onClick={() => setPickerOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 19 }} />
-            <div style={{
-              position: 'absolute',
-              top: 'calc(100% + 4px)',
-              left: 0,
-              background: 'var(--ax-colors-bg-default)',
-              border: '1px solid var(--ax-colors-border-secondary)',
-              borderRadius: 10,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.14)',
-              padding: '8px',
-              zIndex: 20,
-              width: 232,
-            }}>
-              {[
-                { label: 'Frequently used', emojis: recentEmojis },
-                { label: 'Reactions', emojis: ['👍','👎','❤️','😂','😮','😢','😡','🎉','🔥','👏','🙌','💯','✅','⭐','🚀'] },
-                { label: 'Expressions', emojis: ['😊','😍','🤔','😅','😭','🥰','🤣','😎','🥳','🤩','😏','😴','🤗','😬','🙄'] },
-                { label: 'Symbols', emojis: ['💡','📌','🎯','⚡','✨','💬','🔔','💥','🏆','🎊','💪','🙏','👋','🤝','❓'] },
-              ].map(({ label, emojis }) => (
-                <div key={label} style={{ marginBottom: 6 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--ax-colors-fg-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4, paddingLeft: 2 }}>{label}</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                    {emojis.map((emoji) => (
-                      <button
-                        key={emoji}
-                        title={emoji}
-                        onClick={() => { handleQuickEmoji(emoji); setPickerOpen(false); }}
-                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '3px', borderRadius: 4, fontSize: 18, lineHeight: 1, transition: 'background 0.1s', width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--ax-colors-bg-secondary)')}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-      {isUser
-        ? <IMActionBtn icon={IconPen} tooltip="Edit message" onClick={() => setIsEditing(true)} />
-        : <IMActionBtn icon={IconReply} tooltip="Reply with quote" onClick={() => onQuote?.(message.id)} />
-      }
-      <div style={{ position: 'relative' }}>
-        <IMActionBtn icon={IconEllipsisStroke} tooltip="More actions" onClick={() => setMoreOpen((v) => !v)} />
-        {moreOpen && (
-          <>
-            <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 19 }} />
-            <div style={{
-              position: 'absolute',
-              top: 'calc(100% + 4px)',
-              right: 0,
-              background: 'var(--ax-colors-bg-default)',
-              border: '1px solid var(--ax-colors-border-secondary)',
-              borderRadius: 8,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-              padding: 4,
-              zIndex: 20,
-              minWidth: 160,
-            }}>
-              {[
-                { icon: IconLink, label: 'Copy URL', action: () => { navigator.clipboard.writeText(window.location.href); setMoreOpen(false); } },
-                { icon: IconThumbtack, label: 'Pin message', action: () => setMoreOpen(false) },
-                { icon: IconPaperPlaneTop, label: 'Forward', action: () => setMoreOpen(false) },
-              ].map(({ icon: Icon, label, action }) => (
-                <button
-                  key={label}
-                  onClick={action}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 10px', borderRadius: 4, fontSize: 13, color: 'var(--ax-colors-fg-default)', transition: 'background 0.12s' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--ax-colors-bg-secondary)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <Icon size={14} style={{ flexShrink: 0, color: 'var(--ax-colors-fg-secondary)' }} />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  ) : null;
-
-  const reactionPills = reactionEntries.length > 0 ? (
-    <Box
-      display="flex"
-      gap="4"
-      flexWrap="wrap"
-      style={{
-        marginTop: 6,
-        justifyContent: isUser ? 'flex-end' : 'flex-start',
-        paddingLeft: isUser ? 0 : 40,
-      }}
-    >
-      {reactionEntries.map(([emoji, users]) => {
-        const isActive = currentUserId ? users.includes(currentUserId) : false;
-        return (
-          <button
-            key={emoji}
-            onClick={() => handleQuickEmoji(emoji)}
-            style={{
-              background: isActive ? 'var(--ax-colors-bg-accent-subtle)' : 'var(--ax-colors-bg-secondary)',
-              border: `1px solid ${isActive ? 'var(--ax-colors-border-accent)' : 'var(--ax-colors-border-secondary)'}`,
-              borderRadius: 10,
-              padding: '1px 6px',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 3,
-              lineHeight: 1.4,
-            }}
-          >
-            <span style={{ fontSize: 12 }}>{emoji}</span>
-            <span style={{ fontSize: 11, color: isActive ? 'var(--ax-colors-fg-accent)' : 'var(--ax-colors-fg-secondary)', fontWeight: isActive ? 600 : 400 }}>
-              {users.length}
-            </span>
-          </button>
-        );
-      })}
-    </Box>
-  ) : null;
-
-  if (isUser) {
-    return (
-      <div
-        style={{ width: '100%', paddingBottom: isEditing ? 8 : 36, marginBottom: isEditing ? 0 : -20, position: 'relative', zIndex: moreOpen || pickerOpen || isEditing ? 100 : 1 }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <Box display="flex" justifyContent="flex-end" style={{ paddingRight: 36, marginBottom: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--ax-colors-fg-tertiary)' }}>{time}</span>
-        </Box>
-        <Box display="flex" alignItems="start" gap="8" w="full">
-          <Box display="flex" flexDirection="column" alignItems="end" style={{ flex: 1, minWidth: 0 }}>
-            {isEditing ? (
-              <IMEditEditor
-                initialContent={message.content}
-                onSave={(md) => { onEdit?.(message.id, md); setIsEditing(false); }}
-                onCancel={handleEditCancel}
-              />
-            ) : (
-              <div style={{
-                maxWidth: '100%',
-                marginRight: -2,
-                padding: '8px 12px',
-                borderRadius: 12,
-                backgroundColor: bubbleBg,
-                color: 'var(--opal-text-body)',
-                fontSize: 14,
-                lineHeight: '24px',
-                wordBreak: 'break-word',
-                boxSizing: 'border-box',
-              }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-              </div>
-            )}
-          </Box>
-          {avatarEl}
-        </Box>
-        {reactionPills}
-        {hoverBar}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      style={{ width: '100%', paddingBottom: 36, marginBottom: -20, position: 'relative', zIndex: moreOpen || pickerOpen ? 100 : 1 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <Box display="flex" alignItems="center" gap="8" style={{ paddingLeft: 40, marginBottom: 4 }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--ax-colors-fg-default)' }}>{authorName}</span>
-          {isVAU && <IconSparkles size={12} style={{ color: '#7c5cff', flexShrink: 0 }} />}
-        </span>
-        <span style={{ fontSize: 11, color: 'var(--ax-colors-fg-tertiary)' }}>{time}</span>
-      </Box>
-      <Box display="flex" alignItems="start" gap="8" w="full">
-        {avatarEl}
-        <Box display="flex" flexDirection="column" alignItems="start" style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            maxWidth: '100%',
-            marginLeft: -2,
-            padding: '8px 12px',
-            borderRadius: 12,
-            backgroundColor: bubbleBg,
-            color: 'var(--opal-text-body)',
-            fontSize: 14,
-            lineHeight: '24px',
-            wordBreak: 'break-word',
-            boxSizing: 'border-box',
-          }}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-          </div>
-        </Box>
-      </Box>
-      {reactionPills}
-      {hoverBar}
-    </div>
-  );
-}
-
 // ──────────────────────────────────────────────────────────────────────────────
 
 function isExperimentCreationPayload(
@@ -863,13 +831,18 @@ export function OpalMessage({
   onStreamingExpandedChange,
   isOpalLoading,
   onEdit,
+  onActivityComplete,
   onRegenerate,
   onVersionChange,
   agentContext,
   showOpalHeader,
   hideActionBar,
-  onReaction,
-  onQuote,
+  imMode,
+  currentUserId,
+  reactions,
+  onToggleReaction,
+  onReplyInThread,
+  onQuoteReply,
 }: OpalMessageProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -940,33 +913,194 @@ export function OpalMessage({
         {message.eventType !== 'agent-end' && (
           <span style={{ fontSize: 14 }}>{message.agentEmoji}</span>
         )}
-        <span style={{ fontSize: 12, color: '#4f576e', fontFamily: 'Inter, sans-serif' }}>{message.content}</span>
+        <span style={{ fontSize: 12, color: '#4f576e', fontFamily: 'var(--ax-fontFamily-sans, sans-serif)' }}>{message.content}</span>
       </div>
     );
   }
 
-  // Inline system alert — renders as an Axiom Alert in the message stream.
-  // Used by the GEO Q&A flow to surface "Approved" inline (above any later
-  // VAU messages), instead of pinning it to the bottom as a contextualActionCard.
-  if (message.metadata?.systemAlert) {
-    const intent = (message.metadata.systemAlertIntent ?? 'success') as 'success' | 'warning' | 'danger' | 'information';
-    return (
-      <div style={{ width: '100%', marginBottom: 16 }}>
-        <Alert intent={intent}>{message.content}</Alert>
-      </div>
-    );
-  }
-
+  // IM mode (Threads): Teams-style chat row. VAU messages have an avatar
+  // top-left with name + time as a header, message text wrapping below
+  // (no bubble bg). User messages are fully right-aligned with the time
+  // above a subtle-green bubble, avatar to the right.
+  // Triggered by the adapter setting metadata.imMode = true.
   if (message.metadata?.imMode) {
-    return (
-      <>
-        <IMMessageRow message={message} onReaction={onReaction} onQuote={onQuote} onEdit={onEdit} />
-        {message.metadata?.artifactCard && (
-          <div style={{ paddingLeft: 48, paddingBottom: 8, paddingRight: 16 }}>
-            {message.metadata.artifactCard}
+    const authorName: string = message.metadata.authorName ?? '';
+    const authorAvatar: string | undefined = message.metadata.authorAvatar;
+    const time = formatChatTime(message.timestamp);
+    const initials = authorName
+      .split(/\s+/)
+      .map((w: string) => w[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+    const avatarEl = authorAvatar ? (
+      <span style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'inline-flex', flexShrink: 0 }}>
+        <img src={authorAvatar} alt={authorName} width={36} height={36} style={{ display: 'block', objectFit: 'cover' }} />
+      </span>
+    ) : (
+      <span style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ax-colors-bg-tertiary)', color: 'var(--ax-colors-fg-secondary)', fontSize: 12, fontWeight: 600 }}>
+        {initials}
+      </span>
+    );
+    const isVAU: boolean = !!message.metadata?.isVAU;
+    const presenceStatus: string | undefined = !isVAU ? message.metadata?.presenceStatus : undefined;
+    const presenceDot = presenceStatus && presenceStatus !== 'offline' ? (
+      <span style={{
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: 12,
+        height: 12,
+        borderRadius: '50%',
+        background: presenceStatus === 'online'
+          ? 'var(--ax-colors-fg-success)'
+          : 'var(--ax-colors-fg-warning)',
+        border: '1.5px solid var(--ax-colors-bg-default)',
+        boxSizing: 'border-box',
+        pointerEvents: 'none',
+      }} />
+    ) : null;
+    const vauBadge = isVAU ? (
+      <span style={{
+        position: 'absolute',
+        bottom: -1,
+        right: -1,
+        width: 14,
+        height: 14,
+        borderRadius: '50%',
+        background: 'var(--ax-colors-bg-accent)',
+        border: '1.5px solid var(--ax-colors-bg-default)',
+        boxSizing: 'border-box',
+        pointerEvents: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <IconBolt style={{ width: 9, height: 9, color: 'var(--ax-colors-fg-accent)', flexShrink: 0 }} />
+      </span>
+    ) : null;
+    const avatarWithPresence = (presenceDot || vauBadge) ? (
+      <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
+        {avatarEl}
+        {presenceDot}
+        {vauBadge}
+      </span>
+    ) : avatarEl;
+    // Humans → accent-subtle (pale lime in V3); VAUs → subtle gray.
+    const bubbleBg = isVAU
+      ? 'var(--ax-colors-bg-secondary)'
+      : 'var(--ax-colors-bg-accent-subtle)';
+    // Layout sums: avatar width (36) + outer gap (8) = 44 → meta-row inset.
+    if (isUser) {
+      return (
+        <div
+          style={{ width: '100%', marginBottom: 16 }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {/* Time row, right-aligned, inset on the right to clear avatar+gap */}
+          <Box display="flex" justifyContent="flex-end" style={{ paddingRight: 44, marginBottom: 4 }}>
+            <span style={{ fontSize: 11, color: 'var(--ax-colors-fg-tertiary)' }}>{time}</span>
+          </Box>
+          {/* Bubble + avatar row — avatar top-aligns with the bubble */}
+          <Box display="flex" alignItems="start" gap="8" w="full">
+            <Box display="flex" justifyContent="flex-end" style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  maxWidth: '100%',
+                  marginRight: -2,
+                  padding: '12px 16px',
+                  borderRadius: 12,
+                  backgroundColor: bubbleBg,
+                  color: 'var(--opal-text-body)',
+                  fontSize: 14,
+                  lineHeight: '20px',
+                  wordBreak: 'break-word',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+              </div>
+            </Box>
+            {avatarWithPresence}
+          </Box>
+          {/* Action bar + reaction pills */}
+          {reactions && Object.keys(reactions).length > 0 && (
+            <ReactionPills
+              messageId={message.id}
+              reactions={reactions}
+              currentUserId={currentUserId}
+              alignRight
+              onToggleReaction={onToggleReaction}
+            />
+          )}
+          <div style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s', display: 'flex', justifyContent: 'flex-end', paddingRight: 44, marginTop: 2 }}>
+            <IMQuickActions
+              messageId={message.id}
+              isOwn
+              onEdit={() => setIsEditing(true)}
+              onCopy={handleCopy}
+              onToggleReaction={onToggleReaction}
+              onQuoteReply={onQuoteReply}
+            />
           </div>
+        </div>
+      );
+    }
+    return (
+      <div
+        style={{ width: '100%', marginBottom: 16 }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Name + time row, inset to clear avatar+gap */}
+        <Box display="flex" alignItems="center" gap="8" style={{ paddingLeft: 44, marginBottom: 4 }}>
+          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--ax-colors-fg-default)' }}>{authorName}</span>
+          {isVAU && <IconWand size={13} style={{ color: 'var(--ax-colors-fg-secondary)', flexShrink: 0 }} />}
+          <span style={{ fontSize: 11, color: 'var(--ax-colors-fg-tertiary)' }}>{time}</span>
+        </Box>
+        {/* Avatar + bubble row — avatar top-aligns with the bubble */}
+        <Box display="flex" alignItems="start" gap="8" w="full">
+          {avatarWithPresence}
+          <Box display="flex" style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                maxWidth: '100%',
+                marginLeft: -2,
+                padding: '8px 12px',
+                borderRadius: 12,
+                backgroundColor: bubbleBg,
+                color: 'var(--opal-text-body)',
+                fontSize: 14,
+                lineHeight: '20px',
+                wordBreak: 'break-word',
+                boxSizing: 'border-box',
+              }}
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+            </div>
+          </Box>
+        </Box>
+        {/* Action bar + reaction pills */}
+        {reactions && Object.keys(reactions).length > 0 && (
+          <ReactionPills
+            messageId={message.id}
+            reactions={reactions}
+            currentUserId={currentUserId}
+            alignRight={false}
+            onToggleReaction={onToggleReaction}
+          />
         )}
-      </>
+        <div style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s', display: 'flex', justifyContent: 'flex-start', paddingLeft: 44, marginTop: 2 }}>
+          <IMQuickActions
+            messageId={message.id}
+            isOwn={false}
+            onCopy={handleCopy}
+            onToggleReaction={onToggleReaction}
+            onQuoteReply={onQuoteReply}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -977,28 +1111,64 @@ export function OpalMessage({
       onMouseLeave={() => setIsHovered(false)}
       className="group"
     >
-      {/* Author label + avatar for named user messages (multi-user thread) */}
-      {isUser && message.metadata?.authorName && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginBottom: 6, paddingRight: 4 }}>
-          <span style={{ fontSize: 13, color: 'var(--ax-colors-fg-secondary)', fontFamily: 'Inter, sans-serif' }}>{message.metadata.authorName}</span>
-          {message.metadata?.authorAvatar ? (
-            <span style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', display: 'inline-flex', flexShrink: 0 }}>
-              <img src={message.metadata.authorAvatar} alt={message.metadata.authorName} width={28} height={28} style={{ display: 'block', objectFit: 'cover' }} />
-            </span>
-          ) : (
-            <Avatar name={message.metadata.authorName} size="xs" colorScheme="purple" style={{ width: 28, height: 28, fontSize: 11, background: '#ede9fe', color: '#7c3aed' } as React.CSSProperties} />
-          )}
-        </div>
-      )}
-
       {/* Agent or Opal name header for assistant messages */}
       {!isUser && agentContext && (
-        <AgentHeaderRow agentContext={agentContext} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, paddingLeft: 8 }}>
+          {agentContext.avatar ? (
+            <img src={agentContext.avatar} alt={agentContext.name} width={18} height={18} style={{ borderRadius: '50%', flexShrink: 0 }} />
+          ) : (
+            <span style={{ fontSize: 15, lineHeight: 1 }}>{agentContext.emoji}</span>
+          )}
+          <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'var(--ax-fontFamily-sans, sans-serif)' }}>{agentContext.name}</span>
+        </div>
       )}
       {!isUser && showOpalHeader && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, paddingLeft: 8 }}>
           <img src="/opal.png" alt="Opal" width={16} height={16} style={{ borderRadius: 4 }} />
-          <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'Inter, sans-serif' }}>Opal</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'var(--ax-fontFamily-sans, sans-serif)' }}>Opal</span>
+        </div>
+      )}
+      {!isUser && !agentContext && !showOpalHeader && message.authorName && !message.authorInlineAvatar && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, paddingLeft: 8 }}>
+          <AuthorAvatarHover name={message.authorName} title={message.authorTitle}>
+            {message.authorAvatar ? (
+              <img
+                src={message.authorAvatar}
+                alt={message.authorName}
+                width={28}
+                height={28}
+                style={{ borderRadius: '50%', flexShrink: 0, objectFit: 'cover', display: 'block' }}
+              />
+            ) : (
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: 'var(--ax-colors-bg-avatar-purple)',
+                  color: 'var(--ax-colors-fg-avatar-purple)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  fontFamily: 'Inter, sans-serif',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  letterSpacing: '0.02em',
+                  flexShrink: 0,
+                }}
+              >
+                {message.authorName.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
+              </span>
+            )}
+          </AuthorAvatarHover>
+          <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 13, fontWeight: 400, color: '#2e3442', fontFamily: 'var(--ax-fontFamily-sans, sans-serif)' }}>
+            <span>{message.authorName}</span>
+            {message.timestamp && (
+              <span style={{ fontSize: 11, color: 'var(--ax-colors-fg-tertiary)', fontWeight: 400 }}>
+                {formatChatTime(message.timestamp)}
+              </span>
+            )}
+          </span>
         </div>
       )}
 
@@ -1010,6 +1180,19 @@ export function OpalMessage({
           alignItems: isUser ? "flex-end" : "flex-start",
         }}
       >
+        {isUser && message.timestamp && imMode && (
+          <span
+            style={{
+              fontSize: 11,
+              color: 'var(--ax-colors-fg-tertiary)',
+              fontFamily: 'var(--ax-fontFamily-sans, sans-serif)',
+              marginBottom: 2,
+              paddingRight: 4,
+            }}
+          >
+            {formatChatTime(message.timestamp)}
+          </span>
+        )}
         {/* Experiment blocks are full-width, rendered outside the normal bubble */}
         {!isLoading && isExperimentCreation && message.payload ? (
           <ExperimentCreationAgentBlock
@@ -1033,10 +1216,26 @@ export function OpalMessage({
             justifyContent: isUser ? 'flex-end' : 'flex-start',
           }}
         >
+          {message.authorInlineAvatar && !isUser && message.authorAvatar && (
+            <img
+              src={message.authorAvatar}
+              alt={message.authorName ?? ''}
+              width={28}
+              height={28}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                flexShrink: 0,
+                marginTop: 4,
+              }}
+            />
+          )}
           <Box
             style={{
               maxWidth: isUser ? '85%' : '100%',
-              backgroundColor: isUser ? '#F3F4F6' : 'transparent',
+              backgroundColor: isUser ? 'var(--ax-colors-bg-accent-subtle)' : 'transparent',
               color: isUser ? 'var(--opal-text-user)' : 'var(--opal-text-body)',
               borderRadius: isEditing ? '12px' : (isUser ? '16px 4px 16px 16px' : '4px 16px 16px 16px'),
               padding: isEditing ? '8px' : (isUser ? '12px 16px' : '4px 8px'),
@@ -1044,6 +1243,27 @@ export function OpalMessage({
               width: isEditing ? '100%' : 'auto',
             }}
           >
+            {message.authorInlineAvatar && !isUser && message.authorName && (
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 8,
+                  fontSize: 13,
+                  fontWeight: 400,
+                  color: '#2e3442',
+                  fontFamily: 'var(--ax-fontFamily-sans, sans-serif)',
+                  marginBottom: 2,
+                }}
+              >
+                <span>{message.authorName}</span>
+                {message.timestamp && (
+                  <span style={{ fontSize: 11, color: 'var(--ax-colors-fg-tertiary)', fontWeight: 400 }}>
+                    {formatChatTime(message.timestamp)}
+                  </span>
+                )}
+              </span>
+            )}
             {isEditing ? (
               <Box display="flex" flexDirection="column" gap="8" w="full">
                 <textarea
@@ -1100,6 +1320,24 @@ export function OpalMessage({
                 </Box>
               </Box>
             ) : (
+              message.activityScript ? (
+                <Box display="flex" flexDirection="column" gap="12" w="full">
+                  {/* When stream is done, render a static summary to avoid re-animation on remount */}
+                  {!isLoading && !message.isLoading && (message as any).showCanvasCard ? (
+                    <StaticActivitySummary script={message.activityScript} />
+                  ) : (
+                    <ActivityStreamBlock key={`${message.id}-${message.timestamp}`} script={message.activityScript} onComplete={() => onActivityComplete?.(message.id)} />
+                  )}
+                  {!isLoading && message.content && (
+                    <MarkdownContent content={message.content} />
+                  )}
+                  {!isLoading && (message as any).showCanvasCard && (
+                    <Box mt="8" mb="8">
+                      <CanvasOutputCard />
+                    </Box>
+                  )}
+                </Box>
+              ) : (
               isLoading ? (
                 isProcessingStepsLoading && streamingMode === "expanded" ? (
                   <Disclosure open={isStreamingExpanded} onOpenChange={onStreamingExpandedChange} w="full">
@@ -1110,7 +1348,7 @@ export function OpalMessage({
                         gap="12"
                         style={{ width: "fit-content", maxWidth: "100%" }}
                       >
-                        <OpalLoaderV5 size={16} color="#7C3AED" />
+                        <OpalLoaderV5 size={16} color="var(--ax-colors-fg-accent)" />
                         <Text
                           style={{
                             ...opalTypography.body,
@@ -1148,7 +1386,7 @@ export function OpalMessage({
                   <DevLoadingState key={`${message.id}-${sequence}`} sequence={sequence} />
                 ) : (
                   <Box display="flex" alignItems="center" gap="12" py="4">
-                    <OpalLoaderV5 size={16} color="#7C3AED" />
+                    <OpalLoaderV5 size={16} color="var(--ax-colors-fg-accent)" />
                     <Text
                       style={{
                         ...opalTypography.body,
@@ -1204,30 +1442,60 @@ export function OpalMessage({
                   <MarkdownContent content={message.content} />
                 )
               )
+              )
             )}
           </Box>
 
-          {!isEditing && isUser && !message.metadata?.authorName && (
+          {!isEditing && isUser && (
             <Box
               style={{
-                width: '24px',
-                height: '24px',
+                width: '28px',
+                height: '28px',
                 borderRadius: '50%',
                 overflow: 'hidden',
                 flexShrink: 0,
-                marginTop: '4px'
+                marginTop: '4px',
+                background: message.authorAvatar ? undefined : message.authorName ? 'var(--ax-colors-bg-avatar-purple)' : 'var(--ax-colors-bg-accent-strong, #1a2e1a)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <Image
-                src="/avatar-user.png"
-                alt="User"
-                width={24}
-                height={24}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+              {message.authorAvatar ? (
+                <img
+                  src={message.authorAvatar}
+                  alt={message.authorName ?? 'User'}
+                  width={28}
+                  height={28}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : message.authorName ? (
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ax-colors-fg-avatar-purple)', fontFamily: 'Inter, sans-serif', letterSpacing: '0.02em', lineHeight: 1 }}>
+                  {message.authorName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                </span>
+              ) : (
+                <Image
+                  src="/avatar-user.png"
+                  alt="User"
+                  width={24}
+                  height={24}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              )}
             </Box>
           )}
         </Box>
+        )}
+
+        {/* IM reaction pills (above the action row) */}
+        {imMode && reactions && (
+          <ReactionPills
+            messageId={message.id}
+            reactions={reactions}
+            currentUserId={currentUserId}
+            alignRight={isUser}
+            onToggleReaction={onToggleReaction}
+          />
         )}
 
         {/* Quick Actions Row */}
@@ -1239,15 +1507,25 @@ export function OpalMessage({
             style={{
               marginLeft: isUser ? '0' : '8px',
               marginRight: isUser ? '32px' : '0',
-              opacity: isUser ? (isHovered ? 1 : 0) : 1,
+              opacity: imMode ? (isHovered ? 1 : 0) : isUser ? (isHovered ? 1 : 0) : 1,
               transition: 'opacity 0.2s',
               marginTop: isUser ? '4px' : isFullWidthSpecialBlock ? '16px' : '-8px',
               width: '100%',
-              justifyContent: 'space-between',
+              justifyContent: imMode && isUser ? 'flex-end' : 'space-between',
               alignItems: 'center',
             }}
           >
-            {isUser ? (
+            {imMode ? (
+              // IM Mode: emoji picker + (edit if own) + copy. No "Edit in Canvas" / regenerate / thumbs.
+              <IMQuickActions
+                messageId={message.id}
+                isOwn={isUser}
+                onEdit={isUser ? () => setIsEditing(true) : undefined}
+                onCopy={handleCopy}
+                onToggleReaction={onToggleReaction}
+                onQuoteReply={onQuoteReply}
+              />
+            ) : isUser ? (
               // User Actions: Edit, Copy
               <>
                 <ActionButton icon={IconPen} tooltip="Edit" onClick={() => setIsEditing(true)} />
@@ -1325,6 +1603,23 @@ export function OpalMessage({
         )}
       </Box>
     </div>
+  );
+}
+
+function AuthorAvatarHover({ name, title, children }: { name: string; title?: string; children: ReactNode }) {
+  if (!title) return <>{children}</>;
+  return (
+    <Tooltip
+      delayDuration={300}
+      content={
+        <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 2, lineHeight: 1.3 }}>
+          <span style={{ fontWeight: 600 }}>{name}</span>
+          <span style={{ opacity: 0.85 }}>{title}</span>
+        </span>
+      }
+    >
+      <span style={{ display: 'inline-flex', flexShrink: 0 }}>{children}</span>
+    </Tooltip>
   );
 }
 

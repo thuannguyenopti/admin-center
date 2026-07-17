@@ -4,7 +4,7 @@ import {Box, Menu, MenuTrigger, MenuContent, LabelMenuButton} from "@optiaxiom/r
 import {Text} from "@/app/components/Text";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
-import {IconSearch, IconTrendingUp, IconTrendingDown} from "@tabler/icons-react";
+import {IconSearch, IconTrendingUp, IconTrendingDown} from "@/app/lib/axiom-icons";
 import {useState, useMemo} from "react";
 import {volumeQueries, VolumeQuery, scaleValue} from "@/app/db/analyticsData";
 import {Table, Tr, Td, Th} from "@/app/components/Table";

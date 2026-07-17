@@ -4,10 +4,9 @@ import usePersistentState from "../../../usePersistentState";
 
 import {
 	Button,
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
+	Menu,
+	MenuContent,
+	MenuTrigger,
 	Box,
 	SearchInput,
 	Pagination,
@@ -17,7 +16,7 @@ import {
 import { useState, useEffect } from "react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import AbstractDialog from "@/app/components/AbstractDialog";
-import { IconChevronDown } from "@tabler/icons-react";
+import {IconChevronDown} from "@/app/lib/axiom-icons";
 
 const GitHub = (
 	<svg
@@ -254,23 +253,25 @@ export default function Home() {
 					heading="No Applications yet!"
 					body="This is where you will find all your applications."
 				>
-					<DropdownMenu
+					<Menu
 						open={dropped}
 						onOpenChange={setDropped}
+						options={[
+							{
+								label: "Import an existing project",
+								execute: () => setOpen(true),
+							},
+							{ label: "Deploy manually" },
+						]}
 					>
-						<DropdownMenuTrigger
+						<MenuTrigger
 							appearance="primary"
 							size="lg"
 						>
 							Create Application...
-						</DropdownMenuTrigger>
-						<DropdownMenuContent>
-							<DropdownMenuItem onSelect={(event) => setOpen(true)}>
-								Import an existing project
-							</DropdownMenuItem>
-							<DropdownMenuItem>Deploy manually</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
 				</EmptyList>
 			)}
 			<AbstractDialog

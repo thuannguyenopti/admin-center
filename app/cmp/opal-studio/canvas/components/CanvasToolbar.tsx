@@ -1,12 +1,7 @@
 "use client";
 
 import { Box, Button, SegmentedControl, SegmentedControlItem, Text } from "@optiaxiom/react";
-import {
-	IconArrowBackUp,
-	IconCopy,
-	IconDownload,
-	IconX,
-} from "@tabler/icons-react";
+import {IconArrowBackUp, IconCopy, IconDownload, IconXmark} from "@/app/lib/axiom-icons";
 
 export function CanvasToolbar({
 	canvasMode,
@@ -57,7 +52,7 @@ export function CanvasToolbar({
 				<Button appearance="default" icon={<IconDownload size={16} />}>Download</Button>
 				<Button appearance="subtle" icon={<IconArrowBackUp size={18} />} aria-label="Undo" />
 				<Button appearance="subtle" icon={<IconCopy size={18} />} aria-label="Copy" />
-				<Button appearance="subtle" icon={<IconX size={18} />} aria-label="Close canvas" onClick={onClose} />
+				<Button appearance="subtle" icon={<IconXmark size={18} />} aria-label="Close canvas" onClick={onClose} />
 			</Box>
 		</Box>
 	);

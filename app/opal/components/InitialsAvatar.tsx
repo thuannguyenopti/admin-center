@@ -1,6 +1,6 @@
 "use client";
 
-import { IconUserGroup } from "@optimizely/axiom-icons";
+import { IconUserGroup } from "@optiaxiom/icons";
 import type { ReactNode } from "react";
 
 const AVATAR_COLORS = [
@@ -35,18 +35,13 @@ export function initialsFromName(name: string): string {
 
 /** Known users that should render with an image instead of initials. */
 const AVATAR_IMAGE_BY_INITIALS: Record<string, string> = {
-  FR: "/avatars/im-telescope.png",
+  FR: "/avatars/vau-frank.png",
   HE: "/avatars/vau-henry.png",
   JO: "/avatars/vau-jonas.png",
   KE: "/avatars/vau-kerby.png",
   MY: "/avatars/vau-mayling.png",
   PO: "/avatars/vau-poppy.png",
   TO: "/avatars/vau-tony.png",
-  // Seeded human users — must stay in sync with app/opal/im/lib/avatars.ts
-  JC: "/avatars/avatar-3.png",
-  MA: "/avatars/avatar-2.png",
-  PC: "/avatars/avatar-1.png",
-  FB: "/avatars/avatar-4.png",
 };
 
 /** Known identities that render an icon (e.g. group / team) instead of initials. */
@@ -117,7 +112,7 @@ export function InitialsAvatar({
       style={{
         ...commonStyle,
         background: colorForInitials(initials),
-        color: "var(--ax-colors-fg-on-accent, #fff)",
+        color: "#fff",
         fontSize: Math.round(size * 0.42),
         fontWeight: 600,
         lineHeight: 1,

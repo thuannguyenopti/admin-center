@@ -9,7 +9,7 @@ import {
   MenuTrigger,
   Text,
 } from "@optiaxiom/react";
-import { IconAngleDown } from "@optimizely/axiom-icons";
+import { IconAngleDown } from "@optiaxiom/icons";
 import type { ConversationIndexEntry } from "../lib/types";
 import { conversationTitle } from "../lib/adapters";
 

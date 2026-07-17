@@ -2,12 +2,7 @@
 
 import React from "react";
 import {Box, Flex, Heading, Text, Spinner} from "@optiaxiom/react";
-import {
-	IconChecklist,
-	IconCircle,
-	IconCheck,
-	IconX,
-} from "@tabler/icons-react";
+import {IconChecklist, IconCircle, IconCheck, IconXmark} from "@/app/lib/axiom-icons";
 
 /**
  * Checklist item representing the status of an individual audit
@@ -45,7 +40,7 @@ export function PreflightProgressIndicator({checklist, title = "Running Prefligh
 						{item.status === "completed" && (
 							<IconCheck size={16} style={{color: "var(--ax-colors-fg-success)"}} />
 						)}
-						{item.status === "failed" && <IconX size={16} style={{color: "var(--ax-colors-fg-error)"}} />}
+						{item.status === "failed" && <IconXmark size={16} style={{color: "var(--ax-colors-fg-error)"}} />}
 						<Text
 							fontSize="sm"
 							style={{

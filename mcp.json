@@ -2,10 +2,6 @@
 	"mcpServers": {
 		"axiom": {
 			"command": "npx",
-			"args": ["-y", "@optiaxiom/mcp@1"]
-		},
-		"axiom-v3": {
-			"command": "npx",
 			"args": ["-y", "@optiaxiom/mcp"]
 		},
 		"coda": {

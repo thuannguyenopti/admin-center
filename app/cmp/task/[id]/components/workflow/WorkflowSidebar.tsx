@@ -3,7 +3,7 @@
 import { Badge, Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconChevronDown, IconChevronRight, IconDots, IconEye, IconPlus } from "@tabler/icons-react";
+import {IconChevronDown, IconChevronRight, IconEllipsisSolid, IconEye, IconPlus} from "@/app/lib/axiom-icons";
 import { useEffect, useRef } from "react";
 import type { WorkflowTemplate } from "../../types";
 import type { TaskWorkflowState } from "../../workflowTypes";
@@ -100,7 +100,7 @@ export function WorkflowSidebar({
 						>
 							{isAllDone ? "Undo Complete" : hasTaskContent ? "Publish" : "Mark Complete"}
 						</Button>
-						<Button appearance="subtle" aria-label="More" icon={<IconDots size={16} />} size="sm" style={{ height: 28, width: 28 }} />
+						<Button appearance="subtle" aria-label="More" icon={<IconEllipsisSolid size={16} />} size="sm" style={{ height: 28, width: 28 }} />
 					</Box>
 				</Box>
 
@@ -163,7 +163,7 @@ export function WorkflowSidebar({
 						</Box>
 					</Button>
 				</div>
-				<Button appearance="subtle" aria-label="Workflow menu" icon={<IconDots size={16} />} size="sm" style={{ height: 28, width: 28 }} />
+				<Button appearance="subtle" aria-label="Workflow menu" icon={<IconEllipsisSolid size={16} />} size="sm" style={{ height: 28, width: 28 }} />
 			</Box>
 
 			{isMenuOpen && (

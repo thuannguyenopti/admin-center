@@ -1,13 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { Box, Button, Tooltip } from "@optiaxiom/react";
+import { IconPenToSquare, IconPlus, IconAngleDown, IconAngleRight } from "@optiaxiom/icons";
 import { Text } from "../Text";
 import { Input } from "../Input";
 import { OpalHistoryItem } from "./OpalHistoryItem";
 import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
-import { IconSearch, IconPen, IconPlus, IconAngleDown, IconAngleRight, IconPenToSquare } from "@/app/lib/axiom-icons";
+import IconSearch from "@/app/assets/opal/icon-search.svg";
 import { opalTypography } from "@/app/styles/opalTypography";
-import { useState } from "react";
 
 type OpalHistorySidebarProps = {
   groupedHistory: { [key: string]: ChatHistoryItem[] };
@@ -19,6 +20,9 @@ type OpalHistorySidebarProps = {
   onDeleteChat: (id: string) => void;
   mode: 'docked' | 'popped-out';
   isVisible: boolean;
+  newChatLabel?: string;
+  onCreateInSection?: (sectionLabel: string) => void;
+  sectionAddTooltips?: Record<string, string>;
 };
 
 export function OpalHistorySidebar({
@@ -31,18 +35,19 @@ export function OpalHistorySidebar({
   onDeleteChat,
   mode,
   isVisible,
+  newChatLabel = 'New chat',
+  onCreateInSection,
+  sectionAddTooltips,
 }: OpalHistorySidebarProps) {
   const sidebarWidth = mode === 'docked' ? '272px' : '256px';
-  const imMode = typeof window !== 'undefined' && window.location.pathname.startsWith('/opal/im');
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
-
-  const toggleSection = (label: string) => {
-    setCollapsedSections(prev => {
+  const toggleSection = (label: string) =>
+    setCollapsedSections((prev) => {
       const next = new Set(prev);
-      next.has(label) ? next.delete(label) : next.add(label);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
       return next;
     });
-  };
 
   return (
     <Box
@@ -62,94 +67,93 @@ export function OpalHistorySidebar({
       }}
     >
       {/* Search and New Chat */}
-      <Box display="flex" flexDirection="row" gap="2" alignItems="center" justifyContent="space-between">
+      <Box display="flex" flexDirection="row" gap="8" alignItems="center">
         <Button
           appearance="subtle"
           size="md"
           aria-label="Search"
+          icon={<IconSearch />}
           style={{
             width: '32px',
             height: '32px',
             padding: 0,
-            borderRadius: '6px',
             minWidth: '32px',
             flexShrink: 0,
           }}
-        >
-          <IconSearch size={16} />
-        </Button>
-        
-        {imMode ? (
-          <Tooltip content="New Thread">
-            <Button
-              appearance="subtle"
-              size="md"
-              aria-label="New Thread"
-              onClick={onNewChat}
-              icon={<IconPenToSquare size={16} />}
-            />
-          </Tooltip>
-        ) : (
+        />
+
+        <Tooltip content={newChatLabel} delayDuration={300}>
           <Button
-            appearance="default"
-            size="md"
+            appearance="subtle"
+            size="sm"
             onClick={onNewChat}
-            icon={<IconPen size={16} />}
-            style={{ whiteSpace: 'nowrap' }}
-          >
-            New chat
-          </Button>
-        )}
+            icon={<IconPenToSquare />}
+            aria-label={newChatLabel}
+            style={{ marginLeft: 'auto', flexShrink: 0 }}
+          />
+        </Tooltip>
       </Box>
 
       {/* Chat History Groups */}
-      <Box display="flex" flexDirection="column" gap="16" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0, scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
+      <Box display="flex" flexDirection="column" gap="16" style={{ flex: 1, overflowY: 'auto', overflowX: 'clip', minHeight: 0, paddingRight: 2 }}>
         {Object.entries(groupedHistory).map(([dateLabel, items]) => {
           if (items.length === 0) return null;
           const isCollapsed = collapsedSections.has(dateLabel);
 
           return (
-            <Box key={dateLabel} display="flex" flexDirection="column" gap="4">
-              {/* Section header row */}
+            <Box key={dateLabel} display="flex" flexDirection="column" gap="8">
               <Box
                 display="flex"
                 alignItems="center"
-                style={{ gap: 2, marginLeft: '-4px' }}
+                justifyContent="space-between"
+                gap="8"
+                onClick={() => toggleSection(dateLabel)}
+                style={{ cursor: "pointer", userSelect: "none" }}
               >
-                <Button
-                  appearance="subtle"
-                  size="sm"
-                  icon={isCollapsed ? <IconAngleRight size={14} /> : <IconAngleDown size={14} />}
-                  aria-label={isCollapsed ? `Expand ${dateLabel}` : `Collapse ${dateLabel}`}
-                  onClick={() => toggleSection(dateLabel)}
-                  style={{ flexShrink: 0, padding: 0 }}
-                />
-                <Text
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    fontFamily: 'Inter, sans-serif',
-                    margin: 0,
-                    flex: 1,
-                    color: 'var(--opal-text-secondary)',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                  }}
-                  onClick={() => toggleSection(dateLabel)}
-                >
-                  {dateLabel}
-                </Text>
-                <Button
-                  appearance="subtle"
-                  size="sm"
-                  icon={<IconPlus size={14} />}
-                  aria-label={`Add ${dateLabel}`}
-                  style={{ flexShrink: 0, padding: 0 }}
-                />
+                <Box display="flex" alignItems="center" gap="4" style={{ minWidth: 0, flex: 1 }}>
+                  {isCollapsed ? (
+                    <IconAngleRight size={16} style={{ color: "var(--opal-text-secondary)", flexShrink: 0 }} />
+                  ) : (
+                    <IconAngleDown size={16} style={{ color: "var(--opal-text-secondary)", flexShrink: 0 }} />
+                  )}
+                  <Text
+                    style={{
+                      ...opalTypography.disclaimer,
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      margin: 0,
+                      color: 'var(--opal-text-secondary)',
+                    }}
+                  >
+                    {dateLabel}
+                  </Text>
+                </Box>
+                {onCreateInSection && (
+                  <Tooltip
+                    content={sectionAddTooltips?.[dateLabel] ?? `Add to ${dateLabel}`}
+                  >
+                    <Button
+                      appearance="subtle"
+                      size="sm"
+                      aria-label={sectionAddTooltips?.[dateLabel] ?? `Add to ${dateLabel}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCreateInSection(dateLabel);
+                      }}
+                      icon={<IconPlus size={14} />}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        minWidth: 20,
+                        padding: 0,
+                        color: 'var(--opal-text-secondary)',
+                      }}
+                    />
+                  </Tooltip>
+                )}
               </Box>
-              {/* Items — hidden when collapsed */}
               {!isCollapsed && (
-                <Box display="flex" flexDirection="column" gap="4">
+                <Box display="flex" flexDirection="column" gap="4" style={{ paddingLeft: 16 }}>
                   {items.map(item => (
                     <OpalHistoryItem
                       key={item.id}

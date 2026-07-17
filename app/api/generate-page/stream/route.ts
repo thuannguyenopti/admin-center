@@ -1106,32 +1106,31 @@ function populateElements(outline: PageOutline, contentData: ContentResult): Pag
 		if (numColumns === 1 || !sectionContent.listItems || sectionContent.listItems.length === 0) {
 			const elementIds: string[] = [];
 
-			// Heading - hero titles use "prominent", section headings use "default"
+			// Heading
 			if (sectionContent.heading) {
-				const headingTemplate = sectionType === "hero" ? "prominent" : "default";
-				elementIds.push(addElement(createHeadingElement(sectionContent.heading, sectionType === "hero" ? "h1" : "h2", headingTemplate)));
+				elementIds.push(addElement(createHeadingElement(sectionContent.heading, sectionType === "hero" ? "h1" : "h2")));
 			}
 
-			// Subheading - use "default" template
+			// Subheading
 			if (sectionContent.subheading) {
-				elementIds.push(addElement(createTextElement(sectionContent.subheading, "default")));
+				elementIds.push(addElement(createTextElement(sectionContent.subheading)));
 			}
 
-			// Paragraphs - handle both array and single string, use "default" template
+			// Paragraphs - handle both array and single string
 			if (sectionContent.paragraphs) {
 				if (Array.isArray(sectionContent.paragraphs)) {
 					sectionContent.paragraphs.forEach((para) => {
-						elementIds.push(addElement(createTextElement(para, "default")));
+						elementIds.push(addElement(createTextElement(para)));
 					});
 				} else if (typeof sectionContent.paragraphs === 'string') {
-					elementIds.push(addElement(createTextElement(sectionContent.paragraphs, "default")));
+					elementIds.push(addElement(createTextElement(sectionContent.paragraphs)));
 				}
 			}
 
-			// List items (if any) - titles use "subtle" for smaller cards/features
+			// List items (if any)
 			sectionContent.listItems?.forEach((item) => {
-				elementIds.push(addElement(createHeadingElement(item.title, "h3", "subtle")));
-				elementIds.push(addElement(createTextElement(item.description, "default")));
+				elementIds.push(addElement(createHeadingElement(item.title, "h3")));
+				elementIds.push(addElement(createTextElement(item.description)));
 			});
 
 			// Button
@@ -1152,23 +1151,22 @@ function populateElements(outline: PageOutline, contentData: ContentResult): Pag
 			// Multi-column with list items - distribute list items across columns
 			const sharedElementIds: string[] = [];
 
-			// Heading and subheading go in first column only - hero uses "prominent", section uses "default"
+			// Heading and subheading go in first column only
 			if (sectionContent.heading) {
-				const headingTemplate = sectionType === "hero" ? "prominent" : "default";
-				sharedElementIds.push(addElement(createHeadingElement(sectionContent.heading, sectionType === "hero" ? "h1" : "h2", headingTemplate)));
+				sharedElementIds.push(addElement(createHeadingElement(sectionContent.heading, sectionType === "hero" ? "h1" : "h2")));
 			}
 
 			if (sectionContent.subheading) {
-				sharedElementIds.push(addElement(createTextElement(sectionContent.subheading, "default")));
+				sharedElementIds.push(addElement(createTextElement(sectionContent.subheading)));
 			}
 
-			// Distribute list items across columns - card titles use "subtle"
+			// Distribute list items across columns
 			sectionContent.listItems.forEach((item, index) => {
 				const colIndex = index % numColumns;
 				const itemIds: string[] = [];
 
-				itemIds.push(addElement(createHeadingElement(item.title, "h3", "subtle")));
-				itemIds.push(addElement(createTextElement(item.description, "default")));
+				itemIds.push(addElement(createHeadingElement(item.title, "h3")));
+				itemIds.push(addElement(createTextElement(item.description)));
 
 				// Add to the appropriate column
 				if (!columns[colIndex].elements) {

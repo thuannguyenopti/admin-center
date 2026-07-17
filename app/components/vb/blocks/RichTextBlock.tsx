@@ -84,7 +84,7 @@ export const RichTextBlock = React.memo(function RichTextBlock({ properties, has
 
     return (
         <div
-            className={hasBgImage ? "text-stride-lg text-white/90 mb-6 max-w-2xl font-stride-sans" : "text-stride-base text-stride-dark/70 mb-4 font-stride-sans"}
+            className={hasBgImage ? "text-lg text-white/90 mb-6 max-w-2xl" : "text-base text-gray-600 mb-4"}
             dangerouslySetInnerHTML={{ __html: html }}
         />
     );

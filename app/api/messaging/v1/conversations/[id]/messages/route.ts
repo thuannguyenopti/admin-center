@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  addAgentReply,
   getCurrentUserId,
-  getCoSAutoReply,
   getUserProfiles,
   listMessages,
   sendMessage,
@@ -37,16 +35,5 @@ export async function POST(
     body.reply_to_id,
     body.attachments,
   );
-
-  // CoS interview auto-replies (all 3 variant convs)
-  const COS_CONV_IDS = new Set(["conv-vau-chief-of-staff", "conv-vau-cos-empathetic", "conv-vau-cos-analytic"]);
-  if (COS_CONV_IDS.has(id) && senderId !== "vau-chief-of-staff") {
-    const reply = getCoSAutoReply(body.content ?? "", id);
-    if (reply) {
-      await new Promise((r) => setTimeout(r, 300));
-      await addAgentReply(id, "vau-chief-of-staff", reply);
-    }
-  }
-
   return NextResponse.json(msg);
 }

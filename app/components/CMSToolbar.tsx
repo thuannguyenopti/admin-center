@@ -1,63 +1,65 @@
 "use client";
 
-import React from "react";
+import React, {useState, useEffect} from "react";
 import {
 	Box,
 	Text,
+	Button,
 	Badge,
 	Menu,
 	MenuTrigger,
 	MenuContent,
 	LabelMenuButton,
-	DropdownMenu,
-	DropdownMenuTrigger,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSub,
-	DropdownMenuSubTrigger,
-	DropdownMenuSubContent,
-	DropdownMenuSeparator,
-	DropdownMenuLabel,
+	Popover,
+	PopoverTrigger,
+	PopoverContent,
+	Radio,
+	RadioGroup,
+	Checkbox,
+	Separator,
+	Field,
+	Alert,
 	toaster,
 } from "@optiaxiom/react";
-import {Button} from "./Button";
+import type {MenuOption} from "@optiaxiom/react";
 import {
 	IconListTree,
 	IconFile,
 	IconCloud,
 	IconMessage,
-	IconDevices,
+	IconLaptopMobile,
 	IconChevronDown,
-	IconDots,
+	IconEllipsisSolid,
 	IconPlus,
 	IconGlobe,
 	IconGlobeFilled,
 	IconCalendarBolt,
-	IconSettings,
-	IconSend,
+	IconGear,
+	IconPaperPlaneTop as IconSend,
 	IconSend2,
 	IconSendOff,
 	IconWorld,
 	IconWorldOff,
 	IconWorldBolt,
-	IconWorldCheck,
-	IconCalendarCheck,
 	IconWorldX,
 	IconCalendarX,
 	IconTrash,
 	IconVersions,
 	IconStack2,
-	IconPencil,
+	IconPen,
 	IconArrowBackUp,
 	IconArrowForwardUp,
-	IconHistory,
+	IconClockRotateLeft,
 	IconRestore,
 	IconSparkles,
-	IconExternalLink,
-} from "@tabler/icons-react";
+	IconArrowUpRightFromSquare,
+	IconShieldPlus,
+	IconEye,
+	IconWorldCheck,
+	IconCalendarCheck,
+	IconClock,
+} from "@/app/lib/axiom-icons";
 import {PreviewSettings} from "./vb/PreviewSettings";
-import {group} from "console";
-import {sep} from "path";
 import {IconCalendar, IconPaperPlaneTop, IconTrashCan} from "@optimizely/axiom-icons";
 import Link from "next/link";
 import usePersistentState from "@/app/usePersistentState";
@@ -65,20 +67,29 @@ import {availableAgents, defaultOpalConfiguration} from "@/app/cms/settings/opal
 import {OpalConfiguration} from "@/app/cms/settings/opal-actions/types";
 import {getLocationMenu, getEnabledGroups} from "@/app/cms/settings/opal-actions/helpers";
 import {useBrandTone} from "@/app/components/ai/BrandToneProvider";
+import {DEFAULT_REVIEWERS} from "@/app/cms/data/approval-workflow";
 import {useLayout} from "@/app/context/LayoutContext";
 import {usePreflightContext} from "@/app/components/ai/PreflightContext";
 import type {PageField} from "@/app/components/ai/PreflightAuditTypes";
-import ContentConnectionMenuItems from "./ContentConnectionMenuItems";
-import TaskAssignmentMenu from "./TaskAssignmentMenu";
-import { initialCmpTasks, type CmpTask } from "@/app/db/cmpInitialData";
+import {contentConnectionMenuOptions} from "./ContentConnectionMenuItems";
+import {taskAssignmentMenuOptions} from "./TaskAssignmentMenu";
+import {initialCmpTasks, type CmpTask} from "@/app/db/cmpInitialData";
+import {IconShip} from "@/vendor/axiom-icons/dist";
 
 interface CMSToolbarProps {
 	pageName?: string;
 	pageId?: string;
 	lastSaved?: Date | null;
 	pageStatus?: string;
-	onPublish?: () => void;
+	onPublishConfirm?: (options: { scheduledAt: string | null; runPreflight: boolean }) => void;
+	onUnpublish?: () => void;
 	onViewOnWebsite?: () => void;
+	preflightStatus?: "idle" | "running" | "done" | null;
+	preflightRanRecently?: boolean;
+	scheduledDate?: string;
+	onCancelSchedule?: () => void;
+	lastPublishedAt?: string | null;
+	lastPublishedBy?: string | null;
 
 	languageOptions?: Array<{label: string; value: string}>;
 	variationOptions?: Array<{label: string; value: string}>;
@@ -117,6 +128,7 @@ interface CMSToolbarProps {
 	onAddToTask?: (taskId: string, taskName: string) => void;
 	onRemoveFromTask?: () => void;
 	currentTaskId?: string | null;
+	onSyncContent?: () => void;
 }
 
 const getStatusIntent = (
@@ -142,12 +154,377 @@ const getStatusIntent = (
 	}
 };
 
+function MenuRow({icon, label, onClick, intent}: {icon: React.ReactNode; label: string; onClick?: () => void; intent?: "danger"}) {
+	const [hovered, setHovered] = useState(false);
+	return (
+		<Box
+			display="flex"
+			alignItems="center"
+			gap="8"
+			px="8"
+			py="6"
+			rounded="md"
+			onClick={onClick}
+			onMouseEnter={() => setHovered(true)}
+			onMouseLeave={() => setHovered(false)}
+			style={{
+				cursor: "pointer",
+				background: hovered ? "var(--ax-colors-bg-secondary)" : "transparent",
+				transition: "background 0.1s",
+			}}
+		>
+			<Box style={{flexShrink: 0, color: intent === "danger" ? "var(--ax-colors-fg-error)" : "var(--ax-colors-fg-tertiary)"}}>
+				{icon}
+			</Box>
+			<Text fontSize="sm" color={intent === "danger" ? "fg.error" : "fg.default"}>{label}</Text>
+		</Box>
+	);
+}
+
+function PublishDropdown({
+	onConfirm,
+	onViewOnWebsite,
+	preflightRanRecently = false,
+	preflightStatus,
+	lastPublishedAt,
+	lastPublishedBy,
+}: {
+	onConfirm?: (options: { scheduledAt: string | null; runPreflight: boolean }) => void;
+	onViewOnWebsite?: () => void;
+	preflightRanRecently?: boolean;
+	preflightStatus?: "idle" | "running" | "done" | null;
+	lastPublishedAt?: string | null;
+	lastPublishedBy?: string | null;
+}) {
+	const [open, setOpen] = useState(false);
+	const [timing, setTiming] = useState<"now" | "schedule">("now");
+	const [scheduledAt, setScheduledAt] = useState("");
+	const [runPreflight, setRunPreflight] = useState(!preflightRanRecently);
+
+	useEffect(() => {
+		if (open) {
+			setRunPreflight(!preflightRanRecently);
+			setTiming("now");
+			setScheduledAt("");
+		}
+	}, [open, preflightRanRecently]);
+
+	const handleConfirm = () => {
+		onConfirm?.({
+			scheduledAt: timing === "schedule" && scheduledAt ? scheduledAt : null,
+			runPreflight,
+		});
+		setOpen(false);
+	};
+
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger
+				size="lg"
+				appearance={preflightStatus === "running" ? "default" : "primary"}
+				disabled={preflightStatus === "running"}
+			>
+				{preflightStatus === "running" ? "Preflight..." : "Publish"}
+			</PopoverTrigger>
+			<PopoverContent style={{width: 320}}>
+				<Box display="flex" flexDirection="column" p="4">
+					{/* Section 1: Info */}
+					<Box display="flex" flexDirection="column" gap="4" py="8">
+						<Text fontSize="md" fontWeight="600" color="fg.default">Publish</Text>
+						{lastPublishedAt && (
+							<Text fontSize="xs" color="fg.tertiary">
+								Last published {lastPublishedAt}{lastPublishedBy ? ` by ${lastPublishedBy}` : ""}
+							</Text>
+						)}
+						{onViewOnWebsite && lastPublishedAt && (
+							<MenuRow icon={<IconArrowUpRightFromSquare size={16} />} label="View on website" onClick={onViewOnWebsite} />
+						)}
+					</Box>
+					<Separator />
+
+					{/* Section 2: Preflight & schedule */}
+					<Box display="flex" flexDirection="column" gap="12" py="12">
+						<Box display="flex" alignItems="start" gap="8">
+							<Checkbox
+								checked={runPreflight}
+								onCheckedChange={(checked) => setRunPreflight(!!checked)}
+							/>
+							<Box
+								display="flex"
+								flexDirection="column"
+								gap="2"
+								style={{cursor: "pointer"}}
+								onClick={() => setRunPreflight(!runPreflight)}
+							>
+								<Text fontSize="md" fontWeight="500" color="fg.default">
+									Run preflight review
+								</Text>
+								<Text fontSize="sm" color="fg.tertiary">
+									{preflightRanRecently
+										? "Preflight completed recently."
+										: "VTs will review SEO, brand, and legal compliance."}
+								</Text>
+							</Box>
+						</Box>
+
+						{runPreflight && (
+							<Box display="flex" flexDirection="column" gap="4" ml="32">
+								{DEFAULT_REVIEWERS.map((r) => (
+									<Box key={r.vtId} display="flex" alignItems="center" gap="8">
+										<Box
+											style={{
+												width: 20,
+												height: 20,
+												borderRadius: "50%",
+												overflow: "hidden",
+												background: r.vtAvatarBg,
+												flexShrink: 0,
+											}}
+										>
+											<img src={r.vtAvatar} alt={r.vtName} width={20} height={20} style={{display: "block"}} />
+										</Box>
+										<Text fontSize="sm" color="fg.secondary">{r.vtName}</Text>
+										<IconSparkles style={{width: 10, height: 10, color: "var(--ax-colors-fg-tertiary)"}} />
+										<Text fontSize="sm" color="fg.tertiary">{r.role}</Text>
+									</Box>
+								))}
+							</Box>
+						)}
+
+						{!runPreflight && (
+							<>
+								<Separator />
+								<RadioGroup
+									value={timing}
+									onValueChange={(v) => setTiming(v as "now" | "schedule")}
+									name="publish-timing"
+								>
+									<Radio value="now">Now</Radio>
+									<Radio value="schedule">Schedule</Radio>
+								</RadioGroup>
+
+								{timing === "schedule" && (
+									<Field label="Date and time">
+										<input
+											type="datetime-local"
+											value={scheduledAt}
+											onChange={(e) => setScheduledAt(e.target.value)}
+											style={{
+												width: "100%",
+												padding: "8px 12px",
+												borderRadius: 8,
+												border: "1px solid var(--ax-colors-border-default)",
+												background: "var(--ax-colors-bg-default)",
+												color: "var(--ax-colors-fg-default)",
+												fontSize: 14,
+											}}
+										/>
+									</Field>
+								)}
+							</>
+						)}
+					</Box>
+
+					{/* Section 3: CTA */}
+					<Separator />
+					<Box display="flex" justifyContent="end" gap="8" pt="12">
+						<Button appearance="subtle" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
+						<Button appearance="primary" size="sm" onClick={handleConfirm}>
+							{runPreflight ? "Confirm" : timing === "schedule" ? "Schedule Publish" : "Publish"}
+						</Button>
+					</Box>
+				</Box>
+			</PopoverContent>
+		</Popover>
+	);
+}
+
+function UnpublishDropdown({
+	lastPublishedAt,
+	lastPublishedBy,
+	onViewOnWebsite,
+	onUnpublish,
+}: {
+	lastPublishedAt?: string | null;
+	lastPublishedBy?: string | null;
+	onViewOnWebsite?: () => void;
+	onUnpublish?: () => void;
+}) {
+	const [open, setOpen] = useState(false);
+	const [timing, setTiming] = useState<"now" | "schedule">("now");
+	const [scheduledAt, setScheduledAt] = useState("");
+
+	useEffect(() => {
+		if (open) {
+			setTiming("now");
+			setScheduledAt("");
+		}
+	}, [open]);
+
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger size="lg" appearance="default">
+				Published
+			</PopoverTrigger>
+			<PopoverContent style={{width: 300}}>
+				<Box display="flex" flexDirection="column" p="4">
+					{/* Section 1: Info */}
+					<Box display="flex" flexDirection="column" gap="4" py="8">
+						<Text fontSize="md" fontWeight="600" color="fg.default">Unpublish</Text>
+						{lastPublishedAt && (
+							<Text fontSize="xs" color="fg.tertiary">
+								Published {lastPublishedAt}{lastPublishedBy ? ` by ${lastPublishedBy}` : ""}
+							</Text>
+						)}
+						{onViewOnWebsite && (
+							<MenuRow icon={<IconArrowUpRightFromSquare size={16} />} label="View on website" onClick={onViewOnWebsite} />
+						)}
+					</Box>
+					<Separator />
+
+					{/* Section 2: Schedule */}
+					<Box display="flex" flexDirection="column" gap="12" py="12">
+						<RadioGroup
+							value={timing}
+							onValueChange={(v) => setTiming(v as "now" | "schedule")}
+							name="unpublish-timing"
+						>
+							<Radio value="now">Now</Radio>
+							<Radio value="schedule">Schedule</Radio>
+						</RadioGroup>
+
+						{timing === "schedule" && (
+							<Field label="Date and time">
+								<input
+									type="datetime-local"
+									value={scheduledAt}
+									onChange={(e) => setScheduledAt(e.target.value)}
+									style={{
+										width: "100%",
+										padding: "8px 12px",
+										borderRadius: 8,
+										border: "1px solid var(--ax-colors-border-default)",
+										background: "var(--ax-colors-bg-default)",
+										color: "var(--ax-colors-fg-default)",
+										fontSize: 14,
+									}}
+								/>
+							</Field>
+						)}
+					</Box>
+
+					{/* Section 3: CTA */}
+					<Separator />
+					<Box display="flex" justifyContent="end" gap="8" pt="12">
+						<Button appearance="subtle" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
+						<Button appearance="danger" size="sm" onClick={() => { onUnpublish?.(); setOpen(false); }}>{timing === "schedule" ? "Schedule Unpublish" : "Unpublish"}</Button>
+					</Box>
+				</Box>
+			</PopoverContent>
+		</Popover>
+	);
+}
+
+function ScheduledDropdown({
+	scheduledDate,
+	onCancelSchedule,
+	onPublishNow,
+	onReschedule,
+}: {
+	scheduledDate: string;
+	onCancelSchedule?: () => void;
+	onPublishNow?: () => void;
+	onReschedule?: (date: string) => void;
+}) {
+	const [open, setOpen] = useState(false);
+	const [mode, setMode] = useState<"main" | "reschedule">("main");
+	const [newDate, setNewDate] = useState(scheduledDate);
+
+	useEffect(() => {
+		if (open) {
+			setMode("main");
+			setNewDate(scheduledDate);
+		}
+	}, [open, scheduledDate]);
+
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger size="lg" appearance="default">
+				Scheduled
+			</PopoverTrigger>
+			<PopoverContent style={{width: 300}}>
+				<Box display="flex" flexDirection="column" p="4">
+					{/* Section 1: Schedule info */}
+					<Box display="flex" flexDirection="column" gap="4" py="8">
+						<Text fontSize="md" fontWeight="600" color="fg.default">Scheduled</Text>
+						<Text fontSize="xs" color="fg.tertiary">
+							Publishing on {new Date(scheduledDate).toLocaleString()}
+						</Text>
+					</Box>
+					<Separator />
+
+					{mode === "main" ? (
+						<>
+							{/* Section 2: Options */}
+							<Box display="flex" flexDirection="column" gap="2" py="8">
+								<MenuRow icon={<IconWorldCheck size={16} />} label="Publish now" onClick={() => { onPublishNow?.(); setOpen(false); }} />
+								<MenuRow icon={<IconClock size={16} />} label="Reschedule" onClick={() => setMode("reschedule")} />
+							</Box>
+							<Separator />
+
+							{/* Section 3: CTA */}
+							<Box py="8">
+								<MenuRow icon={<IconCalendarX size={16} />} label="Cancel schedule" onClick={() => { onCancelSchedule?.(); setOpen(false); }} intent="danger" />
+							</Box>
+						</>
+					) : (
+						<>
+							{/* Reschedule mode */}
+							<Box display="flex" flexDirection="column" gap="12" py="12">
+								<Field label="New date and time">
+									<input
+										type="datetime-local"
+										value={newDate}
+										onChange={(e) => setNewDate(e.target.value)}
+										style={{
+											width: "100%",
+											padding: "8px 12px",
+											borderRadius: 8,
+											border: "1px solid var(--ax-colors-border-default)",
+											background: "var(--ax-colors-bg-default)",
+											color: "var(--ax-colors-fg-default)",
+											fontSize: 14,
+										}}
+									/>
+								</Field>
+							</Box>
+							<Separator />
+							<Box display="flex" justifyContent="end" gap="8" pt="12">
+								<Button appearance="subtle" size="sm" onClick={() => setMode("main")}>Back</Button>
+								<Button
+									appearance="primary"
+									size="sm"
+									onClick={() => { onReschedule?.(newDate); setOpen(false); }}
+									disabled={!newDate}
+								>
+									Reschedule
+								</Button>
+							</Box>
+						</>
+					)}
+				</Box>
+			</PopoverContent>
+		</Popover>
+	);
+}
+
 export default function CMSToolbar({
 	pageName = "New Page",
 	pageId,
 	lastSaved = null,
 	pageStatus = "Draft",
-	onPublish = () => {},
+	onPublishConfirm,
+	onUnpublish,
 	onViewOnWebsite,
 
 	languageOptions = [
@@ -175,7 +552,7 @@ export default function CMSToolbar({
 	onRevert,
 	onShowVersionHistory,
 
-	preview = {mode: "responsive", width: 1100, maxWidth: 1100},
+	preview = {mode: "scale", width: 1440},
 	onPreviewChange = () => {},
 
 	contentTypeIcon,
@@ -190,6 +567,12 @@ export default function CMSToolbar({
 	onAddToTask,
 	onRemoveFromTask,
 	currentTaskId = null,
+	preflightStatus = null,
+	preflightRanRecently = false,
+	scheduledDate,
+	onCancelSchedule,
+	lastPublishedAt = null,
+	lastPublishedBy = null,
 }: CMSToolbarProps) {
 	const currentLanguage = languageOptions.find((opt) => opt.value === selectedLanguage);
 	const currentVariation = variationOptions.find((opt) => opt.value === selectedVariation);
@@ -205,15 +588,12 @@ export default function CMSToolbar({
 		{
 			label: "Responsive (reflow)",
 			execute: () => onPreviewChange({mode: "responsive", maxWidth: 1100}),
+			selected: preview.mode === "responsive",
 		},
-		{label: "Desktop 1440", execute: () => onPreviewChange({mode: "fixed", width: 1440})},
-		{label: "Desktop 1100", execute: () => onPreviewChange({mode: "fixed", width: 1100})},
-		{label: "Tablet 768", execute: () => onPreviewChange({mode: "fixed", width: 768})},
-		{label: "Mobile 390", execute: () => onPreviewChange({mode: "fixed", width: 390})},
-		{
-			label: "Scale to fit (1100)",
-			execute: () => onPreviewChange({mode: "scale", width: 1100}),
-		},
+		{label: "Desktop 1440", execute: () => onPreviewChange({mode: "scale", width: 1440}), selected: preview.mode === "scale" && preview.width === 1440},
+		{label: "Desktop 1100", execute: () => onPreviewChange({mode: "scale", width: 1100}), selected: preview.mode === "scale" && preview.width === 1100},
+		{label: "Tablet 768", execute: () => onPreviewChange({mode: "scale", width: 768}), selected: preview.mode === "scale" && preview.width === 768},
+		{label: "Mobile 390", execute: () => onPreviewChange({mode: "scale", width: 390}), selected: preview.mode === "scale" && preview.width === 390},
 	];
 
 	const isVariation = selectedVariation !== "original";
@@ -224,7 +604,7 @@ export default function CMSToolbar({
 	// Get enabled Opal Actions for Improve button and context menu
 	const [opalConfig] = usePersistentState("opal-config", defaultOpalConfiguration) as [
 		OpalConfiguration,
-		any
+		any,
 	];
 	const {analyzePage} = useBrandTone();
 	const {opalPanelControls} = useLayout();
@@ -242,7 +622,13 @@ export default function CMSToolbar({
 			return [];
 		}
 
-		const fields: Array<{fieldId: string; fieldLabel: string; text: string; src?: string; alt?: string}> = [];
+		const fields: Array<{
+			fieldId: string;
+			fieldLabel: string;
+			text: string;
+			src?: string;
+			alt?: string;
+		}> = [];
 
 		Object.entries(pageElements).forEach(([elementId, element]) => {
 			// Extract text from various property types
@@ -261,10 +647,14 @@ export default function CMSToolbar({
 			// Common text properties
 			else if (element.properties.text?.value) {
 				text = element.properties.text.value;
-				label = element.type === "heading" ? "Heading" :
-				        element.type === "text" ? "Text" :
-				        element.type === "button" ? "Button" :
-				        element.type;
+				label =
+					element.type === "heading"
+						? "Heading"
+						: element.type === "text"
+							? "Text"
+							: element.type === "button"
+								? "Button"
+								: element.type;
 			} else if (element.properties.content?.value) {
 				text = element.properties.content.value;
 			} else if (element.properties.label?.value) {
@@ -322,19 +712,23 @@ export default function CMSToolbar({
 		const fields = getPageFields();
 
 		if (fields.length === 0) {
-			toaster.create("No text content found on the page", { intent: "warning" });
+			toaster.create("No text content found on the page", {intent: "warning"});
 			return;
 		}
 
 		// Create field-to-element mapping (fieldId is already the elementId)
 		const fieldToElementMap: Record<string, string> = {};
-		fields.forEach(field => {
+		fields.forEach((field) => {
 			fieldToElementMap[field.fieldId] = field.fieldId;
 		});
 
 		console.log("[CMSToolbar] Brand tone analysis:", {
 			fieldsCount: fields.length,
-			fields: fields.map(f => ({ id: f.fieldId, label: f.fieldLabel, textLength: f.text.length })),
+			fields: fields.map((f) => ({
+				id: f.fieldId,
+				label: f.fieldLabel,
+				textLength: f.text.length,
+			})),
 			mapping: fieldToElementMap,
 		});
 
@@ -481,6 +875,13 @@ export default function CMSToolbar({
 		<Box
 			w="full"
 			gridColumn="2"
+			display="flex"
+			flexDirection="column"
+			borderB="1"
+			borderColor="border.tertiary"
+		>
+		<Box
+			w="full"
 			pl="24"
 			pr="12"
 			py="12"
@@ -490,8 +891,6 @@ export default function CMSToolbar({
 			justifyContent="space-between"
 			style={{minHeight: "64px"}}
 			bg="bg.default"
-			borderB="1"
-			borderColor="border.tertiary"
 		>
 			{/* Left Section */}
 			<Box display="flex" alignItems="center" gap="16">
@@ -541,7 +940,7 @@ export default function CMSToolbar({
 						},
 						{
 							label: "Version history",
-							addon: <IconHistory size={16} />,
+							addon: <IconClockRotateLeft size={16} />,
 							execute: onShowVersionHistory || (() => {}),
 							group: {label: "history", hidden: true, separator: true},
 						},
@@ -556,7 +955,7 @@ export default function CMSToolbar({
 							rounded="sm"
 							px="4"
 							py="2"
-							className="hover:bg-[var(--ax-bg-default-hover)] transition-colors"
+							className="hover:bg-[var(--ax-colors-bg-default-hovered)] transition-colors"
 						>
 							<IconCloud size={14} style={{opacity: 0.5}} />
 							<Text fontSize="sm" color="fg.tertiary">
@@ -613,116 +1012,36 @@ export default function CMSToolbar({
 				</Menu>
 
 				<Button
+					size="lg"
 					appearance="default"
-					icon={<IconMessage size={16} />}
+					icon={<IconMessage />}
 					aria-label="Comments"
 				/>
 
-				{/* ✅ Preview Button -> Menu */}
+				{/* Preview Button */}
 				<Menu options={previewOptions}>
-					<MenuTrigger asChild>
-						<LabelMenuButton label="Preview">{previewLabel}</LabelMenuButton>
-					</MenuTrigger>
+					<MenuTrigger
+						appearance="default"
+						icon={<IconEye />}
+						size="lg"
+						aria-label="Preview"
+					/>
 					<MenuContent />
 				</Menu>
 
 				{/* Improve Button with Opal Actions */}
-				{improveGroups.length > 0 && (() => {
-					const totalAgents = improveGroups.reduce((sum, g) => sum + g.agents.length, 0);
-					const hasMultipleGroups = improveGroups.length > 1;
-					const useSubmenus = totalAgents > 5 && hasMultipleGroups;
-
-					if (useSubmenus) {
-						// Use dropdown with submenus (like context menu)
-						return (
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button
-										appearance="default"
-										icon={<IconChevronDown size={12} />}
-										iconPosition="end"
-									>
-										<Box display="flex" alignItems="center" gap="4">
-											<IconSparkles size={16} />
-											Improve
-										</Box>
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent>
-									{improveGroups.map((group) => {
-										// If group has multiple agents, create nested submenu
-										if (group.agents.length > 1) {
-											return (
-												<DropdownMenuSub key={group.id}>
-													<DropdownMenuSubTrigger>
-														{group.name}
-													</DropdownMenuSubTrigger>
-													<DropdownMenuSubContent>
-														{group.agents.map((groupAgent) => {
-															const agent = availableAgents.find(
-																(a) => a.id === groupAgent.id
-															);
-															return (
-																<DropdownMenuItem
-																	key={groupAgent.id}
-																	onSelect={() => {
-																		if (groupAgent.id === "preflight-audit") {
-																			handlePreflightAudit();
-																		} else if (groupAgent.id === "brand-tone-audit") {
-																			handleBrandToneAnalysis();
-																		} else {
-																			console.log(
-																				"Execute Opal Action:",
-																				group.name,
-																				"- Agent:",
-																				agent?.name
-																			);
-																		}
-																	}}
-																>
-																	{agent?.name || groupAgent.id}
-																</DropdownMenuItem>
-															);
-														})}
-													</DropdownMenuSubContent>
-												</DropdownMenuSub>
-											);
-										}
-										// Single agent, just show the group name
-										const singleAgent = group.agents[0];
-										return (
-											<DropdownMenuItem
-												key={group.id}
-												onSelect={() => {
-													if (singleAgent.id === "preflight-audit") {
-														handlePreflightAudit();
-													} else if (singleAgent.id === "brand-tone-audit") {
-														handleBrandToneAnalysis();
-													} else {
-														console.log("Execute Opal Action:", group.name);
-													}
-												}}
-											>
-												{group.name}
-											</DropdownMenuItem>
+				{improveGroups.length > 0 && (
+					<Menu
+						options={improveGroups.map((group): MenuOption => {
+							if (group.agents.length > 1) {
+								return {
+									label: group.name,
+									subOptions: group.agents.map((groupAgent) => {
+										const agent = availableAgents.find(
+											(a) => a.id === groupAgent.id
 										);
-									})}
-								</DropdownMenuContent>
-							</DropdownMenu>
-						);
-					}
-
-					// Use flat menu with groups
-					return (
-						<Menu
-							options={improveGroups.flatMap((group) => {
-								// If group has multiple agents, create submenu items
-								if (group.agents.length > 1) {
-									return group.agents.map((groupAgent, index) => {
-										const agent = availableAgents.find((a) => a.id === groupAgent.id);
 										return {
 											label: agent?.name || groupAgent.id,
-											group: {label: group.name, hidden: index > 0},
 											execute: () => {
 												if (groupAgent.id === "preflight-audit") {
 													handlePreflightAudit();
@@ -738,232 +1057,196 @@ export default function CMSToolbar({
 												}
 											},
 										};
-									});
-								}
-								// Single agent, just show the group name
-								const singleAgent = group.agents[0];
-								return [
-									{
-										label: group.name,
-										execute: () => {
-											if (singleAgent.id === "preflight-audit") {
-												handlePreflightAudit();
-											} else if (singleAgent.id === "brand-tone-audit") {
-												handleBrandToneAnalysis();
-											} else {
-												console.log("Execute Opal Action:", group.name);
-											}
-										},
-									},
-								];
-							})}
-						>
-							<MenuTrigger asChild>
-								<Button
-									appearance="default"
-									icon={<IconChevronDown size={12} />}
-									iconPosition="end"
-								>
-									<Box display="flex" alignItems="center" gap="4">
-										<IconSparkles size={16} />
-										Improve
-									</Box>
-								</Button>
-							</MenuTrigger>
-							<MenuContent />
-						</Menu>
-					);
-				})()}
+									}),
+								};
+							}
+							const singleAgent = group.agents[0];
+							return {
+								label: group.name,
+								execute: () => {
+									if (singleAgent.id === "preflight-audit") {
+										handlePreflightAudit();
+									} else if (singleAgent.id === "brand-tone-audit") {
+										handleBrandToneAnalysis();
+									} else {
+										console.log("Execute Opal Action:", group.name);
+									}
+								},
+							};
+						})}
+					>
+						<MenuTrigger
+							appearance="default"
+							icon={<IconSparkles />}
+							size="lg"
+							aria-label="Improve"
+						/>
+						<MenuContent />
+					</Menu>
+				)}
 
-				{/* Publish Button with Menu */}
+				{/* Publish / Unpublish / Scheduled */}
+				{pageStatus === "Published" ? (
+					<UnpublishDropdown
+						lastPublishedAt={lastPublishedAt}
+						lastPublishedBy={lastPublishedBy}
+						onViewOnWebsite={onViewOnWebsite}
+						onUnpublish={onUnpublish}
+					/>
+				) : pageStatus === "Scheduled" && scheduledDate ? (
+					<ScheduledDropdown
+						scheduledDate={scheduledDate}
+						onCancelSchedule={onCancelSchedule}
+						onPublishNow={onPublishConfirm ? () => onPublishConfirm({scheduledAt: null, runPreflight: false}) : undefined}
+						onReschedule={onPublishConfirm ? (date) => onPublishConfirm({scheduledAt: date, runPreflight: false}) : undefined}
+					/>
+				) : (
+					<PublishDropdown
+						onConfirm={onPublishConfirm}
+						onViewOnWebsite={onViewOnWebsite}
+						preflightRanRecently={preflightRanRecently}
+						preflightStatus={preflightStatus}
+						lastPublishedAt={lastPublishedAt}
+						lastPublishedBy={lastPublishedBy}
+					/>
+				)}
+
+				{/* Options */}
 				<Menu
 					options={[
-						...(pageStatus === "Changed" || pageStatus === "Draft"
+						...(contextMenuGroups.length > 0
 							? [
 									{
-										label: "Publish now",
-										addon: <IconWorldCheck size={16} />,
-										execute: onPublish,
-										group: {label: "publish", hidden: true, separator: true},
-									},
+										label: "Opal",
+										addon: <IconSparkles size={16} />,
+										subOptions: contextMenuGroups.map((group): MenuOption => {
+											if (group.agents.length > 1) {
+												return {
+													label: group.name,
+													subOptions: group.agents.map((groupAgent) => {
+														const agent = availableAgents.find(
+															(a) => a.id === groupAgent.id
+														);
+														return {
+															label: agent?.name || groupAgent.id,
+															execute: () => {
+																if (
+																	groupAgent.id ===
+																	"brand-tone-audit"
+																) {
+																	handleBrandToneAnalysis();
+																} else {
+																	console.log(
+																		"Execute Opal Action:",
+																		group.name,
+																		"- Agent:",
+																		agent?.name
+																	);
+																}
+															},
+														};
+													}),
+												};
+											}
+											const singleAgent = group.agents[0];
+											return {
+												label: group.name,
+												execute: () => {
+													if (singleAgent.id === "brand-tone-audit") {
+														handleBrandToneAnalysis();
+													} else {
+														console.log(
+															"Execute Opal Action:",
+															group.name
+														);
+													}
+												},
+											};
+										}),
+									} satisfies MenuOption,
+								]
+							: []),
+						...contentConnectionMenuOptions({
+							onConnectContent,
+							onDisconnectContent,
+							hasConnection,
+							compatibleInstancesCount,
+						}),
+						...(onViewOnWebsite
+							? [
 									{
-										label: "Schedule publish",
-										addon: <IconCalendarCheck size={16} />,
-										execute: () => {},
-										group: {label: "publish", hidden: true, separator: true},
-									},
+										label: "View on website",
+										addon: <IconWorld size={16} />,
+										detail: <IconArrowUpRightFromSquare size={16} />,
+										execute: onViewOnWebsite,
+										group: {label: "Page", separator: true},
+									} satisfies MenuOption,
 								]
 							: []),
 						{
-							label: "Unpublish",
-							addon: <IconWorldX size={16} />,
-							execute: () => {},
+							label: "Rename",
+							addon: <IconPen size={16} />,
+							execute: onRenamePage,
+							group: {label: "Page", separator: true},
 						},
+						...(onAddToTask
+							? taskAssignmentMenuOptions({
+									currentTaskId,
+									tasks: cmpTasks,
+									onAddToTask,
+									onRemoveFromTask,
+								})
+							: []),
 						{
-							label: "Schedule Unpublish",
-							addon: <IconCalendarX size={16} />,
-							execute: () => {},
+							label: "Move to trash",
+							addon: <IconTrash size={16} />,
+							intent: "danger",
+							execute: onTrash,
+							group: {label: "Page", separator: true},
 						},
+						...(isVariation
+							? [
+									{
+										label: "Rename Variation",
+										addon: <IconStack2 size={16} />,
+										execute: onRenameVariation,
+										group: {label: "Variation", separator: true},
+									} satisfies MenuOption,
+									{
+										label: "Delete Variation",
+										addon: <IconTrash size={16} />,
+										intent: "danger",
+										execute: onDeleteVariationRequest,
+										group: {label: "Variation", separator: true},
+									} satisfies MenuOption,
+								]
+							: []),
 					]}
 				>
-					<MenuTrigger asChild>
-						<Button
-							appearance={pageStatus === "Published" ? "default" : "primary"}
-							icon={<IconChevronDown size={12} />}
-							iconPosition="end"
-						>
-							{pageStatus === "Published" ? "Published" : "Publish"}
-						</Button>
-					</MenuTrigger>
-					<MenuContent />
-				</Menu>
-
-				{/* Options */}
-				<DropdownMenu>
-					<DropdownMenuTrigger
+					<MenuTrigger
 						aria-label={"Status " + pageStatus}
 						size="lg"
-						icon={<IconDots size={16} />}
+						icon={<IconEllipsisSolid size={16} />}
 					/>
-					<DropdownMenuContent>
-						{/* Opal Actions Submenu */}
-						{contextMenuGroups.length > 0 && (
-							<>
-								<DropdownMenuSub>
-									<DropdownMenuSubTrigger>
-										<Box display="flex" alignItems="center" gap="8">
-											<IconSparkles size={16} />
-											Opal
-										</Box>
-									</DropdownMenuSubTrigger>
-									<DropdownMenuSubContent>
-										{contextMenuGroups.map((group) => {
-											// If group has multiple agents, create nested submenu
-											if (group.agents.length > 1) {
-												return (
-													<DropdownMenuSub key={group.id}>
-														<DropdownMenuSubTrigger>
-															{group.name}
-														</DropdownMenuSubTrigger>
-														<DropdownMenuSubContent>
-															{group.agents.map((groupAgent) => {
-																const agent = availableAgents.find(
-																	(a) => a.id === groupAgent.id
-																);
-																return (
-																	<DropdownMenuItem
-																		key={groupAgent.id}
-																		onSelect={() => {
-																			if (groupAgent.id === "brand-tone-audit") {
-																				handleBrandToneAnalysis();
-																			} else {
-																				console.log(
-																					"Execute Opal Action:",
-																					group.name,
-																					"- Agent:",
-																					agent?.name
-																				);
-																			}
-																		}}
-																	>
-																		{agent?.name || groupAgent.id}
-																	</DropdownMenuItem>
-																);
-															})}
-														</DropdownMenuSubContent>
-													</DropdownMenuSub>
-												);
-											}
-											// Single agent, just show the group name
-											const singleAgent = group.agents[0];
-											return (
-												<DropdownMenuItem
-													key={group.id}
-													onSelect={() => {
-														if (singleAgent.id === "brand-tone-audit") {
-															handleBrandToneAnalysis();
-														} else {
-															console.log("Execute Opal Action:", group.name);
-														}
-													}}
-												>
-													{group.name}
-												</DropdownMenuItem>
-											);
-										})}
-									</DropdownMenuSubContent>
-								</DropdownMenuSub>
-								<DropdownMenuSeparator />
-							</>
-						)}
-
-						{/* Content Connection (CMP Integration) */}
-						<ContentConnectionMenuItems
-							onConnectContent={onConnectContent}
-							onDisconnectContent={onDisconnectContent}
-							hasConnection={hasConnection}
-							compatibleInstancesCount={compatibleInstancesCount}
-						/>
-
-						{/* Page Actions */}
-						<DropdownMenuLabel>Page</DropdownMenuLabel>
-						{onViewOnWebsite && (
-							<DropdownMenuItem onSelect={onViewOnWebsite}>
-								<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
-									<Box display="flex" alignItems="center" gap="8">
-										<IconWorld size={16} />
-										<Text>View on website</Text>
-									</Box>
-									<IconExternalLink size={16} />
-								</Box>
-							</DropdownMenuItem>
-						)}
-						<DropdownMenuItem onSelect={onRenamePage}>
-							<Box display="flex" alignItems="center" gap="8">
-								<IconPencil size={16} />
-								Rename
-							</Box>
-						</DropdownMenuItem>
-
-						{/* Add to Task / Remove from Task */}
-						{onAddToTask && (
-							<TaskAssignmentMenu
-								currentTaskId={currentTaskId}
-								tasks={cmpTasks}
-								onAddToTask={onAddToTask}
-								onRemoveFromTask={onRemoveFromTask}
-							/>
-						)}
-
-						<DropdownMenuItem intent="danger" onSelect={onTrash}>
-							<Box display="flex" alignItems="center" gap="8">
-								<IconTrash size={16} />
-								Move to trash
-							</Box>
-						</DropdownMenuItem>
-
-						{/* Variation Actions */}
-						{isVariation && (
-							<>
-								<DropdownMenuSeparator />
-								<DropdownMenuLabel>Variation</DropdownMenuLabel>
-								<DropdownMenuItem onSelect={onRenameVariation}>
-									<Box display="flex" alignItems="center" gap="8">
-										<IconStack2 size={16} />
-										Rename Variation
-									</Box>
-								</DropdownMenuItem>
-								<DropdownMenuItem intent="danger" onSelect={onDeleteVariationRequest}>
-									<Box display="flex" alignItems="center" gap="8">
-										<IconTrash size={16} />
-										Delete Variation
-									</Box>
-								</DropdownMenuItem>
-							</>
-						)}
-					</DropdownMenuContent>
-				</DropdownMenu>
+					<MenuContent />
+				</Menu>
 			</Box>
+		</Box>
+		{pageStatus === "Scheduled" && scheduledDate && (
+			<Alert intent="information" py="12" px="20">
+				<Box display="flex" alignItems="center" gap="8" w="full">
+					<Text fontSize="sm">
+						Scheduled to publish on {new Date(scheduledDate).toLocaleString()}
+					</Text>
+					<Box flex="1" />
+					{onCancelSchedule && (
+						<Button appearance="subtle" size="sm" onClick={onCancelSchedule}>
+							Cancel schedule
+						</Button>
+					)}
+				</Box>
+			</Alert>
+		)}
 		</Box>
 	);
 }

@@ -1,7 +1,7 @@
-import { ReactNode, isValidElement } from "react";
-import { Badge, Box, Avatar, Tooltip } from "@optiaxiom/react";
-import { Text } from "./Text";
-import { Button } from "./Button";
+import {ReactNode, isValidElement} from "react";
+import {Badge, Box, Avatar, Tooltip, TableRow, TableHeaderCell} from "@optiaxiom/react";
+import {Text} from "./Text";
+import {Button} from "./Button";
 import {
 	IconEllipsisSolid as IconMenu,
 	IconCircleInfo as IconInfoCircle,
@@ -36,23 +36,22 @@ export const Table = ({
 	);
 };
 
-import { useRouter } from "next/navigation";
+import {useRouter} from "next/navigation";
 export const Tr = ({
 	children,
 	url,
 	onClick,
-	suppressActiveStyle,
 	style,
 	className,
+	suppressActiveStyle: _suppressActiveStyle,
 	...props
 }: {
 	children: ReactNode;
 	url?: string;
 	onClick?: () => void;
-	/** When set, row stays hoverable/clickable but skips the pressed (:active) background */
-	suppressActiveStyle?: boolean;
 	style?: React.CSSProperties;
 	className?: string;
+	suppressActiveStyle?: boolean;
 	[key: string]: any;
 }) => {
 	const router = useRouter();
@@ -60,32 +59,13 @@ export const Tr = ({
 		router.push(`${href}`);
 	};
 
-	const interactive = Boolean(url || onClick);
-	const handleActivate = () => {
-		if (url) rowClick(url);
-		else onClick?.();
-	};
-
 	return (
-		<tr
-			onClick={interactive ? handleActivate : undefined}
-			role={interactive ? "button" : undefined}
-			tabIndex={interactive ? 0 : undefined}
-			onKeyDown={
-				interactive
-					? (e) => {
-							if (e.key === "Enter" || e.key === " ") {
-								e.preventDefault();
-								handleActivate();
-							}
-						}
-					: undefined
-			}
+		<TableRow
+			onClick={url ? () => rowClick(url) : onClick ? onClick : undefined}
 			className={
-				"relative transition-colors duration-150" +
-				(interactive
-					? " cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)]" +
-						(!suppressActiveStyle ? " active:bg-[var(--ax-colors-bg-default-pressed)]" : "")
+				"relative" +
+				(url || onClick
+					? " cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)]"
 					: "") +
 				(className ? ` ${className}` : "")
 			}
@@ -93,7 +73,7 @@ export const Tr = ({
 			{...props}
 		>
 			{children}
-		</tr>
+		</TableRow>
 	);
 };
 export const Th = ({
@@ -105,7 +85,6 @@ export const Th = ({
 	sortDirection,
 	onSort,
 	tooltip,
-	...rest
 }: {
 	children?: ReactNode;
 	align?: any;
@@ -115,38 +94,40 @@ export const Th = ({
 	sortDirection?: "asc" | "desc" | null;
 	onSort?: () => void;
 	tooltip?: string;
-	[key: string]: any;
 }) => {
 	const interactive = !!(onSort || onClick);
 	return (
-		<th
-			className={`relative text-left px-4 text-xs font-normal py-2 align-middle text-[var(--ax-colors-fg-tertiary)] ${interactive ? "cursor-pointer select-none hover:text-[var(--ax-colors-fg-secondary)]" : ""} ${className || ""}`}
-			style={{
-				textAlign: align,
-				...style,
-			}}
-			onClick={onSort || onClick}
-			{...rest}
-		>
-			<span className="inline-flex items-center gap-1">
-				{children}
-				{onSort &&
-					(sortDirection === "asc" ? (
-						<IconCaretUpFilled size={14} aria-hidden />
-					) : sortDirection === "desc" ? (
-						<IconCaretDownFilled size={14} aria-hidden />
-					) : (
-						<IconCaretUpDownFilled size={14} aria-hidden />
-					))}
-				{tooltip && (
-					<Tooltip content={tooltip}>
-						<span className="inline-flex" onClick={(e) => e.stopPropagation()}>
-							<IconInfoCircle size={14} />
-						</span>
-					</Tooltip>
-				)}
-			</span>
-		</th>
+		<Box asChild textAlign="start" px="16" py="8">
+			<th
+				className={`[&>div]:bg-transparent ${interactive ? "cursor-pointer select-none" : ""} ${className || ""}`}
+				style={{
+					textAlign: align,
+					...style,
+				}}
+				onClick={onSort || onClick}
+			>
+					<Box asChild fontFamily="mono" fontSize="sm" textTransform="uppercase" color="fg.tertiary" fontWeight="400" className="inline-flex items-center gap-1 min-h-[14px]">
+					<span>
+						{children}
+						{onSort &&
+							(sortDirection === "asc" ? (
+								<IconCaretUpFilled size={14} aria-hidden />
+							) : sortDirection === "desc" ? (
+								<IconCaretDownFilled size={14} aria-hidden />
+							) : (
+								<IconCaretUpDownFilled size={14} aria-hidden />
+							))}
+						{tooltip && (
+							<Tooltip content={tooltip}>
+								<span className="inline-flex" onClick={(e) => e.stopPropagation()}>
+									<IconInfoCircle size={14} />
+								</span>
+							</Tooltip>
+						)}
+					</span>
+					</Box>
+			</th>
+		</Box>
 	);
 };
 
@@ -161,7 +142,7 @@ export const Td = ({
 	colSpan,
 }: {
 	children?: ReactNode;
-	type?: "header" | "badge" | "avatar" | "button" | "numeric" | "raw" | "date";
+	type?: "header" | "badge" | "avatar" | "button" | "numeric" | "raw";
 	description?: string;
 	data?: any;
 	width?: string | number;
@@ -171,7 +152,7 @@ export const Td = ({
 }) => {
 	return (
 		<td
-			className={`py-2 px-4 border-t align-middle ${className || ""}`}
+			className={`p-4 border-t align-top ${className || ""}`}
 			colSpan={colSpan}
 			style={{
 				width: type === "button" ? "56px" : width,
@@ -206,12 +187,12 @@ export const Td = ({
 				</>
 			)}
 			{type === "badge" && (
-				<Box style={{ height: "20px", marginTop: "-4px" }}>
+				<Box style={{height: "20px", marginTop: "-4px"}}>
 					<Badge intent={data}>{children}</Badge>
 				</Box>
 			)}
 			{type === "avatar" && (
-				<Box style={{ height: "20px", marginTop: "-6px" }}>
+				<Box style={{height: "20px", marginTop: "-6px"}}>
 					<Tooltip content={children}>
 						<Avatar src={data} size="md" name={children as string} />
 					</Tooltip>
@@ -223,7 +204,7 @@ export const Td = ({
 					display="flex"
 					alignItems="center"
 					justifyContent="end"
-					style={{ height: "20px" }}
+					style={{height: "20px"}}
 				>
 					{children ? (
 						children
@@ -241,11 +222,6 @@ export const Td = ({
 			{type === "numeric" && (
 				<Text color="fg.default" textAlign="end">
 					{children}
-				</Text>
-			)}
-			{type === "date" && (
-				<Text asChild color="fg.default" fontWeight="500">
-					<span>{children}</span>
 				</Text>
 			)}
 			{type === "raw" && children}

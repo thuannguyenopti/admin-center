@@ -83,12 +83,33 @@ export function usePlanViewState() {
 			};
 		});
 
-		const all = [...taskItems, ...campaignItems];
-		all.sort((a, b) => {
+		const topLevel = [
+			...taskItems.filter((t) => !t.parentCampaign),
+			...campaignItems,
+		];
+		topLevel.sort((a, b) => {
 			const dateA = new Date(a.creationDate).getTime();
 			const dateB = new Date(b.creationDate).getTime();
 			return dateB - dateA;
 		});
+
+		const childrenByCampaign = new Map<string, PlanItem[]>();
+		for (const t of taskItems) {
+			if (t.parentCampaign) {
+				const list = childrenByCampaign.get(t.parentCampaign) || [];
+				list.push(t);
+				childrenByCampaign.set(t.parentCampaign, list);
+			}
+		}
+
+		const all: PlanItem[] = [];
+		for (const item of topLevel) {
+			all.push(item);
+			if (item.isGroup) {
+				const children = childrenByCampaign.get(item.title) || [];
+				all.push(...children);
+			}
+		}
 		return all;
 	}, [taskWorkflows, isHydrated]);
 

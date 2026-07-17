@@ -16,39 +16,6 @@ yarn lint         # ESLint via Next.js
 
 Package manager is **Yarn 4** (Corepack). Use `yarn` not `npm`. Run `corepack enable` (requires sudo) if `yarn dev` fails. To install with auth-gated registry: `yarn install:auth` (uses `.env`). Fallback without Corepack: `node_modules/.bin/next dev`.
 
-## ⚠️ V2 / V3 Axiom coexistence — worktree setup
-
-This repo runs two concurrent Axiom versions:
-
-| Area | Package | Branch |
-|---|---|---|
-| `app/opal/` and all V3 work | `@optiaxiom/react@3.0.0-next.0` | `main-rebrand` |
-| All other product areas (`/cms`, `/cmp`, etc.) | `@optiaxiom/react@^1.9.x` | `main` |
-
-**The problem:** `main-rebrand` updates `package.json` to V3 and runs `yarn install`, leaving the main project's `node_modules` with V3. Claude Code worktrees live inside `.claude/worktrees/` — a subdirectory of the main project. Without their own `node_modules`, worktrees inherit V3 from the parent, causing V3 colors (lime green buttons, yellow-green backgrounds) to bleed into V2 routes.
-
-**First-time setup for any worktree doing V2 / `main` work:**
-
-`yarn.lock` and `node_modules` are both gitignored, so you must install locally. Since `corepack enable` requires sudo (IT can grant this), use the `npx` fallback instead:
-
-```bash
-# 1. Copy the parent project's lockfile so Yarn treats this as a standalone root
-cp /path/to/axiom-play/yarn.lock ./yarn.lock
-
-# 2. Install — creates node_modules/ local to this worktree
-npx --yes @yarnpkg/cli-dist install
-```
-
-Verify you have V2:
-```bash
-cat node_modules/@optiaxiom/react/package.json | grep '"version"'
-# should print "version": "1.9.x"
-```
-
-Then restart the dev server so it picks up the local `node_modules`.
-
-**Note:** This only needs to be done once per worktree. The local `node_modules` persists until the worktree is deleted. You do not need to re-run it when switching branches within the same worktree.
-
 ## ⚠️ Critical: Build Script & Webpack Rules
 
 **NEVER add `--webpack` or `--turbopack` to the `next build` command.** Forcing either bundler mode breaks Next.js's internal CSS extraction pipeline for `transpilePackages: ["@optiaxiom/react"]`, causing all Axiom component styles (borders, fills, backgrounds) to be silently stripped from the Vercel production build. The correct build command is simply `next build` with no bundler flags.
@@ -73,31 +40,65 @@ This is a **multi-product UI prototype** built with Next.js 16 (App Router), Rea
 
 ### Navigation & Layout
 
-**`app/layout.tsx`** is a client component that defines the entire sidebar navigation structure for each product as a `structure` object keyed by the first path segment. It passes the matching nav tree to `app/components/template.tsx`.
+**`app/layout.tsx`** is a thin shell. It imports each product's navigation module, assembles them into a `structure` object keyed by the first path segment, and passes the matching nav tree to `app/components/template.tsx`. **Do not edit `app/layout.tsx` to add or change nav items** — it is locked down via CODEOWNERS. Edit the per-product navigation file instead:
+
+| Product | File | Export | Notes |
+|---|---|---|---|
+| CMS | `app/cms/navigation.tsx` | `useCmsNav()` | Hook — reads algorithm / webhook / content-type detail IDs from the path and pulls dynamic sub-nav titles from `usePersistentState` |
+| CMP | `app/cmp/navigation.tsx` | `cmpNav` | Static const |
+| Opal | `app/opal/navigation.tsx` | `useOpalNav()` | Hook — listens to `im-layout-change` window events for IM layout A / B / C variants |
+| Connect Platform | `app/connect-platform/navigation.tsx` | `connectPlatformNav` | Static const |
+| FE Hosting | `app/fe-hosting/navigation.tsx` | `feHostingNav` | Static const |
+| Web Experimentation | `app/web-experimentation/navigation.tsx` | `webExperimentationNav` | Static const |
+
+Hook vs. const: export a hook (`useXxxNav()`) only when the nav needs hooks (path-detail substitution, persistent state, window events). Static product navs stay constants.
+
+**Per-product CSS** follows the same pattern. `app/globals.css` keeps only truly cross-cutting rules (imports, fonts, theme machinery, body resets, scrollbars, generic animations like `.appear`/`@keyframes shimmer`, template grid `.parent`/`.div1-3`, VT slide animation, modal lock). Product-specific rules live in `app/<product>/styles.css` and are pulled into the cascade via `@import` from `globals.css`:
+
+| Product | File |
+|---|---|
+| CMS | `app/cms/styles.css` — `.newly-imported` highlight, `.vb-outline`/`.chevron` |
+| CMP | `app/cmp/styles.css` — empty placeholder |
+| Opal | `app/opal/styles.css` — `.opalGenerateButton`, `.vau-card`, `.pinned-card`, `.file-card` |
+| Connect Platform | `app/connect-platform/styles.css` — empty placeholder |
+| FE Hosting | `app/fe-hosting/styles.css` — empty placeholder |
+| Web Experimentation | `app/web-experimentation/styles.css` — empty placeholder |
+
+There's also a legacy `app/styles/opalStyles.css` with older Opal rules — additions can go in either Opal file, but prefer `app/opal/styles.css` for new rules so they sit with the product they belong to. **Do not edit `app/globals.css` to add product-specific CSS** — same lockdown rationale as `app/layout.tsx`. If your rule only matters for one product, put it in that product's `styles.css`.
 
 **`app/components/template.tsx`** renders the shell: primary sidebar (`Sidebar`/`Nav`), optional secondary sidebar (VT drill-down or Content Manager sidebar), a scrollable main content area, an optional footer bar, and the Opal slide-out panel. Pages get `px="32" py="24"` padding and an auto-generated `<Heading>` page title by default.
 
-**`customLayout: true`** on a nav item bypasses the padding and page header — required for full-bleed pages (e.g., Opal chat, CMS Edit). Full-width table pages instead use negative margins: `-m-6 -mt-[72px]`.
+**Never add route-specific logic to `template.tsx`** — no `path.startsWith(...)` checks, no per-page conditionals, no hardcoded product names or routes. All layout variation is driven by nav-item flags or context values (`useLayout`). If a new layout mode is needed, add a flag to the nav item and read it generically in the template.
+
+**Nav-item layout flags** (resolved from the deepest matching nav level upward — lvl4 → lvl3 → lvl2 → top-level item):
+
+| Flag | Effect |
+|---|---|
+| `customLayout: true` | Bypasses padding and page header — for full-bleed pages (e.g., Opal chat, CMS Edit) |
+| `fullscreen: true` | Strips the entire shell (sidebar, GlobalBar, everything); children own the viewport at 100vh×100vw — for canvas-style builders (e.g., Workflow Builder) |
+| `hideSidebar: true` | Hides primary + secondary sidebars; GlobalBar stays (e.g., Opal Studio) |
+| `chromeless: true` | Hides GlobalBar and sidebars; content spans the full grid (e.g., Opal canvas mode) |
+| `hidePageHeader: true` | Keeps padding but hides the auto-generated heading |
+| `instantShell: true` | Disables the shell slide transition for the route |
+| `hidden: true` | Item doesn't render in the sidebar — used for entries that exist only to carry layout flags for a route |
+| `badge: <n>` | Shows a danger count badge on the sidebar item while it's not active |
+| `opalCloseReturnTo: "<url>"` | Closing the Opal panel navigates to `?returnTo=` (or this fallback URL) |
+| `query: {key: "value"}` | Restricts the item's highlight match to specific search params (e.g. `{artifacts: "1"}`) |
+
+`highlight` may be a string or an array of path prefixes (e.g. Plan matches both `/cmp/plan-view` and `/cmp/task/`). Routes with no sidebar item still need a nav entry (with `hidden: true`) to carry their layout flags — see the bottom of `app/cmp/navigation.tsx` and `app/opal/navigation.tsx` for examples.
 
 **Secondary sidebar drill-down (VT)** — when a nav item has nested `children` objects with a `title` and `children` array, clicking sub-items causes `VT.tsx` to slide in a sub-panel. Up to 4 levels deep (lvl2–lvl4).
 
 ### Design System
 
-Full reference: **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)** — read before writing any UI code.
-
 All UI must use **`@optiaxiom/react`** components. Never use raw HTML elements if an Axiom equivalent exists.
+
+For frontend/product UI work, the agent must behave like a senior frontend product designer using Axiom V3, not like a prototype copier.
+
+**Prototype handling rule**: screenshots, PM HTML, and vibe-coded demos are requirements input only. Extract the user need, then rebuild it with Axiom components, semantic tokens, existing repo patterns, and clean product hierarchy. Do not copy raw `button`, `input`, `select`, `textarea`, tiny CTAs, hardcoded colors, or inconsistent spacing from prototypes.
 
 **Exception**: `app/components/vb/blocks/` uses raw HTML + Tailwind (Visual Builder renders customer website content, not product UI).
 
-**Axiom versions by target branch:**
-- Targeting **`main`** → always use **Axiom V2** (`@optiaxiom/react@^1.9.1`) — applies to all areas including `app/opal/`
-- Targeting **V3 / rebrand work** → use **Axiom V3** (`@optiaxiom/react@3.0.0-next.0`) — always push to `main-rebrand`, never `main`
-
-When an agent or PR targets `main`, default to V2 everywhere. If a designer asks to use V3 or the Opal rebrand, suggest targeting `main-rebrand` instead.
-
-**`data-brand="v3"` is applied globally** (all routes) via a wrapper `<div>` in `app/layout.tsx`. V3 CSS tokens (`--ax-colors-bg-accent`, `--ax-colors-fg-accent`, etc.) and the lime-green palette are therefore active on every page in this branch — not just `/opal/*`. When working on CMS, CMP, or other non-Opal routes, expect V3 token values; do not add a local `data-brand="v3"` wrapper.
-
-**Primary button text color** — V2 Axiom primary buttons in a `[data-brand="v3"]` context use `--v3iotm` to override the default white text with dark (`#202320`) text on the lime-green background. This is set in `app/globals.css` on the `[data-brand="v3"]` rule. Do not remove it.
 
 **Critical rules (all areas):**
 - Spacing tokens only: `"0" "2" "4" "6" "8" "10" "12" "16" "20" "24" "32" "40" "48" "56" "64" "80"` — never arbitrary px
@@ -106,23 +107,32 @@ When an agent or PR targets `main`, default to V2 everywhere. If a designer asks
 - `Input`/`SearchInput` only support `size="md"` (default), `"lg"`, `"xl"` — never `"sm"`
 - Wrap inputs with `<Field label="...">` — never manual `<Text>` labels
 - Dark mode: use `[data-theme="dark"]` selector — never `@media (prefers-color-scheme: dark)`
+- Product controls: use Axiom `Button`, `Input`, `Select`, `Textarea`, `Switch`, `Tabs`, `Menu`, and `Tooltip`; raw product controls are forbidden when an Axiom equivalent exists
+- Main CTAs: use `Button appearance="primary"` with `size="md"` or `size="lg"` unless matching an existing dense-toolbar pattern
+- Empty ellipsis menus, decorative controls, and Settings tabs for one or two fields are not allowed
+
+**Menus — always use `Menu` with the `options` prop, not `DropdownMenu`.** Axiom V3 has two menu components and they look similar from the outside, but they're different:
+
+- **`Menu`** — data-driven. You pass a `MenuOption[]` array via the `options` prop, plus a `MenuTrigger` and `MenuContent`. Supports search/filter (`inputVisible`), nested sub-menus (`subOptions`, `subOptionsInputVisible`), groups with labels and separators (`group: { label, separator, hidden }`), per-item icons (`addon`), right-side detail (`detail`), danger styling (`intent: "danger"`), disabled with reason (`disabledReason`), and keyword matching (`keywords`). This is what almost every menu in the codebase should use.
+- **`DropdownMenu`** — JSX-tree-driven (`DropdownMenuItem`, `DropdownMenuSub`, `DropdownMenuLabel`, `DropdownMenuSeparator`, etc.). Legacy from earlier Axiom versions. Don't introduce new usages.
+
+When converting existing `DropdownMenu` code to `Menu`, helpers that previously rendered JSX (e.g. `<MyMenuItems />`) should export functions returning `MenuOption[]` instead — the caller spreads them into the parent `options` array. Search input inside a sub-menu uses `subOptionsInputVisible: true` + `keywords: "..."` on each sub-option; do not build manual `useState` + `Input` filtering inside menu content.
 
 **Additional rules for `app/opal/` (Axiom V3 + Opal layer):**
 - Opal gradient colors → CSS custom properties (`--opal-gradient-*`), never `bg.*` tokens
 - Action Cards → must use `@optiaxiom/proteus`, never custom HTML
 - OpalOrb → always use `/opal-orb.png`, never CSS/SVG recreation
 - Loading states → reuse existing `OpalLoader` components in `app/opal/components/`
-- See **[OPAL_DESIGN_SYSTEM.md](OPAL_DESIGN_SYSTEM.md)** for full Opal-specific rules
-- See **[.claude/AXIOM_V3_MIGRATION.md](.claude/AXIOM_V3_MIGRATION.md)** for the V2→V3 conversion checklist, audit guide, and GlobalBar V3 implementation details
+- See **`.claude/skills/opal-design.md`** for full Opal-specific rules (auto-loaded as a skill)
 
 ### Icons
 
-**Icon packages are version-specific — use the right one for the area you're editing:**
+**Icon packages differ by area:**
 
 | Area | Package | Import example |
 |------|---------|----------------|
-| `app/opal/` (Axiom V3) | `@optiaxiom/icons` | `import { IconSearch } from "@optiaxiom/icons"` |
-| All other areas (Axiom V2) | `@optimizely/axiom-icons` | `import { IconAgent } from "@optimizely/axiom-icons"` |
+| `app/opal/` | `@optiaxiom/icons` | `import { IconSearch } from "@optiaxiom/icons"` |
+| All other areas | `@optimizely/axiom-icons` | `import { IconAgent } from "@optimizely/axiom-icons"` |
 
 **NEVER use `@tabler/icons-react` in product UI code** — only allowed in `app/lib/axiom-icons.tsx` as a fallback shim.
 
@@ -134,7 +144,7 @@ When an agent or PR targets `main`, default to V2 everywhere. If a designer asks
 
 **When adding a new icon in `app/opal/`**: check `@optiaxiom/icons` first. If missing, fall back to `@optimizely/axiom-icons` (not Tabler).
 
-**Sub Agent icon placeholder** — the `Sub Agent` nav item (`app/layout.tsx`) and the agents type column (`app/opal/agents/page.tsx`) currently use `IconAgent` from `@optimizely/axiom-icons` as a temporary stand-in. The intended icon is the Material `web_traffic` icon (cursor with 3 radiating splash lines). Replace with the correct `@optiaxiom/icons` export once it is added to the package. Note: `IconSubAgent` in `@optimizely/axiom-icons` is a dashed-border box — do NOT use it for this.
+**Sub Agent icon placeholder** — the `Sub Agent` nav item (`app/opal/navigation.tsx`) and the agents type column (`app/opal/agents/page.tsx`) currently use `IconAgent` from `@optimizely/axiom-icons` as a temporary stand-in. The intended icon is the Material `web_traffic` icon (cursor with 3 radiating splash lines). Replace with the correct `@optiaxiom/icons` export once it is added to the package. Note: `IconSubAgent` in `@optimizely/axiom-icons` is a dashed-border box — do NOT use it for this.
 
 **When adding a new icon outside `app/opal/`**: check `@optimizely/axiom-icons` first. If missing, add a Tabler fallback entry to `app/lib/axiom-icons.tsx`.
 
@@ -151,18 +161,28 @@ When an agent or PR targets `main`, default to V2 everywhere. If a designer asks
 ### MCP Servers
 
 Configured in `.mcp.json`:
-- **`axiom`** (`@optiaxiom/mcp`) — fetch Axiom component docs and valid prop values
-- **`figma`** — Figma design context
+- **`axiom-v3`** (`@optiaxiom/mcp@next`) — fetch Axiom component docs, valid prop values, tokens, and icon names
+- **`axiom`** (`@optiaxiom/mcp`) — legacy V2 docs, still connected but prefer `axiom-v3`
 - **`coda`** — Coda docs integration
 - **`optimizely`** — Optimizely project data
+- **`figma`** — Figma MCP (connected but no active skills use it)
 
 ### Data Visualization Colors
 
 Use the shared data-viz palette (see `app/DATA_VISUALIZATION_COLORS.md`) for charts, legends, heatmaps. Do not use Axiom UI tokens (`bg.*`, `fg.*`) for data-encoding. Live reference: `/data-viz-colors`.
 
+## Cross-Surface Consistency
+
+Before building any UI pattern (row actions, dismiss controls, empty states, modals, etc.), grep the codebase for existing instances of that pattern and replicate them exactly — same components, same props, same layout. When a pattern needs to change (QA fix, redesign), search for every surface it appears on and update all of them in the same pass. Never let two placements of the same pattern diverge.
+
 ## No Monolithic Files
 
-Before writing code, check if files you're touching are monolithic (300+ lines, multiple concerns). If so, split them first. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for the splitting guide.
+Before writing code, check if files you're touching are monolithic (300+ lines, multiple concerns). If so, split them first.
+
+## TODO — known standards gaps
+
+- **`--opal-gradient-*` variables are not defined yet.** The Opal gradient rule references CSS custom properties that don't exist in any stylesheet, so Opal gradients are currently hardcoded hex/rgba throughout `app/opal/`. Define the variables (likely in `app/opal/styles.css`) and migrate the hardcoded gradients — the canonical values live in `app/opal/components/OpalAlert.tsx` and `app/opal/agents/page.tsx:686`.
+- **`@optiaxiom/proteus` is installed but never used.** The rule says Action Cards must use proteus, yet all action cards are custom recreations (`app/components/Opal/ApprovalActionCard.tsx`, `AskQuestionsActionCard.tsx`, `CommonActionCard` in `AgentAssistantPanel.tsx`). Migrate them to the proteus Action Card components.
 
 ## Git & Deployment
 
@@ -172,6 +192,7 @@ Before writing code, check if files you're touching are monolithic (300+ lines, 
 - **Never merge locally** — merge via GitHub so CI checks run first
 - Vercel auto-deploys `main` to production; preview deploys on every PR branch
 - Verify build (`yarn build`) before pushing
+- **Never commit secrets** — `.env`, `.env.local`, API keys, tokens, and credentials must never be staged or committed. These files are in `.gitignore` for a reason. If you spot a secret already in git history, stop and tell the user immediately.
 
 ## Efficient Batch Workflow
 
