@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Button } from "@optiaxiom/react";
 import { IconMagnifyingGlassMinus, IconMagnifyingGlassPlus } from "@optiaxiom/icons";
 import { Text } from "@/app/components/Text";
+import { useLayout } from "@/app/context/LayoutContext";
 import { Toolbar } from "./Toolbar";
 
 export type ContentTab = "blog" | "social" | "email";
@@ -69,6 +70,13 @@ export function CanvasStage({
 	showRationale: boolean;
 	showWorkflow?: boolean;
 }) {
+	// The real Opal panel (app/components/OpalPanel.tsx) is a fixed overlay
+	// that doesn't reflow this fullscreen canvas on its own — without this,
+	// centered content (e.g. BlogPost's `margin: 0 auto` article) centers
+	// against the FULL viewport width and can render underneath the panel.
+	// opalPanelWidth is already published by OpalPanel via setOpalPanelWidth,
+	// so inset the pannable area by that amount whenever it's open.
+	const { opalPanelWidth } = useLayout();
 	const viewportRef = useRef<HTMLDivElement | null>(null);
 	const panRef = useRef<{
 		pointerId: number;
@@ -243,7 +251,7 @@ export function CanvasStage({
 				showRationale={showRationale}
 				showWorkflow={showWorkflow}
 			/>
-			<Box style={canvasBodyStyle}>
+			<Box style={{ ...canvasBodyStyle, paddingRight: opalPanelWidth }}>
 				<div
 					ref={viewportRef}
 					data-cmp-canvas-viewport="true"

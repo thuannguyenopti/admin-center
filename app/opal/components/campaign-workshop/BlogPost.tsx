@@ -213,8 +213,15 @@ export function BlogPost({
 				/>
 			</Box>
 
-			<EditableText ariaLabel="kicker" value={text("blog-kicker", "Stride Event Guide • Boston Marathon 2026")} onChange={(v) => onEditText("blog-kicker", v)} style={styles.kicker} />
-			<EditableText ariaLabel="headline" value={text("blog-headline", "Boston Starts Long Before the Starting Line")} onChange={(v) => onEditText("blog-headline", v)} style={styles.title} />
+			{/* Each EditableText renders an inline-flex button (text + edit pencil), so
+			    consecutive instances need their own block wrapper — otherwise the kicker
+			    and headline collapse onto one run-on line instead of stacking. */}
+			<Box>
+				<EditableText ariaLabel="kicker" value={text("blog-kicker", "Stride Event Guide • Boston Marathon 2026")} onChange={(v) => onEditText("blog-kicker", v)} style={styles.kicker} />
+			</Box>
+			<Box>
+				<EditableText ariaLabel="headline" value={text("blog-headline", "Boston Starts Long Before the Starting Line")} onChange={(v) => onEditText("blog-headline", v)} style={styles.title} />
+			</Box>
 			<p style={styles.text}>
 				On Monday, April 20, 2026, the Boston Marathon will turn the road from Hopkinton to Boylston Street into one of running&apos;s most electric stages. For Stride runners, Boston is more than race day. It is the months of quiet training, the weekday miles squeezed between meetings, and the moment a personal goal becomes something a whole city can cheer.
 			</p>
