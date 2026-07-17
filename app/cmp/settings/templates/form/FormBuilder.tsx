@@ -1114,8 +1114,7 @@ export function FormBuilder() {
 				>
 					<Box
 						ref={reactFlowWrapper}
-						flex="1"
-						style={{ height: "100%", position: "relative" }}
+						style={{ flex: 1, minHeight: 0, height: "100%", position: "relative" }}
 					>
 						<ReactFlow
 							nodes={patchedNodes}
