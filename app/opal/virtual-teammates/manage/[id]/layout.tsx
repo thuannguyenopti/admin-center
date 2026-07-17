@@ -170,8 +170,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 					label="Work"
 					active={isWork}
 					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}`)}
-					badge={<Badge intent="information">Needs review</Badge>}
-				/>
+					/>
 				<NavItem
 					label="Activity"
 					active={isActivity}
