@@ -49,6 +49,11 @@ type PendingOpalPrompt = {
 	prompt: string;
 };
 
+type PendingOpalSeed = {
+	chatId: string;
+	messages: Array<{role: "user" | "assistant"; content: string}>;
+};
+
 function TemplateContent({
 	children,
 	structure,
@@ -103,6 +108,7 @@ function TemplateContent({
 	const isHydrated = true;
 	const [mounted, setMounted] = useState(false);
 	const [pendingOpalPrompt, setPendingOpalPrompt] = useState<PendingOpalPrompt | null>(null);
+	const [pendingOpalSeed, setPendingOpalSeed] = useState<PendingOpalSeed | null>(null);
 	const [opalContextChip, setOpalContextChip] = useState<{label: string; content: string} | null>(
 		null
 	);
@@ -177,6 +183,19 @@ function TemplateContent({
 		setPendingOpalPrompt(null);
 	}, [activeChat, isLoading, messages.length, pendingOpalPrompt, sendMessage, setInputValue]);
 
+	// Same "wait for the new chat's messages to actually reset" guard as
+	// pendingOpalPrompt above — calling addMessage() synchronously right after
+	// createNewChat() loses the message, because useOpalState's own effect
+	// resets `messages` for the new activeChatId on the next tick and wipes it.
+	useEffect(() => {
+		if (!pendingOpalSeed) return;
+		if (activeChat !== pendingOpalSeed.chatId) return;
+		if (messages.length > 0) return;
+
+		pendingOpalSeed.messages.forEach((m) => addMessage(m));
+		setPendingOpalSeed(null);
+	}, [activeChat, messages.length, pendingOpalSeed, addMessage]);
+
 	const closeOpalWithRouteAwareness = () => {
 		// `opalCloseReturnTo` is a nav-item flag (resolved below): closing the Opal
 		// panel navigates to ?returnTo= (or the flag's fallback URL) instead of
@@ -210,6 +229,7 @@ function TemplateContent({
 		sendMessage,
 		setInputDisabled,
 		setPendingOpalPrompt,
+		setPendingOpalSeed,
 		setOpalContextChip,
 	});
 	opalControlsRef.current = {
@@ -225,6 +245,7 @@ function TemplateContent({
 		sendMessage,
 		setInputDisabled,
 		setPendingOpalPrompt,
+		setPendingOpalSeed,
 		setOpalContextChip,
 	};
 
@@ -255,6 +276,11 @@ function TemplateContent({
 				opalControlsRef.current.createNewChat();
 				opalControlsRef.current.openOpal();
 				opalControlsRef.current.setOpalContextChip({label, content});
+			},
+			seedChat: (seedMessages) => {
+				const chatId = opalControlsRef.current.createNewChat();
+				opalControlsRef.current.openOpal();
+				opalControlsRef.current.setPendingOpalSeed({chatId, messages: seedMessages});
 			},
 		});
 		return () => setOpalPanelControls(null);

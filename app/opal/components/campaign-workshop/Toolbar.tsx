@@ -53,7 +53,12 @@ export function Toolbar({
 			display="grid"
 			alignItems="center"
 			px="24"
-			style={{ gridTemplateColumns: "auto minmax(320px, 1fr) auto", minHeight: 64 }}
+			// 57px matches the real Opal panel's hardcoded `top: 57px` offset
+			// (app/components/OpalPanel.tsx) — it's fixed to sit just below the
+			// GlobalBar, which this fullscreen canvas's own toolbar visually
+			// replaces. Any other height leaves a gap or an overlapping seam
+			// where the panel cuts into this toolbar.
+			style={{ gridTemplateColumns: "auto minmax(320px, 1fr) auto", minHeight: 57 }}
 		>
 			<Box display="flex" alignItems="center" gap="8">
 				<ToggleButton size="sm" appearance="subtle" pressed={false} icon={<IconCode size={17} />} aria-label="Code" />

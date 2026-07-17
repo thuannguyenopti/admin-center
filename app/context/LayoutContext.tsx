@@ -17,6 +17,10 @@ export type OpalPanelControls = {
 	setInputDisabled: (disabled: boolean) => void;
 	launchPrompt: (prompt: string) => void;
 	launchWithContext: (label: string, content: string) => void;
+	/** Opens a fresh chat pre-populated with a scripted transcript (e.g. carrying
+	 * a conversation that started elsewhere into the real panel) instead of the
+	 * default empty-chat greeting. */
+	seedChat: (messages: Array<{role: "user" | "assistant"; content: string}>) => void;
 };
 
 type CodePanelControls = {

@@ -15,6 +15,19 @@ type QueuedEdits = Partial<Record<ImageSlotId, { description: string }>>;
 
 const WORKFLOW_CHECK_IDS = ["blog", "email", "social"];
 
+// Carries over the brief/audience/angle conversation that already happened in
+// the Opal Messages thread (see OpalWorkshopMessageCard.tsx) into the real
+// panel, so arriving at the canvas continues that chat instead of resetting
+// to Opal's default empty-chat greeting.
+const CARRIED_OVER_TRANSCRIPT: Array<{ role: "user" | "assistant"; content: string }> = [
+	{ role: "user", content: "Yes, create a brief" },
+	{ role: "assistant", content: "I'm putting together a campaign brief for the Boston Marathon April 2026. Who's the primary audience you're targeting for this campaign?" },
+	{ role: "user", content: "Runners" },
+	{ role: "assistant", content: "Got it — runners it is! One more thing before I start generating." },
+	{ role: "user", content: "Motivational Piece" },
+	{ role: "assistant", content: "I've finished generating your Boston Marathon 2026 campaign — blog post, social posts, and email are ready for your review." },
+];
+
 // The canvas view opened from the "suite ready" message card — renders inline
 // as `leftCanvas` in the real Opal Chats page (app/opal/page.tsx), not a
 // separate route. Owns its own view state (tab/mode/per-image/per-text
@@ -49,19 +62,17 @@ export function CampaignWorkshopCanvas({
 	const queuedEditsCount = Object.keys(queuedEdits).length;
 	const hasSeededOpal = useRef(false);
 
-	// Arriving at the canvas always surfaces the real Opal panel in a fresh
-	// chat, pinned with the "finished" card — not re-seeded on every
-	// render/tab change (ref guard also survives React 18 dev double-invoke).
-	// Deliberately NOT using opalPanelControls.addMessage() here: it appends
-	// to `messages` synchronously, but createNewChat() switches activeChatId
-	// and an effect inside useOpalState resets `messages` for the new chat on
-	// the next tick — any message added in between gets wiped. setOpalActionCard
-	// is independent LayoutContext state, so it isn't subject to that race.
+	// Arriving at the canvas always surfaces the real Opal panel, continuing
+	// the brief/audience/angle conversation that already happened in Messages
+	// (not re-seeded on every render/tab change — ref guard also survives
+	// React 18 dev double-invoke). opalPanelControls.seedChat() defers adding
+	// the transcript until the new chat's message-reset effect has actually
+	// landed (see template.tsx's pendingOpalSeed effect) — calling addMessage
+	// directly here would lose the messages to that same reset.
 	useEffect(() => {
 		if (hasSeededOpal.current || !opalPanelControls) return;
 		hasSeededOpal.current = true;
-		opalPanelControls.createNewChat();
-		opalPanelControls.openPanel();
+		opalPanelControls.seedChat(CARRIED_OVER_TRANSCRIPT);
 		setOpalActionCard(<CanvasReadyCard />);
 		return () => setOpalActionCard(null);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
