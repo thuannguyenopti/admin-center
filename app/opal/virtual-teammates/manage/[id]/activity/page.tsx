@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import {
 	Badge, Box, Button, Checkbox, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger,
+	Popover, PopoverContent, PopoverTrigger,
 	Tabs, TabsContent, TabsList, TabsTrigger, Text,
 } from "@optiaxiom/react";
 import { IconArrowDown, IconArrowRight, IconArrowUp, IconArrowUpRightFromSquare, IconDiagramSubtask, IconChevronLeft, IconChevronRight, IconGear, IconGripVertical, IconSearch } from "@optiaxiom/icons";
@@ -110,6 +111,7 @@ export default function VATActivityPage() {
 
 	// Queue drag-and-drop
 	const [queueItems, setQueueItems] = useState(INITIAL_QUEUE);
+	const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 	const dragIndexRef = useRef<number | null>(null);
 
@@ -328,7 +330,33 @@ export default function VATActivityPage() {
 										</Box>
 										<Text fontSize="sm" color="fg.secondary" style={{ width: 120 }}>{item.time}</Text>
 										<Box style={{ width: 80, flexShrink: 0 }}>
-											<Button appearance="subtle" size="sm">Remove</Button>
+											<Popover
+												open={confirmRemoveId === item.id}
+												onOpenChange={(open) => { if (!open) setConfirmRemoveId(null); }}
+											>
+												<PopoverTrigger asChild>
+													<Button appearance="subtle" size="sm" onClick={() => setConfirmRemoveId(item.id)}>Remove</Button>
+												</PopoverTrigger>
+												<PopoverContent align="end" style={{ width: 268, padding: 16 }}>
+													<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, display: "block", marginBottom: 6 }}>Remove this job?</Text>
+													<Text fontSize="sm" color="fg.secondary" style={{ display: "block", lineHeight: "1.5", marginBottom: 16 }}>
+														This will remove <strong>{item.task}</strong> from the schedule for today. You can re-add it from the responsibilities page.
+													</Text>
+													<Box display="flex" gap="8" justifyContent="flex-end">
+														<Button appearance="subtle" size="sm" onClick={() => setConfirmRemoveId(null)}>Cancel</Button>
+														<Button
+															appearance="primary"
+															size="sm"
+															onClick={() => {
+																setQueueItems(prev => prev.filter(q => q.id !== item.id));
+																setConfirmRemoveId(null);
+															}}
+														>
+															Remove
+														</Button>
+													</Box>
+												</PopoverContent>
+											</Popover>
 										</Box>
 									</Box>
 								))}

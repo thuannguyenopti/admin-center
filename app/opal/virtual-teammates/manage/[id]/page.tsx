@@ -6,12 +6,13 @@ import {
 	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
 	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
 	Badge, Box, Button, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger,
-	SegmentedControl, SegmentedControlItem, Text,
+	SegmentedControl, SegmentedControlItem, Text, Tooltip,
 } from "@optiaxiom/react";
 import {
-	IconArrowRight, IconChevronLeft, IconChevronRight, IconComments, IconEllipsisSolid,
+	IconArrowRight, IconArrowUpRightFromSquare, IconChevronLeft, IconChevronRight,
+	IconComments, IconDownload, IconEllipsisSolid,
 	IconFile, IconFileLines, IconGrid, IconImage, IconList, IconLock,
-	IconPause, IconSearch, IconThumbtack, IconThumbtackSolid, IconUserCheck, IconTrashCan,
+	IconPause, IconPen, IconSearch, IconShareNodes, IconThumbtack, IconThumbtackSolid, IconUserCheck, IconTrashCan,
 } from "@optiaxiom/icons";
 import { ReviewCanvas } from "./ReviewCanvas";
 import Image from "next/image";
@@ -244,7 +245,19 @@ function GridImageCard({ item, avatarSrc, avatarBg, isPinned, onTogglePin }: { i
 						<Button appearance="default" size="sm" aria-label={pinned ? "Unpin" : "Pin"} icon={pinned ? <IconThumbtackSolid style={{ width: 10, height: 10 }} /> : <IconThumbtack style={{ width: 10, height: 10 }} />} style={BTN_STYLE} onClick={() => setPinned()} />
 					</Box>
 					<Box onClick={(e) => e.stopPropagation()}>
-						<Menu options={[{ label: "Delete", intent: "danger" as const, addon: <IconTrashCan /> }]}>
+						<Menu options={[
+								{ label: "Open", addon: <IconArrowUpRightFromSquare /> },
+								{ label: "Share", addon: <IconShareNodes /> },
+								{ label: "Download as", addon: <IconDownload />, subOptions: [
+									{ label: "PDF", value: "pdf" },
+									{ label: "Word (.docx)", value: "docx" },
+									{ label: "Markdown", value: "md" },
+									{ label: "Plain text", value: "txt" },
+								]},
+								{ label: "Rename", addon: <IconPen /> },
+								{ label: "Pin", addon: <IconThumbtack /> },
+								{ label: "Delete", intent: "danger" as const, addon: <IconTrashCan />, group: { separator: true } },
+							]}>
 							<MenuTrigger asChild>
 								<Button appearance="default" size="sm" aria-label="Options" icon={<IconEllipsisSolid style={{ width: 13, height: 13 }} />} style={BTN_STYLE} />
 							</MenuTrigger>
@@ -342,7 +355,7 @@ export default function VATWorkPage() {
 	});
 
 	// All work filters
-	const [view, setView] = useState<"list" | "grid">("grid");
+	const [view, setView] = useState<"list" | "grid">("list");
 	const [query, setQuery] = useState("");
 	const [typeFilter, setTypeFilter] = useState("All");
 	const [sourceFilter, setSourceFilter] = useState("All");
@@ -390,21 +403,27 @@ export default function VATWorkPage() {
 					<Heading level="1" mb="4">{name}&apos;s work</Heading>
 					<Text color="fg.secondary" fontSize="lg">What {name}&apos;s been up to and where he still needs your help</Text>
 				</Box>
-				<Menu
-					options={[
-						{ label: `Sign in as ${vau.name}`, addon: <IconUserCheck /> },
-						{ label: "Chat", addon: <IconComments />, execute: () => router.push("/opal/messages?conversation=bubs") },
-						{ label: "Pause", addon: <IconPause />, execute: () => setShowBreakDialog(true) },
-						{ label: "Delete", addon: <IconTrashCan />, intent: "danger" as const },
-					]}
-				>
-					<MenuTrigger asChild>
-						<Button appearance="subtle" size="md" icon={<IconEllipsisSolid />} aria-label="Options" />
-					</MenuTrigger>
-					<MenuContent />
-				</Menu>
+				<Box display="flex" alignItems="center" gap="8">
+					<Tooltip content={`Chat with ${name}`} delayDuration={300}>
+						<span>
+							<Button appearance="default" size="md" icon={<IconComments />} aria-label={`Chat with ${name}`} onClick={() => router.push("/opal/messages?conversation=bubs")} />
+						</span>
+					</Tooltip>
+					<Menu
+						options={[
+							{ label: `Sign in as ${vau.name}`, addon: <IconUserCheck /> },
+							{ label: "Pause", addon: <IconPause />, execute: () => setShowBreakDialog(true) },
+							{ label: "Delete", addon: <IconTrashCan />, intent: "danger" as const, group: { separator: true } },
+						]}
+					>
+						<MenuTrigger asChild>
+							<Button appearance="subtle" size="md" icon={<IconEllipsisSolid />} aria-label="Options" />
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
+				</Box>
 			</Box>
-			<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", marginBottom: 32, marginTop: 8 }} />
+			<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", marginBottom: 20, marginTop: 20 }} />
 			{/* Randy's Impact stats */}
 			<Box mb="40" mt="32">
 				<Heading level="3" mb="4">Impact</Heading>
@@ -494,8 +513,8 @@ export default function VATWorkPage() {
 						value={view}
 						onValueChange={(v: string) => { if (v) setView(v as "list" | "grid"); }}
 					>
-						<SegmentedControlItem value="grid" icon={<IconGrid size={15} />} aria-label="Grid view" />
 						<SegmentedControlItem value="list" icon={<IconList size={15} />} aria-label="List view" />
+						<SegmentedControlItem value="grid" icon={<IconGrid size={15} />} aria-label="Grid view" />
 					</SegmentedControl>
 				</Box>
 
@@ -530,7 +549,17 @@ export default function VATWorkPage() {
 								<Box style={{ width: 40 }} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
 									<Menu
 										options={[
-											{ label: "Delete", intent: "danger", addon: <IconTrashCan />, execute: () => deleteWorkItem(item.name) },
+											{ label: "Open", addon: <IconArrowUpRightFromSquare /> },
+											{ label: "Share", addon: <IconShareNodes /> },
+											{ label: "Download as", addon: <IconDownload />, subOptions: [
+												{ label: "PDF", value: "pdf" },
+												{ label: "Word (.docx)", value: "docx" },
+												{ label: "Markdown", value: "md" },
+												{ label: "Plain text", value: "txt" },
+											]},
+											{ label: "Rename", addon: <IconPen /> },
+											{ label: "Pin", addon: <IconThumbtack /> },
+											{ label: "Delete", intent: "danger" as const, addon: <IconTrashCan />, execute: () => deleteWorkItem(item.name), group: { separator: true } },
 										]}
 									>
 										<MenuTrigger asChild>

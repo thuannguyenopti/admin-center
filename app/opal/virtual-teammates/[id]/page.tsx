@@ -357,7 +357,7 @@ const BRIEFING_CARDS = [
 function BriefingActionCards({ animKey, bg }: { animKey: number; bg?: string }) {
 	return (
 		<div key={animKey} style={{ width: "100%", height: "100%", background: bg ?? "#91dbda", display: "flex", alignItems: "center", justifyContent: "center" }}>
-			<img src="/vau-icons/newspaper.png" alt="Daily briefing" style={{ width: "70%", height: "70%", objectFit: "contain" }} />
+			<img src="/vau-icons/newspaper.png" alt="Daily briefing" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
 		</div>
 	);
 }
@@ -380,19 +380,23 @@ function CapabilityPanel({ vau, title, onClose }: { vau: VAU; title: string; onC
 					<Badge intent="primary">PREVIEW</Badge>
 					<Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} aria-label="Close panel" onClick={onClose} />
 				</Box>
-				<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "#202320" }}>
-					{title}
-				</Text>
-				{example?.description && (
-					<Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5", letterSpacing: "0.32px" }}>
-						{example.description}
-					</Text>
-				)}
-				{example?.icon && (
-					<Box style={{ position: "relative", height: 357, flexShrink: 0, borderRadius: 8, border: "1px solid var(--ax-colors-border-default)", overflow: "hidden", background: vau.cardBg ?? vau.avatarBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-						<img src={example.icon} alt={title} style={{ width: "70%", height: "70%", objectFit: "contain" }} />
+				<Box display="flex" gap="16">
+					{example?.icon && (
+						<Box style={{ width: 113, height: 116, flexShrink: 0, borderRadius: 8, border: "1px solid var(--ax-colors-border-default)", overflow: "hidden", background: vau.cardBg ?? vau.avatarBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+							<img src={example.icon} alt={title} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+						</Box>
+					)}
+					<Box>
+						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "#202320" }}>
+							{title}
+						</Text>
+						{example?.description && (
+							<Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5", letterSpacing: "0.32px", display: "block", marginTop: 6 }}>
+								{example.description}
+							</Text>
+						)}
 					</Box>
-				)}
+				</Box>
 				{thirdPartyTools.length > 0 && (
 					<Box display="flex" flexDirection="column" gap="12" style={{ marginTop: 8 }}>
 						<PanelSectionHeader label="Connectors" count={thirdPartyTools.length} info />
@@ -464,42 +468,25 @@ function DailyBriefingPanel({ vau, onClose }: { vau: VAU; onClose: () => void })
 					/>
 				</Box>
 
-				{/* Title */}
-				<Text
-					style={{
-						fontFamily: "var(--ax-font-family-headings)",
-						fontSize: 28,
-						fontWeight: 800,
-						lineHeight: "1.04",
-						letterSpacing: "0.56px",
-						color: "#202320",
-					}}
-				>
-					Daily briefing
-				</Text>
+				{/* Thumbnail + title + description */}
+				<Box display="flex" gap="16">
+					<Box style={{ width: 113, height: 116, flexShrink: 0, borderRadius: 8, border: "1px solid var(--ax-colors-border-default)", overflow: "hidden", background: vau.cardBg ?? vau.avatarBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+						<img src="/vau-icons/newspaper.png" alt="Daily briefing" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+					</Box>
+					<Box>
+						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "#202320" }}>
+							Daily briefing
+						</Text>
+						<Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5", letterSpacing: "0.32px", display: "block", marginTop: 6 }}>
+							No more opening six tabs to figure out what happened overnight. Randy reads your inbox,
+							calendar, and Slack while you slept — and tells you the three things that actually need
+							you today.
+						</Text>
+					</Box>
+				</Box>
 
-				{/* Description */}
-				<Text
-					fontSize="md"
-					color="fg.secondary"
-					style={{ lineHeight: "1.5", letterSpacing: "0.32px" }}
-				>
-					No more opening six tabs to figure out what happened overnight. Randy reads your inbox,
-					calendar, and Slack while you slept — and tells you the three things that actually need
-					you today.
-				</Text>
-
-				{/* Slideshow */}
-				<Box
-					style={{
-						position: "relative",
-						height: 357,
-						flexShrink: 0,
-						borderRadius: 8,
-						border: "1px solid var(--ax-colors-border-default)",
-						overflow: "hidden",
-					}}
-				>
+				{/* Slideshow (hidden — kept for slide state logic) */}
+				<Box style={{ display: "none" }}>
 					{BRIEFING_SLIDES[slide].component
 						? <BriefingActionCards animKey={slide} bg={vau.cardBg ?? vau.avatarBg} />
 						: <img
