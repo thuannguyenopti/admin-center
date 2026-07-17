@@ -93,7 +93,7 @@ const DEFAULT_INTERACTIONS: Interaction[] = [
 
 // ─── Approval badge ───────────────────────────────────────────────────────────
 
-const APPROVAL_CONFIG: Record<ApprovalMode, { label: string; intent: "success" | "warning" | "danger"; tooltip: string }> = {
+const APPROVAL_CONFIG: Record<ApprovalMode, { label: string; intent: "success" | "warning" | "danger" | "neutral"; tooltip: string }> = {
 	auto:       { label: "Auto",       intent: "neutral", tooltip: "Runs automatically without any approval." },
 	"ask-first": { label: "Ask first", intent: "warning", tooltip: "Requires human approval before running." },
 	never:      { label: "Never",      intent: "danger",  tooltip: "This responsibility will never run automatically." },

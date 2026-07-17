@@ -45,7 +45,7 @@ const APPROVALS = [
 ];
 
 type PinnedItem =
-	| { type: "artifact"; title: string; image: string; visibility: string; age: string; tags: string[]; initials: string }
+	| { type: "artifact"; title: string; image: string; visibility: string; age: string; tags: string[]; initials: string; label?: string }
 	| { type: "action"; priority: string; priorityBg: string; priorityColor: string; title: string; description: string; filename: string; fileType: string; age: string };
 
 const PINNED_ITEMS: PinnedItem[] = [
@@ -530,9 +530,8 @@ export default function VATWorkPage() {
 								<Box style={{ width: 40 }} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
 									<Menu
 										options={[
-											{ label: "Delete", value: "delete", intent: "danger", addon: <IconTrashCan /> },
+											{ label: "Delete", intent: "danger", addon: <IconTrashCan />, execute: () => deleteWorkItem(item.name) },
 										]}
-										onValueChange={(value) => { if (value === "delete") deleteWorkItem(item.name); }}
 									>
 										<MenuTrigger asChild>
 											<Button appearance="subtle" size="sm" icon={<IconEllipsisSolid />} aria-label="Actions" />
