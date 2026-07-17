@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLayout } from "@/app/context/LayoutContext";
 import { CanvasStage, type ContentTab } from "./CanvasStage";
 import { BlogPost } from "./BlogPost";
 import { SocialPosts } from "./SocialPosts";
 import { EmailPreview } from "./EmailPreview";
 import { WorkflowDrawer } from "./WorkflowDrawer";
+import { CanvasReadyCard } from "./CanvasReadyCard";
 import { IMAGE_LIBRARY, SLOT_META, resolveSlotImage, type ImageOverrides, type ImageSlotId } from "./assets";
 
 type Mode = "canvas" | "workflow";
@@ -23,9 +24,10 @@ const WORKFLOW_CHECK_IDS = ["blog", "email", "social"];
 // Editing an image is commenting directly on it (EditableImage/EditPopover)
 // rather than navigating to a separate screen — a queued edit just sits in
 // `queuedEdits` until the toolbar's "Run Now" resolves it. There is no
-// canvas-owned chat panel: "Ask Opal" in the toolbar opens the one real,
-// shared Opal panel (useLayout().opalPanelControls) instead of rendering a
-// second, out-of-sync lookalike.
+// canvas-owned chat panel: the one real, shared Opal panel
+// (useLayout().opalPanelControls) opens automatically on arrival, pinned
+// with a "suite ready" card, instead of rendering a second, out-of-sync
+// lookalike.
 export function CampaignWorkshopCanvas({
 	initialShowRationale = false,
 	initialTab = "blog",
@@ -35,7 +37,7 @@ export function CampaignWorkshopCanvas({
 	initialTab?: ContentTab;
 	onClose: () => void;
 }) {
-	const { opalPanelControls } = useLayout();
+	const { opalPanelControls, setOpalActionCard } = useLayout();
 	const [tab, setTab] = useState<ContentTab>(initialTab);
 	const [showRationale, setShowRationale] = useState(initialShowRationale);
 	const [mode, setMode] = useState<Mode>("canvas");
@@ -45,9 +47,28 @@ export function CampaignWorkshopCanvas({
 	const [workflowChecks, setWorkflowChecks] = useState<Record<string, boolean>>({});
 	const [workflowComplete, setWorkflowComplete] = useState(false);
 	const queuedEditsCount = Object.keys(queuedEdits).length;
+	const hasSeededOpal = useRef(false);
+
+	// Arriving at the canvas always surfaces the real Opal panel in a fresh
+	// chat, pinned with the "finished" card — not re-seeded on every
+	// render/tab change (ref guard also survives React 18 dev double-invoke).
+	// Deliberately NOT using opalPanelControls.addMessage() here: it appends
+	// to `messages` synchronously, but createNewChat() switches activeChatId
+	// and an effect inside useOpalState resets `messages` for the new chat on
+	// the next tick — any message added in between gets wiped. setOpalActionCard
+	// is independent LayoutContext state, so it isn't subject to that race.
+	useEffect(() => {
+		if (hasSeededOpal.current || !opalPanelControls) return;
+		hasSeededOpal.current = true;
+		opalPanelControls.createNewChat();
+		opalPanelControls.openPanel();
+		setOpalActionCard(<CanvasReadyCard />);
+		return () => setOpalActionCard(null);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [opalPanelControls]);
 
 	const askOpal = () => {
-		opalPanelControls?.launchWithContext("Boston Marathon 2026", "Campaign: Boston Marathon 2026 · Brand Pack: Stride");
+		opalPanelControls?.openPanel();
 	};
 
 	const queueEdit = (slot: ImageSlotId, description: string) => {

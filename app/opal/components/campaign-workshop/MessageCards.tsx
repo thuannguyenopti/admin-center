@@ -165,7 +165,7 @@ export function SuiteReadyCard({
 	);
 }
 
-function StatusTile({ label, value }: { label: string; value: string }) {
+export function StatusTile({ label, value }: { label: string; value: string }) {
 	return (
 		<Box bg="bg.page" border="1" borderColor="border.tertiary" rounded="md" p="10">
 			<Text fontSize="xs" fontWeight="700" color="fg.tertiary">
