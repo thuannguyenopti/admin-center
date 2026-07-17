@@ -431,7 +431,7 @@ export function IMChatPanel({
   vauAvatar: string;
   onClose: () => void;
 }) {
-  const { messages, profiles, sendCurrent } = useIMData(convId);
+  const { messages, profiles, sendCurrent } = useIMData();
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);

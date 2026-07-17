@@ -5,7 +5,7 @@ import { IconSliders, IconArrowsRotate } from "@optiaxiom/icons";
 import { useEffect, useRef, useState } from "react";
 import { UserSwitcher } from "./UserSwitcher";
 
-export type LayoutKey = "A";
+export type LayoutKey = "A" | "B" | "C";
 
 export function LayoutSwitcher() {
   const [open, setOpen] = useState(false);

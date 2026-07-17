@@ -19,7 +19,7 @@ function IMPageInner() {
 
   return (
     <>
-      {layout === "A" && <LayoutASidebar initialConvId={convParam} />}
+      {layout === "A" && <LayoutASidebar />}
       {layout === "B" && <LayoutBFullPage />}
       {layout === "C" && <LayoutCPanel />}
     </>

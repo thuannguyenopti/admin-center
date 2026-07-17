@@ -169,9 +169,7 @@ export function LayoutCPanel() {
             mentionableAgents={mentionableAgents}
             onMentionSelect={(agent) => insertMention(agent.handle)}
             canvasMode={true}
-            onReaction={toggleReaction}
-            onQuote={setQuotedMsgId}
-            preInputContent={quoteChip}
+            aboveInputContent={quoteChip}
           />
         </Box>
       </Box>

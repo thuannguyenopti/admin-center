@@ -14,7 +14,7 @@ import { Text } from "@/app/components/Text";
 import {
 	IconEllipsisSolid,
 	IconPen,
-	IconClone,
+	IconCopy as IconClone,
 	IconTrashCan,
 } from "@/app/lib/axiom-icons";
 import Image from "next/image";
