@@ -6,7 +6,7 @@ import { BlogPost } from "./BlogPost";
 import { SocialPosts } from "./SocialPosts";
 import { EmailPreview } from "./EmailPreview";
 import { OpalPanel } from "./OpalPanel";
-import { WorkflowDrawer, FrankWorkflowPanel } from "./WorkflowDrawer";
+import { WorkflowDrawer, OpalWorkflowPanel } from "./WorkflowDrawer";
 import { IMAGE_LIBRARY, SLOT_META, resolveSlotImage, type ImageOverrides, type ImageSlotId } from "./assets";
 
 type Mode = "canvas" | "workflow" | "workflow-done";
@@ -97,7 +97,7 @@ export function CampaignWorkshopCanvas({
 					mode === "workflow-done" ? (
 						<OpalPanel editingSlot={DEFAULT_SLOT} imageOverrides={imageOverrides} mode={hasAnyOverride ? "result" : "context"} onOpenWorkflow={() => setMode("workflow-done")} />
 					) : (
-						<FrankWorkflowPanel />
+						<OpalWorkflowPanel />
 					)
 				}
 			>

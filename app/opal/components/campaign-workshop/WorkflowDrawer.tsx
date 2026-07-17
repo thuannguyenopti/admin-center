@@ -150,13 +150,14 @@ function WorkflowStep({ date, done, title }: { date: string; done?: boolean; tit
 	);
 }
 
-export function FrankWorkflowPanel() {
+export function OpalWorkflowPanel() {
 	return (
 		<Box bg="bg.page" borderL="1" borderColor="border.tertiary" style={{ display: "flex", flex: "0 0 455px", flexDirection: "column", minHeight: 0 }}>
 			<Box borderB="1" borderColor="border.tertiary" display="flex" alignItems="center" justifyContent="space-between" px="32" style={{ height: 72 }}>
-				<Box display="flex" alignItems="center" gap="20">
+				<Box display="flex" alignItems="center" gap="12">
+					<img alt="" src="/opal-orb.png" style={{ borderRadius: 8, height: 32, width: 32 }} />
 					<Text fontSize="xl" fontWeight="700">
-						Frank
+						Opal
 					</Text>
 					<IconChevronDown size={18} />
 				</Box>

@@ -30,7 +30,7 @@ export function OpalPanel({
 		<Box bg="bg.default" borderL="1" borderColor="border.tertiary" style={{ display: "flex", flex: "0 0 360px", flexDirection: "column", minHeight: 0 }}>
 			<Box borderB="1" borderColor="border.tertiary" display="flex" alignItems="center" justifyContent="space-between" px="16" style={{ height: 56 }}>
 				<Box display="flex" alignItems="center" gap="10">
-					<img alt="" src="/opal.png" style={{ borderRadius: 8, height: 32, width: 32 }} />
+					<img alt="" src="/opal-orb.png" style={{ borderRadius: 8, height: 32, width: 32 }} />
 					<Box>
 						<Text fontSize="sm" fontWeight="700">
 							Opal

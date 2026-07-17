@@ -163,7 +163,7 @@ const UNREAD_DOT_STYLE: React.CSSProperties = {
 };
 
 const DMS: DMItem[] = [
-  { id: "opal", name: "Opal",                      avatar: "/opal.png", status: "active", preview: "Your Boston Marathon 2026 content suite is ready to review.", time: "9:12 AM" },
+  { id: "opal", name: "Opal",                      avatar: "/opal-orb.png", status: "active", preview: "Your Boston Marathon 2026 content suite is ready to review.", time: "9:12 AM" },
   { id: "js",   name: "Jane Smith",                avatar: "https://i.pravatar.cc/150?img=47", status: "active", unread: 2, preview: "Same 😂 see you at 2!", time: "2:22 PM" },
   { id: "hw",   name: "Harry Winston-Brown",        avatar: "https://i.pravatar.cc/150?img=52", status: "busy",   preview: "Happy to help 😄 Let me know if anything else comes up!", time: "Yesterday" },
   { id: "pr",   name: "Priya Rajan",                avatar: "https://i.pravatar.cc/150?img=44", status: "away",  unread: 3, hasDraft: true, preview: "Just flagging in case you hadn't seen the calendar invite!", time: "11:45 AM" },
@@ -644,12 +644,12 @@ const THREADS: Record<string, Message[]> = {
     },
     {
       id: "2", from: "vau",
-      senderName: "Opal", senderAvatar: "/opal.png",
+      senderName: "Opal", senderAvatar: "/opal-orb.png",
       text: "To get started, I can create a campaign brief for this. Want me to go ahead?",
     },
     {
       id: "opal-brief", from: "vau", type: "hitl",
-      senderName: "Opal", senderAvatar: "/opal.png",
+      senderName: "Opal", senderAvatar: "/opal-orb.png",
       text: "",
     },
   ],
@@ -3483,8 +3483,8 @@ function IMMain({
       opal: [
         ...(prev.opal ?? []),
         { id: crypto.randomUUID(), from: "user", text: userText },
-        ...(assistantText ? [{ id: crypto.randomUUID(), from: "vau" as const, senderName: "Opal", senderAvatar: "/opal.png", text: assistantText }] : []),
-        ...(nextCardId ? [{ id: nextCardId, from: "vau" as const, type: "hitl" as const, senderName: "Opal", senderAvatar: "/opal.png", text: "" }] : []),
+        ...(assistantText ? [{ id: crypto.randomUUID(), from: "vau" as const, senderName: "Opal", senderAvatar: "/opal-orb.png", text: assistantText }] : []),
+        ...(nextCardId ? [{ id: nextCardId, from: "vau" as const, type: "hitl" as const, senderName: "Opal", senderAvatar: "/opal-orb.png", text: "" }] : []),
       ],
     }));
   };
