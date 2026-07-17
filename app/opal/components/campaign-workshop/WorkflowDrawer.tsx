@@ -3,13 +3,10 @@
 import type { CSSProperties } from "react";
 import { Box, Button, Checkbox } from "@optiaxiom/react";
 import {
-	IconArrowsMaximize,
 	IconCheck,
-	IconChevronDown,
 	IconXmark,
 	IconEye,
 	IconEllipsisStroke,
-	IconPaperPlaneTop,
 	IconUser,
 } from "@optiaxiom/icons";
 import { Text } from "@/app/components/Text";
@@ -146,56 +143,6 @@ function WorkflowStep({ date, done, title }: { date: string; done?: boolean; tit
 			<Text fontSize="sm" color="fg.tertiary">
 				{date}
 			</Text>
-		</Box>
-	);
-}
-
-export function OpalWorkflowPanel() {
-	return (
-		<Box bg="bg.page" borderL="1" borderColor="border.tertiary" style={{ display: "flex", flex: "0 0 455px", flexDirection: "column", minHeight: 0 }}>
-			<Box borderB="1" borderColor="border.tertiary" display="flex" alignItems="center" justifyContent="space-between" px="32" style={{ height: 72 }}>
-				<Box display="flex" alignItems="center" gap="12">
-					<img alt="" src="/opal-orb.png" style={{ borderRadius: 8, height: 32, width: 32 }} />
-					<Text fontSize="xl" fontWeight="700">
-						Opal
-					</Text>
-					<IconChevronDown size={18} />
-				</Box>
-				<IconArrowsMaximize size={19} />
-			</Box>
-			<Box style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "20px 28px" }}>
-				<Box display="flex" alignItems="start" gap="12" justifyContent="flex-end">
-					<Box bg="bg.page" rounded="md" p="16" style={{ maxWidth: 276 }}>
-						<Text fontSize="md">
-							Write a more punchy headline that creates a stronger marketing hook for the Boston Marathon event
-						</Text>
-					</Box>
-				</Box>
-			</Box>
-			<Box style={{ flexShrink: 0, padding: "0 28px 18px" }}>
-				<Box bg="bg.default" border="1" borderColor="border.secondary" rounded="md" display="flex" alignItems="end" justifyContent="space-between" p="10" style={{ height: 102 }}>
-					<Box display="flex" alignItems="center" gap="20" style={{ padding: "0 0 5px 8px" }}>
-						<Text fontSize="lg">⌘</Text>
-						<Text fontSize="lg">↥</Text>
-					</Box>
-					<Button appearance="primary" size="sm" icon={<IconPaperPlaneTop size={18} />} aria-label="Send" />
-				</Box>
-				<Box display="flex" gap="8" style={{ marginTop: 10 }}>
-					<Box bg="bg.page" rounded="full" px="8">
-						<Text fontSize="xs" fontFamily="mono">
-							BRAND PACK
-						</Text>
-					</Box>
-					<Box bg="bg.page" rounded="full" px="8">
-						<Text fontSize="xs" fontFamily="mono">
-							BOSTON MARATHON
-						</Text>
-					</Box>
-				</Box>
-				<Text fontSize="xs" color="fg.tertiary" fontFamily="mono" style={{ marginTop: 8, textTransform: "uppercase" }}>
-					Opal can make mistakes. Double-check its responses.
-				</Text>
-			</Box>
 		</Box>
 	);
 }

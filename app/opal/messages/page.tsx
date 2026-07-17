@@ -5163,7 +5163,7 @@ function IMMain({
           sidebar, so this needs to escape IMMain's content pane entirely
           rather than sit inset within it. */}
       {workshopCanvasOpen && typeof document !== "undefined" && createPortal(
-        <Box style={{ position: "fixed", inset: 0, background: "var(--ax-colors-bg-default)", zIndex: 200 }}>
+        <Box style={{ position: "fixed", inset: 0, background: "var(--ax-colors-bg-default)", zIndex: 30 }}>
           <CampaignWorkshopCanvas
             initialTab={workshopCanvasTab}
             initialShowRationale={workshopCanvasRationale}

@@ -17,20 +17,31 @@ import type { ContentTab } from "./CanvasStage";
 // Canvas header chrome — matches Figma "Image Gen II - 10 Channel Pack Items"
 // (node 6708:90368/89886): code/preview toggle, content tabs, rationale switch,
 // workflow trigger, and version/copy/fullscreen/close icon buttons.
+//
+// "Ask Opal" and "Run Now" live here instead of a canvas-owned chat panel —
+// there's only ever one real Opal conversation (app/components/OpalPanel.tsx,
+// opened via useLayout().opalPanelControls), so the canvas triggers it rather
+// than rendering a second, out-of-sync lookalike.
 export function Toolbar({
 	activeTab,
+	onAskOpal,
 	onClose,
 	onOpenWorkflow,
+	onRunQueuedEdits,
 	onTabChange,
 	onToggleRationale,
+	queuedEditsCount,
 	showRationale,
 	showWorkflow,
 }: {
 	activeTab: ContentTab;
+	onAskOpal: () => void;
 	onClose: () => void;
 	onOpenWorkflow: () => void;
+	onRunQueuedEdits: () => void;
 	onTabChange: (tab: ContentTab) => void;
 	onToggleRationale: () => void;
+	queuedEditsCount: number;
 	showRationale: boolean;
 	showWorkflow: boolean;
 }) {
@@ -60,6 +71,14 @@ export function Toolbar({
 			</Box>
 
 			<Box className="cmp-canvas-toolbar-right" display="flex" alignItems="center" gap="16" justifyContent="flex-end">
+				{queuedEditsCount > 0 && (
+					<Button appearance="primary" size="sm" onClick={onRunQueuedEdits}>
+						Run Now ({queuedEditsCount})
+					</Button>
+				)}
+				<Tooltip content="Ask Opal">
+					<Button appearance="subtle" size="sm" icon={<img alt="" src="/opal-orb.png" style={{ borderRadius: 4, height: 18, width: 18 }} />} aria-label="Ask Opal" onClick={onAskOpal} />
+				</Tooltip>
 				{showWorkflow ? (
 					<Tooltip content="More">
 						<Button appearance="subtle" size="sm" icon={<IconEllipsisStroke size={18} />} aria-label="More" />

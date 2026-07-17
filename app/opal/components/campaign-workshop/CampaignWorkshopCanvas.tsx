@@ -1,18 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useLayout } from "@/app/context/LayoutContext";
 import { CanvasStage, type ContentTab } from "./CanvasStage";
 import { BlogPost } from "./BlogPost";
 import { SocialPosts } from "./SocialPosts";
 import { EmailPreview } from "./EmailPreview";
-import { OpalPanel } from "./OpalPanel";
-import { WorkflowDrawer, OpalWorkflowPanel } from "./WorkflowDrawer";
+import { WorkflowDrawer } from "./WorkflowDrawer";
 import { IMAGE_LIBRARY, SLOT_META, resolveSlotImage, type ImageOverrides, type ImageSlotId } from "./assets";
 
-type Mode = "canvas" | "workflow" | "workflow-done";
+type Mode = "canvas" | "workflow";
 type QueuedEdits = Partial<Record<ImageSlotId, { description: string }>>;
 
-const DEFAULT_SLOT: ImageSlotId = "social-linkedin";
 const WORKFLOW_CHECK_IDS = ["blog", "email", "social"];
 
 // The canvas view opened from the "suite ready" message card — renders inline
@@ -22,8 +21,11 @@ const WORKFLOW_CHECK_IDS = ["blog", "email", "social"];
 // real ChatMessages, not scene state.
 //
 // Editing an image is commenting directly on it (EditableImage/EditPopover)
-// rather than navigating to a separate screen — there is no more "edit" mode
-// here; a queued edit just sits in `queuedEdits` until Run Now resolves it.
+// rather than navigating to a separate screen — a queued edit just sits in
+// `queuedEdits` until the toolbar's "Run Now" resolves it. There is no
+// canvas-owned chat panel: "Ask Opal" in the toolbar opens the one real,
+// shared Opal panel (useLayout().opalPanelControls) instead of rendering a
+// second, out-of-sync lookalike.
 export function CampaignWorkshopCanvas({
 	initialShowRationale = false,
 	initialTab = "blog",
@@ -33,6 +35,7 @@ export function CampaignWorkshopCanvas({
 	initialTab?: ContentTab;
 	onClose: () => void;
 }) {
+	const { opalPanelControls } = useLayout();
 	const [tab, setTab] = useState<ContentTab>(initialTab);
 	const [showRationale, setShowRationale] = useState(initialShowRationale);
 	const [mode, setMode] = useState<Mode>("canvas");
@@ -41,6 +44,11 @@ export function CampaignWorkshopCanvas({
 	const [queuedEdits, setQueuedEdits] = useState<QueuedEdits>({});
 	const [workflowChecks, setWorkflowChecks] = useState<Record<string, boolean>>({});
 	const [workflowComplete, setWorkflowComplete] = useState(false);
+	const queuedEditsCount = Object.keys(queuedEdits).length;
+
+	const askOpal = () => {
+		opalPanelControls?.launchWithContext("Boston Marathon 2026", "Campaign: Boston Marathon 2026 · Brand Pack: Stride");
+	};
 
 	const queueEdit = (slot: ImageSlotId, description: string) => {
 		setQueuedEdits((current) => ({ ...current, [slot]: { description } }));
@@ -86,103 +94,75 @@ export function CampaignWorkshopCanvas({
 	const completeWorkflow = () => {
 		setWorkflowChecks(Object.fromEntries(WORKFLOW_CHECK_IDS.map((id) => [id, true])));
 		setWorkflowComplete(true);
-		setMode("workflow-done");
 	};
 
-	if (mode === "workflow" || mode === "workflow-done") {
-		const hasAnyOverride = Object.keys(imageOverrides).length > 0;
+	if (mode === "workflow") {
 		return (
-			<WorkspaceWithPanel
-				panel={
-					mode === "workflow-done" ? (
-						<OpalPanel editingSlot={DEFAULT_SLOT} imageOverrides={imageOverrides} mode={hasAnyOverride ? "result" : "context"} onOpenWorkflow={() => setMode("workflow-done")} />
-					) : (
-						<OpalWorkflowPanel />
-					)
-				}
-			>
-				<div className="cmp-workflow-layout" style={{ background: "var(--ax-colors-bg-page)", display: "flex", height: "100%", minHeight: 0, overflow: "hidden", width: "100%" }}>
-					<div className="cmp-workflow-canvas-column" style={{ flex: "1 1 656px", minHeight: 0, minWidth: 0 }}>
-						<CanvasStage
-							activeTab={tab}
-							onClose={onClose}
-							onOpenWorkflow={() => setMode("workflow")}
-							onTabChange={setTab}
-							onToggleRationale={() => setShowRationale((v) => !v)}
-							showRationale={false}
-							showWorkflow
-						>
-							<SocialPosts imageOverrides={imageOverrides} onQueueEdit={queueEdit} onRemoveQueuedEdit={removeQueuedEdit} queuedEdits={queuedEdits} />
-						</CanvasStage>
-					</div>
-					<WorkflowDrawer
-						checks={workflowChecks}
-						done={workflowComplete}
-						onClose={() => setMode("canvas")}
-						onDone={completeWorkflow}
-						onToggleCheck={toggleWorkflowCheck}
-					/>
+			<div className="cmp-workflow-layout" style={{ background: "var(--ax-colors-bg-page)", display: "flex", height: "100%", minHeight: 0, overflow: "hidden", width: "100%" }}>
+				<div className="cmp-workflow-canvas-column" style={{ flex: "1 1 656px", minHeight: 0, minWidth: 0 }}>
+					<CanvasStage
+						activeTab={tab}
+						onAskOpal={askOpal}
+						onClose={onClose}
+						onOpenWorkflow={() => setMode("workflow")}
+						onRunQueuedEdits={runQueuedEdits}
+						onTabChange={setTab}
+						onToggleRationale={() => setShowRationale((v) => !v)}
+						queuedEditsCount={queuedEditsCount}
+						showRationale={false}
+						showWorkflow
+					>
+						<SocialPosts imageOverrides={imageOverrides} onQueueEdit={queueEdit} onRemoveQueuedEdit={removeQueuedEdit} queuedEdits={queuedEdits} />
+					</CanvasStage>
 				</div>
-			</WorkspaceWithPanel>
+				<WorkflowDrawer
+					checks={workflowChecks}
+					done={workflowComplete}
+					onClose={() => setMode("canvas")}
+					onDone={completeWorkflow}
+					onToggleCheck={toggleWorkflowCheck}
+				/>
+			</div>
 		);
 	}
 
 	return (
-		<WorkspaceWithPanel
-			panel={
-				<OpalPanel
-					editingSlot={DEFAULT_SLOT}
-					imageOverrides={imageOverrides}
-					mode="canvas"
-					onRemoveQueuedEdit={removeQueuedEdit}
-					onRunQueuedEdits={runQueuedEdits}
-					queuedEdits={queuedEdits}
-				/>
-			}
+		<CanvasStage
+			activeTab={tab}
+			onAskOpal={askOpal}
+			onClose={onClose}
+			onOpenWorkflow={() => setMode("workflow")}
+			onRunQueuedEdits={runQueuedEdits}
+			onTabChange={setTab}
+			onToggleRationale={() => setShowRationale((v) => !v)}
+			queuedEditsCount={queuedEditsCount}
+			showRationale={showRationale}
 		>
-			<CanvasStage
-				activeTab={tab}
-				onClose={onClose}
-				onOpenWorkflow={() => setMode("workflow")}
-				onTabChange={setTab}
-				onToggleRationale={() => setShowRationale((v) => !v)}
-				showRationale={showRationale}
-			>
-				{tab === "blog" && (
-					<BlogPost
-						buildStep={3}
-						imageOverrides={imageOverrides}
-						onEditText={editText}
-						onQueueEdit={queueEdit}
-						onRemoveQueuedEdit={removeQueuedEdit}
-						queuedEdits={queuedEdits}
-						showRationale={showRationale}
-						textOverrides={textOverrides}
-					/>
-				)}
-				{tab === "social" && <SocialPosts imageOverrides={imageOverrides} onQueueEdit={queueEdit} onRemoveQueuedEdit={removeQueuedEdit} queuedEdits={queuedEdits} />}
-				{tab === "email" && (
-					<EmailPreview
-						buildStep={3}
-						imageOverrides={imageOverrides}
-						onEditText={editText}
-						onQueueEdit={queueEdit}
-						onRemoveQueuedEdit={removeQueuedEdit}
-						queuedEdits={queuedEdits}
-						showRationale={showRationale}
-						textOverrides={textOverrides}
-					/>
-				)}
-			</CanvasStage>
-		</WorkspaceWithPanel>
-	);
-}
-
-function WorkspaceWithPanel({ children, panel }: { children: React.ReactNode; panel: React.ReactNode }) {
-	return (
-		<div style={{ background: "var(--ax-colors-bg-page)", display: "flex", height: "100%", minHeight: 0, overflow: "hidden" }}>
-			<div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-			{panel}
-		</div>
+			{tab === "blog" && (
+				<BlogPost
+					buildStep={3}
+					imageOverrides={imageOverrides}
+					onEditText={editText}
+					onQueueEdit={queueEdit}
+					onRemoveQueuedEdit={removeQueuedEdit}
+					queuedEdits={queuedEdits}
+					showRationale={showRationale}
+					textOverrides={textOverrides}
+				/>
+			)}
+			{tab === "social" && <SocialPosts imageOverrides={imageOverrides} onQueueEdit={queueEdit} onRemoveQueuedEdit={removeQueuedEdit} queuedEdits={queuedEdits} />}
+			{tab === "email" && (
+				<EmailPreview
+					buildStep={3}
+					imageOverrides={imageOverrides}
+					onEditText={editText}
+					onQueueEdit={queueEdit}
+					onRemoveQueuedEdit={removeQueuedEdit}
+					queuedEdits={queuedEdits}
+					showRationale={showRationale}
+					textOverrides={textOverrides}
+				/>
+			)}
+		</CanvasStage>
 	);
 }

@@ -47,19 +47,25 @@ const canvasWorldStyle = {
 export function CanvasStage({
 	activeTab,
 	children,
+	onAskOpal,
 	onClose,
 	onOpenWorkflow,
+	onRunQueuedEdits,
 	onTabChange,
 	onToggleRationale,
+	queuedEditsCount,
 	showRationale,
 	showWorkflow = false,
 }: {
 	activeTab: ContentTab;
 	children: React.ReactNode;
+	onAskOpal: () => void;
 	onClose: () => void;
 	onOpenWorkflow: () => void;
+	onRunQueuedEdits: () => void;
 	onTabChange: (tab: ContentTab) => void;
 	onToggleRationale: () => void;
+	queuedEditsCount: number;
 	showRationale: boolean;
 	showWorkflow?: boolean;
 }) {
@@ -227,10 +233,13 @@ export function CanvasStage({
 			`}</style>
 			<Toolbar
 				activeTab={activeTab}
+				onAskOpal={onAskOpal}
 				onClose={onClose}
 				onOpenWorkflow={onOpenWorkflow}
+				onRunQueuedEdits={onRunQueuedEdits}
 				onTabChange={onTabChange}
 				onToggleRationale={onToggleRationale}
+				queuedEditsCount={queuedEditsCount}
 				showRationale={showRationale}
 				showWorkflow={showWorkflow}
 			/>
