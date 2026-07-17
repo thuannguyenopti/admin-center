@@ -106,6 +106,18 @@ export const initialCmpTasks: CmpTask[] = [
 		endDate: "Apr 28, 2025",
 		lastModified: "Apr 1, 2025",
 	},
+	{
+		id: "task-boston-marathon-2027",
+		title: "Boston Marathon blog post",
+		reference: "TSK-2720",
+		status: "In Progress",
+		owner: { name: "David Steinberg", src: avatarImages[0] },
+		creationDate: "May 1, 2026",
+		startDate: "May 11, 2026",
+		endDate: "Jun 28, 2026",
+		lastModified: "Jun 1, 2026",
+		parentCampaignId: "boston-marathon-2027",
+	},
 ];
 
 export const initialCmpCampaigns: CmpCampaign[] = [

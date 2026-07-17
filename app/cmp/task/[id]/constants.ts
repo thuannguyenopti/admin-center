@@ -77,6 +77,34 @@ Content #1: Recovery & Nutrition Guide
 • Distribution Channels: Stride blog, email newsletter, and CMS website.
 • Social Channels: Instagram, Facebook.
 • SEO Keywords: running recovery, post-run nutrition, runner's diet, active recovery for runners.`,
+	"task-boston-marathon-2027": `Objective:
+Build awareness, drive registrations, and equip participants with essential race-day knowledge for the Boston Marathon 2027, powered by Stride.
+
+Campaign Overview:
+The Boston Marathon 2027 content package targets first-time and returning runners with practical, shareable content across blog, social media, and email. All materials should reflect Stride's brand voice — active, confident, community-focused — and position Stride as the essential partner for marathon preparation.
+
+Content #1: Blog Post
+• Title: Boston Marathon 2027, 10 essentials for the day
+• Asset Type: Blog Post (long-form, SEO-optimized)
+• Brief: Write an actionable race-day guide covering the 10 most important things every Boston Marathon runner needs to know — from nutrition timing and gear checklist to course strategy, weather preparation, and recovery planning. Include Stride product recommendations where relevant. Tone should be authoritative yet approachable, as if written by a seasoned marathoner sharing insider tips.
+• Target Audience: Registered Boston Marathon participants, aspiring qualifiers, and the broader running community.
+• Distribution Channels: Stride blog, CMS website, partner syndication.
+• SEO Keywords: Boston Marathon 2027, race day essentials, marathon preparation guide, Boston Marathon tips.
+
+Content #2: Social Media Campaign
+• Title: #StrideToBoston — 10 Days, 10 Tips Countdown
+• Asset Type: Social Media (Instagram carousel + LinkedIn posts)
+• Brief: Create a 10-day countdown series leading up to race day. Each post highlights one of the 10 essentials from the blog post, formatted as a punchy visual tip with a short caption. Drive traffic to the full blog post. Use Stride brand photography and the Boston Marathon event branding. Include a mix of motivational quotes, practical advice, and community-generated content prompts.
+• Target Audience: Active runners on social media, Stride community followers, marathon spectators.
+• Social Channels: Instagram, LinkedIn, Facebook.
+
+Content #3: Email — Race Day Prep
+• Title: Your Boston Marathon race day checklist
+• Asset Type: Email (marketing automation)
+• Brief: Design a race-week email sent 5 days before the event. Include a downloadable checklist PDF, top 3 essentials from the blog, a personalized greeting based on registration data, and a clear CTA to visit the Stride expo booth. Subject line should create urgency without being clickbait. Include a secondary CTA for the Stride app download.
+• Target Audience: Registered Boston Marathon 2027 participants (email list segment).
+• Distribution Channels: Email via Stride marketing automation (Marketo).
+• Personalization: Runner name, bib number if available, estimated wave start time.`,
 };
 
 export const richTextContentStyles = `
