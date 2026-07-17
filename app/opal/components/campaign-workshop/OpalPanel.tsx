@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Button } from "@optiaxiom/react";
-import { IconSearch, IconPaperPlaneTop } from "@optiaxiom/icons";
+import { IconSearch, IconPaperPlaneTop, IconTrashCan } from "@optiaxiom/icons";
 import { Text } from "@/app/components/Text";
 import { SLOT_META, resolveSlotImage, type ImageOverrides, type ImageSlotId } from "./assets";
 
@@ -10,14 +10,21 @@ export function OpalPanel({
 	imageOverrides,
 	mode,
 	onOpenWorkflow,
+	onRemoveQueuedEdit,
+	onRunQueuedEdits,
+	queuedEdits,
 }: {
 	editingSlot: ImageSlotId;
 	imageOverrides?: ImageOverrides;
-	mode: "canvas" | "context" | "edit" | "result";
+	mode: "canvas" | "context" | "result";
 	onOpenWorkflow?: () => void;
+	onRemoveQueuedEdit?: (slot: ImageSlotId) => void;
+	onRunQueuedEdits?: () => void;
+	queuedEdits?: Partial<Record<ImageSlotId, { description: string }>>;
 }) {
 	const meta = SLOT_META[editingSlot];
 	const currentImage = resolveSlotImage(editingSlot, imageOverrides ?? {});
+	const queuedEntries = Object.entries(queuedEdits ?? {}) as [ImageSlotId, { description: string }][];
 
 	return (
 		<Box bg="bg.default" borderL="1" borderColor="border.tertiary" style={{ display: "flex", flex: "0 0 360px", flexDirection: "column", minHeight: 0 }}>
@@ -51,10 +58,30 @@ export function OpalPanel({
 					</Box>
 				)}
 
-				{mode === "edit" && (
-					<Text fontSize="sm" color="fg.secondary">
-						Choose from the real photos available in this workshop, or ask Opal for something different.
-					</Text>
+				{queuedEntries.length > 0 && (
+					<Box border="1" borderColor="border.tertiary" rounded="md" p="12">
+						<Text fontSize="sm" fontWeight="700" style={{ marginBottom: 10 }}>
+							Queued Image Edits ({queuedEntries.length})
+						</Text>
+						<Box display="flex" flexDirection="column" gap="10">
+							{queuedEntries.map(([slot, edit]) => (
+								<Box key={slot} display="flex" alignItems="start" justifyContent="space-between" gap="8">
+									<Box style={{ minWidth: 0 }}>
+										<Text fontSize="sm" fontWeight="700">
+											{SLOT_META[slot].title}
+										</Text>
+										<Text fontSize="xs" color="fg.tertiary">
+											{edit.description}
+										</Text>
+									</Box>
+									<Button appearance="subtle" size="sm" icon={<IconTrashCan size={14} />} aria-label={`Remove queued edit for ${SLOT_META[slot].title}`} onClick={() => onRemoveQueuedEdit?.(slot)} />
+								</Box>
+							))}
+						</Box>
+						<Button appearance="primary" size="sm" style={{ marginTop: 12, width: "100%" }} onClick={onRunQueuedEdits}>
+							Run Now
+						</Button>
+					</Box>
 				)}
 
 				{mode === "result" && (

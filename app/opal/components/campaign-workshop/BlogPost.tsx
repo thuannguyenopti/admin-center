@@ -2,9 +2,9 @@
 
 import type { CSSProperties } from "react";
 import { Box } from "@optiaxiom/react";
-import { ChannelCard } from "./ChannelCard";
+import { EditableImage } from "./EditableImage";
 import { EditableText } from "./EditableText";
-import { IMG, SLOT_META, resolveSlotImage, type ImageOverrides } from "./assets";
+import { IMG, SLOT_META, resolveSlotImage, type ImageOverrides, type ImageSlotId } from "./assets";
 
 const styles: Record<string, CSSProperties> = {
 	article: {
@@ -161,15 +161,19 @@ const styles: Record<string, CSSProperties> = {
 export function BlogPost({
 	buildStep,
 	imageOverrides,
-	onEdit,
 	onEditText,
+	onQueueEdit,
+	onRemoveQueuedEdit,
+	queuedEdits,
 	showRationale,
 	textOverrides,
 }: {
 	buildStep: number;
 	imageOverrides: ImageOverrides;
-	onEdit: (slot: "blog-hero") => void;
 	onEditText: (fieldId: string, value: string) => void;
+	onQueueEdit: (slot: ImageSlotId, description: string) => void;
+	onRemoveQueuedEdit: (slot: ImageSlotId) => void;
+	queuedEdits: Partial<Record<ImageSlotId, { description: string }>>;
 	showRationale: boolean;
 	textOverrides: Partial<Record<string, string>>;
 }) {
@@ -197,17 +201,15 @@ export function BlogPost({
 			)}
 
 			<Box style={{ marginBottom: 34, maxWidth: 780 }}>
-				<ChannelCard
-					altText={text("blog-hero-alt", meta.altText)}
+				<EditableImage
+					slot="blog-hero"
 					aspectRatio="16 / 7"
-					createdLabel={meta.createdLabel}
 					image={resolveSlotImage("blog-hero", imageOverrides)}
-					imageAlt="Boston Marathon finish line for Stride's 2026 campaign"
-					onAltTextChange={(next) => onEditText("blog-hero-alt", next)}
-					onEdit={() => onEdit("blog-hero")}
-					onTitleChange={(next) => onEditText("blog-hero-title", next)}
-					title={text("blog-hero-title", meta.title)}
-					variant="hero"
+					imageAlt={meta.altText}
+					label="the blog hero image"
+					onQueueEdit={onQueueEdit}
+					onRemoveQueuedEdit={onRemoveQueuedEdit}
+					queuedEdit={queuedEdits["blog-hero"]}
 				/>
 			</Box>
 

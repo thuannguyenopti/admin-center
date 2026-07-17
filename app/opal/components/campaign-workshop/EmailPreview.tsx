@@ -1,9 +1,9 @@
 "use client";
 
 import { Box } from "@optiaxiom/react";
-import { ChannelCard } from "./ChannelCard";
+import { EditableImage } from "./EditableImage";
 import { EditableText } from "./EditableText";
-import { SLOT_META, resolveSlotImage, type ImageOverrides } from "./assets";
+import { SLOT_META, resolveSlotImage, type ImageOverrides, type ImageSlotId } from "./assets";
 
 const RACE_DETAILS = [
 	["📅", "Date", "Mon April 20, 2026"],
@@ -21,15 +21,19 @@ const FEATURES = [
 export function EmailPreview({
 	buildStep,
 	imageOverrides,
-	onEdit,
 	onEditText,
+	onQueueEdit,
+	onRemoveQueuedEdit,
+	queuedEdits,
 	showRationale,
 	textOverrides,
 }: {
 	buildStep: number;
 	imageOverrides: ImageOverrides;
-	onEdit: (slot: "email-hero") => void;
 	onEditText: (fieldId: string, value: string) => void;
+	onQueueEdit: (slot: ImageSlotId, description: string) => void;
+	onRemoveQueuedEdit: (slot: ImageSlotId) => void;
+	queuedEdits: Partial<Record<ImageSlotId, { description: string }>>;
 	showRationale: boolean;
 	textOverrides: Partial<Record<string, string>>;
 }) {
@@ -57,17 +61,15 @@ export function EmailPreview({
 			</Box>
 
 			<Box style={{ marginBottom: 20 }}>
-				<ChannelCard
-					altText={text("email-hero-alt", meta.altText)}
+				<EditableImage
+					slot="email-hero"
 					aspectRatio="16 / 9"
-					createdLabel={meta.createdLabel}
 					image={resolveSlotImage("email-hero", imageOverrides)}
-					imageAlt="Sunrise training run for Stride's Boston Marathon 2026 campaign"
-					onAltTextChange={(next) => onEditText("email-hero-alt", next)}
-					onEdit={() => onEdit("email-hero")}
-					onTitleChange={(next) => onEditText("email-hero-title", next)}
-					title={text("email-hero-title", meta.title)}
-					variant="hero"
+					imageAlt={meta.altText}
+					label="the email hero image"
+					onQueueEdit={onQueueEdit}
+					onRemoveQueuedEdit={onRemoveQueuedEdit}
+					queuedEdit={queuedEdits["email-hero"]}
 				/>
 			</Box>
 

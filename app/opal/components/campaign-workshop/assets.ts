@@ -57,8 +57,9 @@ export function resolveSlotImage(slot: ImageSlotId, overrides: ImageOverrides): 
 	return overrides[slot] ?? SLOT_META[slot].defaultImage;
 }
 
-// Every rectangular-safe real photo available in the workshop, offered as
-// alternatives when editing any image slot (see EditorWorkspace.tsx).
+// Every rectangular-safe real photo available in the workshop. Run Now
+// (CampaignWorkshopCanvas.runQueuedEdits) cycles a queued slot to whichever
+// of these isn't already showing elsewhere, simulating a regenerated image.
 // `communityCircle` is excluded — its circular alpha mask only reads
 // correctly at the fixed circular placement used in BlogPost.tsx, not as a
 // generic object-fit:cover swap into an arbitrary rectangular slot.

@@ -5,12 +5,12 @@ import { CanvasStage, type ContentTab } from "./CanvasStage";
 import { BlogPost } from "./BlogPost";
 import { SocialPosts } from "./SocialPosts";
 import { EmailPreview } from "./EmailPreview";
-import { EditorWorkspace } from "./EditorWorkspace";
 import { OpalPanel } from "./OpalPanel";
 import { WorkflowDrawer, FrankWorkflowPanel } from "./WorkflowDrawer";
-import { type ImageOverrides, type ImageSlotId } from "./assets";
+import { IMAGE_LIBRARY, SLOT_META, resolveSlotImage, type ImageOverrides, type ImageSlotId } from "./assets";
 
-type Mode = "canvas" | "edit" | "result" | "workflow" | "workflow-done";
+type Mode = "canvas" | "workflow" | "workflow-done";
+type QueuedEdits = Partial<Record<ImageSlotId, { description: string }>>;
 
 const DEFAULT_SLOT: ImageSlotId = "social-linkedin";
 const WORKFLOW_CHECK_IDS = ["blog", "email", "social"];
@@ -18,8 +18,12 @@ const WORKFLOW_CHECK_IDS = ["blog", "email", "social"];
 // The canvas view opened from the "suite ready" message card — renders inline
 // as `leftCanvas` in the real Opal Chats page (app/opal/page.tsx), not a
 // separate route. Owns its own view state (tab/mode/per-image/per-text
-// overrides); the surrounding conversation lives in real ChatMessages, not
-// scene state.
+// overrides plus queued image edits); the surrounding conversation lives in
+// real ChatMessages, not scene state.
+//
+// Editing an image is commenting directly on it (EditableImage/EditPopover)
+// rather than navigating to a separate screen — there is no more "edit" mode
+// here; a queued edit just sits in `queuedEdits` until Run Now resolves it.
 export function CampaignWorkshopCanvas({
 	initialShowRationale = false,
 	initialTab = "blog",
@@ -32,25 +36,39 @@ export function CampaignWorkshopCanvas({
 	const [tab, setTab] = useState<ContentTab>(initialTab);
 	const [showRationale, setShowRationale] = useState(initialShowRationale);
 	const [mode, setMode] = useState<Mode>("canvas");
-	const [editingSlot, setEditingSlot] = useState<ImageSlotId | null>(null);
 	const [imageOverrides, setImageOverrides] = useState<ImageOverrides>({});
 	const [textOverrides, setTextOverrides] = useState<Partial<Record<string, string>>>({});
+	const [queuedEdits, setQueuedEdits] = useState<QueuedEdits>({});
 	const [workflowChecks, setWorkflowChecks] = useState<Record<string, boolean>>({});
 	const [workflowComplete, setWorkflowComplete] = useState(false);
-	const activeSlot = editingSlot ?? DEFAULT_SLOT;
 
-	const startEdit = (slot: ImageSlotId) => {
-		setEditingSlot(slot);
-		setMode("edit");
+	const queueEdit = (slot: ImageSlotId, description: string) => {
+		setQueuedEdits((current) => ({ ...current, [slot]: { description } }));
 	};
 
-	// Picking a specific photo for a specific slot/aspect ratio — no more
-	// ambiguous "apply to all images?" step, since the choice is inherently
-	// scoped to the one asset being edited.
-	const selectImage = (url: string) => {
-		if (!editingSlot) return;
-		setImageOverrides((current) => ({ ...current, [editingSlot]: url }));
-		setMode("result");
+	const removeQueuedEdit = (slot: ImageSlotId) => {
+		setQueuedEdits((current) => {
+			const next = { ...current };
+			delete next[slot];
+			return next;
+		});
+	};
+
+	// Resolves every queued edit at once: each affected slot moves to a
+	// library photo not already showing anywhere else in the workshop,
+	// simulating "here's the regenerated version" the same honest way the
+	// rest of this prototype does, then the queue clears.
+	const runQueuedEdits = () => {
+		setImageOverrides((current) => {
+			const next = { ...current };
+			for (const slot of Object.keys(queuedEdits) as ImageSlotId[]) {
+				const usedImages = new Set((Object.keys(SLOT_META) as ImageSlotId[]).map((s) => resolveSlotImage(s, next)));
+				const alternative = IMAGE_LIBRARY.find((image) => !usedImages.has(image.src));
+				next[slot] = alternative ? alternative.src : IMAGE_LIBRARY[0].src;
+			}
+			return next;
+		});
+		setQueuedEdits({});
 	};
 
 	const editText = (fieldId: string, value: string) => {
@@ -71,34 +89,13 @@ export function CampaignWorkshopCanvas({
 		setMode("workflow-done");
 	};
 
-	if (mode === "edit") {
-		return <EditorWorkspace editingSlot={editingSlot} imageOverrides={imageOverrides} onBack={() => setMode("canvas")} onClose={onClose} onSelectImage={selectImage} />;
-	}
-
-	if (mode === "result") {
-		return (
-			<WorkspaceWithPanel panel={<OpalPanel editingSlot={activeSlot} imageOverrides={imageOverrides} mode="result" onOpenWorkflow={() => setMode("workflow")} />}>
-				<CanvasStage
-					activeTab="social"
-					onClose={onClose}
-					onOpenWorkflow={() => setMode("workflow")}
-					onTabChange={setTab}
-					onToggleRationale={() => setShowRationale((v) => !v)}
-					showRationale={false}
-				>
-					<SocialPosts imageOverrides={imageOverrides} onEdit={startEdit} onEditText={editText} textOverrides={textOverrides} />
-				</CanvasStage>
-			</WorkspaceWithPanel>
-		);
-	}
-
 	if (mode === "workflow" || mode === "workflow-done") {
 		const hasAnyOverride = Object.keys(imageOverrides).length > 0;
 		return (
 			<WorkspaceWithPanel
 				panel={
 					mode === "workflow-done" ? (
-						<OpalPanel editingSlot={activeSlot} imageOverrides={imageOverrides} mode={hasAnyOverride ? "result" : "context"} onOpenWorkflow={() => setMode("workflow-done")} />
+						<OpalPanel editingSlot={DEFAULT_SLOT} imageOverrides={imageOverrides} mode={hasAnyOverride ? "result" : "context"} onOpenWorkflow={() => setMode("workflow-done")} />
 					) : (
 						<FrankWorkflowPanel />
 					)
@@ -115,7 +112,7 @@ export function CampaignWorkshopCanvas({
 							showRationale={false}
 							showWorkflow
 						>
-							<SocialPosts imageOverrides={imageOverrides} onEdit={startEdit} onEditText={editText} textOverrides={textOverrides} />
+							<SocialPosts imageOverrides={imageOverrides} onQueueEdit={queueEdit} onRemoveQueuedEdit={removeQueuedEdit} queuedEdits={queuedEdits} />
 						</CanvasStage>
 					</div>
 					<WorkflowDrawer
@@ -131,7 +128,18 @@ export function CampaignWorkshopCanvas({
 	}
 
 	return (
-		<WorkspaceWithPanel panel={<OpalPanel editingSlot={activeSlot} imageOverrides={imageOverrides} mode="canvas" />}>
+		<WorkspaceWithPanel
+			panel={
+				<OpalPanel
+					editingSlot={DEFAULT_SLOT}
+					imageOverrides={imageOverrides}
+					mode="canvas"
+					onRemoveQueuedEdit={removeQueuedEdit}
+					onRunQueuedEdits={runQueuedEdits}
+					queuedEdits={queuedEdits}
+				/>
+			}
+		>
 			<CanvasStage
 				activeTab={tab}
 				onClose={onClose}
@@ -140,9 +148,31 @@ export function CampaignWorkshopCanvas({
 				onToggleRationale={() => setShowRationale((v) => !v)}
 				showRationale={showRationale}
 			>
-				{tab === "blog" && <BlogPost buildStep={3} imageOverrides={imageOverrides} onEdit={startEdit} onEditText={editText} showRationale={showRationale} textOverrides={textOverrides} />}
-				{tab === "social" && <SocialPosts imageOverrides={imageOverrides} onEdit={startEdit} onEditText={editText} textOverrides={textOverrides} />}
-				{tab === "email" && <EmailPreview buildStep={3} imageOverrides={imageOverrides} onEdit={startEdit} onEditText={editText} showRationale={showRationale} textOverrides={textOverrides} />}
+				{tab === "blog" && (
+					<BlogPost
+						buildStep={3}
+						imageOverrides={imageOverrides}
+						onEditText={editText}
+						onQueueEdit={queueEdit}
+						onRemoveQueuedEdit={removeQueuedEdit}
+						queuedEdits={queuedEdits}
+						showRationale={showRationale}
+						textOverrides={textOverrides}
+					/>
+				)}
+				{tab === "social" && <SocialPosts imageOverrides={imageOverrides} onQueueEdit={queueEdit} onRemoveQueuedEdit={removeQueuedEdit} queuedEdits={queuedEdits} />}
+				{tab === "email" && (
+					<EmailPreview
+						buildStep={3}
+						imageOverrides={imageOverrides}
+						onEditText={editText}
+						onQueueEdit={queueEdit}
+						onRemoveQueuedEdit={removeQueuedEdit}
+						queuedEdits={queuedEdits}
+						showRationale={showRationale}
+						textOverrides={textOverrides}
+					/>
+				)}
 			</CanvasStage>
 		</WorkspaceWithPanel>
 	);
