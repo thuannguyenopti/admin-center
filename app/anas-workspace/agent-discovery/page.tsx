@@ -24,11 +24,8 @@ import {
   IconBrandFigma,
 } from "@tabler/icons-react";
 
-// Figma asset URLs (expire after 7 days — for experimentation only)
-const IMG_EMAIL_ILLUSTRATION =
-  "https://www.figma.com/api/mcp/asset/bfedfe67-07c1-4419-a8a3-72759e3c4501";
-const IMG_CARD_ICON =
-  "https://www.figma.com/api/mcp/asset/c054f9d2-73fb-48e3-b75c-69efe038f99f";
+const IMG_EMAIL_ILLUSTRATION = "/cmp/assets/recommendation/panel-01-image.jpg";
+const IMG_CARD_ICON = "/cmp/assets/recommendation/panel-05-image.jpg";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

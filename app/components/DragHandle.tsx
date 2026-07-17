@@ -2,6 +2,7 @@
 
 import {Box} from "@optiaxiom/react";
 import {IconArrowBarBoth} from "@tabler/icons-react";
+import {useState, useEffect, useRef} from "react";
 
 interface DragHandleProps {
 	/** Position of the handle */
@@ -23,6 +24,48 @@ export default function DragHandle({
 	width,
 	onWidthChange,
 }: DragHandleProps) {
+	const [hasScrollbar, setHasScrollbar] = useState(false);
+	const handleRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!handleRef.current) return;
+
+		const checkScrollbar = () => {
+			const parentElement = handleRef.current?.parentElement;
+			if (!parentElement) return;
+
+			// Find all scrollable descendants
+			const scrollables = parentElement.querySelectorAll('*');
+			let hasScroll = false;
+
+			for (const el of scrollables) {
+				const style = window.getComputedStyle(el);
+				if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+					const element = el as HTMLElement;
+					if (element.scrollHeight > element.clientHeight) {
+						hasScroll = true;
+						break;
+					}
+				}
+			}
+
+			setHasScrollbar(hasScroll);
+		};
+
+		// Check immediately
+		checkScrollbar();
+
+		// Check on interval for dynamic content changes
+		const interval = setInterval(checkScrollbar, 500);
+
+		window.addEventListener('resize', checkScrollbar);
+
+		return () => {
+			clearInterval(interval);
+			window.removeEventListener('resize', checkScrollbar);
+		};
+	}, []);
+
 	const handleMouseDown = (e: React.MouseEvent) => {
 		e.preventDefault();
 		const startX = e.clientX;
@@ -61,10 +104,11 @@ export default function DragHandle({
 
 	return (
 		<div
+			ref={handleRef}
 			onMouseDown={handleMouseDown}
 			style={{
 				position: "absolute",
-				[position]: 0,
+				[position]: hasScrollbar && position === "right" ? "8px" : 0,
 				top: 0,
 				bottom: 0,
 				width: "8px",

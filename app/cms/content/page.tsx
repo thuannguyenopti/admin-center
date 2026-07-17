@@ -9,6 +9,7 @@ import {
 	SelectTrigger,
 	SelectContent,
 	Text as AxiomText,
+	Tooltip,
 } from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
@@ -20,6 +21,7 @@ import {
 	IconPhoto,
 	IconChevronUp,
 	IconChevronDown,
+	IconLink,
 } from "@tabler/icons-react";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Item from "@/app/components/Item";
@@ -398,7 +400,17 @@ export default function ContentPage() {
 								/>
 							</Td>
 							<Td type="header">
-								<Item icon={getIconForType(item.baseType)} title={item.name} />
+								<Item
+									icon={getIconForType(item.baseType)}
+									title={item.name}
+									endAdornment={item.hasConnection ? (
+										<Tooltip content="Connected to content" auto>
+											<Box display="inline-flex" color="fg.accent">
+												<IconLink size={14} />
+											</Box>
+										</Tooltip>
+									) : undefined}
+								/>
 							</Td>
 							<Td>{item.baseType}</Td>
 							<Td type="badge" data={getStatusIntent(item.status)}>

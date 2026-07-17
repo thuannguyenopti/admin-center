@@ -1,23 +1,43 @@
 "use client";
 
-import {createContext, useContext, useState, useEffect, ReactNode} from "react";
-import type {ChatMessage} from "@/app/hooks/useOpalState";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import type { ChatMessage } from "@/app/hooks/useOpalState";
 
 type OpalPanelControls = {
 	openPanel: () => void;
 	togglePanel: () => void;
 	closePanel: () => void;
+	createNewChat: () => string;
 	clearHistory: () => void;
-	setInputValue: (value: string) => void;
 	addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => ChatMessage;
 	updateMessage: (id: string, updates: Partial<ChatMessage>) => void;
 	removeMessage: (id: string) => void;
+	setInputValue: (value: string) => void;
+	sendMessage: (content: string) => void | Promise<void>;
 	setInputDisabled: (disabled: boolean) => void;
+	launchPrompt: (prompt: string) => void;
+	launchWithContext: (label: string, content: string) => void;
 };
+
+type CodePanelControls = {
+	openPanel: (target: string) => void;
+	closePanel: () => void;
+	isOpen: boolean;
+};
+
+export type FormBuilderControls = {
+	applyGraph: (nodes: any[], edges: any[]) => void;
+	removeEdge: (edgeId: string) => void;
+	deleteNode: (nodeId: string) => void;
+};
+
+export type ActiveVAU = { name: string; avatar: string };
 
 type LayoutContextType = {
 	asideContent: ReactNode | null;
 	setAsideContent: (content: ReactNode | null) => void;
+	titleActions: ReactNode | null;
+	setTitleActions: (content: ReactNode | null) => void;
 	footerContent: ReactNode | null;
 	setFooterContent: (content: ReactNode | null) => void;
 	hidePageHeader: boolean;
@@ -26,19 +46,32 @@ type LayoutContextType = {
 	setOpalPanelControls: (controls: OpalPanelControls | null) => void;
 	opalPanelWidth: number;
 	setOpalPanelWidth: (width: number) => void;
+	codePanelControls: CodePanelControls | null;
+	setCodePanelControls: (controls: CodePanelControls | null) => void;
+	formBuilderControls: FormBuilderControls | null;
+	setFormBuilderControls: (controls: FormBuilderControls | null) => void;
+	activeVAU: ActiveVAU | null;
+	setActiveVAU: (vau: ActiveVAU | null) => void;
+	pendingIMConvId: string | null;
+	setPendingIMConvId: (id: string | null) => void;
 };
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
-export function LayoutProvider({children}: {children: ReactNode}) {
+export function LayoutProvider({ children }: { children: ReactNode }) {
 	const [asideContent, setAsideContent] = useState<ReactNode | null>(null);
+	const [titleActions, setTitleActions] = useState<ReactNode | null>(null);
 	const [footerContent, setFooterContent] = useState<ReactNode | null>(null);
 	const [hidePageHeader, setHidePageHeader] = useState<boolean>(false);
 	const [opalPanelControls, setOpalPanelControls] = useState<OpalPanelControls | null>(null);
 	const [opalPanelWidth, setOpalPanelWidth] = useState<number>(0);
+	const [codePanelControls, setCodePanelControls] = useState<CodePanelControls | null>(null);
+	const [formBuilderControls, setFormBuilderControls] = useState<FormBuilderControls | null>(null);
+	const [activeVAU, setActiveVAU] = useState<ActiveVAU | null>(null);
+	const [pendingIMConvId, setPendingIMConvId] = useState<string | null>(null);
 
 	return (
-		<LayoutContext.Provider value={{asideContent, setAsideContent, footerContent, setFooterContent, hidePageHeader, setHidePageHeader, opalPanelControls, setOpalPanelControls, opalPanelWidth, setOpalPanelWidth}}>
+		<LayoutContext.Provider value={{ asideContent, setAsideContent, titleActions, setTitleActions, footerContent, setFooterContent, hidePageHeader, setHidePageHeader, opalPanelControls, setOpalPanelControls, opalPanelWidth, setOpalPanelWidth, codePanelControls, setCodePanelControls, formBuilderControls, setFormBuilderControls, activeVAU, setActiveVAU, pendingIMConvId, setPendingIMConvId }}>
 			{children}
 		</LayoutContext.Provider>
 	);
@@ -62,8 +95,8 @@ export function useLayout() {
  * </Aside>
  * ```
  */
-export function Aside({children}: {children: ReactNode}) {
-	const {setAsideContent} = useLayout();
+export function Aside({ children }: { children: ReactNode }) {
+	const { setAsideContent } = useLayout();
 
 	useEffect(() => {
 		setAsideContent(children);
@@ -88,8 +121,8 @@ export function Aside({children}: {children: ReactNode}) {
  * </Footer>
  * ```
  */
-export function Footer({children}: {children: ReactNode}) {
-	const {setFooterContent} = useLayout();
+export function Footer({ children }: { children: ReactNode }) {
+	const { setFooterContent } = useLayout();
 
 	useEffect(() => {
 		setFooterContent(children);

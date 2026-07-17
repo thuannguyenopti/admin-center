@@ -22,7 +22,7 @@ export default function ApplicationSettingsPage() {
 		initialApplications
 	) as [Application[], (value: Application[]) => void];
 
-	const [pages] = usePersistentState("pages_v5", initialPages) as [
+	const [pages] = usePersistentState("pages_v6", initialPages) as [
 		Page[],
 		(pages: Page[]) => void,
 		boolean

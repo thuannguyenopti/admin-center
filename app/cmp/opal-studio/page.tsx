@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useSearchParams } from "next/navigation";
-import { Badge, Box, Button as AxiomButton, SearchInput, Text, Textarea } from "@optiaxiom/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Badge, Box, Button as AxiomButton, SearchInput, Text, Textarea, Tabs, TabsList, TabsTrigger, TabsContent } from "@optiaxiom/react";
 import {
 	IconArrowBackUp,
 	IconArrowForwardUp,
@@ -10,15 +10,12 @@ import {
 	IconCheck,
 	IconChevronDown,
 	IconCopy,
-	IconDeviceFloppy,
 	IconDownload,
-	IconEye,
-	IconPhoto,
-	IconPlayerPlayFilled,
 	IconSparkles,
 	IconUpload,
 	IconWand,
 	IconX,
+	IconPlus,
 } from "@tabler/icons-react";
 import { useLayout } from "@/app/context/LayoutContext";
 import { useOpalContext } from "@/app/context/OpalContext";
@@ -28,6 +25,7 @@ type FlowMode = "create" | "edit";
 type AssetMode = "image" | "video";
 type SaveState = "saved" | "saving" | "unsaved";
 type CreateStage = "panel" | "advanced";
+type CanvasMode = "generate" | "edit";
 type DraftResult = {
 	id: string;
 	title: string;
@@ -65,6 +63,15 @@ const createIntentOptions = [
 	"Poster",
 	"Product placement",
 	"Trade booth",
+];
+
+const intentOptions = [
+	"Logo",
+	"Photo",
+	"Video",
+	"Poster",
+	"Illustrations",
+	"Icons",
 ];
 
 const editToolOptions = [
@@ -569,6 +576,566 @@ function CanvasToolbarIconButton({
 	return <AxiomButton aria-label={ariaLabel} appearance="default" size="sm" icon={icon} onClick={onClick} />;
 }
 
+function CanvasTopBar({
+	canvasMode,
+	onCanvasModeChange,
+	saveState,
+	onClose,
+}: {
+	canvasMode: CanvasMode;
+	onCanvasModeChange: (mode: CanvasMode) => void;
+	saveState: SaveState;
+	onClose: () => void;
+}) {
+	const [addToMenuOpen, setAddToMenuOpen] = useState(false);
+
+	return (
+		<Box
+			alignItems="center"
+			borderB="1"
+			borderColor="border.tertiary"
+			bg="bg.default"
+			display="flex"
+			justifyContent="space-between"
+			px="24"
+			py="12"
+			style={{ minHeight: 64 }}
+		>
+			{/* Left side: Mode toggle */}
+			<Box alignItems="center" display="flex" gap="8">
+				<Box
+					alignItems="center"
+					bg="bg.secondary"
+					display="inline-flex"
+					gap="4"
+					p="4"
+					rounded="full"
+					style={{ width: "fit-content" }}
+				>
+					<button
+						type="button"
+						onClick={() => onCanvasModeChange("generate")}
+						style={{
+							background: canvasMode === "generate" ? "var(--ax-colors-bg-default)" : "transparent",
+							border: 0,
+							borderRadius: 999,
+							color: canvasMode === "generate" ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)",
+							cursor: "pointer",
+							fontSize: 14,
+							fontWeight: canvasMode === "generate" ? 600 : 500,
+							height: 36,
+							padding: "0 16px",
+							transition: "all 0.2s ease",
+						}}
+					>
+						Generate
+					</button>
+					<button
+						type="button"
+						onClick={() => onCanvasModeChange("edit")}
+						style={{
+							background: canvasMode === "edit" ? "var(--ax-colors-bg-default)" : "transparent",
+							border: 0,
+							borderRadius: 999,
+							color: canvasMode === "edit" ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)",
+							cursor: "pointer",
+							fontSize: 14,
+							fontWeight: canvasMode === "edit" ? 600 : 500,
+							height: 36,
+							padding: "0 16px",
+							transition: "all 0.2s ease",
+						}}
+					>
+						Edit
+					</button>
+				</Box>
+			</Box>
+
+			{/* Right side: Actions */}
+			<Box alignItems="center" display="flex" gap="8">
+				<Text color="fg.secondary" fontSize="xs">
+					{saveState === "saved" ? "Changes saved" : saveState === "saving" ? "Saving..." : "Unsaved changes"}
+				</Text>
+				<CanvasToolbarIconButton ariaLabel="Undo" icon={<IconArrowBackUp size={16} />} />
+				<CanvasToolbarIconButton ariaLabel="Redo" icon={<IconArrowForwardUp size={16} />} />
+				<CanvasToolbarIconButton ariaLabel="Copy" icon={<IconCopy size={16} />} />
+
+				{/* Add to dropdown */}
+				<Box style={{ position: "relative" }}>
+					<AxiomButton
+						appearance="primary"
+						size="sm"
+						icon={<IconChevronDown size={14} />}
+						onClick={() => setAddToMenuOpen(!addToMenuOpen)}
+					>
+						Add to
+					</AxiomButton>
+					{addToMenuOpen ? (
+						<Box
+							bg="bg.default"
+							border="1"
+							borderColor="border.tertiary"
+							rounded="lg"
+							shadow="lg"
+							style={{
+								position: "absolute",
+								right: 0,
+								top: 40,
+								width: 200,
+								zIndex: 100,
+							}}
+						>
+							<Box display="flex" flexDirection="column" p="4">
+								{[
+									{ label: "Add to Task", icon: <IconPlus size={16} /> },
+									{ label: "Add to Library", icon: <IconDownload size={16} /> },
+									{ label: "Download", icon: <IconDownload size={16} /> },
+								].map((item) => (
+									<button
+										key={item.label}
+										type="button"
+										onClick={() => {
+											setAddToMenuOpen(false);
+											// Handle action
+										}}
+										style={{
+											alignItems: "center",
+											background: "transparent",
+											border: 0,
+											borderRadius: 6,
+											color: "var(--ax-colors-fg-default)",
+											cursor: "pointer",
+											display: "flex",
+											fontSize: 14,
+											gap: 8,
+											padding: "8px 12px",
+											textAlign: "left",
+											transition: "background 0.15s ease",
+											width: "100%",
+										}}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.background = "var(--ax-colors-bg-secondary)";
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.background = "transparent";
+										}}
+									>
+										{item.icon}
+										{item.label}
+									</button>
+								))}
+							</Box>
+						</Box>
+					) : null}
+				</Box>
+
+				<CanvasToolbarIconButton ariaLabel="Close canvas" icon={<IconX size={16} />} onClick={onClose} />
+			</Box>
+		</Box>
+	);
+}
+
+function CanvasSettingsSidebar({
+	canvasMode,
+	intent,
+	onIntentChange,
+	aspectRatio,
+	onAspectRatioChange,
+	channelPack,
+	onChannelPackChange,
+	themePack,
+	onThemePackChange,
+	brandPack,
+	onBrandPackChange,
+	referenceAssets,
+	selectedReferenceId,
+	onSelectReference,
+	textOverlayEnabled,
+	onTextOverlayChange,
+	referenceStrength,
+	onReferenceStrengthChange,
+	outputVariants,
+}: {
+	canvasMode: CanvasMode;
+	intent: string;
+	onIntentChange: (value: string) => void;
+	aspectRatio: string;
+	onAspectRatioChange: (value: string) => void;
+	channelPack: string;
+	onChannelPackChange: (value: string) => void;
+	themePack: string;
+	onThemePackChange: (value: string) => void;
+	brandPack: string;
+	onBrandPackChange: (value: string) => void;
+	referenceAssets: ReferenceAsset[];
+	selectedReferenceId: string;
+	onSelectReference: (id: string) => void;
+	textOverlayEnabled: boolean;
+	onTextOverlayChange: (enabled: boolean) => void;
+	referenceStrength: number;
+	onReferenceStrengthChange: (value: number) => void;
+	outputVariants: OutputVariant[];
+}) {
+	const showAspectRatio = intent !== "Logo"; // Logos are always square
+	const showChannelPack = intent === "Photo" || intent === "Poster";
+
+	return (
+		<Box
+			bg="bg.default"
+			borderL="1"
+			borderColor="border.tertiary"
+			display="flex"
+			flexDirection="column"
+			style={{ width: 400, minHeight: "100%", overflowY: "auto" }}
+		>
+			<Box borderB="1" borderColor="border.tertiary" p="24" pb="20">
+				<Text fontSize="lg" fontWeight="700">
+					Settings
+				</Text>
+			</Box>
+
+			<Box flex="1" p="24" pt="20">
+				<Tabs defaultValue="output">
+					<TabsList>
+						<TabsTrigger value="output">Output</TabsTrigger>
+						<TabsTrigger value="brand">Brand</TabsTrigger>
+						<TabsTrigger value="advanced">Advanced</TabsTrigger>
+					</TabsList>
+
+					{/* Output Tab */}
+					<TabsContent value="output">
+						<Box display="flex" flexDirection="column" gap="24" pt="20">
+							{/* Intent - Always visible */}
+							<Box display="flex" flexDirection="column" gap="12">
+								<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+									Intent
+								</Text>
+								<select
+									value={intent}
+									onChange={(e) => onIntentChange(e.target.value)}
+									style={{
+										background: "var(--ax-colors-bg-default)",
+										border: "1px solid var(--ax-colors-border-secondary)",
+										borderRadius: 12,
+										color: "var(--ax-colors-fg-default)",
+										fontSize: 14,
+										height: 44,
+										outline: "none",
+										padding: "0 14px",
+									}}
+								>
+									{intentOptions.map((option) => (
+										<option key={option} value={option}>
+											{option}
+										</option>
+									))}
+								</select>
+								<Text color="fg.secondary" fontSize="xs">
+									{intent === "Logo" && "AI will optimize for clean vectors and brand marks"}
+									{intent === "Photo" && "AI will load photorealistic rendering skills"}
+									{intent === "Video" && "AI will prepare motion and timing controls"}
+									{intent === "Poster" && "AI will focus on bold composition and copy space"}
+									{intent === "Illustrations" && "AI will use illustrative styles and treatments"}
+									{intent === "Icons" && "AI will create minimal, recognizable symbols"}
+								</Text>
+							</Box>
+
+							{/* Aspect Ratio - Conditional */}
+							{showAspectRatio && (
+								<Box display="flex" flexDirection="column" gap="12">
+									<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+										Aspect Ratio
+									</Text>
+									<RatioChips value={aspectRatio} onChange={onAspectRatioChange} />
+									<Text color="fg.secondary" fontSize="xs">
+										{aspectRatio === "Auto" && "Opal will choose the best ratio for your channel pack"}
+										{aspectRatio === "1:1" && "Square format • Instagram posts, profile images"}
+										{aspectRatio === "4:5" && "Portrait • Instagram feed, Facebook posts"}
+										{aspectRatio === "16:9" && "Landscape • YouTube, presentations, web heroes"}
+										{aspectRatio === "9:16" && "Vertical • Instagram stories, TikTok, Reels"}
+									</Text>
+								</Box>
+							)}
+
+							{/* Channel Pack - Conditional */}
+							{showChannelPack && (
+								<Box display="flex" flexDirection="column" gap="12">
+									<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+										Channel Pack
+									</Text>
+									<select
+										value={channelPack}
+										onChange={(e) => onChannelPackChange(e.target.value)}
+										style={{
+											background: "var(--ax-colors-bg-default)",
+											border: "1px solid var(--ax-colors-border-secondary)",
+											borderRadius: 12,
+											color: "var(--ax-colors-fg-default)",
+											fontSize: 14,
+											height: 44,
+											outline: "none",
+											padding: "0 14px",
+										}}
+									>
+										{channelPacks.map((option) => (
+											<option key={option} value={option}>
+												{option}
+											</option>
+										))}
+									</select>
+
+									{/* Output Preview */}
+									{outputVariants.length > 0 && (
+										<Box bg="bg.secondary" border="1" borderColor="border.tertiary" p="12" rounded="xl">
+											<Text fontSize="xs" fontWeight="600" mb="8">
+												Will generate {outputVariants.length} outputs:
+											</Text>
+											<Box display="flex" flexDirection="column" gap="6">
+												{outputVariants.map((variant) => (
+													<Box key={`${variant.label}-${variant.width}`} display="flex" alignItems="center" justifyContent="space-between">
+														<Text fontSize="xs" color="fg.secondary">
+															{variant.label}
+														</Text>
+														<Badge intent="neutral" size="sm">
+															{variant.width}×{variant.height}
+														</Badge>
+													</Box>
+												))}
+											</Box>
+										</Box>
+									)}
+								</Box>
+							)}
+						</Box>
+					</TabsContent>
+
+					{/* Brand Tab */}
+					<TabsContent value="brand">
+						<Box display="flex" flexDirection="column" gap="24" pt="20">
+							{/* Theme Package */}
+							<Box display="flex" flexDirection="column" gap="12">
+								<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+									Theme Package
+								</Text>
+								<select
+									value={themePack}
+									onChange={(e) => onThemePackChange(e.target.value)}
+									style={{
+										background: "var(--ax-colors-bg-default)",
+										border: "1px solid var(--ax-colors-border-secondary)",
+										borderRadius: 12,
+										color: "var(--ax-colors-fg-default)",
+										fontSize: 14,
+										height: 44,
+										outline: "none",
+										padding: "0 14px",
+									}}
+								>
+									{themePacks.map((option) => (
+										<option key={option} value={option}>
+											{option}
+										</option>
+									))}
+								</select>
+								<Text color="fg.secondary" fontSize="xs">
+									Campaign-specific visual direction and color palette
+								</Text>
+							</Box>
+
+							{/* Brand Pack */}
+							<Box display="flex" flexDirection="column" gap="12">
+								<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+									Brand Pack
+								</Text>
+								<select
+									value={brandPack}
+									onChange={(e) => onBrandPackChange(e.target.value)}
+									style={{
+										background: "var(--ax-colors-bg-default)",
+										border: "1px solid var(--ax-colors-border-secondary)",
+										borderRadius: 12,
+										color: "var(--ax-colors-fg-default)",
+										fontSize: 14,
+										height: 44,
+										outline: "none",
+										padding: "0 14px",
+									}}
+								>
+									{brandPacks.map((option) => (
+										<option key={option} value={option}>
+											{option}
+										</option>
+									))}
+								</select>
+								<Text color="fg.secondary" fontSize="xs">
+									Applies Stride's brand guidelines and negative rules
+								</Text>
+							</Box>
+
+							{/* Reference Images */}
+							<Box display="flex" flexDirection="column" gap="12">
+								<Box alignItems="center" display="flex" justifyContent="space-between">
+									<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+										Reference Images
+									</Text>
+									<AxiomButton appearance="default" size="sm" icon={<IconUpload size={14} />}>
+										Upload
+									</AxiomButton>
+								</Box>
+								<Box display="grid" gap="12" style={{ gridTemplateColumns: "1fr 1fr" }}>
+									{referenceAssets.slice(0, 4).map((asset) => (
+										<button
+											key={asset.id}
+											type="button"
+											onClick={() => onSelectReference(asset.id)}
+											style={{
+												background: "var(--ax-colors-bg-default)",
+												border: `2px solid ${asset.id === selectedReferenceId ? "var(--ax-colors-border-accent)" : "var(--ax-colors-border-tertiary)"}`,
+												borderRadius: 12,
+												cursor: "pointer",
+												overflow: "hidden",
+												padding: 0,
+												textAlign: "left",
+												transition: "border-color 0.2s ease",
+											}}
+										>
+											<img
+												alt={asset.title}
+												src={asset.image}
+												style={{
+													display: "block",
+													height: 96,
+													objectFit: "cover",
+													width: "100%",
+												}}
+											/>
+											<Box p="10">
+												<Text fontSize="xs" fontWeight="600">
+													{asset.title}
+												</Text>
+												<Text color="fg.secondary" fontSize="xs">
+													{asset.source}
+												</Text>
+											</Box>
+										</button>
+									))}
+								</Box>
+
+								{/* Reference Strength Slider */}
+								{selectedReferenceId && (
+									<Box display="flex" flexDirection="column" gap="8" mt="8">
+										<Box alignItems="center" display="flex" justifyContent="space-between">
+											<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+												Reference Influence
+											</Text>
+											<Text color="fg.default" fontSize="xs" fontWeight="600">
+												{referenceStrength}%
+											</Text>
+										</Box>
+										<input
+											type="range"
+											min="0"
+											max="100"
+											value={referenceStrength}
+											onChange={(e) => onReferenceStrengthChange(Number(e.target.value))}
+											style={{
+												width: "100%",
+												accentColor: "var(--ax-colors-bg-accent)",
+											}}
+										/>
+										<Text color="fg.secondary" fontSize="xs">
+											{referenceStrength < 30 && "Subtle inspiration only"}
+											{referenceStrength >= 30 && referenceStrength < 70 && "Balanced influence"}
+											{referenceStrength >= 70 && "Strong style transfer"}
+										</Text>
+									</Box>
+								)}
+							</Box>
+						</Box>
+					</TabsContent>
+
+					{/* Advanced Tab */}
+					<TabsContent value="advanced">
+						<Box display="flex" flexDirection="column" gap="24" pt="20">
+							{/* Text Overlay */}
+							<Box display="flex" flexDirection="column" gap="12">
+								<Box display="flex" alignItems="center" justifyContent="space-between">
+									<Box flex="1">
+										<Text fontSize="sm" fontWeight="600">
+											Text Overlay
+										</Text>
+										<Text color="fg.secondary" fontSize="xs">
+											Add text elements to the canvas
+										</Text>
+									</Box>
+									<button
+										type="button"
+										onClick={() => onTextOverlayChange(!textOverlayEnabled)}
+										style={{
+											background: textOverlayEnabled ? "var(--ax-colors-bg-accent)" : "var(--ax-colors-bg-secondary)",
+											border: 0,
+											borderRadius: 12,
+											cursor: "pointer",
+											height: 24,
+											position: "relative",
+											transition: "background 0.2s ease",
+											width: 44,
+											flexShrink: 0,
+										}}
+									>
+										<span
+											style={{
+												background: "var(--ax-colors-bg-default)",
+												borderRadius: 10,
+												display: "block",
+												height: 20,
+												left: textOverlayEnabled ? 22 : 2,
+												position: "absolute",
+												top: 2,
+												transition: "left 0.2s ease",
+												width: 20,
+											}}
+										/>
+									</button>
+								</Box>
+							</Box>
+
+							{/* Edit Mode Tools */}
+							{canvasMode === "edit" && (
+								<Box bg="bg.secondary" border="1" borderColor="border.tertiary" p="16" rounded="xl">
+									<Text fontSize="sm" fontWeight="600" mb="8">
+										Transform Tools
+									</Text>
+									<Box display="flex" flexDirection="column" gap="8">
+										<Text color="fg.secondary" fontSize="xs">
+											• Upscale to higher resolution
+										</Text>
+										<Text color="fg.secondary" fontSize="xs">
+											• Resize to different dimensions
+										</Text>
+										<Text color="fg.secondary" fontSize="xs">
+											• Reframe with smart cropping
+										</Text>
+									</Box>
+								</Box>
+							)}
+
+							<Box bg="bg.secondary" border="1" borderColor="border.tertiary" p="16" rounded="xl">
+								<Text fontSize="sm" fontWeight="600" mb="8">
+									Quality Settings
+								</Text>
+								<Text color="fg.secondary" fontSize="xs">
+									Generation uses {canvasMode === "generate" ? "standard" : "production"} quality. Higher quality uses more credits.
+								</Text>
+							</Box>
+						</Box>
+					</TabsContent>
+				</Tabs>
+			</Box>
+		</Box>
+	);
+}
+
 function AdvancedCanvasWorkspace({
 	prompt,
 	selectedDraft,
@@ -580,100 +1147,322 @@ function AdvancedCanvasWorkspace({
 	saveState: SaveState;
 	onCloseAdvanced: () => void;
 }) {
+	const [canvasMode, setCanvasMode] = useState<CanvasMode>("generate");
+	const [intent, setIntent] = useState(intentOptions[1]); // Default to "Photo"
+	const [aspectRatio, setAspectRatio] = useState<(typeof aspectRatios)[number]>("4:5");
+	const [channelPack, setChannelPack] = useState(channelPacks[0]);
+	const [themePack, setThemePack] = useState(themePacks[0]);
+	const [brandPack, setBrandPack] = useState(brandPacks[0]);
+	const [selectedReferenceId, setSelectedReferenceId] = useState(referenceAssets[0].id);
+	const [textOverlayEnabled, setTextOverlayEnabled] = useState(false);
+	const [referenceStrength, setReferenceStrength] = useState(50);
+
+	const outputVariants = useMemo(
+		() => getOutputVariants(channelPack, "image", aspectRatio),
+		[aspectRatio, channelPack],
+	);
+	const imageSrc = selectedDraft?.image || referenceAssets[0].image;
+	const title = selectedDraft?.title || "Quick draft";
+
 	return (
-		<Box
-			bg="bg.page"
-			display="flex"
-			flexDirection="column"
-			style={{ minHeight: "calc(100vh - 57px)" }}
+		<div
+			style={{
+				display: "flex",
+				flexDirection: "column",
+				height: "100%",
+				minHeight: 0,
+				background: "var(--ax-colors-bg-page, #f8f9fb)",
+			}}
 		>
-			<Box
-				bg="bg.default"
-				border="1"
-				borderColor="border.tertiary"
-				rounded="xl"
-				shadow="lg"
+			<div
 				style={{
 					display: "flex",
-					flex: 1,
-					flexDirection: "column",
-					margin: "24px 24px 24px 0",
-					minHeight: 0,
-					overflow: "hidden",
+					alignItems: "center",
+					justifyContent: "space-between",
+					padding: "14px 24px",
+					borderBottom: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+					background: "var(--ax-colors-bg-default, #ffffff)",
+					flexShrink: 0,
 				}}
 			>
-				<Box
-					alignItems="center"
-					borderB="1"
-					borderColor="border.tertiary"
-					display="flex"
-					justifyContent="space-between"
-					px="24"
-					py="12"
-					style={{ minHeight: 64 }}
-				>
-					<Box alignItems="center" display="flex" gap="8">
-						<CanvasToolbarIconButton ariaLabel="Code view" icon={<span style={{ fontSize: 16, lineHeight: 1 }}>{'</>'}</span>} />
-						<CanvasToolbarIconButton ariaLabel="Preview mode" icon={<IconEye size={16} />} />
-					</Box>
-					<Box alignItems="center" display="flex" gap="8">
-						<Text color="fg.secondary" fontSize="xs">
-							{saveState === "saved" ? "Changes saved." : saveState === "saving" ? "Saving..." : "Unsaved changes"}
-						</Text>
-						<CanvasToolbarIconButton ariaLabel="Undo" icon={<IconArrowBackUp size={16} />} />
-						<CanvasToolbarIconButton ariaLabel="Redo" icon={<IconArrowForwardUp size={16} />} />
-						<CanvasToolbarIconButton ariaLabel="Copy" icon={<IconCopy size={16} />} />
-						<CanvasToolbarIconButton ariaLabel="Download" icon={<IconDownload size={16} />} />
-						<AxiomButton appearance="default" size="sm">
-							Preview
-						</AxiomButton>
-						<AxiomButton appearance="primary" size="sm" icon={<IconChevronDown size={14} />}>
-							Add to
-						</AxiomButton>
-						<CanvasToolbarIconButton ariaLabel="Close advanced editor" icon={<IconX size={16} />} onClick={onCloseAdvanced} />
-					</Box>
-				</Box>
-				<Box bg="bg.default" flex="1" p="32" style={{ minHeight: 0, overflow: "auto" }}>
-					<Box display="flex" flexDirection="column" gap="8" mb="24">
-						<Text fontSize="2xl" fontWeight="700">
-							{selectedDraft.title}
-						</Text>
-						<Text color="fg.secondary" fontSize="sm">
-							{prompt}
-						</Text>
-					</Box>
-					<Box
-						alignItems="center"
-						bg="bg.default"
-						border="1"
-						borderColor="border.tertiary"
-						display="flex"
-						justifyContent="center"
-						rounded="xl"
-						shadow="sm"
-						style={{ minHeight: "calc(100vh - 260px)", overflow: "hidden" }}
+				<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+					<button
+						type="button"
+						onClick={() => setCanvasMode("generate")}
+						style={{
+							border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+							background: canvasMode === "generate" ? "var(--ax-colors-bg-secondary, #eef2ff)" : "var(--ax-colors-bg-default, #fff)",
+							borderRadius: 999,
+							padding: "8px 16px",
+							fontSize: 14,
+							fontWeight: 600,
+							cursor: "pointer",
+						}}
 					>
-						<img
-							alt={selectedDraft.title}
-							src={selectedDraft.image}
+						Generate
+					</button>
+					<button
+						type="button"
+						onClick={() => setCanvasMode("edit")}
+						style={{
+							border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+							background: canvasMode === "edit" ? "var(--ax-colors-bg-secondary, #eef2ff)" : "var(--ax-colors-bg-default, #fff)",
+							borderRadius: 999,
+							padding: "8px 16px",
+							fontSize: 14,
+							fontWeight: 600,
+							cursor: "pointer",
+						}}
+					>
+						Edit
+					</button>
+				</div>
+				<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+					<span style={{ color: "var(--ax-colors-fg-secondary, #667085)", fontSize: 14 }}>
+						{saveState === "saved" ? "Changes saved." : saveState === "saving" ? "Saving..." : "Unsaved changes"}
+					</span>
+					<button
+						type="button"
+						style={{
+							border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+							background: "var(--ax-colors-bg-default, #fff)",
+							borderRadius: 10,
+							padding: "8px 14px",
+							fontSize: 14,
+							cursor: "pointer",
+						}}
+					>
+						Preview
+					</button>
+					<button
+						type="button"
+						style={{
+							border: "1px solid var(--ax-colors-border-accent, #2457ff)",
+							background: "var(--ax-colors-bg-accent, #2457ff)",
+							color: "white",
+							borderRadius: 10,
+							padding: "8px 14px",
+							fontSize: 14,
+							fontWeight: 600,
+							cursor: "pointer",
+						}}
+					>
+						Add to
+					</button>
+					<button
+						type="button"
+						onClick={onCloseAdvanced}
+						style={{
+							border: "none",
+							background: "transparent",
+							fontSize: 22,
+							lineHeight: 1,
+							cursor: "pointer",
+							color: "var(--ax-colors-fg-default, #1f2937)",
+						}}
+						aria-label="Close advanced editor"
+					>
+						×
+					</button>
+				</div>
+			</div>
+
+			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
+				<div style={{ flex: 1, minWidth: 0, overflow: "auto", padding: 24 }}>
+					<div
+						style={{
+							display: "grid",
+							gridTemplateColumns: "minmax(0, 1fr) 320px",
+							gap: 24,
+							minHeight: "100%",
+						}}
+					>
+						<div
 							style={{
-								display: "block",
-								height: "auto",
-								maxHeight: "calc(100vh - 320px)",
-								maxWidth: "100%",
-								objectFit: "contain",
-								width: "100%",
+								background: "var(--ax-colors-bg-default, #fff)",
+								border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+								borderRadius: 20,
+								padding: 24,
+								boxShadow: "0 8px 28px rgba(15, 23, 42, 0.06)",
+								minHeight: "calc(100vh - 180px)",
+								display: "flex",
+								flexDirection: "column",
 							}}
-						/>
-					</Box>
-					<Box display="flex" justifyContent="flex-end" mt="20">
-						<AxiomButton appearance="default" size="sm" onClick={onCloseAdvanced}>
-							Back to quick draft
-						</AxiomButton>
-					</Box>
-				</Box>
-			</Box>
-		</Box>
+						>
+							<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+								<div>
+									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)", marginBottom: 8 }}>
+										Image generation
+									</div>
+									<h2 style={{ fontSize: 28, lineHeight: 1.2, margin: 0, fontWeight: 700 }}>{title}</h2>
+									<p style={{ fontSize: 14, color: "var(--ax-colors-fg-secondary, #667085)", margin: "8px 0 0" }}>
+										{prompt}
+									</p>
+								</div>
+								<div style={{ display: "flex", gap: 8 }}>
+									<button
+										type="button"
+										style={{
+											border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+											background: "var(--ax-colors-bg-default, #fff)",
+											borderRadius: 10,
+											padding: "8px 12px",
+											fontSize: 14,
+											cursor: "pointer",
+										}}
+									>
+										Regenerate
+									</button>
+									<button
+										type="button"
+										style={{
+											border: "1px solid var(--ax-colors-border-accent, #2457ff)",
+											background: "var(--ax-colors-bg-accent, #2457ff)",
+											color: "white",
+											borderRadius: 10,
+											padding: "8px 12px",
+											fontSize: 14,
+											fontWeight: 600,
+											cursor: "pointer",
+										}}
+									>
+										Generate Pack
+									</button>
+								</div>
+							</div>
+
+							<div
+								style={{
+									flex: 1,
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									background: "linear-gradient(180deg, #f7fafc 0%, #eef3fb 100%)",
+									border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+									borderRadius: 16,
+									overflow: "hidden",
+									padding: 24,
+									minHeight: 520,
+								}}
+							>
+								<img
+									src={imageSrc}
+									alt={title}
+									style={{
+										display: "block",
+										width: "100%",
+										height: "auto",
+										maxHeight: "100%",
+										objectFit: "contain",
+										borderRadius: 14,
+										boxShadow: "0 12px 40px rgba(15, 23, 42, 0.12)",
+									}}
+								/>
+							</div>
+						</div>
+
+						<div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+							<div
+								style={{
+									background: "var(--ax-colors-bg-default, #fff)",
+									border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+									borderRadius: 16,
+									padding: 20,
+								}}
+							>
+								<div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Output</div>
+								<div style={{ display: "grid", gap: 14 }}>
+									<div>
+										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Intent</div>
+										<select value={intent} onChange={(event) => setIntent(event.target.value)} style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)", padding: "0 12px", fontSize: 14 }}>
+											{intentOptions.map((option) => <option key={option}>{option}</option>)}
+										</select>
+									</div>
+									<div>
+										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Aspect ratio</div>
+										<div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+											{aspectRatios.map((ratio) => (
+												<button
+													key={ratio}
+													type="button"
+													onClick={() => setAspectRatio(ratio)}
+													style={{
+														border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+														background: ratio === aspectRatio ? "var(--ax-colors-bg-secondary, #eef2ff)" : "var(--ax-colors-bg-default, #fff)",
+														borderRadius: 999,
+														padding: "6px 12px",
+														fontSize: 13,
+														cursor: "pointer",
+													}}
+												>
+													{ratio}
+												</button>
+											))}
+										</div>
+									</div>
+									<div>
+										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Channel pack</div>
+										<select value={channelPack} onChange={(event) => setChannelPack(event.target.value)} style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)", padding: "0 12px", fontSize: 14 }}>
+											{channelPacks.map((option) => <option key={option}>{option}</option>)}
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<div
+								style={{
+									background: "var(--ax-colors-bg-default, #fff)",
+									border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+									borderRadius: 16,
+									padding: 20,
+								}}
+							>
+								<div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Brand</div>
+								<div style={{ display: "grid", gap: 14 }}>
+									<div>
+										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Theme pack</div>
+										<select value={themePack} onChange={(event) => setThemePack(event.target.value)} style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)", padding: "0 12px", fontSize: 14 }}>
+											{themePacks.map((option) => <option key={option}>{option}</option>)}
+										</select>
+									</div>
+									<div>
+										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Brand pack</div>
+										<select value={brandPack} onChange={(event) => setBrandPack(event.target.value)} style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)", padding: "0 12px", fontSize: 14 }}>
+											{brandPacks.map((option) => <option key={option}>{option}</option>)}
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<div
+								style={{
+									background: "var(--ax-colors-bg-default, #fff)",
+									border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+									borderRadius: 16,
+									padding: 20,
+								}}
+							>
+								<div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Advanced</div>
+								<div style={{ display: "grid", gap: 12 }}>
+									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)" }}>
+										Selected reference: {referenceAssets.find((asset) => asset.id === selectedReferenceId)?.title ?? referenceAssets[0].title}
+									</div>
+									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)" }}>
+										Text overlay: {textOverlayEnabled ? "Enabled" : "Disabled"}
+									</div>
+									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)" }}>
+										Reference strength: {referenceStrength}%
+									</div>
+									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)" }}>
+										Output variants: {outputVariants.map((variant) => variant.label).join(", ")}
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	);
 }
 
@@ -1896,7 +2685,39 @@ function EditWorkspace({
 }
 
 export default function OpalStudioPrototypePage() {
+	const router = useRouter();
 	const searchParams = useSearchParams();
+	const routeFlow = searchParams.get("flow");
+	const routeAsset = searchParams.get("asset");
+	const routeStage = searchParams.get("stage");
+	const routePrompt = searchParams.get("prompt");
+	const routeDraft = searchParams.get("draft");
+	const routeReturnTo = searchParams.get("returnTo") || "/cmp/library";
+	const [resolvedRouteParams, setResolvedRouteParams] = useState<{
+		flow: string | null;
+		asset: string | null;
+		stage: string | null;
+		prompt: string | null;
+		draft: string | null;
+		returnTo: string;
+	} | null>(null);
+	const resolvedRouteFlow = resolvedRouteParams?.flow ?? null;
+	const resolvedRouteAsset = resolvedRouteParams?.asset ?? null;
+	const resolvedRouteStage = resolvedRouteParams?.stage ?? null;
+	const resolvedRoutePrompt = resolvedRouteParams?.prompt ?? null;
+	const resolvedRouteDraft = resolvedRouteParams?.draft ?? null;
+	const resolvedRouteReturnTo = resolvedRouteParams?.returnTo || "/cmp/library";
+
+	useEffect(() => {
+		if (!resolvedRouteParams) {
+			return;
+		}
+
+		if (resolvedRouteStage === "advanced" && resolvedRouteAsset === "image") {
+			const params = new URLSearchParams(window.location.search);
+			router.replace(`/cmp/opal-studio/canvas?${params.toString()}`);
+		}
+	}, [resolvedRouteAsset, resolvedRouteParams, resolvedRouteStage, router]);
 	const { opalPanelControls, opalPanelWidth, setHidePageHeader } = useLayout();
 	const opalContext = useOpalContext();
 	const seededPanelKeyRef = useRef<string | null>(null);
@@ -1932,11 +2753,39 @@ export default function OpalStudioPrototypePage() {
 		returnTo?: string;
 		messages?: Array<{ role: "user" | "assistant"; content: string }>;
 	} | null>(null);
+	const [forceAdvancedImageEditor, setForceAdvancedImageEditor] = useState(false);
 
 	useEffect(() => {
 		setHidePageHeader(true);
 		return () => setHidePageHeader(false);
 	}, [setHidePageHeader]);
+
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const params = new URLSearchParams(window.location.search);
+		setForceAdvancedImageEditor(
+			params.get("stage") === "advanced" && params.get("asset") === "image",
+		);
+	}, [searchParams]);
+
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const urlParams = new URLSearchParams(window.location.search);
+		setResolvedRouteParams({
+			flow: urlParams.get("flow") || routeFlow,
+			asset: urlParams.get("asset") || routeAsset,
+			stage: urlParams.get("stage") || routeStage,
+			prompt: urlParams.get("prompt") || routePrompt,
+			draft: urlParams.get("draft") || routeDraft,
+			returnTo: urlParams.get("returnTo") || routeReturnTo,
+		});
+	}, [routeAsset, routeDraft, routeFlow, routePrompt, routeReturnTo, routeStage, searchParams]);
 
 	useEffect(() => {
 		try {
@@ -1965,34 +2814,30 @@ export default function OpalStudioPrototypePage() {
 	}, []);
 
 	useEffect(() => {
-		const flow = searchParams.get("flow");
-		const asset = searchParams.get("asset");
-		const stage = searchParams.get("stage");
-		const prompt = searchParams.get("prompt");
-		const draft = searchParams.get("draft");
-		if (flow === "create" || flow === "edit") {
-			setFlowMode(flow);
+		if (resolvedRouteFlow === "create" || resolvedRouteFlow === "edit") {
+			setFlowMode(resolvedRouteFlow);
 		}
-		if (asset === "image" || asset === "video") {
-			setAssetMode(asset);
+		if (resolvedRouteAsset === "image" || resolvedRouteAsset === "video") {
+			setAssetMode(resolvedRouteAsset);
 		}
-		if (stage === "advanced" && asset === "image") {
+		if (resolvedRouteStage === "advanced" && resolvedRouteAsset === "image") {
 			setFlowMode("create");
 			setAssetMode("image");
 			setCreateStage("advanced");
 			setGenerated(true);
 			setProduced(false);
-			if (prompt) {
-				setCreatePrompt(prompt);
+			if (resolvedRoutePrompt) {
+				setCreatePrompt(resolvedRoutePrompt);
 			}
-			if (draft) {
+			if (resolvedRouteDraft) {
 				setSelectedDraftId("chat-draft");
 			}
-		} else if (flow !== "edit") {
+		} else if (resolvedRouteFlow !== "edit") {
 			setCreateStage("panel");
 		}
-	}, [searchParams]);
+	}, [resolvedRouteAsset, resolvedRouteDraft, resolvedRouteFlow, resolvedRoutePrompt, resolvedRouteStage]);
 
+	const isAdvancedImageRoute = forceAdvancedImageEditor || (resolvedRouteStage === "advanced" && resolvedRouteAsset === "image");
 	const drafts = useMemo(() => (assetMode === "image" ? imageDrafts : videoDrafts), [assetMode]);
 	const effectiveDrafts = useMemo(() => {
 		const sourceDraft = chatDraft ?? (storedQuickDraft
@@ -2004,19 +2849,38 @@ export default function OpalStudioPrototypePage() {
 			}
 			: null);
 
+		// If we're in advanced mode and have a source draft, prioritize it
 		if (assetMode === "image" && sourceDraft && createStage === "advanced" && flowMode === "create") {
+			const chatDraftObj = {
+				...sourceDraft,
+				id: "chat-draft",
+				title: sourceDraft.title || "Quick draft",
+			};
+			console.log('[Opal Studio] Creating chat draft:', chatDraftObj);
 			return [
-				{
-					...sourceDraft,
-					id: "chat-draft",
-					title: sourceDraft.title || "Quick draft",
-				},
+				chatDraftObj,
 				...imageDrafts.filter((draft) => draft.id !== "chat-draft"),
 			];
 		}
 
+		// Default to standard drafts
 		return drafts;
 	}, [assetMode, chatDraft, createStage, drafts, flowMode, storedQuickDraft]);
+	const handoffPrompt = resolvedRoutePrompt || routePrompt || chatDraftPayload?.prompt || storedQuickDraft?.prompt || createPrompt;
+	const handoffDraftImage = resolvedRouteDraft || routeDraft || chatDraft?.image || storedQuickDraft?.image || "";
+	const handoffDraft = useMemo<DraftResult | null>(() => {
+		if (!handoffDraftImage) {
+			return null;
+		}
+
+		return {
+			id: "chat-draft",
+			title: "Quick draft",
+			image: handoffDraftImage,
+			ratio: "4:5",
+			score: 96,
+		};
+	}, [handoffDraftImage]);
 	const draftConfig = useMemo(
 		() => ({
 			flowMode,
@@ -2058,11 +2922,6 @@ export default function OpalStudioPrototypePage() {
 	);
 
 	useEffect(() => {
-		const routeStage = searchParams.get("stage");
-		const routeFlow = searchParams.get("flow");
-		const routeAsset = searchParams.get("asset");
-		const routePrompt = searchParams.get("prompt");
-		const routeDraft = searchParams.get("draft");
 		try {
 			const saved = window.localStorage.getItem("cmp-opal-studio-draft");
 			if (!saved) {
@@ -2070,13 +2929,13 @@ export default function OpalStudioPrototypePage() {
 			}
 
 			const parsed = JSON.parse(saved) as Partial<typeof draftConfig>;
-			if (!routeFlow && (parsed.flowMode === "create" || parsed.flowMode === "edit")) {
+			if (!resolvedRouteFlow && (parsed.flowMode === "create" || parsed.flowMode === "edit")) {
 				setFlowMode(parsed.flowMode);
 			}
-			if (!routeAsset && (parsed.assetMode === "image" || parsed.assetMode === "video")) {
+			if (!resolvedRouteAsset && (parsed.assetMode === "image" || parsed.assetMode === "video")) {
 				setAssetMode(parsed.assetMode);
 			}
-			if (!routePrompt && typeof parsed.createPrompt === "string") setCreatePrompt(parsed.createPrompt);
+			if (!resolvedRoutePrompt && typeof parsed.createPrompt === "string") setCreatePrompt(parsed.createPrompt);
 			if (typeof parsed.editPrompt === "string") setEditPrompt(parsed.editPrompt);
 			if (typeof parsed.intent === "string") setIntent(parsed.intent);
 			if (typeof parsed.editTool === "string") setEditTool(parsed.editTool);
@@ -2086,16 +2945,16 @@ export default function OpalStudioPrototypePage() {
 			if (typeof parsed.brandPack === "string") setBrandPack(parsed.brandPack);
 			if (typeof parsed.showReferences === "boolean") setShowReferences(parsed.showReferences);
 			if (typeof parsed.selectedReferenceId === "string") setSelectedReferenceId(parsed.selectedReferenceId);
-			if (parsed.flowMode === "create" && routeStage !== "advanced") {
+			if (parsed.flowMode === "create" && resolvedRouteStage !== "advanced") {
 				setCreateStage("panel");
 			}
-			if (routeDraft) {
+			if (resolvedRouteDraft) {
 				setSelectedDraftId("chat-draft");
 			}
 		} catch {
 			// Ignore invalid saved drafts in prototype mode.
 		}
-	}, [searchParams]);
+	}, [resolvedRouteAsset, resolvedRouteDraft, resolvedRouteFlow, resolvedRoutePrompt, resolvedRouteStage]);
 
 	useEffect(() => {
 		setSaveState("saving");
@@ -2117,26 +2976,23 @@ export default function OpalStudioPrototypePage() {
 	}, [effectiveDrafts, selectedDraftId]);
 
 	useEffect(() => {
-		const stage = searchParams.get("stage");
-		if (flowMode === "create" && assetMode === "image" && stage === "advanced") {
+		if (flowMode === "create" && assetMode === "image" && resolvedRouteStage === "advanced") {
 			setLastGeneratedSignature(configSignature);
 		}
-	}, [assetMode, configSignature, flowMode, searchParams]);
+	}, [assetMode, configSignature, flowMode, resolvedRouteStage]);
 
 	useEffect(() => {
-		const restoredPrompt = chatDraftPayload?.prompt || storedQuickDraft?.prompt;
-		if (flowMode === "create" && createStage === "advanced" && assetMode === "image" && restoredPrompt) {
-			setCreatePrompt(restoredPrompt);
+		if (flowMode === "create" && createStage === "advanced" && assetMode === "image" && handoffPrompt) {
+			setCreatePrompt(handoffPrompt);
 		}
-	}, [assetMode, chatDraftPayload, createStage, flowMode, storedQuickDraft]);
+	}, [assetMode, createStage, flowMode, handoffPrompt]);
 
 	useEffect(() => {
 		if (
-			flowMode !== "create" ||
-			createStage !== "advanced" ||
-			assetMode !== "image" ||
+			!isAdvancedImageRoute ||
+			(resolvedRouteStage === "advanced" && resolvedRouteAsset === "image") ||
 			!opalPanelControls ||
-			!storedQuickDraft?.messages?.length
+			(!storedQuickDraft?.messages?.length && (!handoffPrompt || !handoffDraftImage))
 		) {
 			return;
 		}
@@ -2144,23 +3000,44 @@ export default function OpalStudioPrototypePage() {
 		const alreadyHasDraftThread = panelMessages.some(
 			(message) =>
 				message.role === "assistant" &&
-				message.content.includes("I created a quick image draft for"),
+				(message.content.includes("I created a quick image draft for") ||
+					(handoffDraftImage ? message.content.includes(handoffDraftImage) : false)),
 		);
 
 		if (alreadyHasDraftThread) {
+			opalPanelControls.openPanel();
 			return;
 		}
 
 		opalPanelControls.clearHistory();
-		storedQuickDraft.messages.forEach((message) => {
-			opalPanelControls.addMessage({
-				role: message.role,
-				content: message.content,
+		if (storedQuickDraft?.messages?.length) {
+			storedQuickDraft.messages.forEach((message) => {
+				opalPanelControls.addMessage({
+					role: message.role,
+					content: message.content,
+				});
 			});
-		});
+		} else if (handoffPrompt && handoffDraftImage) {
+			opalPanelControls.addMessage({
+				role: "user",
+				content: handoffPrompt,
+			});
+			opalPanelControls.addMessage({
+				role: "assistant",
+				content: [
+					`I created a quick image draft for: "${handoffPrompt}"`,
+					"",
+					"It follows Stride's athletic visual direction, preserves copy space, and stays inside brand-safe composition rules.",
+					"",
+					`![Triathlon draft](${handoffDraftImage})`,
+					"",
+					"[Use advanced editor](#)",
+				].join("\n"),
+			});
+		}
 		opalPanelControls.setInputValue("");
 		opalPanelControls.openPanel();
-	}, [assetMode, createStage, flowMode, opalPanelControls, panelMessages, storedQuickDraft]);
+	}, [handoffDraftImage, handoffPrompt, isAdvancedImageRoute, opalPanelControls, panelMessages, resolvedRouteAsset, resolvedRouteStage, storedQuickDraft]);
 
 	useEffect(() => {
 		if (flowMode !== "create" || createStage !== "panel") {
@@ -2205,74 +3082,201 @@ export default function OpalStudioPrototypePage() {
 		setLastGeneratedSignature(configSignature);
 	};
 
+	const canvasDraft = isAdvancedImageRoute
+		? handoffDraft ?? effectiveDrafts.find((d) => d.id === selectedDraftId) ?? effectiveDrafts[0] ?? imageDrafts[0]
+		: effectiveDrafts.find((d) => d.id === selectedDraftId) ?? effectiveDrafts[0] ?? imageDrafts[0];
+	const canvasPrompt = handoffPrompt;
+
+	if (!resolvedRouteParams && !forceAdvancedImageEditor) {
+		return <CreatePanelOnlyState />;
+	}
+
+	if (resolvedRouteStage === "advanced" && resolvedRouteAsset === "image") {
+		return null;
+	}
+
+	if (isAdvancedImageRoute) {
+		return (
+			<div
+				style={{
+					position: "absolute",
+					top: 0,
+					left: 0,
+					bottom: 0,
+					right: opalPanelWidth > 0 ? opalPanelWidth : 0,
+					background: "var(--ax-colors-bg-page, #f8f9fb)",
+					minHeight: 0,
+				}}
+			>
+				<AdvancedCanvasWorkspace
+					prompt={canvasPrompt}
+					selectedDraft={canvasDraft}
+					saveState={saveState}
+					onCloseAdvanced={() => router.push(resolvedRouteReturnTo)}
+				/>
+			</div>
+		);
+	}
+
+	if (flowMode === "create") {
+		return <CreatePanelOnlyState />;
+	}
+
 	return (
-		<Box
-			bg="bg.secondary"
-			display="flex"
-			flexDirection="column"
-			style={{
-				margin: "-32px",
-				minHeight: "calc(100vh - 57px)",
-				width:
-					createStage === "advanced" && assetMode === "image" && opalPanelWidth > 0
-						? `calc(100% - ${opalPanelWidth}px)`
-						: "100%",
-				transition: "width 0.3s cubic-bezier(0, 1, 0, 1)",
-			}}
-		>
-			<Box flex="1">
-				<Box style={{ height: "100%", width: "100%" }}>
-					{planOpen ? (
-						<Box bg="bg.default" border="1" borderColor="border.tertiary" mb="20" p="16" rounded="xl" shadow="sm">
-						<Box alignItems="center" display="flex" justifyContent="space-between">
-							<Text fontSize="sm" fontWeight="700">
-								Execution plan
-							</Text>
-							<AxiomButton appearance="default" size="sm" onClick={() => setPlanOpen(false)}>
-								Close
-							</AxiomButton>
-						</Box>
-						<Box display="grid" gap="10" mt="12">
-							{[
-								`Use ${brandPack.toLowerCase()} rules and ${themePack.toLowerCase()} style direction`,
-								`Generate ${draftMode ? "two fast drafts" : "production-first outputs"} for ${channelPack.toLowerCase()}`,
-								`Apply ${aspectRatio} preview math immediately and ${outputVariants.length} output formula${outputVariants.length === 1 ? "" : "s"} on production`,
-							].map((line) => (
-								<Box key={line} bg="bg.secondary" border="1" borderColor="border.tertiary" p="12" rounded="xl">
-									<Text fontSize="sm">{line}</Text>
-								</Box>
-							))}
-						</Box>
-						</Box>
-					) : null}
-					{flowMode === "create" ? (
-						createStage === "advanced" && assetMode === "image" ? (
-							<AdvancedCanvasWorkspace
-								prompt={chatDraftPayload?.prompt || storedQuickDraft?.prompt || createPrompt}
-								selectedDraft={effectiveDrafts.find((draft) => draft.id === selectedDraftId) ?? effectiveDrafts[0]}
-								saveState={saveState}
-								onCloseAdvanced={() => {
-									setCreateStage("panel");
-									setGenerated(false);
-									setProduced(false);
-								}}
-							/>
-						) : (
-							<CreatePanelOnlyState />
-						)
+		<div style={{
+			position: "absolute",
+			top: 0,
+			left: 0,
+			bottom: 0,
+			right: opalPanelWidth > 0 ? opalPanelWidth : 0,
+			display: "flex",
+			flexDirection: "column",
+			background: "var(--ax-colors-bg-page, #f8f9fb)",
+		}}>
+			{/* Top Bar */}
+			<div style={{
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "space-between",
+				padding: "12px 24px",
+				borderBottom: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+				background: "var(--ax-colors-bg-default, #fff)",
+				minHeight: 56,
+				flexShrink: 0,
+			}}>
+				<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+					<div style={{
+						display: "inline-flex",
+						gap: 4,
+						padding: 4,
+						background: "var(--ax-colors-bg-secondary, #f3f4f6)",
+						borderRadius: 999,
+					}}>
+						<button type="button" style={{
+							background: "var(--ax-colors-bg-default, #fff)",
+							border: 0, borderRadius: 999, cursor: "pointer",
+							fontSize: 14, fontWeight: 600, height: 36, padding: "0 16px",
+							color: "var(--ax-colors-fg-default, #111)",
+						}}>Generate</button>
+						<button type="button" style={{
+							background: "transparent",
+							border: 0, borderRadius: 999, cursor: "pointer",
+							fontSize: 14, fontWeight: 500, height: 36, padding: "0 16px",
+							color: "var(--ax-colors-fg-secondary, #6b7280)",
+						}}>Edit</button>
+					</div>
+				</div>
+				<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+					<span style={{ fontSize: 12, color: "var(--ax-colors-fg-secondary, #6b7280)" }}>
+						{saveState === "saved" ? "Changes saved" : "Saving..."}
+					</span>
+					<AxiomButton appearance="default" size="sm" icon={<IconCopy size={16} />} aria-label="Copy" />
+					<AxiomButton appearance="primary" size="sm" icon={<IconChevronDown size={14} />}>Add to</AxiomButton>
+				</div>
+			</div>
+
+			{/* Main Content Area */}
+			<div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
+				{/* Canvas */}
+				<div style={{ flex: 1, padding: 32, overflow: "auto", background: "var(--ax-colors-bg-page, #f8f9fb)" }}>
+					{canvasDraft?.image ? (
+						<>
+							<div style={{ marginBottom: 20 }}>
+								<h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 8px" }}>{canvasDraft.title}</h2>
+								<p style={{ fontSize: 14, color: "var(--ax-colors-fg-secondary, #6b7280)", margin: 0 }}>{canvasPrompt}</p>
+							</div>
+							<div style={{
+								background: "var(--ax-colors-bg-default, #fff)",
+								border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+								borderRadius: 16, padding: 24, textAlign: "center" as const,
+							}}>
+								<img src={canvasDraft.image} alt={canvasDraft.title} style={{
+									maxWidth: "100%", maxHeight: "calc(100vh - 300px)",
+									borderRadius: 12, objectFit: "contain" as const,
+								}} />
+							</div>
+							<div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
+								<AxiomButton appearance="default" size="sm" icon={<IconWand size={16} />}>Regenerate</AxiomButton>
+								<AxiomButton appearance="primary" size="sm" icon={<IconCheck size={16} />}>Generate Pack</AxiomButton>
+							</div>
+						</>
 					) : (
-						<AdvancedCanvasWorkspace
-							prompt={editPrompt}
-							selectedDraft={effectiveDrafts.find((draft) => draft.id === selectedDraftId) ?? effectiveDrafts[0]}
-							saveState={saveState}
-							onCloseAdvanced={() => {
-								setFlowMode("create");
-								setCreateStage("panel");
-							}}
-						/>
+						<div style={{
+							display: "flex", flexDirection: "column" as const, alignItems: "center",
+							justifyContent: "center", height: "100%", textAlign: "center" as const,
+							border: "2px dashed var(--ax-colors-border-tertiary, #e5e7eb)", borderRadius: 16,
+						}}>
+							<IconSparkles size={48} style={{ color: "var(--ax-colors-fg-accent, #7c3aed)", marginBottom: 16 }} />
+							<h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 8px" }}>Start Generating with Opal</h2>
+							<p style={{ fontSize: 14, color: "var(--ax-colors-fg-secondary, #6b7280)", maxWidth: 400 }}>
+								Use the Opal chat to describe what you want to create, then open the advanced editor.
+							</p>
+						</div>
 					)}
-				</Box>
-			</Box>
-		</Box>
+				</div>
+
+				{/* Settings Sidebar */}
+				<div style={{
+					width: 340, flexShrink: 0, borderLeft: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+					background: "var(--ax-colors-bg-default, #fff)", overflow: "auto", padding: 20,
+				}}>
+					<h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 20px" }}>Settings</h3>
+
+					<div style={{ marginBottom: 20 }}>
+						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Intent</label>
+						<select style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #d1d5db)", padding: "0 12px", fontSize: 14 }}>
+							{intentOptions.map(o => <option key={o}>{o}</option>)}
+						</select>
+						<p style={{ fontSize: 12, color: "var(--ax-colors-fg-secondary, #6b7280)", marginTop: 6 }}>Determines AI skills and output style</p>
+					</div>
+
+					<div style={{ marginBottom: 20 }}>
+						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Aspect Ratio</label>
+						<div style={{ display: "flex", gap: 4, background: "var(--ax-colors-bg-secondary, #f3f4f6)", borderRadius: 999, padding: 4, width: "fit-content" }}>
+							{aspectRatios.map(r => (
+								<button key={r} type="button" style={{
+									background: r === aspectRatio ? "var(--ax-colors-bg-default, #fff)" : "transparent",
+									border: 0, borderRadius: 999, cursor: "pointer", fontSize: 13,
+									fontWeight: r === aspectRatio ? 600 : 400, height: 32, padding: "0 12px",
+								}} onClick={() => setAspectRatio(r)}>{r}</button>
+							))}
+						</div>
+					</div>
+
+					<div style={{ marginBottom: 20 }}>
+						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Channel Pack</label>
+						<select style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #d1d5db)", padding: "0 12px", fontSize: 14 }}>
+							{channelPacks.map(o => <option key={o}>{o}</option>)}
+						</select>
+					</div>
+
+					<div style={{ marginBottom: 20 }}>
+						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Theme Package</label>
+						<select style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #d1d5db)", padding: "0 12px", fontSize: 14 }}>
+							{themePacks.map(o => <option key={o}>{o}</option>)}
+						</select>
+					</div>
+
+					<div style={{ marginBottom: 20 }}>
+						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Brand Pack</label>
+						<select style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #d1d5db)", padding: "0 12px", fontSize: 14 }}>
+							{brandPacks.map(o => <option key={o}>{o}</option>)}
+						</select>
+					</div>
+
+					<div>
+						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Reference Images</label>
+						<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+							{referenceAssets.slice(0, 4).map(a => (
+								<div key={a.id} style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)" }}>
+									<img src={a.image} alt={a.title} style={{ width: "100%", height: 72, objectFit: "cover" as const, display: "block" }} />
+									<div style={{ padding: "6px 8px", fontSize: 11, fontWeight: 600 }}>{a.title}</div>
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	);
 }

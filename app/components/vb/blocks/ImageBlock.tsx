@@ -4,27 +4,31 @@ import React from "react";
 import { getProperty } from "./utils";
 
 export const ImageBlock = React.memo(function ImageBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
-    const imageUrlRaw = getProperty(properties, "src", "Image URL");
-    const imageUrl = typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
-    const imageAlt = getProperty(properties, "alt", "Alt Text");
-    const imageWidth = getProperty(properties, "width", "Width");
-    const imageHeight = getProperty(properties, "height", "Height");
+    // Read from ImageReference property
+    const imageUrl = getProperty(properties, "image", "Image");
+
+    // Read optional layout overrides
+    const widthOverride = getProperty(properties, "width", "Width Override") || "auto";
+    const heightOverride = getProperty(properties, "height", "Height Override") || "auto";
+
+    // Parse URL
+    const imageUrlStr = typeof imageUrl === "string" ? imageUrl.trim() : imageUrl;
 
     return (
         <div className="mb-4">
-            {imageUrl ? (
+            {imageUrlStr ? (
                 <img
-                    src={imageUrl}
-                    alt={imageAlt || "Image"}
+                    src={imageUrlStr}
+                    alt=""
                     style={{
-                        width: imageWidth === "auto" ? "100%" : imageWidth,
-                        height: imageHeight === "auto" ? "auto" : imageHeight,
-                        borderRadius: "10px",
+                        width: widthOverride === "auto" ? "100%" : widthOverride,
+                        height: heightOverride === "auto" ? "auto" : heightOverride,
+                        borderRadius: "12px",
                         objectFit: "cover",
                     }}
                 />
             ) : (
-                <div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-[10px] p-6 text-sm">
+                <div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-stride-lg p-6 text-sm font-stride-sans">
                     No image selected
                 </div>
             )}

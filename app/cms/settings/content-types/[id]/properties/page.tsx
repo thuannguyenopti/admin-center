@@ -13,16 +13,32 @@ import ConfigurePropertyPane from "../../ConfigurePropertyPane";
 import usePersistentState from "@/app/usePersistentState";
 
 // Type category grouping - Text, Number, etc.
-type TypeCategory = "Text" | "Number" | "Boolean" | "Date/Time" | "Reference" | "Selection" | "Content" | "Other";
+type TypeCategory = "Text" | "Number" | "Boolean" | "Date/Time" | "Reference" | "Selection" | "Content" | "Outline" | "Link" | "Block" | "Other";
 
-const getTypeCategory = (type: PropertyType): TypeCategory => {
+const getTypeCategory = (type: PropertyType, allowedTypes?: string[], allContentTypes?: ContentType[]): TypeCategory => {
 	const textTypes = ["String", "LongString", "XhtmlString", "text", "textarea", "richtext"];
 	const numberTypes = ["Int", "Double"];
 	const booleanTypes = ["Boolean", "checkbox"];
 	const dateTypes = ["DateTime"];
-	const referenceTypes = ["ContentReference", "PageReference", "ImageReference", "VideoReference", "reference", "Url"];
+	const referenceTypes = ["ContentReference", "PageReference", "ImageReference", "VideoReference", "reference"];
 	const selectionTypes = ["SelectOne", "SelectMany"];
-	const contentTypes = ["ContentArea", "LinkItemCollection", "outline"];
+	const contentTypes = ["ContentArea"];
+	const outlineTypes = ["outline"];
+	const linkTypes = ["Url", "LinkItem", "LinkItemCollection", "link"];
+	const otherTypes = ["Guid"];
+
+	// Check if ContentReference with allowedTypes pointing to Block content types
+	if (type === "ContentReference" && allowedTypes && allowedTypes.length > 0 && allContentTypes) {
+		const referencedType = allContentTypes.find(ct => ct.id === allowedTypes[0]);
+		if (referencedType && referencedType.baseType === "Block") {
+			return "Block";
+		}
+	}
+
+	// Check for legacy block types (seo, address)
+	if (type === "seo" || type === "address") {
+		return "Block";
+	}
 
 	if (textTypes.includes(type)) return "Text";
 	if (numberTypes.includes(type)) return "Number";
@@ -31,11 +47,22 @@ const getTypeCategory = (type: PropertyType): TypeCategory => {
 	if (referenceTypes.includes(type)) return "Reference";
 	if (selectionTypes.includes(type)) return "Selection";
 	if (contentTypes.includes(type)) return "Content";
+	if (outlineTypes.includes(type)) return "Outline";
+	if (linkTypes.includes(type)) return "Link";
+	if (otherTypes.includes(type)) return "Other";
 	return "Other";
 };
 
 // Get specific type label within a category
-const getSpecificTypeLabel = (type: PropertyType): string => {
+const getSpecificTypeLabel = (type: PropertyType, allowedTypes?: string[], allContentTypes?: ContentType[]): string => {
+	// If it's a block (ContentReference with block allowedTypes), show the block type name
+	if (type === "ContentReference" && allowedTypes && allowedTypes.length > 0 && allContentTypes) {
+		const referencedType = allContentTypes.find(ct => ct.id === allowedTypes[0]);
+		if (referencedType && referencedType.baseType === "Block") {
+			return referencedType.displayName || referencedType.name;
+		}
+	}
+
 	const typeLabels: Record<string, string> = {
 		String: "String (<=255)",
 		LongString: "String (>255)",
@@ -51,7 +78,9 @@ const getSpecificTypeLabel = (type: PropertyType): string => {
 		ContentReference: "Content Reference",
 		ContentArea: "Content Area",
 		Url: "URL",
+		LinkItem: "Link",
 		LinkItemCollection: "Link Collection",
+		link: "Link",
 		PageReference: "Page Reference",
 		ImageReference: "Image Reference",
 		VideoReference: "Video Reference",
@@ -61,14 +90,15 @@ const getSpecificTypeLabel = (type: PropertyType): string => {
 		address: "Address",
 		outline: "Outline",
 		seo: "SEO",
+		Guid: "GUID",
 	};
 	return typeLabels[type] || type;
 };
 
 // Get display label showing category + specific type
-const getPropertyTypeLabel = (type: PropertyType): string => {
-	const category = getTypeCategory(type);
-	const specific = getSpecificTypeLabel(type);
+const getPropertyTypeLabel = (type: PropertyType, allowedTypes?: string[], allContentTypes?: ContentType[]): string => {
+	const category = getTypeCategory(type, allowedTypes, allContentTypes);
+	const specific = getSpecificTypeLabel(type, allowedTypes, allContentTypes);
 	return `${category} · ${specific}`;
 };
 
@@ -405,6 +435,7 @@ export default function PropertiesPage() {
 								<PropertyCard
 									key={property.id}
 									property={property}
+									contentTypes={contentTypes}
 									isSelected={selectedPropertyId === property.id}
 									isDragging={draggedPropertyId === property.id}
 									showDropBefore={dropIndicator?.propertyId === property.id && dropIndicator.position === "before"}
@@ -494,12 +525,14 @@ function AddPropertyMenu({ onAddProperty }: { onAddProperty: (type: PropertyType
 	const addPropertyOptions = [
 		// Main type categories - sub-type can be selected in the property editor
 		{ label: "Text", execute: () => onAddProperty("String") },
-		{ label: "Number", execute: () => onAddProperty("Int") },
-		{ label: "Boolean", execute: () => onAddProperty("Boolean") },
+		{ label: "Block", execute: () => onAddProperty("ContentReference") },
+		{ label: "Content", execute: () => onAddProperty("ContentArea") },
+		{ label: "Outline", execute: () => onAddProperty("outline") },
 		{ label: "Date/Time", execute: () => onAddProperty("DateTime") },
+		{ label: "Link", execute: () => onAddProperty("LinkItem") },
+		{ label: "Number", execute: () => onAddProperty("Int") },
 		{ label: "Choice", execute: () => onAddProperty("SelectOne") },
-		{ label: "Reference", execute: () => onAddProperty("ContentReference") },
-		{ label: "Content Area", execute: () => onAddProperty("ContentArea") },
+		{ label: "Guid", execute: () => onAddProperty("Guid") },
 	];
 
 	return (
@@ -540,6 +573,7 @@ const INSERT_BAR_AFTER: React.CSSProperties = {
 // Property Card Component using Axiom Card
 interface PropertyCardProps {
 	property: Property;
+	contentTypes?: ContentType[];
 	isSelected?: boolean;
 	isDragging?: boolean;
 	showDropBefore?: boolean;
@@ -554,6 +588,7 @@ interface PropertyCardProps {
 
 function PropertyCard({
 	property,
+	contentTypes,
 	isSelected,
 	isDragging,
 	showDropBefore,
@@ -565,8 +600,8 @@ function PropertyCard({
 	onDragEnd,
 	onRemove,
 }: PropertyCardProps) {
-	const typeCategory = getTypeCategory(property.type);
-	const specificType = getSpecificTypeLabel(property.type);
+	const typeCategory = getTypeCategory(property.type, property.allowedTypes, contentTypes);
+	const specificType = getSpecificTypeLabel(property.type, property.allowedTypes, contentTypes);
 
 	return (
 		<div

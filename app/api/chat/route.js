@@ -72,16 +72,45 @@ INSTRUCTIONS:
 
 export async function POST(request) {
   try {
-    if (!openai) {
-      return Response.json({ error: 'OpenAI API key not configured' }, { status: 500 });
-    }
-
     const body = await request.json();
     const userMessage = body.userMessage;
     const context = body.context;
+    const experimentContext = body.experimentContext;
 
     if (typeof userMessage !== 'string' || userMessage.trim() === '') {
       return Response.json({ error: 'Invalid userMessage' }, { status: 400 });
+    }
+
+    // Experiment results summary: return structured steps + summary without calling OpenAI
+    if (
+      experimentContext?.optimizationId &&
+      experimentContext?.requestSummary
+    ) {
+      try {
+        const { getExperimentSummary } = await import('./experimentSummary');
+        const { steps, summary } = getExperimentSummary(experimentContext.optimizationId);
+        return Response.json({ steps, summary });
+      } catch (summaryError) {
+        console.error('Experiment summary failed:', summaryError);
+        return Response.json(
+          { error: summaryError?.message || 'Failed to generate experiment summary' },
+          { status: 500 }
+        );
+      }
+    }
+
+    if (!openai) {
+      // Dev fallback — return a mock response so the prototype works without an API key
+      const MOCK_RESPONSES = [
+        "I can help with that! Based on your Optimizely setup, here are a few recommendations to get started. Would you like me to dive deeper into any of these areas?",
+        "Great question. Looking at your current configuration, there are a couple of approaches worth considering. Let me walk you through the options.",
+        "Sure! Here's a summary of what I found. The key insight is that your current experiment setup has strong statistical significance — you should be confident in the results.",
+        "Absolutely. I've analyzed the context and here's what I recommend: start by segmenting your audience by device type, then create targeted variations for each segment.",
+        "I can see a few opportunities here. Your conversion funnel has a notable drop-off at the checkout step — that's likely the highest-impact place to focus your next experiment.",
+      ];
+      const response = MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)];
+      await new Promise(r => setTimeout(r, 400));
+      return Response.json({ response });
     }
 
     // Build dynamic system prompt with context

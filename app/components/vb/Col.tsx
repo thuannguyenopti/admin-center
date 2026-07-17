@@ -23,7 +23,10 @@ const Col: React.FC<{
     removeCol: any;
     onDragStart: any;
     elementOptions: { type: string; label: string }[];
-}> = ({ setOpen, col, children, addElement, removeCol, onDragStart, elementOptions }) => {
+    isSelected?: boolean;
+    onHoverChange?: (colId: string | null) => void;
+    onScrollToPreview?: (colId: string) => void;
+}> = ({ setOpen, col, children, addElement, removeCol, onDragStart, elementOptions, isSelected, onHoverChange, onScrollToPreview }) => {
 
     const iconForType = (type: string) => {
         switch (type) {
@@ -39,6 +42,7 @@ const Col: React.FC<{
             case "ct-button":
                 return <IconRectangle size={16} />;
             case "ct-image":
+            case "ct-image-block":
                 return <IconPhoto size={16} />;
             default:
                 return <IconBrackets size={16} />;
@@ -50,7 +54,7 @@ const Col: React.FC<{
         { type: "ct-text", label: "Text" },
         { type: "ct-input", label: "Input" },
         { type: "ct-button", label: "Button" },
-        { type: "ct-image", label: "Image" },
+        { type: "ct-image-block", label: "Image" },
     ];
 
     const optionsSource = (elementOptions && elementOptions.length > 0) ? elementOptions : fallbackOptions;
@@ -63,13 +67,18 @@ const Col: React.FC<{
             <div
                 className="newsection group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
                 draggable
-                style={{ paddingLeft: `${4 + indentDistance * 2}px` }}
-                onClick={() => setOpen(col.id, !col.open)}
+                style={{
+                    paddingLeft: `${4 + indentDistance * 2}px`,
+                    backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : undefined
+                }}
+                onClick={() => onScrollToPreview?.(col.id)}
                 onDragStart={onDragStart}
+                onMouseEnter={() => onHoverChange?.(col.id)}
+                onMouseLeave={() => onHoverChange?.(null)}
             >
                 <div className="flex gap-1 items-center">
                     <svg
-                        className="chevron"
+                        className="chevron cursor-pointer"
                         width="12"
                         height="12"
                         viewBox="0 0 12 12"
@@ -77,6 +86,10 @@ const Col: React.FC<{
                         xmlns="http://www.w3.org/2000/svg"
                         style={{
                             transform: col.open ? "rotate(0deg)" : "rotate(-90deg)",
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setOpen(col.id, !col.open);
                         }}
                     >
                         <path
@@ -137,7 +150,7 @@ const Col: React.FC<{
                     </Menu>
                 </div>
             </div>
-            <div style={{ display: col.open ? "block" : "none" }}>{children}</div>
+            <div style={{ display: col.open ? "block" : "none", backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : undefined }}>{children}</div>
         </Box>
     );
 };

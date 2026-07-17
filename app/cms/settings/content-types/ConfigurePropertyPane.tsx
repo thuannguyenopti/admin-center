@@ -15,11 +15,14 @@ import {
 	RadioGroup,
 	Radio,
 	Link,
+	toaster,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { IconX } from "@tabler/icons-react";
-import { Property, PropertyType } from "@/app/db/initialData";
-import { useState, useEffect } from "react";
+import { Property, PropertyType, initialContentTypes, ContentType } from "@/app/db/initialData";
+import { useState, useEffect, useMemo } from "react";
+import usePersistentState from "@/app/usePersistentState";
+import type { PropertyGroup } from "@/app/cms/settings/edit-tabs/page";
 
 interface ConfigurePropertyPaneProps {
 	property: Property;
@@ -30,16 +33,18 @@ interface ConfigurePropertyPaneProps {
 }
 
 // Type categories and their sub-types
-type TypeCategory = "Text" | "Number" | "Boolean" | "Date/Time" | "Reference" | "Selection" | "Content" | "Other";
+type TypeCategory = "Text" | "Block" | "Content" | "Outline" | "Date/Time" | "Link" | "Number" | "Boolean" | "Selection" | "Other";
 
 const typeCategories: { value: TypeCategory; label: string }[] = [
 	{ value: "Text", label: "Text" },
+	{ value: "Block", label: "Block" },
+	{ value: "Content", label: "Content" },
+	{ value: "Outline", label: "Outline" },
+	{ value: "Date/Time", label: "Date/Time" },
+	{ value: "Link", label: "Link" },
 	{ value: "Number", label: "Number" },
 	{ value: "Boolean", label: "Boolean" },
-	{ value: "Date/Time", label: "Date/Time" },
-	{ value: "Reference", label: "Reference" },
 	{ value: "Selection", label: "Selection" },
-	{ value: "Content", label: "Content" },
 	{ value: "Other", label: "Other" },
 ];
 
@@ -49,6 +54,22 @@ const subTypesByCategory: Record<TypeCategory, { value: PropertyType; label: str
 		{ value: "LongString", label: "String (>255)" },
 		{ value: "XhtmlString", label: "XHTML String" },
 	],
+	Block: [],  // Will be populated dynamically from content types
+	Content: [
+		{ value: "ContentArea", label: "Content Area" },
+		{ value: "ContentReference", label: "Content Reference" },
+	],
+	Outline: [
+		{ value: "outline", label: "Outline" },
+	],
+	"Date/Time": [
+		{ value: "DateTime", label: "Date/Time" },
+	],
+	Link: [
+		{ value: "Url", label: "URL" },
+		{ value: "LinkItem", label: "Link" },
+		{ value: "LinkItemCollection", label: "Link Collection" },
+	],
 	Number: [
 		{ value: "Int", label: "Integer" },
 		{ value: "Double", label: "Decimal" },
@@ -56,50 +77,50 @@ const subTypesByCategory: Record<TypeCategory, { value: PropertyType; label: str
 	Boolean: [
 		{ value: "Boolean", label: "Boolean" },
 	],
-	"Date/Time": [
-		{ value: "DateTime", label: "Date/Time" },
-	],
-	Reference: [
-		{ value: "ContentReference", label: "Content Reference" },
-		{ value: "PageReference", label: "Page Reference" },
-		{ value: "ImageReference", label: "Image Reference" },
-		{ value: "VideoReference", label: "Video Reference" },
-		{ value: "Url", label: "URL" },
-		{ value: "LinkItem", label: "Link Item" },
-		{ value: "link", label: "Link (legacy)" },
-	],
 	Selection: [
 		{ value: "SelectOne", label: "Selection (single)" },
 		{ value: "SelectMany", label: "Selection (multiple)" },
 	],
-	Content: [
-		{ value: "ContentArea", label: "Content Area" },
-		{ value: "LinkItemCollection", label: "Link Collection" },
-	],
 	Other: [
-		{ value: "address", label: "Address" },
-		{ value: "outline", label: "Outline" },
-		{ value: "seo", label: "SEO" },
+		{ value: "Guid", label: "GUID" },
 	],
 };
 
 // Get category from property type
-const getCategoryFromType = (type: PropertyType): TypeCategory => {
+const getCategoryFromType = (type: PropertyType, allowedTypes?: string[], allContentTypes?: ContentType[]): TypeCategory => {
 	const textTypes = ["String", "LongString", "XhtmlString", "text", "textarea", "richtext"];
 	const numberTypes = ["Int", "Double"];
 	const booleanTypes = ["Boolean", "checkbox"];
 	const dateTypes = ["DateTime"];
-	const referenceTypes = ["ContentReference", "PageReference", "ImageReference", "VideoReference", "reference", "Url", "LinkItem", "link"];
+	const linkTypes = ["Url", "LinkItem", "LinkItemCollection", "link"];
 	const selectionTypes = ["SelectOne", "SelectMany"];
-	const contentTypes = ["ContentArea", "LinkItemCollection"];
+	const contentTypes = ["ContentArea"];
+	const outlineTypes = ["outline"];
+	const otherTypes = ["Guid"];
+
+	// Check if ContentReference with allowedTypes pointing to Block content types
+	if (type === "ContentReference" && allowedTypes && allowedTypes.length > 0 && allContentTypes) {
+		const referencedType = allContentTypes.find(ct => ct.id === allowedTypes[0]);
+		if (referencedType && referencedType.baseType === "Block") {
+			return "Block";
+		}
+		return "Content"; // ContentReference but not a block
+	}
+
+	// Check for legacy block types (seo, address) - treat as blocks
+	if (type === "seo" || type === "address") {
+		return "Block";
+	}
 
 	if (textTypes.includes(type)) return "Text";
 	if (numberTypes.includes(type)) return "Number";
 	if (booleanTypes.includes(type)) return "Boolean";
 	if (dateTypes.includes(type)) return "Date/Time";
-	if (referenceTypes.includes(type)) return "Reference";
+	if (linkTypes.includes(type)) return "Link";
 	if (selectionTypes.includes(type)) return "Selection";
 	if (contentTypes.includes(type)) return "Content";
+	if (outlineTypes.includes(type)) return "Outline";
+	if (otherTypes.includes(type)) return "Other";
 	return "Other";
 };
 
@@ -133,12 +154,116 @@ export default function ConfigurePropertyPane({
 	onSave,
 	isNew = false,
 }: ConfigurePropertyPaneProps) {
+	// Load property groups from settings
+	const initialPropertyGroups: PropertyGroup[] = [
+		{
+			id: "content-settings",
+			name: "ContentSettings",
+			displayName: "Content Settings",
+			sortIndex: 10,
+			accessLevel: "Read",
+			fromCode: false,
+		},
+		{
+			id: "geo-seo",
+			name: "GeoSeo",
+			displayName: "GEO & SEO",
+			sortIndex: 20,
+			accessLevel: "Read",
+			fromCode: false,
+		},
+		{
+			id: "categories-tags",
+			name: "CategoriesTags",
+			displayName: "Categories & Tags",
+			sortIndex: 30,
+			accessLevel: "Read",
+			fromCode: false,
+		},
+	];
+
+	const [propertyGroups] = usePersistentState(
+		"propertyGroups",
+		initialPropertyGroups
+	) as [PropertyGroup[], (value: PropertyGroup[]) => void];
+
+	// Load content types for block selection
+	const [savedContentTypes] = usePersistentState(
+		"contentTypes",
+		initialContentTypes
+	) as [ContentType[], (value: ContentType[]) => void];
+
+	const contentTypes = useMemo(() => {
+		if (!savedContentTypes) return initialContentTypes;
+		const savedMap = new Map(savedContentTypes.map((ct) => [ct.id, ct]));
+		initialContentTypes.forEach((ct) => {
+			if (!savedMap.has(ct.id)) {
+				savedMap.set(ct.id, ct);
+			}
+		});
+		return Array.from(savedMap.values());
+	}, [savedContentTypes]);
+
+	// Convert property groups to select options
+	const propertyGroupOptions = useMemo(() => {
+		return [...propertyGroups]
+			.sort((a, b) => a.sortIndex - b.sortIndex)
+			.map((group) => ({
+				value: group.displayName,
+				label: group.displayName,
+			}));
+	}, [propertyGroups]);
+
+	// Generate block type options from content types
+	const blockTypeOptions = useMemo(() => {
+		return contentTypes
+			.filter(ct => ct.baseType === "Block")
+			.map(ct => ({
+				value: ct.id,
+				label: ct.displayName,
+			}))
+			.sort((a, b) => a.label.localeCompare(b.label));
+	}, [contentTypes]);
+
+	// Generate reference type options (for Content Reference)
+	const referenceTypeOptions = useMemo(() => {
+		const options: { value: string; label: string }[] = [
+			{ value: "Any", label: "Any" }
+		];
+
+		// Add all content types
+		contentTypes.forEach(ct => {
+			options.push({
+				value: ct.id,
+				label: ct.displayName || ct.name,
+			});
+		});
+
+		return options;
+	}, [contentTypes]);
+
+	// Get all selectable content types (for allowed/restricted types)
+	const selectableContentTypes = useMemo(() => {
+		return contentTypes.map(ct => ({
+			value: ct.id,
+			label: ct.displayName || ct.name,
+		}));
+	}, [contentTypes]);
+
+	// Merge static subtypes with dynamic block types
+	const getSubTypeOptions = (category: TypeCategory) => {
+		if (category === "Block") {
+			return blockTypeOptions;
+		}
+		return subTypesByCategory[category] || [];
+	};
+
 	const normalizedType = normalizeType(property.type);
 	const [displayName, setDisplayName] = useState(property.displayName || property.name);
 	const [systemName, setSystemName] = useState(property.name);
 	const [nameManuallyEdited, setNameManuallyEdited] = useState(!!property.name && property.displayName ? property.name !== toSystemName(property.displayName) : false);
 	const [showNameField, setShowNameField] = useState(false);
-	const [typeCategory, setTypeCategory] = useState<TypeCategory>(getCategoryFromType(normalizedType));
+	const [typeCategory, setTypeCategory] = useState<TypeCategory>(getCategoryFromType(normalizedType, property.allowedTypes, contentTypes));
 	const [propertyType, setPropertyType] = useState<PropertyType>(normalizedType);
 	const [required, setRequired] = useState(property.required || false);
 	const [searchable, setSearchable] = useState(property.searchable || false);
@@ -149,6 +274,22 @@ export default function ConfigurePropertyPane({
 	const [defaultValueType, setDefaultValueType] = useState<string>(
 		property.defaultValue !== undefined ? "custom" : "none"
 	);
+	const [groupName, setGroupName] = useState(property.groupName || (propertyGroupOptions.length > 0 ? propertyGroupOptions[0].value : "Other"));
+	const [selectedBlockType, setSelectedBlockType] = useState<string>(
+		property.allowedTypes && property.allowedTypes.length > 0 ? property.allowedTypes[0] : ""
+	);
+	// Content Reference specific states
+	const [referenceType, setReferenceType] = useState<string>(
+		property.type === "ContentReference" && property.allowedTypes && property.allowedTypes.length === 1
+			? property.allowedTypes[0]
+			: "Any"
+	);
+	const [allowedContentTypes, setAllowedContentTypes] = useState<string[]>(
+		property.allowedTypes && property.allowedTypes.length > 1 ? property.allowedTypes : []
+	);
+	const [restrictedContentTypes, setRestrictedContentTypes] = useState<string[]>(
+		property.restrictedTypes || []
+	);
 
 	// Reset state when property changes
 	useEffect(() => {
@@ -157,7 +298,7 @@ export default function ConfigurePropertyPane({
 		setSystemName(property.name);
 		setNameManuallyEdited(!!property.name && property.displayName ? property.name !== toSystemName(property.displayName) : false);
 		setShowNameField(false);
-		setTypeCategory(getCategoryFromType(normalized));
+		setTypeCategory(getCategoryFromType(normalized, property.allowedTypes, contentTypes));
 		setPropertyType(normalized);
 		setRequired(property.required || false);
 		setSearchable(property.searchable || false);
@@ -166,20 +307,116 @@ export default function ConfigurePropertyPane({
 		setMaxLength(property.validation?.maxLength?.toString() || "");
 		setPattern(property.validation?.pattern || "");
 		setDefaultValueType(property.defaultValue !== undefined ? "custom" : "none");
-	}, [property]);
+		setGroupName(property.groupName || (propertyGroupOptions.length > 0 ? propertyGroupOptions[0].value : "Other"));
+		setSelectedBlockType(property.allowedTypes && property.allowedTypes.length > 0 ? property.allowedTypes[0] : "");
+		setReferenceType(
+			property.type === "ContentReference" && property.allowedTypes && property.allowedTypes.length === 1
+				? property.allowedTypes[0]
+				: "Any"
+		);
+		setAllowedContentTypes(property.allowedTypes && property.allowedTypes.length > 1 ? property.allowedTypes : []);
+		setRestrictedContentTypes(property.restrictedTypes || []);
+	}, [property, propertyGroupOptions, contentTypes]);
+
+	// Check if any changes have been made
+	const hasChanges = useMemo(() => {
+		const currentName = nameManuallyEdited ? systemName.trim() : toSystemName(displayName);
+		const originalName = property.name;
+		const originalDisplayName = property.displayName || property.name;
+		const originalType = normalizeType(property.type);
+		const originalRequired = property.required || false;
+		const originalSearchable = property.searchable || false;
+		const originalCultureSpecific = property.cultureSpecific || false;
+		const originalDescription = property.description || "";
+		const originalMaxLength = property.validation?.maxLength?.toString() || "";
+		const originalPattern = property.validation?.pattern || "";
+		const originalGroupName = property.groupName || (propertyGroupOptions.length > 0 ? propertyGroupOptions[0].value : "Other");
+		const originalBlockType = property.allowedTypes && property.allowedTypes.length > 0 ? property.allowedTypes[0] : "";
+		const originalReferenceType = property.type === "ContentReference" && property.allowedTypes && property.allowedTypes.length === 1 ? property.allowedTypes[0] : "Any";
+		const originalAllowedTypes = property.allowedTypes && property.allowedTypes.length > 1 ? property.allowedTypes : [];
+		const originalRestrictedTypes = property.restrictedTypes || [];
+
+		// Helper to compare arrays
+		const arraysEqual = (a: string[], b: string[]) => {
+			if (a.length !== b.length) return false;
+			const sortedA = [...a].sort();
+			const sortedB = [...b].sort();
+			return sortedA.every((val, idx) => val === sortedB[idx]);
+		};
+
+		return (
+			displayName.trim() !== originalDisplayName ||
+			currentName !== originalName ||
+			propertyType !== originalType ||
+			required !== originalRequired ||
+			searchable !== originalSearchable ||
+			cultureSpecific !== originalCultureSpecific ||
+			description !== originalDescription ||
+			maxLength !== originalMaxLength ||
+			pattern !== originalPattern ||
+			groupName !== originalGroupName ||
+			(typeCategory === "Block" && selectedBlockType !== originalBlockType) ||
+			(propertyType === "ContentReference" && typeCategory === "Content" && (
+				referenceType !== originalReferenceType ||
+				!arraysEqual(allowedContentTypes, originalAllowedTypes) ||
+				!arraysEqual(restrictedContentTypes, originalRestrictedTypes)
+			))
+		);
+	}, [
+		displayName,
+		systemName,
+		nameManuallyEdited,
+		propertyType,
+		required,
+		searchable,
+		cultureSpecific,
+		description,
+		maxLength,
+		pattern,
+		groupName,
+		selectedBlockType,
+		referenceType,
+		allowedContentTypes,
+		restrictedContentTypes,
+		typeCategory,
+		property,
+		propertyGroupOptions,
+	]);
 
 	// When category changes, reset to first sub-type of that category
 	const handleCategoryChange = (category: TypeCategory) => {
 		setTypeCategory(category);
-		const subTypes = subTypesByCategory[category];
+		const subTypes = getSubTypeOptions(category);
 		if (subTypes && subTypes.length > 0) {
-			setPropertyType(subTypes[0].value);
+			// For Block category, set to ContentReference and store the block type in allowedTypes
+			if (category === "Block") {
+				setPropertyType("ContentReference");
+				setSelectedBlockType(blockTypeOptions.length > 0 ? blockTypeOptions[0].value : "");
+			} else {
+				setPropertyType(subTypes[0].value as PropertyType);
+			}
 		}
 	};
 
 	const handleSave = () => {
 		if (onSave) {
 			const finalName = nameManuallyEdited ? systemName.trim() : toSystemName(displayName);
+
+			// Determine allowedTypes based on type category
+			let allowedTypes: string[] | undefined = undefined;
+			let restrictedTypes: string[] | undefined = undefined;
+
+			if (typeCategory === "Block" && selectedBlockType) {
+				allowedTypes = [selectedBlockType];
+			} else if (propertyType === "ContentReference" && typeCategory === "Content") {
+				if (referenceType === "Any") {
+					allowedTypes = allowedContentTypes.length > 0 ? allowedContentTypes : undefined;
+					restrictedTypes = restrictedContentTypes.length > 0 ? restrictedContentTypes : undefined;
+				} else {
+					allowedTypes = [referenceType];
+				}
+			}
+
 			onSave({
 				...property,
 				name: finalName || toSystemName(displayName),
@@ -189,15 +426,20 @@ export default function ConfigurePropertyPane({
 				searchable,
 				cultureSpecific,
 				description,
+				groupName,
+				allowedTypes,
+				restrictedTypes,
 				validation: maxLength || pattern ? {
 					...(maxLength ? { maxLength: parseInt(maxLength, 10) } : {}),
 					...(pattern ? { pattern } : {}),
 				} : undefined,
 			});
+			toaster.create(`Property "${displayName.trim()}" saved successfully`, { intent: "success" });
+			onClose();
 		}
 	};
 
-	const subTypeOptions = subTypesByCategory[typeCategory] || [];
+	const subTypeOptions = getSubTypeOptions(typeCategory);
 	const selectedSubTypeLabel = subTypeOptions.find(opt => opt.value === propertyType)?.label || propertyType;
 	const isTextType = ["String", "LongString", "XhtmlString", "text", "textarea", "richtext"].includes(propertyType);
 	const autoName = nameManuallyEdited ? systemName : toSystemName(displayName);
@@ -290,15 +532,88 @@ export default function ConfigurePropertyPane({
 				{subTypeOptions.length > 1 && (
 					<Field label={`${typeCategory} Type`} required mb="16">
 						<Select
-							value={propertyType}
-							onValueChange={(value) => setPropertyType(value as PropertyType)}
+							value={typeCategory === "Block" ? selectedBlockType : propertyType}
+							onValueChange={(value) => {
+								if (typeCategory === "Block") {
+									setSelectedBlockType(value);
+								} else {
+									setPropertyType(value as PropertyType);
+								}
+							}}
 							options={subTypeOptions}
 						>
 							<SelectTrigger w="full">
-								{selectedSubTypeLabel}
+								{typeCategory === "Block"
+									? blockTypeOptions.find(opt => opt.value === selectedBlockType)?.label || "Select block type"
+									: selectedSubTypeLabel
+								}
 							</SelectTrigger>
 							<SelectContent />
 						</Select>
+					</Field>
+				)}
+
+				{/* Show Block subtype selector even when there's only one or no option */}
+				{typeCategory === "Block" && subTypeOptions.length <= 1 && (
+					<Field label="Block Type" required mb="16">
+						<Select
+							value={selectedBlockType}
+							onValueChange={setSelectedBlockType}
+							options={blockTypeOptions}
+						>
+							<SelectTrigger w="full">
+								{blockTypeOptions.find(opt => opt.value === selectedBlockType)?.label || "Select block type"}
+							</SelectTrigger>
+							<SelectContent />
+						</Select>
+					</Field>
+				)}
+
+				{/* Content Reference - Reference Type selector */}
+				{propertyType === "ContentReference" && typeCategory === "Content" && (
+					<Field label="Reference Type" required mb="16">
+						<Select
+							value={referenceType}
+							onValueChange={setReferenceType}
+							options={referenceTypeOptions}
+						>
+							<SelectTrigger w="full">
+								{referenceTypeOptions.find(opt => opt.value === referenceType)?.label || "Any"}
+							</SelectTrigger>
+							<SelectContent />
+						</Select>
+					</Field>
+				)}
+
+				{/* Content Reference - Allowed Types (when Reference Type is "Any") */}
+				{propertyType === "ContentReference" && typeCategory === "Content" && referenceType === "Any" && (
+					<Field label="Allowed Content Types" mb="16">
+						<Text fontSize="sm" color="fg.secondary" mb="8">
+							Configure which content types can be selected (leave empty for all types)
+						</Text>
+						<Box p="12" bg="bg.secondary" rounded="md">
+							<Text fontSize="sm" color="fg.secondary">
+								{allowedContentTypes.length > 0
+									? `${allowedContentTypes.length} type(s) configured`
+									: "All types allowed (multi-select UI to be implemented)"}
+							</Text>
+						</Box>
+					</Field>
+				)}
+
+				{/* Content Reference - Restricted Types (when Reference Type is "Any") */}
+				{propertyType === "ContentReference" && typeCategory === "Content" && referenceType === "Any" && (
+					<Field label="Restricted Content Types" mb="16">
+						<Text fontSize="sm" color="fg.secondary" mb="8">
+							Configure which content types to exclude from selection
+						</Text>
+						<Box p="12" bg="bg.secondary" rounded="md">
+							<Text fontSize="sm" color="fg.secondary">
+								{restrictedContentTypes.length > 0
+									? `${restrictedContentTypes.length} type(s) restricted`
+									: "No restrictions (multi-select UI to be implemented)"}
+							</Text>
+						</Box>
 					</Field>
 				)}
 
@@ -408,17 +723,12 @@ export default function ConfigurePropertyPane({
 
 				<Field label="Property Group" mb="16">
 					<Select
-						value={property.groupName || "Content"}
-						options={[
-							{ value: "Content", label: "Content" },
-							{ value: "Settings", label: "Settings" },
-							{ value: "SEO", label: "SEO" },
-							{ value: "Social", label: "Social" },
-							{ value: "Basic", label: "Basic" },
-						]}
+						value={groupName}
+						onValueChange={(value) => setGroupName(value)}
+						options={propertyGroupOptions}
 					>
 						<SelectTrigger w="full">
-							{property.groupName || "Content"}
+							{groupName}
 						</SelectTrigger>
 						<SelectContent />
 					</Select>
@@ -440,7 +750,7 @@ export default function ConfigurePropertyPane({
 						<Button appearance="subtle" onClick={onClose}>
 							Cancel
 						</Button>
-						<Button appearance="primary" onClick={handleSave} disabled={!displayName.trim()}>
+						<Button appearance="primary" onClick={handleSave} disabled={!displayName.trim() || !hasChanges}>
 							Save
 						</Button>
 					</Flex>

@@ -100,14 +100,18 @@ export default function ReportsPage() {
 					>
 						<MenuTrigger asChild>
 							<LabelMenuButton label="Select Location">
-								<Box display="flex" alignItems="center" gap="8">
-									<IconFolder size={16} color="#2E3442" />
-									<Text>
-										{
-											locationOptions.find((opt) => opt.value === location)
-												?.label
-										}
-									</Text>
+								<Box asChild display="inline-flex" alignItems="center" gap="8">
+									<span>
+										<IconFolder size={16} color="#2E3442" />
+										<Text asChild>
+											<span>
+												{
+													locationOptions.find((opt) => opt.value === location)
+														?.label
+												}
+											</span>
+										</Text>
+									</span>
 								</Box>
 							</LabelMenuButton>
 						</MenuTrigger>

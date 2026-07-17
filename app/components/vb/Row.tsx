@@ -14,20 +14,28 @@ const Row: React.FC<{
     addRowBelow: any;
     removeRow: any;
     onDragStart: any;
-}> = ({ addRowBelow, addRow, setOpen, row, children, addCol, removeRow, onDragStart }) => {
+    isSelected?: boolean;
+    onHoverChange?: (rowId: string | null) => void;
+    onScrollToPreview?: (rowId: string) => void;
+}> = ({ addRowBelow, addRow, setOpen, row, children, addCol, removeRow, onDragStart, isSelected, onHoverChange, onScrollToPreview }) => {
     const group = { label: "Add", separator: true };
     return (
         <div className="py-0">
             <div
                 className="newsection group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
-                style={{ paddingLeft: `${4 + indentDistance}px` }}
+                style={{
+                    paddingLeft: `${4 + indentDistance}px`,
+                    backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : undefined
+                }}
                 onDragStart={onDragStart}
-                onClick={() => setOpen(row.id, !row.open)}
+                onClick={() => onScrollToPreview?.(row.id)}
+                onMouseEnter={() => onHoverChange?.(row.id)}
+                onMouseLeave={() => onHoverChange?.(null)}
                 draggable
             >
                 <div className="flex gap-1 items-center">
                     <svg
-                        className="chevron"
+                        className="chevron cursor-pointer"
                         width="12"
                         height="12"
                         viewBox="0 0 12 12"
@@ -35,6 +43,10 @@ const Row: React.FC<{
                         xmlns="http://www.w3.org/2000/svg"
                         style={{
                             transform: row.open ? "rotate(0deg)" : "rotate(-90deg)",
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setOpen(row.id, !row.open);
                         }}
                     >
                         <path
@@ -99,7 +111,7 @@ const Row: React.FC<{
                     </Menu>
                 </div>
             </div>
-            <div style={{ display: row.open ? "block" : "none" }}>{children}</div>
+            <div style={{ display: row.open ? "block" : "none", backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : undefined }}>{children}</div>
         </div>
     );
 };

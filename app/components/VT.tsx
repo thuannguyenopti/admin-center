@@ -23,7 +23,7 @@ export default function VT({
 	backLink?: {label: string; url?: string};
 	title?: string;
 	description?: string;
-	items: Array<{label: string; url?: string}> | undefined;
+	items: Array<{label: string; url?: string; separator?: boolean}> | undefined;
 }>) {
 	const router = useRouter();
 	const path = usePathname();
@@ -67,23 +67,29 @@ export default function VT({
 						)}
 					</Box>
 				)}
-				{items?.map((menuItem, i) =>
-					menuItem.url ? (
-						<NavItem
-							onClick={() => menuClick(menuItem.url || "")}
-							active={menuItem.url === path}
-							key={`${menuItem.label}-${menuItem.url}`}
-							aria-label={menuItem.label}
-						>
-							{menuItem.label}
-						</NavItem>
-					) : (
-						<Fragment key={`${menuItem.label}-group-${i}`}>
-							{i !== 0 && <NavSeparator />}
-							<NavGroupTrigger>{menuItem.label}</NavGroupTrigger>
-						</Fragment>
-					)
-				)}
+				{items?.map((menuItem, i) => {
+					if (menuItem.url) {
+						return (
+							<Fragment key={`${menuItem.label}-${menuItem.url}`}>
+								<NavItem
+									onClick={() => menuClick(menuItem.url || "")}
+									active={menuItem.url === path}
+									aria-label={menuItem.label}
+								>
+									{menuItem.label}
+								</NavItem>
+								{menuItem.separator && <NavSeparator />}
+							</Fragment>
+						);
+					} else {
+						return (
+							<Fragment key={`${menuItem.label}-group-${i}`}>
+								{i !== 0 && <NavSeparator />}
+								<NavGroupTrigger>{menuItem.label}</NavGroupTrigger>
+							</Fragment>
+						);
+					}
+				})}
 			</NavList>
 		</NavBody>
 	);

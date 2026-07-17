@@ -227,7 +227,7 @@ const activities = [
             baseQualityScore: "85%"
         },
         trigger: "Chat",
-        triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+        triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
         status: "In Progress",
         variables: "--",
         output: "--",
@@ -239,7 +239,7 @@ const activities = [
                 id: "1-1",
                 started: "Oct 13, 2025\n03:51 PM",
                 agent: { name: "Target Research Agent", handle: "@target_research", type: "agent", version: "v1.0.0", mode: "Enforcer", baseQualityScore: "85%" },
-                triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+                triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
                 status: "Completed",
                 variables: "Variables",
                 output: "View Output",
@@ -251,7 +251,7 @@ const activities = [
                 id: "1-2",
                 started: "Oct 13, 2025\n03:54 PM",
                 agent: { name: "Campaign Builder", handle: "@campaign_builder", type: "agent", version: "v2.1.0", mode: "Learner", baseQualityScore: "88%" },
-                triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+                triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
                 status: "In Progress",
                 variables: "Variables",
                 output: "--",
@@ -273,7 +273,7 @@ const activities = [
             baseQualityScore: "85%"
         },
         trigger: "--",
-        triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+        triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
         status: "Completed",
         variables: "Variables when",
         output: "View Output",
@@ -361,7 +361,7 @@ const activities = [
             baseQualityScore: "85%"
         },
         trigger: "Scheduler",
-        triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+        triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
         status: "In Progress",
         variables: "Variables",
         output: "--",
@@ -373,7 +373,7 @@ const activities = [
                 id: "5-1",
                 started: "Oct 13, 2025\n02:51 PM",
                 agent: { name: "Transcription Agent", handle: "@transcribe", type: "agent", version: "v1.4.0", mode: "Learner", baseQualityScore: "85%" },
-                triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+                triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
                 status: "Completed",
                 variables: "Variables",
                 output: "View Output",
@@ -385,7 +385,7 @@ const activities = [
                 id: "5-2",
                 started: "Oct 13, 2025\n02:56 PM",
                 agent: { name: "Summary Generator", handle: "@summarize", type: "agent", version: "v2.0.0", mode: "Learner" },
-                triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+                triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
                 status: "In Progress",
                 variables: "Variables",
                 output: "--",
@@ -407,7 +407,7 @@ const activities = [
             baseQualityScore: "85%"
         },
         trigger: "Scheduler",
-        triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+        triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
         status: "Terminated",
         variables: "Variables",
         output: "View execution log",
@@ -419,7 +419,7 @@ const activities = [
                 id: "6-1",
                 started: "Oct 13, 2025\n02:11 PM",
                 agent: { name: "Image Generator", handle: "@image_gen", type: "agent", version: "v1.2.0", mode: "Enforcer", baseQualityScore: "85%" },
-                triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+                triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
                 status: "Completed",
                 variables: "Variables",
                 output: "View Output",
@@ -431,7 +431,7 @@ const activities = [
                 id: "6-2",
                 started: "Oct 13, 2025\n02:15 PM",
                 agent: { name: "Asset Optimizer", handle: "@optimize", type: "agent", version: "v1.0.0", mode: "Enforcer" },
-                triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+                triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
                 status: "Terminated",
                 variables: "Variables",
                 output: "View execution log",
@@ -474,7 +474,7 @@ const activities = [
             baseQualityScore: "85%"
         },
         trigger: "--",
-        triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+        triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
         status: "Failed",
         variables: "Variables",
         output: "Foo",
@@ -486,7 +486,7 @@ const activities = [
                 id: "8-1",
                 started: "Oct 13, 2025\n12:51 PM",
                 agent: { name: "Accessibility Scanner", handle: "@a11y_scan", type: "agent", version: "v2.0.0", mode: "Enforcer", baseQualityScore: "85%" },
-                triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+                triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
                 status: "Completed",
                 variables: "Variables",
                 output: "View Output",
@@ -498,7 +498,7 @@ const activities = [
                 id: "8-2",
                 started: "Oct 13, 2025\n12:54 PM",
                 agent: { name: "Compliance Validator", handle: "@validate", type: "agent", version: "v1.5.0", mode: "Enforcer" },
-                triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+                triggeredBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
                 status: "Failed",
                 variables: "Variables",
                 output: "View execution log",
@@ -546,7 +546,7 @@ export default function ActivitiesPage() {
     }, []);
 
     const users = [
-        { name: "Mary Anne", avatar: "/avatars/user.png" },
+        { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
         { name: "William Mo...", avatar: "/avatars/user2.png" }
     ];
 

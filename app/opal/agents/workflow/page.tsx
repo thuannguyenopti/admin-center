@@ -21,10 +21,11 @@ import {
 import { Layout } from "@optiaxiom/react/unstable";
 import {
     IconSearch,
-    IconMenu2,
+    IconBars,
     IconGripVertical,
     IconChevronDown,
-} from "@tabler/icons-react";
+    IconSparkles as IconWand,
+} from "@optimizely/axiom-icons";
 import {
     IconAgent,
     IconCodeBranch,
@@ -40,6 +41,7 @@ import {
     IconPlay,
     IconXmark,
     IconEllipsisStroke,
+    IconFileArrowUp,
 } from "@optimizely/axiom-icons";
 import { useState, useRef, useCallback, useMemo, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -58,9 +60,9 @@ import {
     ConditionNode,
     AddTriggerNode,
     StepPlaceholderNode,
-    ConditionEdge
+    ConditionEdge,
+    ApprovalNode,
 } from "./components/WorkflowNodes";
-import BroomIcon from "./icon/BroomIcon";
 import WebhookIcon from "./icon/WebhookIcon";
 import {
     ReactFlow,
@@ -184,6 +186,39 @@ const INITIAL_EDGES: any[] = [
         markerEnd: { type: MarkerType.ArrowClosed },
         style: { strokeDasharray: '5,5' }
     }
+];
+
+const WF_AGENT_NODES: any[] = [
+    {
+        id: 'wf-start',
+        type: 'trigger',
+        position: { x: 300, y: 50 },
+        data: { label: 'Start', description: 'Workflow triggered by CMP task submission', bg: 'bg.success.subtle' },
+    },
+    {
+        id: 'wf-review',
+        type: 'action',
+        position: { x: 300, y: 220 },
+        data: { label: 'Review', description: 'Opal agent reviews content and prepares approval request', bg: 'bg.accent.subtle' },
+    },
+    {
+        id: 'wf-approval',
+        type: 'approval',
+        position: { x: 300, y: 390 },
+        data: { label: 'Approval', description: 'Waiting for human review and sign-off' },
+    },
+    {
+        id: 'wf-end',
+        type: 'action',
+        position: { x: 300, y: 560 },
+        data: { label: 'End', description: 'Workflow complete — artifact published', bg: 'bg.tertiary' },
+    },
+];
+
+const WF_AGENT_EDGES: any[] = [
+    { id: 'e-start-review', source: 'wf-start', target: 'wf-review', type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } },
+    { id: 'e-review-approval', source: 'wf-review', target: 'wf-approval', type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } },
+    { id: 'e-approval-end', source: 'wf-approval', target: 'wf-end', type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } },
 ];
 
 const CMP_NODES: any[] = [
@@ -345,15 +380,27 @@ function WorkflowBuilder() {
     const [isSetupPanelOpen, setIsSetupPanelOpen] = useState(!isViewingExisting);
     const [isLibraryOpen, setIsLibraryOpen] = useState(!isViewingExisting);
     const [isEditing, setIsEditing] = useState(false);
-    const [workflowName, setWorkflowName] = useState(preset === 'cmp-workflow' ? "CMP Workflow Agent" : "Untitled Workflow");
+    const [workflowName, setWorkflowName] = useState(
+        preset === 'cmp-workflow' ? "CMP Workflow Agent" :
+        preset === 'wf-agent' ? "WF Approval Agent" :
+        "Untitled Workflow"
+    );
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [isElkEnabled, setIsElkEnabled] = useState(false);
 
     // React Flow hooks
     const reactFlowWrapper = useRef(null);
-    const [nodes, setNodes, onNodesChange] = useNodesState(preset === 'cmp-workflow' ? CMP_NODES : INITIAL_NODES);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(preset === 'cmp-workflow' ? CMP_EDGES : INITIAL_EDGES);
+    const [nodes, setNodes, onNodesChange] = useNodesState(
+        preset === 'cmp-workflow' ? CMP_NODES :
+        preset === 'wf-agent' ? WF_AGENT_NODES :
+        INITIAL_NODES
+    );
+    const [edges, setEdges, onEdgesChange] = useEdgesState(
+        preset === 'cmp-workflow' ? CMP_EDGES :
+        preset === 'wf-agent' ? WF_AGENT_EDGES :
+        INITIAL_EDGES
+    );
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
 
     const nodeTypes = useMemo(() => ({
@@ -362,7 +409,8 @@ function WorkflowBuilder() {
         loop: LoopNode,
         condition: ConditionNode,
         addTrigger: AddTriggerNode,
-        stepPlaceholder: StepPlaceholderNode
+        stepPlaceholder: StepPlaceholderNode,
+        approval: ApprovalNode,
     }), []);
 
     const edgeTypes = useMemo(() => ({
@@ -385,9 +433,11 @@ function WorkflowBuilder() {
             { name: "Design Analyst", icon: <IconAgent />, bg: "bg.avatar.purple", type: 'action', outputType: 'JSON' },
             { name: "Hypothesis Creator", icon: <IconCodeBranch />, bg: "bg.avatar.purple", type: 'action', outputType: 'JSON' },
         ],
-        Data: [],
+        Data: [
+            { name: "Import (Upload)", icon: <IconFileArrowUp />, bg: "bg.accent.subtle", type: 'action' },
+        ],
         Inputs: [
-            { name: "Instruction", icon: <IconBook />, bg: "bg.accent.subtle", type: 'action' },
+            { name: "Skill", icon: <IconBook />, bg: "bg.accent.subtle", type: 'action' },
             { name: "Prompts", icon: <IconTerminal />, bg: "bg.accent.subtle", type: 'action' },
         ],
         Triggers: [
@@ -401,7 +451,7 @@ function WorkflowBuilder() {
         Logic: [
             { name: "Condition", icon: <IconSplit />, bg: "bg.accent.subtle", type: 'condition', category: 'Logic' },
             { name: "Loop", icon: <IconArrowsRepeat />, bg: "bg.accent.subtle", type: 'loop' },
-            { name: "User Approval", icon: <IconUserCheck />, bg: "bg.accent.subtle", type: 'action' },
+            { name: "User Approval", icon: <IconUserCheck />, bg: "bg.accent.subtle", type: 'approval', description: 'Waiting for human review' },
         ],
     };
 
@@ -798,7 +848,7 @@ function WorkflowBuilder() {
                         <Box display="flex" alignItems="center" gap="16">
                             {(!isViewingExisting || isEditing) && (
                                 <Button
-                                    icon={<IconMenu2 />}
+                                    icon={<IconBars />}
                                     appearance={isLibraryOpen ? "default" : "subtle"}
                                     aria-label="Toggle Component Library"
                                     onClick={() => setIsLibraryOpen(!isLibraryOpen)}
@@ -1041,7 +1091,7 @@ function WorkflowBuilder() {
                                     backgroundColor: isElkEnabled ? 'var(--ax-colors-bg-accent-subtle)' : undefined,
                                 }}
                             >
-                                <BroomIcon size={16} />
+                                <IconWand size={16} />
                             </ControlButton>
                         </Controls>
                         <MiniMap />

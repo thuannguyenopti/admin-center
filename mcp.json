@@ -1,51 +1,28 @@
 {
-  "mcpServers": {
-    "axiom": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@optiaxiom/mcp"
-      ]
-    },
-    "coda": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "coda-mcp"
-      ],
-      "env": {
-        "CODA_API_TOKEN": "4eaa5f7a-be80-47a1-a5c9-98f882813020"
-      }
-    },
-    "optimizely": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@simonecoelhosfo/optimizely-mcp-server",
-        "server"
-      ],
-      "env": {
-        "OPTIMIZELY_API_TOKEN": "",
-        "OPTIMIZELY_PROJECT_IDS": ""
-      }
-    },
-    "figma": {
-      "type": "http",
-      "url": "https://mcp.figma.com/mcp"
-    },
-    "jira": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@aashari/mcp-server-atlassian-jira"
-      ],
-      "env": {
-        "JIRA_URL": "",
-        "JIRA_USERNAME": "",
-        "JIRA_API_TOKEN": ""
-      }
-    }
-  }
+	"mcpServers": {
+		"axiom": {
+			"command": "npx",
+			"args": ["-y", "@optiaxiom/mcp@1"]
+		},
+		"axiom-v3": {
+			"command": "npx",
+			"args": ["-y", "@optiaxiom/mcp"]
+		},
+		"coda": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "coda-mcp"],
+			"env": {
+				"CODA_API_TOKEN": "4eaa5f7a-be80-47a1-a5c9-98f882813020"
+			}
+		},
+		"figma": {
+			"type": "http",
+			"url": "https://mcp.figma.com/mcp"
+		},
+		"TalkToFigma": {
+			"command": "bunx",
+			"args": ["cursor-talk-to-figma-mcp@latest"]
+		}
+	}
 }

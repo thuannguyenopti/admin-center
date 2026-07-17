@@ -22,12 +22,15 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #fff;
+      background: #f9fafc;
       color: #2E3442;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 13px;
       line-height: 1.6;
-      padding: 20px 18px 40px;
+      padding: 16px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
     /* ── HEADER ── */
@@ -35,13 +38,12 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 3px;
     }
 
     .header svg { color: #66708C; flex-shrink: 0; }
 
     .header h1 {
-      font-size: 13.5px;
+      font-size: 14px;
       font-weight: 600;
       color: #2E3442;
     }
@@ -49,39 +51,42 @@
     .subtitle {
       font-size: 12px;
       color: #66708C;
-      margin-bottom: 20px;
-      padding-left: 22px;
+      margin-top: -4px;
     }
 
     /* ── DIVIDER ── */
-    hr {
-      border: none;
-      border-top: 1px solid #DADFEB;
-      margin: 14px 0;
-    }
+    hr { display: none; }
 
-    /* ── STEP ── */
-    .step { margin-bottom: 2px; }
+    /* ── STEP (card) ── */
+    .step {
+      background: #ffffff;
+      border: 1px solid #dadfeb;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 0;
+      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      cursor: pointer;
+    }
 
     .step-header {
       display: flex;
       align-items: center;
-      gap: 9px;
-      margin-bottom: 7px;
+      gap: 10px;
+      margin-bottom: 8px;
     }
 
     .step-num {
       width: 22px;
       height: 22px;
-      border-radius: 6px;
-      font-weight: 700;
+      border-radius: 50%;
+      font-weight: 600;
       font-size: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      background: #EDEFFE;
-      color: #002ACC;
+      background: #f5f6fa;
+      color: #66708c;
     }
 
     .step-title {
@@ -90,7 +95,7 @@
       color: #2E3442;
     }
 
-    .step-body { padding-left: 31px; }
+    .step-body { padding-left: 32px; }
 
     .step-body > p {
       font-size: 12.5px;
@@ -119,7 +124,7 @@
       width: 4px;
       height: 4px;
       border-radius: 50%;
-      background: #0037FF;
+      background: #66708c;
       margin-top: 7px;
       flex-shrink: 0;
     }
@@ -209,13 +214,31 @@
     .token-card.med  .usecase { background: #FFFBEB; color: #92400e; }
     .token-card.high .usecase { background: #FEF2F2; color: #991b1b; }
 
+
+    /* ── CONTEXTUAL HIGHLIGHT ── */
+    .step:hover:not(.active) {
+      background: #faf9ff;
+      border-color: #c4b5fd;
+    }
+
+    .step.active {
+      background: linear-gradient(135deg, #f5f3ff, #eef2ff);
+      border-color: #c4b5fd;
+      box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.08);
+    }
+
+    .step.active .step-num {
+      background: #7c3aed;
+      color: #fff;
+    }
+
     /* ── BACK NAV ── */
     .back-nav {
       display: flex;
       align-items: center;
       gap: 4px;
       font-size: 11.5px;
-      font-weight: 500;
+      font-weight: 400;
       color: #66708C;
       cursor: pointer;
       margin-bottom: 14px;
@@ -229,27 +252,15 @@
 </head>
 <body>
 
-  <!-- BACK NAV -->
-  <a class="back-nav" href="#" onclick="return false;">
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-      <path d="M7.5 2L3.5 6L7.5 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    All guides
-  </a>
-
   <!-- HEADER -->
   <div class="header">
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-      <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm9-1v4.5H7V7h2Zm0-2.5v2H7v-2h2Z"/>
-    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
     <h1>Multi-Turn Agent Guide</h1>
   </div>
   <p class="subtitle">6 steps to build your first conversational agent.</p>
 
-  <hr/>
-
   <!-- STEP 1 -->
-  <div class="step">
+  <div class="step" id="step-1">
     <div class="step-header">
       <div class="step-num">01</div>
       <span class="step-title">Enable Multi-Turn</span>
@@ -258,7 +269,7 @@
       <p>Toggle <strong>Support multi-turn conversation</strong> on. Your agent gains memory across the full conversation.</p>
       <div class="callout">
         <span class="icon">↳</span>
-        <span>If you drop this agent into a workflow it reverts to single-shot mode.</span>
+        <span>Multi-turn memory is currently only supported in chat, not in workflows.</span>
       </div>
     </div>
   </div>
@@ -266,7 +277,7 @@
   <hr/>
 
   <!-- STEP 2 -->
-  <div class="step">
+  <div class="step" id="step-2">
     <div class="step-header">
       <div class="step-num">02</div>
       <span class="step-title">Write Your Prompt Template</span>
@@ -285,7 +296,7 @@
   <hr/>
 
   <!-- STEP 3 -->
-  <div class="step">
+  <div class="step" id="step-3">
     <div class="step-header">
       <div class="step-num">03</div>
       <span class="step-title">Set the System Prompt</span>
@@ -306,7 +317,7 @@
   <hr/>
 
   <!-- STEP 4 -->
-  <div class="step">
+  <div class="step" id="step-4">
     <div class="step-header">
       <div class="step-num">04</div>
       <span class="step-title">Dial In Memory Limit</span>
@@ -339,7 +350,7 @@
   <hr/>
 
   <!-- STEP 5 -->
-  <div class="step">
+  <div class="step" id="step-5">
     <div class="step-header">
       <div class="step-num">05</div>
       <span class="step-title">Craft the First Message</span>
@@ -356,7 +367,7 @@
   <hr/>
 
   <!-- STEP 6 -->
-  <div class="step">
+  <div class="step" id="step-6">
     <div class="step-header">
       <div class="step-num">06</div>
       <span class="step-title">Save, Test &amp; Iterate</span>
@@ -372,5 +383,34 @@
   </div>
 
 
+  <script>
+    // Page → guide: highlight the relevant step
+    window.addEventListener('message', function(e) {
+      if (!e.data || e.data.type !== 'highlightStep') return;
+      var step = e.data.step;
+      document.querySelectorAll('.step').forEach(function(el) {
+        el.classList.remove('active');
+      });
+      if (step) {
+        var target = document.getElementById('step-' + step);
+        if (target) {
+          target.classList.add('active');
+          target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    });
+
+    // Guide → page: clicking a step highlights it and navigates to that field
+    document.querySelectorAll('.step[id]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        // Immediately apply active state
+        document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+        el.classList.add('active');
+        var id = el.id; // e.g. "step-2"
+        var num = parseInt(id.replace('step-', ''), 10);
+        window.parent.postMessage({ type: 'focusStep', step: num }, '*');
+      });
+    });
+  </script>
 </body>
 </html>

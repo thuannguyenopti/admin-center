@@ -1,5 +1,6 @@
 import {NextResponse} from "next/server";
 import OpenAI from "openai";
+import {STRIDE_COMPANY_CONTEXT} from "../../ai-context";
 
 const openai = process.env.OPENAI_API_KEY
 	? new OpenAI({
@@ -28,15 +29,11 @@ async function analyzePageFields(fields: PageField[]) {
 		messages: [
 			{
 				role: "system",
-				content: `You are a brand voice expert. Analyze the provided page content for brand tone alignment.
+				content: `You are a brand voice expert analyzing content for Stride, a premium running event organizer.
 
-Brand Voice Guidelines:
-- Conversational and friendly
-- Customer-first language
-- Active voice preferred
-- Clear and concise
-- Professional but approachable
-- Use "you" and "we" instead of third person
+${STRIDE_COMPANY_CONTEXT}
+
+Analyze the provided page content against Stride's brand voice and messaging guidelines above.
 
 Respond with a JSON object containing:
 {
@@ -116,15 +113,11 @@ export async function POST(request: Request) {
 			messages: [
 				{
 					role: "system",
-					content: `You are a brand voice expert. Analyze the provided text for brand tone alignment.
+					content: `You are a brand voice expert analyzing content for Stride, a premium running event organizer.
 
-Brand Voice Guidelines:
-- Conversational and friendly
-- Customer-first language
-- Active voice preferred
-- Clear and concise
-- Professional but approachable
-- Use "you" and "we" instead of third person
+${STRIDE_COMPANY_CONTEXT}
+
+Analyze the provided text against Stride's brand voice and messaging guidelines above.
 
 Respond with a JSON object containing:
 {

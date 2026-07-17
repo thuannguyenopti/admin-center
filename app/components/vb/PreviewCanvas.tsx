@@ -20,7 +20,18 @@ import {BlockRegistry} from "./blocks";
 import {isImageDrag, isInternalDrag, isValidVBDrag, VB_INTERNAL_MIME} from "./blocks/utils";
 import {Box} from "@optiaxiom/react";
 import StrideHeaderContent from "../../site/StrideHeaderContent";
-import {getSectionTemplateClasses} from "./blocks/templateUtils";
+import StrideHeaderWrapper from "../../site/StrideHeaderWrapper";
+import StrideFooter from "../../site/StrideFooter";
+import StrideColumnGrid from "../../site/StrideColumnGrid";
+import "../../site/StrideGrid.css";
+import {getDisplayTemplateClasses} from "./blocks/displayTemplateRenderer";
+import {getContentType} from "../../db/initialData";
+
+const SECTION_SPACING_MAP: Record<string, string> = {
+	'exp-landing-page': 'space-y-0',   // Sections control their own spacing
+	'ct-page': 'space-y-0',            // Sections control their own spacing
+	'default': 'space-y-0'
+};
 
 export type EleMap = Record<string, {type: string; properties: any}>;
 
@@ -43,6 +54,22 @@ const getDraggedAlt = (dt: DataTransfer) => {
 	return typeof alt === "string" ? alt : "";
 };
 
+// Map content type IDs to display names for Visual Builder
+const getElementDisplayName = (type: string): string => {
+	const typeMap: Record<string, string> = {
+		"ct-heading": "Heading",
+		"ct-text": "Text",
+		"ct-rich-text": "Rich Text",
+		"ct-input": "Input",
+		"ct-button": "Button",
+		"ct-image": "Image",
+		"ct-image-block": "Image",
+		"ct-product": "Product",
+		// Add more mappings as needed
+	};
+	return typeMap[type] || type;
+};
+
 export default function PreviewCanvas({
 	outlines,
 	theEles, // unused but kept for prop compatibility
@@ -52,15 +79,59 @@ export default function PreviewCanvas({
 	setCurrentHoverEle,
 	setOutlines,
 	preview,
+	scrollToSectionId,
+	onScrollComplete,
+	currentSection,
+	currentHoverSection,
+	setCurrentSection,
+	setCurrentHoverSection,
+	onSectionClick,
+	currentRow,
+	currentHoverRow,
+	setCurrentRow,
+	setCurrentHoverRow,
+	onRowClick,
+	currentColumn,
+	currentHoverColumn,
+	setCurrentColumn,
+	setCurrentHoverColumn,
+	onColumnClick,
+	scrollToRowId,
+	scrollToColumnId,
+	onRowScrollComplete,
+	onColumnScrollComplete,
+	contentTypeId,
 }: {
 	outlines: Outline[];
 	theEles: EleMap;
+	contentTypeId?: string;
 	currentEle: string;
 	currentHoverEle: string;
 	setCurrentEle: (value: React.SetStateAction<string>) => void;
 	setCurrentHoverEle: (value: React.SetStateAction<string>) => void;
 	setOutlines: React.Dispatch<React.SetStateAction<Outline[]>>;
 	preview: PreviewSettings;
+	scrollToSectionId?: string | null;
+	onScrollComplete?: () => void;
+	currentSection?: string | null;
+	currentHoverSection?: string | null;
+	setCurrentSection?: (value: string | null) => void;
+	setCurrentHoverSection?: (value: string | null) => void;
+	onSectionClick?: (sectionId: string) => void;
+	currentRow?: string | null;
+	currentHoverRow?: string | null;
+	setCurrentRow?: (value: string | null) => void;
+	setCurrentHoverRow?: (value: string | null) => void;
+	onRowClick?: (rowId: string) => void;
+	currentColumn?: string | null;
+	currentHoverColumn?: string | null;
+	setCurrentColumn?: (value: string | null) => void;
+	setCurrentHoverColumn?: (value: string | null) => void;
+	onColumnClick?: (columnId: string) => void;
+	scrollToRowId?: string | null;
+	scrollToColumnId?: string | null;
+	onRowScrollComplete?: () => void;
+	onColumnScrollComplete?: () => void;
 }) {
 	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 	const [dropPosition, setDropPosition] = useState<DropPosition>(null);
@@ -68,8 +139,114 @@ export default function PreviewCanvas({
 	// ✅ This MUST be the scroll container div inside PreviewWrapper
 	const scrollRef = useRef<HTMLDivElement | null>(null);
 
+	// Auto-scroll preview when a section is added in the outline
+	useEffect(() => {
+		if (scrollToSectionId && scrollRef.current) {
+			// Wait for DOM to update with new section
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					const scrollContainer = scrollRef.current;
+					if (!scrollContainer) {
+						// Clear trigger even if container is gone
+						onScrollComplete?.();
+						return;
+					}
+
+					// Scope the query to this scroll container
+					const sectionElement = scrollContainer.querySelector(
+						`[data-preview-section-id="${scrollToSectionId}"]`
+					) as HTMLElement | null;
+
+					if (sectionElement) {
+						// Get the section's position relative to the scroll container
+						const containerRect = scrollContainer.getBoundingClientRect();
+						const sectionRect = sectionElement.getBoundingClientRect();
+
+						// Calculate how much to scroll
+						const scrollTop = scrollContainer.scrollTop;
+						const targetScroll = scrollTop + (sectionRect.top - containerRect.top) - 100; // 100px offset from top
+
+						scrollContainer.scrollTo({
+							top: targetScroll,
+							behavior: 'smooth'
+						});
+					}
+
+					// Always clear the scroll trigger (even if element not found)
+					onScrollComplete?.();
+				});
+			});
+		}
+	}, [scrollToSectionId, onScrollComplete]);
+
+	// Auto-scroll preview when a row is clicked in outline
+	useEffect(() => {
+		if (scrollToRowId && scrollRef.current) {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					const scrollContainer = scrollRef.current;
+					if (!scrollContainer) {
+						onRowScrollComplete?.();
+						return;
+					}
+
+					const rowElement = scrollContainer.querySelector(
+						`[data-row-id="${scrollToRowId}"]`
+					) as HTMLElement | null;
+
+					if (rowElement) {
+						const containerRect = scrollContainer.getBoundingClientRect();
+						const rowRect = rowElement.getBoundingClientRect();
+						const scrollTop = scrollContainer.scrollTop;
+						const targetScroll = scrollTop + (rowRect.top - containerRect.top) - 100;
+
+						scrollContainer.scrollTo({
+							top: targetScroll,
+							behavior: 'smooth'
+						});
+					}
+
+					onRowScrollComplete?.();
+				});
+			});
+		}
+	}, [scrollToRowId, onRowScrollComplete]);
+
+	// Auto-scroll preview when a column is clicked in outline
+	useEffect(() => {
+		if (scrollToColumnId && scrollRef.current) {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					const scrollContainer = scrollRef.current;
+					if (!scrollContainer) {
+						onColumnScrollComplete?.();
+						return;
+					}
+
+					const columnElement = scrollContainer.querySelector(
+						`[data-column-id="${scrollToColumnId}"]`
+					) as HTMLElement | null;
+
+					if (columnElement) {
+						const containerRect = scrollContainer.getBoundingClientRect();
+						const columnRect = columnElement.getBoundingClientRect();
+						const scrollTop = scrollContainer.scrollTop;
+						const targetScroll = scrollTop + (columnRect.top - containerRect.top) - 100;
+
+						scrollContainer.scrollTo({
+							top: targetScroll,
+							behavior: 'smooth'
+						});
+					}
+
+					onColumnScrollComplete?.();
+				});
+			});
+		}
+	}, [scrollToColumnId, onColumnScrollComplete]);
+
 	// "tablet/mobile" breakpoint
-	const MOBILE_BP = 1024;
+	const MOBILE_BP = 768;
 
 	const [viewportW, setViewportW] = useState<number>(() => {
 		// fixed/scale should behave like that device width immediately
@@ -201,12 +378,9 @@ export default function PreviewCanvas({
 				const nextElements: EleMap = {
 					...o.elements,
 					[uKey]: {
-						type: "ct-image",
+						type: "ct-image-block",
 						properties: {
-							src: {value: imageUrl},
-							alt: {value: imageAlt || "Untitled Image"},
-							width: {value: "auto"},
-							height: {value: "auto"},
+							image: {value: imageUrl},
 						},
 					},
 				};
@@ -246,43 +420,174 @@ export default function PreviewCanvas({
 		const isAside = isAsideOutline(outline);
 		return outline.tree.map((section: any, sindex: number) => {
 			const hasBgImage = !!section.bgImage;
+			const noPadding = section.noPadding === true;
 			const isFooterCTA = section.name === "Footer CTA";
 
-			// Get template classes for section (background, padding, etc.)
-			const templateClasses = getSectionTemplateClasses(section, {hasBgImage});
+			// Check if this section contains a hero block
+			const hasHeroBlock = (section.children || []).some((row: any) =>
+				(row.children || []).some((col: any) =>
+					(col.elements || []).some((element: any) => {
+						const ele = outline.elements[element.id];
+						return ele && ele.type === "ct-hero";
+					})
+				)
+			);
+
+			// Count app preview blocks in this section
+			let appPreviewCount = 0;
+			(section.children || []).forEach((row: any) => {
+				(row.children || []).forEach((col: any) => {
+					(col.elements || []).forEach((element: any) => {
+						const ele = outline.elements[element.id];
+						if (ele && ele.type === "ct-app-preview") {
+							appPreviewCount++;
+						}
+					});
+				});
+			});
+
+			const hasAppPreview = appPreviewCount > 0;
+			// Showcase sections have multiple app previews (apply mask to section)
+			const isShowcaseSection = appPreviewCount > 1;
+			// Community sections have single app preview (apply mask to column)
+			const isCommunitySection = appPreviewCount === 1;
+
+			// Get display template classes for section (background, padding, etc.)
+			const templateClasses = section.displayTemplateKey
+				? getDisplayTemplateClasses(
+						section.displayTemplateKey,
+						section.displaySettings || [],
+						{hasBgImage}
+				  )
+				: "";
+
+			// Debug logging
+			console.log("[PreviewCanvas] Section:", {
+				id: section.id,
+				name: section.name,
+				displayTemplateKey: section.displayTemplateKey,
+				displaySettings: section.displaySettings,
+				templateClasses,
+			});
 
 			// Base classes that apply to all sections
-			const baseClasses = "mb-6 last:mb-0 overflow-hidden rounded-[10px]";
+			const baseClasses = "";
 
 			// Additional classes when there's a background image
-			const bgImageClasses = hasBgImage ? "relative min-h-[500px] flex items-center" : "shadow-sm";
+			const bgImageClasses = hasBgImage ? "relative min-h-[500px] flex items-center rounded-stride-lg" : "";
+
+			// Add bottom margin to hero sections
+			const heroBottomMargin = hasHeroBlock ? "mb-[100px]" : "";
+
+			// App preview section padding - showcase needs more top padding to avoid clipping
+			const appPreviewPadding = isShowcaseSection
+				? "md:pt-180 pt-6 pb-20"
+				: hasAppPreview
+				? "md:pt-40 pt-20 pb-20"
+				: "";
+
+			// Add negative margins for showcase overlap effect
+			const showcaseMargins = isShowcaseSection
+				? "md:-mt-120 mt-6 md:-mb-100 -mb-20"
+				: "";
 
 			return (
 				<section
 					key={section.id ?? sindex}
-					className={`${baseClasses} ${bgImageClasses} ${hasBgImage ? "" : templateClasses}`}
+					data-preview-section-id={section.id}
+					className={`${baseClasses} ${bgImageClasses} ${heroBottomMargin} ${appPreviewPadding} ${showcaseMargins} ${templateClasses} relative`}
+					onClick={(e) => {
+						// Only trigger if not clicking an element
+						if (!(e.target as HTMLElement).closest('[data-element-id]')) {
+							e.stopPropagation();
+							setCurrentSection?.(section.id);
+							onSectionClick?.(section.id);
+						}
+					}}
+					onMouseEnter={(e) => {
+						// Only trigger if not hovering an element
+						if (!(e.target as HTMLElement).closest('[data-element-id]')) {
+							setCurrentHoverSection?.(section.id);
+							// Clear higher-priority hovers
+							setCurrentHoverRow?.(null);
+							setCurrentHoverColumn?.(null);
+						}
+					}}
+					onMouseLeave={() => {
+						setCurrentHoverSection?.(null);
+					}}
 					style={
 						hasBgImage
 							? {
-									backgroundImage: `linear-gradient(rgba(25, 75, 255, 0.8), rgba(25, 75, 255, 0.8)), url(${section.bgImage})`,
+									backgroundImage: `linear-gradient(rgba(9, 128, 246, 0.8), rgba(9, 128, 246, 0.8)), url(${section.bgImage})`,
 									backgroundSize: "cover",
 									backgroundPosition: "center",
+								}
+							: isShowcaseSection
+							? {
+									WebkitMaskImage: 'linear-gradient(black 60%, transparent 70%)',
+									maskImage: 'linear-gradient(black 60%, transparent 70%)',
 								}
 							: {}
 					}
 				>
-					<div
-						className={
-							hasBgImage
-								? "relative z-10 w-full p-12 md:p-20"
-								: `w-full ${isAside ? "p-8" : "p-8 md:p-12"}`
-						}
-					>
+					{/* Blue outline overlay for hover/selection */}
+					{(currentHoverSection === section.id || currentSection === section.id) && (
+						<div
+							className="pointer-events-none absolute inset-0"
+							style={{
+								outline: '2px solid #0037FF',
+								outlineOffset: '-2px',
+								borderRadius: '10px',
+								opacity: currentSection === section.id ? 1 : 0.5,
+								zIndex: 5,
+							}}
+						/>
+					)}
+					<div className="w-full">
 						{(section.children || []).map((row: any, rIndex: number) => (
 							<section
-								className={`grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-4 ${hasBgImage ? "text-white" : "text-[#05051F]"}`}
+								className={`${hasAppPreview ? "w-full max-w-[1200px] mx-auto md:flex gap-6 items-start md:-mb-50 mb-6" : hasHeroBlock ? `grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"}` : `max-w-[1200px] mx-auto grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-6`} ${hasBgImage ? "text-white" : "text-[#05051F]"} relative`}
 								key={row.id ?? rIndex}
+								data-row-id={row.id}
+								onClick={(e) => {
+									// Only trigger if not clicking an element or column
+									if (!(e.target as HTMLElement).closest('[data-element-id]') &&
+									    !(e.target as HTMLElement).closest('[data-column-id]')) {
+										e.stopPropagation();
+										setCurrentRow?.(row.id);
+										setCurrentSection?.(null);
+										onRowClick?.(row.id);
+									}
+								}}
+								onMouseEnter={(e) => {
+									// Only trigger if not hovering an element or column
+									if (!(e.target as HTMLElement).closest('[data-element-id]') &&
+									    !(e.target as HTMLElement).closest('[data-column-id]')) {
+										setCurrentHoverRow?.(row.id);
+										// Clear lower-priority hovers
+										setCurrentHoverSection?.(null);
+										// Clear higher-priority hovers
+										setCurrentHoverColumn?.(null);
+									}
+								}}
+								onMouseLeave={() => {
+									setCurrentHoverRow?.(null);
+								}}
 							>
+								{/* Blue outline overlay for row hover/selection */}
+								{(currentHoverRow === row.id || currentRow === row.id) && (
+									<div
+										className="pointer-events-none absolute inset-0"
+										style={{
+											outline: '2px solid #0037FF',
+											outlineOffset: '-2px',
+											borderRadius: '10px',
+											opacity: currentRow === row.id ? 1 : 0.5,
+											zIndex: 4,
+										}}
+									/>
+								)}
 								{(row.children || []).map((col: any, cIndex: number) => {
 									const colChildren = col.elements || col.children || [];
 									const isActiveDropCol =
@@ -291,9 +596,47 @@ export default function PreviewCanvas({
 										dropPosition.outlineId === outline.id &&
 										dropPosition.colId === col.id;
 
+									// Check if this column contains an app preview
+									const hasAppPreviewInCol = colChildren.some((element: any) => {
+										const ele = outline.elements[element.id];
+										return ele && ele.type === "ct-app-preview";
+									});
+
+									// Only apply column mask for community sections (single app preview)
+									const applyColumnMask = isCommunitySection && hasAppPreviewInCol;
+
 									return (
 										<div
 											key={col.id ?? cIndex}
+											className={`relative ${hasAppPreview ? "basis-0 grow" : ""}`}
+											style={applyColumnMask ? {
+												marginTop: '-10%',
+												WebkitMaskImage: 'linear-gradient(#000 40%, transparent 75%)',
+												maskImage: 'linear-gradient(#000 40%, transparent 75%)',
+											} : {}}
+											data-column-id={col.id}
+											onClick={(e) => {
+												// Only trigger if not clicking an element
+												if (!(e.target as HTMLElement).closest('[data-element-id]')) {
+													e.stopPropagation();
+													setCurrentColumn?.(col.id);
+													setCurrentRow?.(null);
+													setCurrentSection?.(null);
+													onColumnClick?.(col.id);
+												}
+											}}
+											onMouseEnter={(e) => {
+												// Only trigger if not hovering an element
+												if (!(e.target as HTMLElement).closest('[data-element-id]')) {
+													setCurrentHoverColumn?.(col.id);
+													// Clear lower-priority hovers
+													setCurrentHoverSection?.(null);
+													setCurrentHoverRow?.(null);
+												}
+											}}
+											onMouseLeave={() => {
+												setCurrentHoverColumn?.(null);
+											}}
 											onDragOver={(e) => {
 												e.preventDefault();
 												e.stopPropagation();
@@ -335,8 +678,20 @@ export default function PreviewCanvas({
 													setDropPosition(null);
 												}
 											}}
-											className={dragOverColumn === col.id ? "relative" : ""}
 										>
+											{/* Blue outline overlay for column hover/selection */}
+											{(currentHoverColumn === col.id || currentColumn === col.id) && (
+												<div
+													className="pointer-events-none absolute inset-0"
+													style={{
+														outline: '2px solid #0037FF',
+														outlineOffset: '-2px',
+														borderRadius: '10px',
+														opacity: currentColumn === col.id ? 1 : 0.5,
+														zIndex: 3,
+													}}
+												/>
+											)}
 											{/* list */}
 											{colChildren.map((element: any, eleIndex: number) => {
 												const ele = outline.elements[element.id];
@@ -361,6 +716,17 @@ export default function PreviewCanvas({
 														<div
 															className="relative group"
 															data-element-id={element.id}
+															onMouseEnter={(e) => {
+																e.stopPropagation();
+																setCurrentHoverEle(element.id);
+																// Clear lower-priority hovers
+																setCurrentHoverSection?.(null);
+																setCurrentHoverRow?.(null);
+																setCurrentHoverColumn?.(null);
+															}}
+															onMouseLeave={() => {
+																setCurrentHoverEle("none");
+															}}
 														>
 															{/* selection outline */}
 															<div
@@ -368,6 +734,9 @@ export default function PreviewCanvas({
 																	e.stopPropagation();
 																	setCurrentEle(element.id);
 																	setCurrentHoverEle("none");
+																	setCurrentSection?.(null);
+																	setCurrentRow?.(null);
+																	setCurrentColumn?.(null);
 																}}
 																style={{
 																	visibility:
@@ -445,8 +814,9 @@ export default function PreviewCanvas({
 																				);
 																			case "Image":
 																			case "ct-image":
-																				return (
-																					<IconPhoto
+																			case "ct-image-block":
+																			return (
+																				<IconPhoto
 																						size={12}
 																					/>
 																				);
@@ -458,7 +828,7 @@ export default function PreviewCanvas({
 																				);
 																		}
 																	})()}
-																	{type || "Unknown"}
+																	{getElementDisplayName(type) || "Unknown"}
 																</div>
 															</div>
 
@@ -507,12 +877,52 @@ export default function PreviewCanvas({
 		});
 	}, [isAsideOutline, isMobileViewport, currentEle, currentHoverEle, setCurrentEle, setCurrentHoverEle, dragOverColumn, dropPosition, setDragOverColumn, setDropPosition]);
 
+	// Detect if content type supports aside/sidenav outlines
+	const contentType = useMemo(() => contentTypeId ? getContentType(contentTypeId) : null, [contentTypeId]);
+	const hasAsideProperty = useMemo(() => contentType?.properties?.some(p => p.id === "asideOutline") ?? false, [contentType]);
+	const hasSidenavProperty = useMemo(() => contentType?.properties?.some(p => p.id === "sidenavOutline") ?? false, [contentType]);
+
+	// Resolve spacing based on content type
+	const sectionSpacing = useMemo(() =>
+		contentTypeId
+			? (SECTION_SPACING_MAP[contentTypeId] ?? SECTION_SPACING_MAP.default)
+			: SECTION_SPACING_MAP.default,
+		[contentTypeId]
+	);
+
 	const mainOutlines = useMemo(() => outlines.filter((o) => !isAsideOutline(o)), [outlines, isAsideOutline]);
 	const asideOutlines = useMemo(() => outlines.filter((o) => isAsideOutline(o)), [outlines, isAsideOutline]);
-	const hasAside = useMemo(() => asideOutlines.length > 0 && mainOutlines.length > 0, [asideOutlines.length, mainOutlines.length]);
+
+	// Only show aside if content type supports it AND we have aside outlines
+	const hasAside = useMemo(() => hasAsideProperty && asideOutlines.length > 0 && mainOutlines.length > 0, [hasAsideProperty, asideOutlines.length, mainOutlines.length]);
+	const hasSidenav = useMemo(() => hasSidenavProperty && asideOutlines.length > 0 && mainOutlines.length > 0, [hasSidenavProperty, asideOutlines.length, mainOutlines.length]);
+
+	// Check if first section has a hero block
+	const firstSectionHasHero = useMemo(() => {
+		if (mainOutlines.length === 0 || mainOutlines[0].tree.length === 0) return false;
+		return (mainOutlines[0].tree[0].children || []).some((row: any) =>
+			(row.children || []).some((col: any) =>
+				(col.elements || []).some((element: any) => {
+					const ele = mainOutlines[0].elements[element.id];
+					return ele && ele.type === "ct-hero";
+				})
+			)
+		);
+	}, [mainOutlines]);
+
+	// Extract hero section if present
+	const heroSection = useMemo(() => firstSectionHasHero && mainOutlines.length > 0 ? mainOutlines[0].tree[0] : null, [firstSectionHasHero, mainOutlines]);
+	const heroElements = useMemo(() => heroSection && mainOutlines.length > 0 ? mainOutlines[0].elements : {}, [heroSection, mainOutlines]);
+
+	// Remaining sections after hero
+	const remainingMainOutlines = useMemo(() => {
+		if (!firstSectionHasHero || mainOutlines.length === 0) return mainOutlines;
+		return [{...mainOutlines[0], tree: mainOutlines[0].tree.slice(1)}, ...mainOutlines.slice(1)];
+	}, [firstSectionHasHero, mainOutlines]);
 
 	// ✅ only break into 1 column on "mobile" preview widths
 	const useTwoCol = useMemo(() => hasAside && !isMobileViewport, [hasAside, isMobileViewport]);
+	const useSidenav = useMemo(() => hasSidenav && !isMobileViewport, [hasSidenav, isMobileViewport]);
 
 	return (
 		<Box
@@ -523,7 +933,7 @@ export default function PreviewCanvas({
 			border="1"
 			borderColor="border.tertiary"
 			style={{
-				background: "#F3F4F6",
+				background: "#F2F8FC",
 				height: "100%",
 				minHeight: 0,
 				overflow: "hidden",
@@ -566,42 +976,93 @@ export default function PreviewCanvas({
 				}}
 				style={{transition: "opacity 0.2s"}}
 			>
-				{/* Fake Site Header */}
-				<div className="w-full bg-white px-4 md:px-8 py-4 md:py-5 flex items-center justify-between border-b border-gray-100 shrink-0 sticky top-0 z-50 shadow-sm">
-				<StrideHeaderContent
-					isMobile={isMobileViewport}
-					menuIcon={<IconMenu2 size={24} />}
-					closeIcon={<IconX size={24} />}
-				/>
-				</div>
+				{/* Wrapper to constrain absolutely positioned header within preview */}
+				<div className="relative w-full h-full flex flex-col">
+					{/* Site Header - positioned absolutely to overlay hero */}
+					<StrideHeaderWrapper positioning="absolute" useMaxWidth={false}>
+						<StrideHeaderContent
+							isMobile={isMobileViewport}
+							menuIcon={<IconMenu2 size={24} />}
+							closeIcon={<IconX size={24} />}
+						/>
+					</StrideHeaderWrapper>
 
-				<div
-					className="w-full p-6 md:p-6 flex-1"
-					style={{
-						background: "#F3F4F6",
-					}}
-				>
-					{useTwoCol ? (
-						<div className="grid grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-6 items-start">
-							<div className="space-y-6">
-								{mainOutlines.map((outline) => (
+					<div
+						className="w-full font-stride-sans relative"
+						style={{
+							background: "#F2F8FC",
+						}}
+					>
+						<StrideColumnGrid />
+					{/* Render hero full-width if present */}
+					{heroSection && (
+						<section className="mb-[100px]">
+							<div className="w-full">
+								{(heroSection.children || []).map((row: any, rIndex: number) => (
+									<div className="grid grid-cols-1 md:grid-flow-col md:auto-cols-fr" key={row.id ?? rIndex}>
+										{(row.children || []).map((col: any, cIndex: number) => {
+											const colChildren = col.elements || col.children || [];
+											return (
+												<div key={col.id ?? cIndex}>
+													{colChildren.map((element: any, eleIndex: number) => {
+														const ele = heroElements[element.id];
+														if (!ele) return null;
+														const BlockComponent = BlockRegistry[ele.type];
+														if (!BlockComponent) return null;
+														return (
+															<BlockComponent
+																key={element.id ?? eleIndex}
+																properties={ele.properties}
+															/>
+														);
+													})}
+												</div>
+											);
+										})}
+									</div>
+								))}
+							</div>
+						</section>
+					)}
+
+					{useSidenav ? (
+						<div className="max-w-[1200px] mx-auto px-6 pt-32 pb-20 grid grid-cols-12 gap-6 items-start overflow-hidden">
+							<aside className="col-span-3 sticky top-32 space-y-1">
+								{asideOutlines.map((outline) => (
+									<div key={outline.id}>{renderOutlineTree(outline)}</div>
+								))}
+							</aside>
+							<div className={`col-span-8 col-start-5 ${sectionSpacing}`}>
+								{remainingMainOutlines.map((outline) => (
+									<div key={outline.id}>{renderOutlineTree(outline)}</div>
+								))}
+							</div>
+						</div>
+					) : useTwoCol ? (
+						<div className="max-w-[1200px] mx-auto px-6 grid grid-cols-12 gap-6 items-start overflow-hidden">
+							<div className={`col-span-8 ${sectionSpacing}`}>
+								{remainingMainOutlines.map((outline) => (
 									<div key={outline.id}>{renderOutlineTree(outline)}</div>
 								))}
 							</div>
 
-							<aside className="space-y-6">
+							<aside className="col-span-4 space-y-6">
 								{asideOutlines.map((outline) => (
 									<div key={outline.id}>{renderOutlineTree(outline)}</div>
 								))}
 							</aside>
 						</div>
 					) : (
-						<div className="space-y-6">
-							{[...mainOutlines, ...asideOutlines].map((outline) => (
+						<div className={heroSection ? `max-w-[1200px] mx-auto px-6 mt-6 ${sectionSpacing}` : `max-w-[1200px] mx-auto px-6 ${sectionSpacing}`}>
+							{[...remainingMainOutlines, ...asideOutlines].map((outline) => (
 								<div key={outline.id}>{renderOutlineTree(outline)}</div>
 							))}
 						</div>
 					)}
+
+				</div>
+					{/* Footer - outside grid container */}
+					<StrideFooter />
 				</div>
 			</PreviewWrapper>
 		</Box>

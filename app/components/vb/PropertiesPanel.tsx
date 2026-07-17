@@ -1,32 +1,36 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
 	Box,
-	Button,
 	Field,
-	Text,
-	Input as Input2,
-	Select,
-	SelectTrigger,
-	SelectContent,
-	Textarea,
 	type MenuOption,
+	Tabs,
+	TabsList,
+	TabsTrigger,
+	TabsContent,
+	Heading,
+	Separator,
+	Text,
 } from "@optiaxiom/react";
 import { PillMenu, PillMenuTrigger, PillMenuContent } from "@optiaxiom/react/unstable";
-import { IconChevronRight } from "@tabler/icons-react";
 import { useGlobalTags } from "@/app/cms/hooks/useGlobalTags";
 import { useGlobalCategories } from "@/app/cms/hooks/useGlobalCategories";
 import { getThumbnailForContent } from "@/app/cms/content/contentThumbnails";
-import { initialContentTypes, Property } from "@/app/db/initialData";
+import { initialContentTypes, type Property, type ContentType } from "@/app/db/initialData";
+import usePersistentState from "@/app/usePersistentState";
+import { groupPropertiesByGroup, shouldShowGroupHeaders } from "./utils/propertyGroups";
+import { PropertyRenderer } from "@/app/components/property-renderers";
+import BoundPropertyIndicator from "./BoundPropertyIndicator";
+
+// Import to register all property renderers
+import "@/app/components/property-renderers";
 
 export type PageProperties = {
 	seoTitle?: string;
 	keywords?: string;
 	description?: string;
 	meta?: string;
-	campaignMode?: "no" | "yes";
-	someOtherSetting?: "setting1" | "setting2";
 	categories?: string[];
 	tags?: string[];
 };
@@ -36,23 +40,21 @@ export type PropertySection = string;
 type Props = {
 	value: PageProperties;
 	onChange: (patch: Partial<PageProperties>) => void;
+	/** @deprecated No longer used in single-pane design */
 	activeSection?: PropertySection;
+	/** @deprecated No longer used in single-pane design */
 	onSectionChange?: (section: PropertySection) => void;
 	/** Page context for Generate (tags suggest); when provided, Generate uses page name and optional thumbnail. */
 	pageName?: string;
 	pageId?: string;
 	contentTypeId?: string;
+	/** Set of property IDs that are data-bound from a connected content instance */
+	boundPropertyIds?: Set<string>;
 	/** Register with parent so header sparkles can trigger generate. Call with null on unmount. */
 	onRegisterGenerateTrigger?: (trigger: (() => void) | null) => void;
 	/** Notify parent when generate is loading (for header button spinner). */
 	onGenerateLoadingChange?: (loading: boolean) => void;
 };
-
-export const navigationItems = [
-	{ id: "content-settings", label: "Content Settings" },
-	{ id: "geo-seo", label: "GEO & SEO" },
-	{ id: "categories-tags", label: "Categories & Tags" },
-];
 
 // PillMenu wrapper component for categories/tags
 function PillMenuSelect({
@@ -105,10 +107,24 @@ function PillMenuSelect({
 		return menuOptions;
 	}, [availableItems, selectedItems, inputValue, onToggle, onCreateNew]);
 
+	const value = useMemo<MenuOption[]>(
+		() =>
+			availableItems
+				.filter((item) => selectedItems.includes(item.slug))
+				.map((item) => ({
+					execute: () => onToggle(item.slug),
+					label: item.name,
+					multi: true,
+					selected: () => true,
+				})),
+		[availableItems, selectedItems, onToggle],
+	);
+
 	return (
 		<Field label={label}>
 			<PillMenu
 				options={options}
+				value={value}
 				placeholder={placeholder}
 				inputValue={inputValue}
 				onInputValueChange={setInputValue}
@@ -136,50 +152,44 @@ export default function PropertiesPanel({
 	pageName,
 	pageId,
 	contentTypeId,
+	boundPropertyIds,
 	onRegisterGenerateTrigger,
 	onGenerateLoadingChange,
 }: Props) {
-	// Load content type definition
+	// Load runtime content types from localStorage (includes user-created properties)
+	const [runtimeContentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		any,
+	];
+
+	// Load content type definition from runtime state
 	const contentType = useMemo(() => {
 		if (!contentTypeId) return null;
-		return initialContentTypes.find((ct) => ct.id === contentTypeId) || null;
-	}, [contentTypeId]);
+		return runtimeContentTypes?.find((ct) => ct.id === contentTypeId) || null;
+	}, [contentTypeId, runtimeContentTypes]);
 
 	// Group properties by groupName for dynamic sections
-	const propertyGroups = useMemo(() => {
+	const contentTypePropertyGroups = useMemo(() => {
 		if (!contentType) return {};
-
-		const groups: Record<string, Property[]> = {};
-
-		// Filter out outline properties (they're handled separately in the outline tree)
-		const nonOutlineProps = contentType.properties.filter((p) => p.type !== "outline");
-
-		nonOutlineProps.forEach((prop) => {
-			const groupName = prop.groupName || "Other";
-			if (!groups[groupName]) {
-				groups[groupName] = [];
-			}
-			groups[groupName].push(prop);
-		});
-
-		// Sort properties within each group by order
-		Object.keys(groups).forEach((groupName) => {
-			groups[groupName].sort((a, b) => (a.order || 0) - (b.order || 0));
-		});
-
-		return groups;
+		return groupPropertiesByGroup(contentType.properties, false);
 	}, [contentType]);
 
-	// Generate navigation items dynamically from property groups
-	const dynamicNavigationItems = useMemo(() => {
-		const groupNames = Object.keys(propertyGroups);
-		if (groupNames.length === 0) return navigationItems; // Fallback to static
+	// Generate filter items from property groups
+	const filterItems = useMemo(() => {
+		const groupNames = Object.keys(contentTypePropertyGroups);
+		if (groupNames.length === 0) return [];
 
-		return groupNames.map((groupName) => ({
-			id: groupName.toLowerCase().replace(/\s+/g, "-").replace(/[&]/g, ""),
-			label: groupName,
-		}));
-	}, [propertyGroups]);
+		// Add each group as a filter option
+		const items: { id: string; label: string }[] = [];
+		groupNames.forEach((groupName) => {
+			items.push({
+				id: groupName.toLowerCase().replace(/\s+/g, "-").replace(/[&]/g, ""),
+				label: groupName,
+			});
+		});
+
+		return items;
+	}, [contentTypePropertyGroups]);
 
 	// Get global tags and categories from CMS settings
 	const { tags: allTags, tagNames: availableTagNames, addTag, tagExists } = useGlobalTags();
@@ -197,15 +207,18 @@ export default function PropertiesPanel({
 	const [noTagSuggestions, setNoTagSuggestions] = useState(false);
 	const [noCategorySuggestions, setNoCategorySuggestions] = useState(false);
 
-	// When parent doesn't control section (no onSectionChange), keep local section so menu clicks work
-	const [localSection, setLocalSection] = useState<PropertySection>("menu");
-	const isControlled = onSectionChange != null;
-	const effectiveSection = isControlled ? (activeSection ?? "menu") : localSection;
+	// Filter state for property groups
+	const [activeFilter, setActiveFilter] = useState<string>("");
 
-	const handleSectionChange = (section: PropertySection) => {
-		if (onSectionChange) onSectionChange(section);
-		else setLocalSection(section);
-	};
+	// Update activeFilter when filterItems changes
+	useEffect(() => {
+		if (filterItems.length > 0) {
+			const currentFilterExists = filterItems.some(item => item.id === activeFilter);
+			if (!currentFilterExists) {
+				setActiveFilter(filterItems[0].id);
+			}
+		}
+	}, [filterItems, activeFilter]);
 
 	// Categories handlers
 	const selectedCategories = value.categories || [];
@@ -399,284 +412,209 @@ export default function PropertiesPanel({
 	// Render a single property field based on its definition
 	const renderPropertyField = (prop: Property) => {
 		const propValue = (value as any)[prop.id];
+		const isBound = boundPropertyIds?.has(prop.id) ?? false;
 
-		switch (prop.type) {
-			case "String":
-			case "text":
+		// Handle categories and tags specially with PillMenu (PropertiesPanel specific)
+		if (prop.type === "SelectMany") {
+			if (prop.id === "categories") {
 				return (
-					<Field key={prop.id} label={prop.displayName || prop.name} description={prop.description}>
-						<Input2
-							placeholder={`Enter ${prop.displayName || prop.name}`}
-							value={propValue ?? prop.defaultValue ?? ""}
-							onChange={(e: any) => onChange({ [prop.id]: e.target.value })}
-						/>
-					</Field>
+					<PillMenuSelect
+						key={prop.id}
+						label={prop.displayName || prop.name}
+						placeholder={`Search ${prop.displayName || prop.name}...`}
+						selectedItems={selectedCategories}
+						availableItems={categoriesWithSlugs}
+						onToggle={handleToggleCategory}
+						onCreateNew={handleCreateCategory}
+					/>
 				);
-
-			case "LongString":
-			case "textarea":
+			} else if (prop.id === "tags") {
 				return (
-					<Field key={prop.id} label={prop.displayName || prop.name} description={prop.description}>
-						<Textarea
-							placeholder={`Enter ${prop.displayName || prop.name}`}
-							rows={3}
-							value={propValue ?? prop.defaultValue ?? ""}
-							onChange={(e: any) => onChange({ [prop.id]: e.target.value })}
-						/>
-					</Field>
+					<PillMenuSelect
+						key={prop.id}
+						label={prop.displayName || prop.name}
+						placeholder={`Search ${prop.displayName || prop.name}...`}
+						selectedItems={selectedTags}
+						availableItems={tagsWithSlugs}
+						onToggle={handleToggleTag}
+						onCreateNew={handleCreateTag}
+					/>
 				);
-
-			case "SelectOne":
-				return (
-					<Field key={prop.id} label={prop.displayName || prop.name} description={prop.description}>
-						<Select
-							value={propValue ?? prop.defaultValue}
-							onValueChange={(newValue) => onChange({ [prop.id]: newValue })}
-							options={prop.options || []}
-						>
-							<SelectTrigger />
-							<SelectContent />
-						</Select>
-					</Field>
-				);
-
-			case "SelectMany":
-				// Handle categories and tags specially with PillMenu
-				if (prop.id === "categories") {
-					return (
-						<PillMenuSelect
-							key={prop.id}
-							label={prop.displayName || prop.name}
-							placeholder={`Search ${prop.displayName || prop.name}...`}
-							selectedItems={selectedCategories}
-							availableItems={categoriesWithSlugs}
-							onToggle={handleToggleCategory}
-							onCreateNew={handleCreateCategory}
-						/>
-					);
-				} else if (prop.id === "tags") {
-					return (
-						<PillMenuSelect
-							key={prop.id}
-							label={prop.displayName || prop.name}
-							placeholder={`Search ${prop.displayName || prop.name}...`}
-							selectedItems={selectedTags}
-							availableItems={tagsWithSlugs}
-							onToggle={handleToggleTag}
-							onCreateNew={handleCreateTag}
-						/>
-					);
-				}
-				return null;
-
-			case "seo":
-				// SEO block is handled separately - skip for now
-				return null;
-
-			default:
-				return (
-					<Field key={prop.id} label={prop.displayName || prop.name} description={prop.description}>
-						<Input2
-							placeholder={`Enter ${prop.displayName || prop.name}`}
-							value={propValue ?? ""}
-							onChange={(e: any) => onChange({ [prop.id]: e.target.value })}
-						/>
-					</Field>
-				);
+			}
+			return null;
 		}
+
+		// SEO block is handled separately - skip for now
+		if (prop.type === "seo") {
+			return null;
+		}
+
+		// Use shared PropertyRenderer for all other property types
+		return (
+			<Box key={prop.id} style={{ position: "relative" }}>
+				{isBound && (
+					<Box style={{ position: "absolute", top: 0, right: 0, zIndex: 1 }}>
+						<BoundPropertyIndicator />
+					</Box>
+				)}
+				<PropertyRenderer
+					property={prop}
+					value={propValue}
+					onChange={(newVal: any) => onChange({ [prop.id]: newVal })}
+					enableAI={false}
+					mode={isBound ? "readonly" : "edit"}
+					context={{ runtimeContentTypes }}
+				/>
+			</Box>
+		);
 	};
 
 	// Render section-specific content
+	// Legacy fallback for backward compatibility (when no contentType)
 	const renderSectionContent = () => {
-		// If we have a content type, render properties dynamically
-		if (contentType && effectiveSection !== "menu") {
-			const sectionId = effectiveSection;
-			const groupName = dynamicNavigationItems.find((item) => item.id === sectionId)?.label;
+		return (
+			<Box display="flex" flexDirection="column" gap="20">
+				<Box display="flex" flexDirection="column" gap="8">
+					{suggestError && (
+						<Text fontSize="xs" color="fg.error">
+							{suggestError}
+						</Text>
+					)}
+					{!suggestError && noTagSuggestions && (
+						<Text fontSize="xs" color="fg.secondary">
+							No suggestions for tags.
+						</Text>
+					)}
+					{!suggestError && noCategorySuggestions && (
+						<Text fontSize="xs" color="fg.secondary">
+							No suggestions for categories.
+						</Text>
+					)}
+				</Box>
+				<PillMenuSelect
+					label="Categories"
+					placeholder="Search categories..."
+					selectedItems={selectedCategories}
+					availableItems={categoriesWithSlugs}
+					onToggle={handleToggleCategory}
+					onCreateNew={handleCreateCategory}
+				/>
+				<PillMenuSelect
+					label="Tags"
+					placeholder="Search tags..."
+					selectedItems={selectedTags}
+					availableItems={tagsWithSlugs}
+					onToggle={handleToggleTag}
+					onCreateNew={handleCreateTag}
+				/>
+			</Box>
+		);
+	};
 
-			if (groupName && propertyGroups[groupName]) {
-				const properties = propertyGroups[groupName];
-
-				return (
-					<Box display="flex" flexDirection="column" gap="12">
-						{/* Special handling for Categories & Tags section - show suggestions UI */}
-						{groupName === "Categories & Tags" && (
-							<Box display="flex" flexDirection="column" gap="8">
-								{suggestError && (
-									<Text fontSize="xs" color="fg.error">
-										{suggestError}
-									</Text>
-								)}
-								{!suggestError && noTagSuggestions && (
-									<Text fontSize="xs" color="fg.secondary">
-										No suggestions for tags.
-									</Text>
-								)}
-								{!suggestError && noCategorySuggestions && (
-									<Text fontSize="xs" color="fg.secondary">
-										No suggestions for categories.
-									</Text>
-								)}
-							</Box>
-						)}
-						{properties.map((prop) => renderPropertyField(prop))}
-					</Box>
-				);
-			}
+	// Render properties filtered by active filter
+	const renderFilteredContent = () => {
+		if (!contentType) {
+			// Fallback to legacy hardcoded sections for backward compatibility
+			return renderSectionContent();
 		}
 
-		// Fallback to hardcoded sections for backward compatibility
-		switch (effectiveSection) {
-			case "content-settings":
-				return (
-					<Box display="flex" flexDirection="column" gap="8">
-						<Field label="Content Type">
-							<Input2 placeholder="Enter content type" />
-						</Field>
-						<Field label="Status">
-							<Select
-								value="draft"
-								options={[
-									{ label: "Draft", value: "draft" },
-									{ label: "Published", value: "published" },
-								]}
-							>
-								<SelectTrigger>Draft</SelectTrigger>
-								<SelectContent />
-							</Select>
-						</Field>
-					</Box>
-				);
+		const groupNames = Object.keys(contentTypePropertyGroups);
 
-			case "geo-seo":
-				return (
-					<Box display="flex" flexDirection="column" gap="8">
-						<Field label="Title">
-							<Input2
-								placeholder="Enter page title"
-								value={value.seoTitle ?? ""}
-								onChange={(e: any) => onChange({ seoTitle: e.target.value })}
-							/>
-						</Field>
-						<Field label="Keywords">
-							<Input2
-								placeholder="Enter keywords"
-								value={value.keywords ?? ""}
-								onChange={(e: any) => onChange({ keywords: e.target.value })}
-							/>
-						</Field>
-						<Field label="Description">
-							<Textarea
-								placeholder="Enter description"
-								rows={3}
-								value={value.description ?? ""}
-								onChange={(e: any) => onChange({ description: e.target.value })}
-							/>
-						</Field>
-						<Field label="Meta">
-							<Textarea
-								placeholder="Enter meta information"
-								rows={3}
-								value={value.meta ?? ""}
-								onChange={(e: any) => onChange({ meta: e.target.value })}
-							/>
-						</Field>
-					</Box>
-				);
+		// Determine which groups to show based on filter
+		const groupsToShow = groupNames.filter(name => {
+			const groupId = name.toLowerCase().replace(/\s+/g, "-").replace(/[&]/g, "");
+			return groupId === activeFilter;
+		});
 
-			case "categories-tags":
-				return (
-					<Box display="flex" flexDirection="column" gap="20">
-						<Box display="flex" flexDirection="column" gap="8">
-							{suggestError && (
-								<Text fontSize="xs" color="fg.error">
-									{suggestError}
-								</Text>
+		if (groupsToShow.length === 0) {
+			return (
+				<Box p="24" display="flex" justifyContent="center">
+					<Text color="fg.tertiary">No properties in this group</Text>
+				</Box>
+			);
+		}
+
+		const totalGroups = Object.keys(contentTypePropertyGroups).length;
+		const showHeaders = shouldShowGroupHeaders(totalGroups, false);
+
+		return (
+			<Box display="flex" flexDirection="column" gap="32">
+				{groupsToShow.map((groupName) => {
+					const properties = contentTypePropertyGroups[groupName];
+
+					return (
+						<Box key={groupName} display="flex" flexDirection="column" gap="12">
+							{showHeaders && (
+								<Box mb="4">
+									<Heading level="4" fontSize="sm" color="fg.tertiary" mb="8">
+										{groupName}
+									</Heading>
+									<Separator />
+								</Box>
 							)}
-							{!suggestError && noTagSuggestions && (
-								<Text fontSize="xs" color="fg.secondary">
-									No suggestions for tags.
-								</Text>
+
+							{/* Special handling for Categories & Tags section */}
+							{groupName === "Categories & Tags" && (
+								<Box display="flex" flexDirection="column" gap="8">
+									{suggestError && (
+										<Text fontSize="xs" color="fg.error">
+											{suggestError}
+										</Text>
+									)}
+									{!suggestError && noTagSuggestions && (
+										<Text fontSize="xs" color="fg.secondary">
+											No suggestions for tags.
+										</Text>
+									)}
+									{!suggestError && noCategorySuggestions && (
+										<Text fontSize="xs" color="fg.secondary">
+											No suggestions for categories.
+										</Text>
+									)}
+								</Box>
 							)}
-							{!suggestError && noCategorySuggestions && (
-								<Text fontSize="xs" color="fg.secondary">
-									No suggestions for categories.
-								</Text>
-							)}
+
+							{properties.map((prop) => renderPropertyField(prop))}
 						</Box>
-						<PillMenuSelect
-							label="Categories"
-							placeholder="Search categories..."
-							selectedItems={selectedCategories}
-							availableItems={categoriesWithSlugs}
-							onToggle={handleToggleCategory}
-							onCreateNew={handleCreateCategory}
-						/>
-
-						<PillMenuSelect
-							label="Tags"
-							placeholder="Search tags..."
-							selectedItems={selectedTags}
-							availableItems={tagsWithSlugs}
-							onToggle={handleToggleTag}
-							onCreateNew={handleCreateTag}
-						/>
-					</Box>
-				);
-
-			default:
-				return null;
-		}
+					);
+				})}
+			</Box>
+		);
 	};
 
 	return (
-		<div className="h-full overflow-hidden">
-			<div
-				className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
-				style={{
-					transform: effectiveSection === "menu" ? "translateX(0%)" : "translateX(-50%)",
-				}}
+		<Box display="flex" flexDirection="column" style={{ flex: 1, minHeight: 0 }}>
+			<Tabs
+				value={activeFilter}
+				onValueChange={setActiveFilter}
+				style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
 			>
-				{/* PANE 1: Properties Menu */}
-				<div className="min-w-[50%] w-[50%] h-full flex flex-col">
-					<Box display="flex" flexDirection="column" w="full">
-						{dynamicNavigationItems.map((item) => (
-							<Box
-								key={item.id}
-								pl="24"
-								pr="12"
-								py="8"
-								w="full"
-								display="flex"
-								alignItems="center"
-								justifyContent="space-between"
-								cursor="pointer"
-								className="hover:bg-[var(--ax-colors-bg-default-hovered)] transition-colors"
-								onClick={() => handleSectionChange(item.id)}
-								style={{
-									fontSize: "14px",
-								}}
-							>
-								<Text fontSize="sm">{item.label}</Text>
-								<IconChevronRight
-									size={16}
-									style={{
-										opacity: 0.6,
-										flexShrink: 0,
-									}}
-								/>
-							</Box>
+				{/* Filter Bar - Fixed at top */}
+				<Box
+					px="24"
+					pt="16"
+					pb="16"
+					bg="bg.page"
+				>
+					<TabsList>
+						{filterItems.map((item) => (
+							<TabsTrigger key={item.id} value={item.id}>
+								{item.label}
+							</TabsTrigger>
 						))}
-					</Box>
-				</div>
+					</TabsList>
+				</Box>
 
-				{/* PANE 2: Property Subsection Detail */}
-				<div className="min-w-[50%] w-[50%] h-full flex flex-col">
-					{/* Section content */}
-					<Box px="24" py="16" style={{ overflowY: "auto", flex: 1 }}>
-						{renderSectionContent()}
-					</Box>
-				</div>
-			</div>
-		</div>
+				{/* Content Area - Scrollable */}
+				<Box
+					overflow="auto"
+					px="24"
+					py="16"
+					style={{ flex: 1, minHeight: 0 }}
+				>
+					{renderFilteredContent()}
+				</Box>
+			</Tabs>
+		</Box>
 	);
 }

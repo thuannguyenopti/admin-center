@@ -1,0 +1,26 @@
+/**
+ * Stride 6-column grid system with 24px gutters (gap-6)
+ * Matches the visual StrideColumnGrid decoration
+ */
+
+.stride-content-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 24px;
+}
+
+/* Column span utilities */
+.stride-col-1 { grid-column: span 1; }
+.stride-col-2 { grid-column: span 2; }
+.stride-col-3 { grid-column: span 3; }
+.stride-col-4 { grid-column: span 4; }
+.stride-col-5 { grid-column: span 5; }
+.stride-col-6 { grid-column: span 6; }
+
+/* Full bleed (ignores grid) */
+.stride-full-bleed {
+  grid-column: 1 / -1;
+  margin-left: -24px;
+  margin-right: -24px;
+  width: calc(100% + 48px);
+}

@@ -1,14 +1,15 @@
 "use client";
 
-import React, { Fragment, useEffect, useRef, useState } from "react";
-import { Box, Field, Text, Input as AxiomInput, Checkbox, Heading, Textarea, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
+import React, { Fragment, useEffect, useRef, useState, useMemo } from "react";
+import { Box, Text, Heading, Menu, MenuTrigger, MenuContent, Separator } from "@optiaxiom/react";
 import { IconPalette } from "@tabler/icons-react";
-import { BLOCK_SCHEMAS } from "./blocks/schemas";
-import { AIInputField } from "@/app/components/ai/AIInputField";
-import { AITextArea } from "@/app/components/ai/AITextArea";
-import { FieldWithAIActions } from "./FieldWithAIActions";
-import { usePropertyEditorActions } from "@/app/hooks/usePropertyEditorActions";
-import { PropertyType } from "@/app/cms/settings/opal-actions/mockData";
+import { initialContentTypes, Property, ContentType } from "@/app/db/initialData";
+import { groupPropertiesByGroup } from "./utils/propertyGroups";
+import { PropertyRenderer } from "@/app/components/property-renderers";
+import usePersistentState from "@/app/usePersistentState";
+
+// Import to register all property renderers
+import "@/app/components/property-renderers";
 
 type Props = {
   currentEle: string;
@@ -18,121 +19,6 @@ type Props = {
   onInputChange: (value: any, keyOrIndex: string | number) => void;
   outlineTitle?: string;
   onOpenStyleEditor?: () => void;
-};
-
-const Input: React.FC<{ label: string; placeholder?: string; value: any; onChange: any; propertyType?: PropertyType }> = ({
-  label,
-  placeholder,
-  value,
-  onChange,
-  propertyType = "String",
-}) => {
-  const aiActions = usePropertyEditorActions(propertyType, value || "", (suggestion: string) => {
-    onChange(suggestion);
-  });
-
-  return (
-    <div className=" pr-1 py-2">
-      <FieldWithAIActions label={label} aiActions={aiActions}>
-        <AIInputField
-          placeholder={placeholder || ""}
-          value={value || ""}
-          onChange={(e: any) => onChange(e.currentTarget.value)}
-          enableAutoComplete={true}
-        />
-      </FieldWithAIActions>
-    </div>
-  );
-};
-
-const renderMarkdown = (val: string) => {
-  const escaped = (val || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  return escaped
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
-    .replace(/\n/g, "<br/>");
-};
-
-const isTipTapDoc = (val: any) => val && typeof val === "object" && val.type === "doc";
-
-const tiptapToMarkdown = (val: any): string => {
-  if (!isTipTapDoc(val)) return typeof val === "string" ? val : "";
-  const paragraphs = (val.content || []).map((p: any) => {
-    if (!p || p.type !== "paragraph") return "";
-    return (p.content || []).map((node: any) => {
-      if (!node || node.type !== "text") return "";
-      let text = node.text || "";
-      const marks = node.marks || [];
-      marks.forEach((m: any) => {
-        if (!m || !m.type) return;
-        if (m.type === "bold" || m.type === "strong") text = `**${text}**`;
-        if (m.type === "italic" || m.type === "em") text = `*${text}*`;
-        if (m.type === "link" && m.attrs?.href) text = `[${text}](${m.attrs.href})`;
-      });
-      return text;
-    }).join("");
-  }).join("\n");
-  return paragraphs;
-};
-
-const markdownToTipTap = (text: string) => {
-  const lines = (text || "").split(/\n/);
-  const paragraphFromLine = (line: string) => {
-    const tokens = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^\)]+\))/g).filter(Boolean);
-    const content = tokens.map((tok) => {
-      // link
-      const linkMatch = tok.match(/^\[(.+)\]\((.+)\)$/);
-      if (linkMatch) {
-        return {
-          type: "text",
-          text: linkMatch[1],
-          marks: [{ type: "link", attrs: { href: linkMatch[2] } }],
-        };
-      }
-      // bold
-      const boldMatch = tok.match(/^\*\*(.+)\*\*$/);
-      if (boldMatch) {
-        return { type: "text", text: boldMatch[1], marks: [{ type: "bold" }] };
-      }
-      // italic
-      const italicMatch = tok.match(/^\*(.+)\*$/);
-      if (italicMatch) {
-        return { type: "text", text: italicMatch[1], marks: [{ type: "italic" }] };
-      }
-      // plain
-      return { type: "text", text: tok };
-    });
-    return { type: "paragraph", content };
-  };
-
-  return {
-    type: "doc",
-    content: lines.map(paragraphFromLine),
-  };
-};
-
-const RichTextInput: React.FC<{ label: string; value: any; onChange: any; propertyType?: PropertyType }> = ({ label, value, onChange, propertyType = "XhtmlString" }) => {
-  const markdownValue = isTipTapDoc(value) ? tiptapToMarkdown(value) : (value || "");
-  const aiActions = usePropertyEditorActions(propertyType, markdownValue, (suggestion: string) => {
-    onChange(markdownToTipTap(suggestion));
-  });
-
-  return (
-    <div className="pr-1 py-2">
-      <FieldWithAIActions label={label} aiActions={aiActions}>
-        <AITextArea
-          value={markdownValue}
-          onChange={(e: any) => onChange(markdownToTipTap(e.currentTarget.value))}
-          rows={4}
-          enableAutoComplete={true}
-        />
-      </FieldWithAIActions>
-    </div>
-  );
 };
 
 export default function ElementEditor({
@@ -147,8 +33,24 @@ export default function ElementEditor({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Load runtime content types from localStorage (includes user-created properties)
+  const [runtimeContentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+    ContentType[],
+    any,
+  ];
+
+  // Get content type definition and group properties
+  const contentType = useMemo(() => {
+    return runtimeContentTypes?.find((ct) => ct.id === elementType) || initialContentTypes.find((ct) => ct.id === elementType);
+  }, [elementType, runtimeContentTypes]);
+
+  const propertyGroups = useMemo(() => {
+    if (!contentType) return {};
+    return groupPropertiesByGroup(contentType.properties, true);
+  }, [contentType]);
+
   useEffect(() => {
-    // Don’t focus when “closed”
+    // Don't focus when "closed"
     if (!currentEle || currentEle === "none") return;
 
     // Match your slide duration (you use `duration-300`)
@@ -175,7 +77,7 @@ export default function ElementEditor({
         el.focus?.();
       }
 
-      // Optional: select text if it’s a real input/textarea
+      // Optional: select text if it's a real input/textarea
       /*if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
         try {
           el.select?.();
@@ -193,7 +95,7 @@ export default function ElementEditor({
       </Text>
 
       <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" pr="0" py="4">
-        <Heading level="4">{elementType}</Heading>
+        <Heading level="4">{contentType?.displayName || contentType?.name || elementType}</Heading>
 
         <Box display="flex" alignItems="center" gap="8">
           {onOpenStyleEditor && (
@@ -232,105 +134,63 @@ export default function ElementEditor({
         </Box>
       </Box>
 
-      {/* Production-Aligned Schema-Driven Properties */}
-      {(() => {
-        const schema = BLOCK_SCHEMAS[elementType];
-        if (!schema) return null;
+      {/* Render properties grouped by groupName */}
+      <Box mt="16">
+        {(() => {
+          // Calculate groups with visible properties
+          const groupsWithVisibleProps = Object.entries(propertyGroups).filter(([_, groupProps]) => {
+            const visibleProps = groupProps.filter((prop) => {
+              return !(prop.id === "template" || prop.type === "SelectOne");
+            });
+            return visibleProps.length > 0;
+          });
 
-        return Object.entries(schema.properties).map(([key, def]) => {
-          // Skip template property - it's accessed via context menu "Style" option
-          if (key === "template" || def.type === "SelectOne") {
-            return null;
-          }
+          // Only show headers if there are 2 or more groups with visible properties
+          const shouldShowHeaders = groupsWithVisibleProps.length > 1;
 
-          const propData = properties ? properties[key] : null;
-          const value = propData ? propData.value : (def.default ?? "");
+          // Render properties grouped by groupName
+          return Object.entries(propertyGroups).map(([groupName, groupProps]) => {
+          // Filter out properties that should be hidden
+          const visibleProps = groupProps.filter((prop) => {
+            // Skip template property - it's accessed via context menu "Style" option
+            return !(prop.id === "template" || prop.type === "SelectOne");
+          });
 
-          // Map schema type to PropertyType
-          const getPropertyType = (schemaType: string): PropertyType => {
-            switch (schemaType) {
-              case "text":
-                return "String";
-              case "textarea":
-                return "LongString";
-              case "richtext":
-                return "XhtmlString";
-              case "link":
-                return "Url";
-              default:
-                return "String";
-            }
-          };
+          // Don't render the group at all if no visible properties
+          if (visibleProps.length === 0) return null;
 
           return (
-            <Fragment key={key}>
-              {(def.type === "text" || def.type === "textarea" || def.type === "link") && (
-                <Input
-                  label={def.label}
-                  value={value}
-                  onChange={(val: any) => onInputChange(val, key)}
-                  propertyType={getPropertyType(def.type)}
-                />
+            <Fragment key={groupName}>
+              {shouldShowHeaders && (
+                <Box mb="12" mt="16">
+                  <Heading level="4" fontSize="xs" color="fg.tertiary" mb="8" textTransform="uppercase">
+                    {groupName}
+                  </Heading>
+                  <Separator />
+                </Box>
               )}
-              {def.type === "richtext" && (
-                <RichTextInput
-                  label={def.label}
-                  value={value}
-                  onChange={(val: any) => onInputChange(val, key)}
-                  propertyType="XhtmlString"
-                />
-              )}
-              {def.type === "checkbox" && (
-                <div className="p-6 pr-0 py-2">
-                  <Checkbox
-                    checked={value === true || value === "true"}
-                    onChange={(e: any) => onInputChange(e.currentTarget.checked, key)}
-                  >
-                    {def.label}
-                  </Checkbox>
-                </div>
-              )}
+
+              {visibleProps.map((prop) => {
+                const propData = properties ? properties[prop.id] : undefined;
+                // After migration, properties are stored directly (not { value: ... })
+                const value = propData !== undefined ? propData : (prop.defaultValue ?? "");
+
+                return (
+                  <PropertyRenderer
+                    key={prop.id}
+                    property={prop}
+                    value={value}
+                    onChange={(newVal: any) => onInputChange(newVal, prop.id)}
+                    enableAI={true}
+                    context={{ runtimeContentTypes }}
+                  />
+                );
+              })}
             </Fragment>
           );
         });
       })()}
-
-      {/* Fallback for properties not in schema but present in data */}
-      {properties &&
-        Object.entries(properties).map(([key, prop]: [string, any]) => {
-          const schema = BLOCK_SCHEMAS[elementType];
-          if (schema && schema.properties[key]) return null;
-
-          return (
-            <Fragment key={key}>
-              {(!prop.type || prop.type === "text") && (
-                <Input
-                  label={key.charAt(0).toUpperCase() + key.slice(1)}
-                  placeholder={prop.placeholder}
-                  value={prop.value}
-                  onChange={(val: any) => onInputChange(val, key)}
-                />
-              )}
-              {prop.type === "richtext" && (
-                <RichTextInput
-                  label={key.charAt(0).toUpperCase() + key.slice(1)}
-                  value={prop.value}
-                  onChange={(val: any) => onInputChange(val, key)}
-                />
-              )}
-              {prop.type === "checkbox" && (
-                <div className="p-6 pr-0 py-2">
-                  <Checkbox
-                    checked={prop.value === "true" ? true : false}
-                    onChange={(e: any) => onInputChange(e.currentTarget.checked ? "true" : "false", key)}
-                  >
-                    {key.charAt(0).toUpperCase() + key.slice(1)}
-                  </Checkbox>
-                </div>
-              )}
-            </Fragment>
-          );
-        })}
+      </Box>
     </div>
   );
 }

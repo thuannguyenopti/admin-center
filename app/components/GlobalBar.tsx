@@ -5,16 +5,41 @@ import {Text} from "./Text";
 import {useRouter, usePathname} from "next/navigation";
 import {
 	IconSearch,
-	IconBell,
 	IconHelp,
 	IconUser,
 	IconSunFilled,
 	IconMoon,
 	IconDeviceDesktop,
-} from "@tabler/icons-react";
+	IconBuilding,
+	IconUsers,
+	IconSparkles,
+	IconFolder,
+	IconCircleDot,
+	IconApps,
+	IconGitBranch,
+	IconTarget,
+	IconTemplate,
+	IconList,
+	IconFileDownload,
+	IconActivity,
+	IconTrash,
+	IconShare,
+	IconShieldCheck,
+	IconMail,
+	IconCloud,
+	IconWebhook,
+	IconCode,
+} from "@/app/lib/axiom-icons";
 import Image from "next/image";
 import Link from "next/link";
 import {useTheme} from "@/app/hooks/useTheme";
+import {useLayout} from "@/app/context/LayoutContext";
+import NotificationDropdown from "./NotificationDropdown";
+import { useState, Suspense } from "react";
+import { createPortal } from "react-dom";
+import { IconXmark } from "@optimizely/axiom-icons";
+import { VAUS } from "@/app/opal/data/vaus";
+import { LayoutSwitcher } from "@/app/opal/im/components/LayoutSwitcher";
 
 type GlobalBarProps = {
 	onOpalClick?: () => void;
@@ -24,9 +49,37 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const isCmpTaskDetail = pathname.startsWith("/cmp/task/");
+	const isCmpRoute = pathname.startsWith("/cmp");
+	const isOpalRoute = pathname.startsWith("/opal");
+	const isImRoute = pathname.startsWith("/opal/im");
 	const {preference: themePreference, setPreference: setThemePreference} = useTheme();
+	const {codePanelControls, activeVAU, setActiveVAU} = useLayout();
+	const [switchingVAU, setSwitchingVAU] = useState<{ name: string; avatar: string } | null>(null);
+	const [switchVisible, setSwitchVisible] = useState(false);
+
+	const handleSelectVAU = (vau: { name: string; avatar: string }) => {
+		if (activeVAU?.name === vau.name) { setActiveVAU(null); return; }
+		setSwitchingVAU(vau);
+		setSwitchVisible(true);
+		setTimeout(() => setSwitchVisible(false), 1400);
+		setTimeout(() => { setSwitchingVAU(null); setActiveVAU(vau); }, 1700);
+	};
+
+	const handleCodeClick = () => {
+		codePanelControls?.openPanel(pathname);
+	};
+
+	const settingsGroups = {
+		userOrg: { label: "User", separator: false, hidden: true },
+		ai: { label: "AI", separator: true, hidden: true },
+		main: { label: "Main", separator: true, hidden: true },
+		management: { label: "Management", separator: true, hidden: true },
+		integrations: { label: "Integrations", separator: true, hidden: true },
+		social: { label: "Social", separator: false, hidden: true },
+	};
 
 	const getCurrentProduct = () => {
+		if (pathname.startsWith("/web-experimentation")) return "Web Experimentation";
 		if (pathname.startsWith("/cms")) return "CMS";
 		if (pathname.startsWith("/cmp")) return "CMP";
 		if (pathname.startsWith("/graph")) return "Graph";
@@ -38,16 +91,19 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	return (
 		<Box
 			w="full"
-			py="12"
-			px="20"
 			bg="bg.default"
-			gridColumn="2"
+			style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column" }}
 			borderB="1"
 			borderColor="border.tertiary"
+			className="global-bar"
+		>
+		<Box
+			w="full"
+			py="12"
+			px="20"
 			display="flex"
 			alignItems="center"
 			justifyContent="space-between"
-			className="global-bar"
 		>
 			<Box display="flex" alignItems="center">
 				<Link href={"/"}>
@@ -99,6 +155,10 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						{
 							label: "Content Management System",
 							execute: () => router.push("/cms/dashboard"),
+						},
+						{
+							label: "Web Experimentation",
+							execute: () => router.push("/web-experimentation"),
 						},
 						{
 							label: "Content Marketing Platform",
@@ -185,52 +245,260 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>
-				<Button appearance="subtle" size="md" aria-label="Opal AI Assistant" onClick={onOpalClick}>
-					<Box display="flex" alignItems="center" gap="8">
-						<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
-						{isCmpTaskDetail && (
-							<Text fontSize="md" fontWeight="500" color="fg.default">
-								Ask Opal
-							</Text>
-						)}
-					</Box>
-				</Button>
+				{!isOpalRoute && (
+					<Button appearance="subtle" size="md" aria-label="Opal AI Assistant" onClick={onOpalClick}>
+						<Box display="flex" alignItems="center" gap="8">
+							<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
+							{isCmpTaskDetail && (
+								<Text fontSize="md" fontWeight="500" color="fg.default">
+									Ask Opal
+								</Text>
+							)}
+						</Box>
+					</Button>
+				)}
+				{isOpalRoute && (
+					<Suspense fallback={null}>
+						<LayoutSwitcher />
+					</Suspense>
+				)}
 				<Button appearance="subtle" size="md" icon={<IconSearch size={20} />} aria-label="Search" />
-				<Box style={{position: "relative"}}>
-					<Button
-						appearance="subtle"
-						size="md"
-						icon={<IconBell size={20} />}
-						aria-label="Notifications"
-					/>
-					<Box
-						style={{
-							position: "absolute",
-							top: "4px",
-							right: "4px",
-							height: "8px",
-							width: "8px",
-							border: "1.5px solid #FFFFFF",
-						}}
-						bg="bg.error"
-						rounded="full"
-					/>
-				</Box>
+				<NotificationDropdown />
 				<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
-				<Button appearance="subtle" size="md" aria-label="User profile">
-					{isCmpTaskDetail ? (
-						<Image
-							src="/avatars/aamr-fakhry.png"
-							alt="User profile"
-							width={24}
-							height={24}
-							style={{borderRadius: 999}}
-						/>
-					) : (
-						<IconUser size={20} />
-					)}
-				</Button>
+				<Button
+					appearance="subtle"
+					size="md"
+					icon={<IconCode size={20} />}
+					aria-label="View source code"
+					onClick={handleCodeClick}
+				/>
+				<Menu
+					options={[
+						...VAUS.map(vau => ({
+							group: { label: "Act as", separator: false, hidden: false },
+							label: vau.name,
+							description: vau.templateName,
+							addon: (
+								<Image
+									src={vau.avatar}
+									alt={vau.name}
+									width={20}
+									height={20}
+									style={{ borderRadius: 999, flexShrink: 0 }}
+									unoptimized
+								/>
+							),
+							execute: () => handleSelectVAU(vau),
+						})),
+						{
+							group: { label: "Manage", separator: true, hidden: true },
+							label: "Manage Virtual Teammates",
+							addon: <IconUsers size={16} />,
+							execute: () => router.push("/opal/virtual-teammates"),
+						},
+						...(isCmpRoute ? [
+							{
+								group: settingsGroups.userOrg,
+								label: "Stefan Svebeck (Admin)",
+								addon: <IconUser size={16} />,
+							},
+							{
+								group: settingsGroups.userOrg,
+								label: "Organization",
+								addon: <IconBuilding size={16} />,
+							},
+							{
+								group: settingsGroups.userOrg,
+								label: "Users & Teams",
+								addon: <IconUsers size={16} />,
+							},
+							{
+								group: settingsGroups.ai,
+								label: "AI",
+								addon: <IconSparkles size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Assets",
+								addon: <IconFolder size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Fields",
+								addon: <IconCircleDot size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Integrations",
+								addon: <IconApps size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Routing Rules",
+								addon: <IconGitBranch size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Strategy",
+								addon: <IconTarget size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Templates",
+								addon: <IconTemplate size={16} />,
+								execute: () => router.push("/cmp/settings/content-models"),
+							},
+							{
+								group: settingsGroups.main,
+								label: "Workflows",
+								addon: <IconList size={16} />,
+							},
+							{
+								group: settingsGroups.management,
+								label: "Reports",
+								addon: <IconFileDownload size={16} />,
+							},
+							{
+								group: settingsGroups.management,
+								label: "Activity Log",
+								addon: <IconActivity size={16} />,
+							},
+							{
+								group: settingsGroups.management,
+								label: "Recycle Bin",
+								addon: <IconTrash size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Marketo",
+								addon: <IconMail size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Eloqua",
+								addon: <IconMail size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Salesforce",
+								addon: <IconCloud size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Apps & Webhooks",
+								addon: <IconWebhook size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Brand Compliance",
+								addon: <IconShieldCheck size={16} />,
+							},
+							{
+								group: settingsGroups.social,
+								label: "Social Accounts",
+								addon: <IconShare size={16} />,
+							},
+						] : []),
+					]}
+				>
+					<MenuTrigger asChild>
+						<Button appearance="subtle" size="md" aria-label="Account">
+							<Box
+								display="inline-flex"
+								alignItems="center"
+								justifyContent="center"
+								style={{
+									width: 26,
+									height: 26,
+									borderRadius: 999,
+									overflow: 'hidden',
+									flexShrink: 0,
+									userSelect: 'none',
+								}}
+							>
+								{activeVAU ? (
+									<Image src={activeVAU.avatar} alt={activeVAU.name} width={26} height={26} style={{ objectFit: 'cover' }} unoptimized />
+								) : (
+									<Image src="/avatars/avatar-3.png" alt="JC" width={26} height={26} style={{ objectFit: 'cover' }} />
+								)}
+							</Box>
+						</Button>
+					</MenuTrigger>
+					<MenuContent style={{ minWidth: "220px" }} />
+				</Menu>
 			</Box>
+		</Box>
+		{activeVAU && isOpalRoute && (
+			<Box
+				display="flex"
+				alignItems="center"
+				gap="8"
+				px="16"
+				py="6"
+				style={{
+					background: "var(--ax-colors-bg-information-subtle)",
+					borderTop: "1px solid var(--ax-colors-border-information)",
+				}}
+			>
+				<Image src={activeVAU.avatar} alt="" width={18} height={18} style={{ borderRadius: 999, flexShrink: 0 }} />
+				<Text fontSize="sm" color="fg.default">
+					Acting as <strong>{activeVAU.name}</strong>
+				</Text>
+				<Box style={{ flex: 1 }} />
+				<Button
+					appearance="subtle"
+					size="sm"
+					icon={<IconXmark size={14} />}
+					aria-label="Exit"
+					onClick={() => setActiveVAU(null)}
+				/>
+			</Box>
+		)}
+		{switchingVAU && typeof window !== "undefined" && createPortal(
+			<div style={{
+				position: "fixed", inset: 0, zIndex: 9999,
+				display: "flex", alignItems: "center", justifyContent: "center",
+				background: "var(--ax-colors-bg-overlay)",
+				opacity: switchVisible ? 1 : 0,
+				transition: "opacity 0.3s ease",
+				pointerEvents: switchVisible ? "auto" : "none",
+			}}>
+				<div style={{
+					background: "var(--ax-colors-bg-default)",
+					borderRadius: 16,
+					padding: "32px 40px",
+					display: "flex",
+					flexDirection: "column",
+					alignItems: "center",
+					gap: 16,
+					minWidth: 280,
+					boxShadow: "var(--ax-box-shadow-lg, 0 24px 64px rgba(0,0,0,0.18))",
+				}}>
+					<div style={{
+						width: 64, height: 64, borderRadius: 16,
+						background: "var(--ax-colors-bg-secondary)",
+						display: "flex", alignItems: "center", justifyContent: "center",
+						overflow: "hidden",
+					}}>
+						<Image src={switchingVAU.avatar} alt="" width={44} height={44} unoptimized />
+					</div>
+					<div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 4 }}>
+						<p style={{ margin: 0, fontSize: 11, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ax-colors-fg-tertiary)" }}>Acting as</p>
+						<p style={{ margin: 0, fontSize: 18, fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>{switchingVAU.name}</p>
+					</div>
+					<div style={{ display: "flex", gap: 5 }}>
+						{[0, 1, 2].map(i => (
+							<div key={i} style={{
+								width: 6, height: 6, borderRadius: 999,
+								background: "var(--ax-colors-fg-accent)",
+								animation: `vau-pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+							}} />
+						))}
+					</div>
+				</div>
+				</div>,
+			document.body
+		)}
 		</Box>
 	);
 }
