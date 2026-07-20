@@ -96,12 +96,13 @@ Icon imports in code use `@optiaxiom/icons` — NOT `@optimizely/axiom-icons` or
 | Refresh (Arrow Rotate) | `IconRefresh` | `2e5a2a9b61e4e6b34e8f44603e0e4f3cc513ca9d` | `Active=False` |
 | History (Clock) | `IconHistory` | `d97e050a623235552bb76086c035639a0984f00b` | `Active=False` |
 | Arrow Down Circle | `IconArrowDownCircle` | `0b1d812c80a390277ca81b780e9b12640034febc` | `Active=False` |
+| Close / Xmark | `IconXmark` | `94021c35dea93d114eb2b1c081fecebc71c44c86` | `Active=False` — ⚠️ USE THIS for close buttons. Figma name: "Close", library "Axiom Design System" (confirmed 2026-07-17). Do NOT use the legacy Axiom Icons `6824278e…` "xmark-thin 24" below. |
 
 ### Icons not found in "Axiom Design System" — use Axiom Icons library
 
 | Icon | Axiom Icons componentKey | Notes |
 |------|--------------------------|-------|
-| Xmark / Close | `6824278e82aa2571467fb347e30501ba24e0c328` | From "Axiom Icons" lib; name: `xmark-thin 24` |
+| ~~Xmark / Close~~ | ~~`6824278e82aa2571467fb347e30501ba24e0c328`~~ | ⛔ **LEGACY — do not use.** The V3 "Close" icon IS in Axiom Design System (`94021c35…`, above). This legacy `xmark-thin 24` from the Axiom Icons lib was used by mistake and flagged as wrong. |
 | Plus / Add | Not found via MCP — use `search_design_system` query "Plus Axiom Icons" at build time | From `@optiaxiom/icons` as `IconPlus` |
 
 ---
