@@ -6,13 +6,21 @@ import { IconMagnifyingGlassMinus, IconMagnifyingGlassPlus } from "@optiaxiom/ic
 import { Text } from "@/app/components/Text";
 import { useLayout } from "@/app/context/LayoutContext";
 import { Toolbar } from "./Toolbar";
+import { EditPopover } from "./EditPopover";
+import type { EditPin } from "./CampaignWorkshopCanvas";
 
 export type ContentTab = "blog" | "social" | "email";
 type CanvasTransform = { x: number; y: number; scale: number };
+// A pin being placed but not yet confirmed — world coords for where it'll
+// land, client coords for where to anchor the "describe your edit" popover
+// (a fixed overlay, independent of pan/zoom).
+type DraftPin = { clientX: number; clientY: number; label: string; x: number; y: number };
 
 const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 2.5;
 const ZOOM_STEP = 1.15;
+const POPOVER_WIDTH = 320;
+const POPOVER_HEIGHT_ESTIMATE = 220;
 
 const surfaceStyle = {
 	background: "var(--ax-colors-bg-page)",
@@ -45,28 +53,45 @@ const canvasWorldStyle = {
 	willChange: "transform",
 };
 
+// Clamps a fixed-position overlay's top-left so it can't render off-screen.
+function clampToViewport(x: number, y: number) {
+	const maxX = typeof window !== "undefined" ? window.innerWidth - POPOVER_WIDTH - 16 : x;
+	const maxY = typeof window !== "undefined" ? window.innerHeight - POPOVER_HEIGHT_ESTIMATE - 16 : y;
+	return { x: Math.min(Math.max(x, 16), Math.max(maxX, 16)), y: Math.min(Math.max(y, 16), Math.max(maxY, 16)) };
+}
+
 export function CanvasStage({
 	activeTab,
 	children,
+	commentMode,
+	onAddPin,
 	onAskOpal,
 	onClose,
 	onOpenWorkflow,
+	onRemovePin,
 	onRunQueuedEdits,
 	onTabChange,
+	onToggleCommentMode,
 	onToggleRationale,
-	queuedEditsCount,
+	onUpdatePin,
+	pins,
 	showRationale,
 	showWorkflow = false,
 }: {
 	activeTab: ContentTab;
 	children: React.ReactNode;
+	commentMode: boolean;
+	onAddPin: (label: string, x: number, y: number, description: string) => void;
 	onAskOpal: () => void;
 	onClose: () => void;
 	onOpenWorkflow: () => void;
+	onRemovePin: (id: string) => void;
 	onRunQueuedEdits: () => void;
 	onTabChange: (tab: ContentTab) => void;
+	onToggleCommentMode: () => void;
 	onToggleRationale: () => void;
-	queuedEditsCount: number;
+	onUpdatePin: (id: string, description: string) => void;
+	pins: EditPin[];
 	showRationale: boolean;
 	showWorkflow?: boolean;
 }) {
@@ -88,8 +113,40 @@ export function CanvasStage({
 	const [transform, setTransform] = useState<CanvasTransform>({ x: 0, y: 0, scale: 1 });
 	const [spaceDown, setSpaceDown] = useState(false);
 	const [panning, setPanning] = useState(false);
+	const [draftPin, setDraftPin] = useState<DraftPin | null>(null);
+	const [editingPinId, setEditingPinId] = useState<string | null>(null);
 
 	const clampScale = useCallback((scale: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, scale)), []);
+
+	// Screen point -> world point, using the canvas's current pan/zoom — the
+	// same inversion zoomAt() below already relies on to zoom at the cursor.
+	const toWorldPoint = useCallback(
+		(clientX: number, clientY: number) => {
+			const viewport = viewportRef.current;
+			if (!viewport) return { x: 0, y: 0 };
+			const rect = viewport.getBoundingClientRect();
+			return {
+				x: (clientX - rect.left - transform.x) / transform.scale,
+				y: (clientY - rect.top - transform.y) / transform.scale,
+			};
+		},
+		[transform],
+	);
+
+	// World point -> screen point (the inverse), for anchoring an existing
+	// pin's popover at its current on-screen position.
+	const toScreenPoint = useCallback(
+		(worldX: number, worldY: number) => {
+			const viewport = viewportRef.current;
+			if (!viewport) return { x: 0, y: 0 };
+			const rect = viewport.getBoundingClientRect();
+			return {
+				x: rect.left + worldX * transform.scale + transform.x,
+				y: rect.top + worldY * transform.scale + transform.y,
+			};
+		},
+		[transform],
+	);
 
 	const zoomAt = useCallback(
 		(clientX: number, clientY: number, nextScale: number) => {
@@ -129,6 +186,8 @@ export function CanvasStage({
 		panRef.current = null;
 		setPanning(false);
 		setSpaceDown(false);
+		setDraftPin(null);
+		setEditingPinId(null);
 	}, [activeTab]);
 
 	useEffect(() => {
@@ -226,6 +285,27 @@ export function CanvasStage({
 		zoomAt(event.clientX, event.clientY, transform.scale * factor);
 	};
 
+	// Universal pin placement: while the comment tool is active, a click
+	// anywhere on the canvas content (image, text, blank page area) drops a
+	// numbered pin exactly there — not gated to a specific element. Runs on
+	// the capture phase so it fires before a clicked element's own handler
+	// (e.g. EditableText's click-to-edit), which it then suppresses via
+	// stopPropagation. Clicks on an existing pin badge are left alone so the
+	// badge's own click handler can open that pin's popover instead.
+	const handleCanvasClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+		if (!commentMode) return;
+		const target = event.target as HTMLElement;
+		if (target.closest("[data-pin-badge]")) return;
+		event.preventDefault();
+		event.stopPropagation();
+		const label = target.closest<HTMLElement>("[data-edit-label]")?.dataset.editLabel ?? "Page Content";
+		const { x, y } = toWorldPoint(event.clientX, event.clientY);
+		setDraftPin({ clientX: event.clientX, clientY: event.clientY, label, x, y });
+	};
+
+	const editingPin = editingPinId ? pins.find((pin) => pin.id === editingPinId) ?? null : null;
+	const editingPinScreen = editingPin ? toScreenPoint(editingPin.x, editingPin.y) : null;
+
 	return (
 		<Box style={surfaceStyle}>
 			<style>{`
@@ -241,13 +321,15 @@ export function CanvasStage({
 			`}</style>
 			<Toolbar
 				activeTab={activeTab}
+				commentMode={commentMode}
 				onAskOpal={onAskOpal}
 				onClose={onClose}
 				onOpenWorkflow={onOpenWorkflow}
 				onRunQueuedEdits={onRunQueuedEdits}
 				onTabChange={onTabChange}
+				onToggleCommentMode={onToggleCommentMode}
 				onToggleRationale={onToggleRationale}
-				queuedEditsCount={queuedEditsCount}
+				queuedEditsCount={pins.length}
 				showRationale={showRationale}
 				showWorkflow={showWorkflow}
 			/>
@@ -255,6 +337,7 @@ export function CanvasStage({
 				<div
 					ref={viewportRef}
 					data-cmp-canvas-viewport="true"
+					onClickCapture={handleCanvasClickCapture}
 					onContextMenu={(event) => {
 						if (panRef.current || panning) event.preventDefault();
 					}}
@@ -264,7 +347,7 @@ export function CanvasStage({
 					onPointerMove={movePan}
 					onPointerUp={endPan}
 					onWheel={handleWheel}
-					style={{ ...canvasViewportStyle, cursor: panning ? "grabbing" : spaceDown ? "grab" : "default" }}
+					style={{ ...canvasViewportStyle, cursor: commentMode ? "crosshair" : panning ? "grabbing" : spaceDown ? "grab" : "default" }}
 				>
 					<div
 						style={{
@@ -273,6 +356,37 @@ export function CanvasStage({
 						}}
 					>
 						{children}
+						{pins.map((pin) => (
+							<button
+								key={pin.id}
+								data-pin-badge="true"
+								type="button"
+								aria-label={`Edit ${pin.label}`}
+								onClick={() => setEditingPinId(pin.id)}
+								style={{
+									alignItems: "center",
+									background: "var(--ax-colors-fg-default)",
+									border: "2px solid var(--ax-colors-bg-default)",
+									borderRadius: "50%",
+									boxShadow: "0 1px 4px rgba(16,24,40,0.3)",
+									color: "var(--ax-colors-fg-default-inverse)",
+									cursor: "pointer",
+									display: "flex",
+									fontSize: 12,
+									fontWeight: 700,
+									height: 24,
+									justifyContent: "center",
+									left: pin.x,
+									position: "absolute",
+									top: pin.y,
+									transform: "translate(-50%, -50%)",
+									width: 24,
+									zIndex: 10,
+								}}
+							>
+								{pin.number}
+							</button>
+						))}
 					</div>
 				</div>
 				<Box
@@ -294,9 +408,50 @@ export function CanvasStage({
 					</Button>
 					<Button appearance="subtle" size="sm" icon={<IconMagnifyingGlassPlus size={14} />} aria-label="Zoom in" onClick={() => zoomFromCenter(ZOOM_STEP)} />
 					<Text fontSize="sm" color="fg.tertiary" style={{ paddingRight: 4 }}>
-						Space + drag
+						{commentMode ? "Click to comment" : "Space + drag"}
 					</Text>
 				</Box>
+
+				{draftPin && (
+					(() => {
+						const anchor = clampToViewport(draftPin.clientX, draftPin.clientY);
+						return (
+							<Box style={{ left: anchor.x, position: "fixed", top: anchor.y, zIndex: 30 }}>
+								<EditPopover
+									title={`Edit ${draftPin.label}`}
+									onCancel={() => setDraftPin(null)}
+									onSubmit={(description) => {
+										onAddPin(draftPin.label, draftPin.x, draftPin.y, description);
+										setDraftPin(null);
+									}}
+								/>
+							</Box>
+						);
+					})()
+				)}
+
+				{editingPin && editingPinScreen && (
+					(() => {
+						const anchor = clampToViewport(editingPinScreen.x, editingPinScreen.y);
+						return (
+							<Box style={{ left: anchor.x, position: "fixed", top: anchor.y, zIndex: 30 }}>
+								<EditPopover
+									initialValue={editingPin.description}
+									title={`Edit ${editingPin.label}`}
+									onCancel={() => setEditingPinId(null)}
+									onRemove={() => {
+										onRemovePin(editingPin.id);
+										setEditingPinId(null);
+									}}
+									onSubmit={(description) => {
+										onUpdatePin(editingPin.id, description);
+										setEditingPinId(null);
+									}}
+								/>
+							</Box>
+						);
+					})()
+				)}
 			</Box>
 		</Box>
 	);

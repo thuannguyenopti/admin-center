@@ -3,7 +3,7 @@
 import { Box } from "@optiaxiom/react";
 import { EditableImage } from "./EditableImage";
 import { EditableText } from "./EditableText";
-import { SLOT_META, resolveSlotImage, type ImageOverrides, type ImageSlotId } from "./assets";
+import { SLOT_META, resolveSlotImage, type ImageOverrides } from "./assets";
 
 const RACE_DETAILS = [
 	["📅", "Date", "Mon April 20, 2026"],
@@ -22,18 +22,12 @@ export function EmailPreview({
 	buildStep,
 	imageOverrides,
 	onEditText,
-	onQueueEdit,
-	onRemoveQueuedEdit,
-	queuedEdits,
 	showRationale,
 	textOverrides,
 }: {
 	buildStep: number;
 	imageOverrides: ImageOverrides;
 	onEditText: (fieldId: string, value: string) => void;
-	onQueueEdit: (slot: ImageSlotId, description: string) => void;
-	onRemoveQueuedEdit: (slot: ImageSlotId) => void;
-	queuedEdits: Partial<Record<ImageSlotId, { description: string }>>;
 	showRationale: boolean;
 	textOverrides: Partial<Record<string, string>>;
 }) {
@@ -55,21 +49,17 @@ export function EmailPreview({
 				</div>
 			)}
 
-			<Box display="flex" gap="4" style={{ alignItems: "baseline", color: "#6B6B6B", fontSize: 13, fontWeight: 650, marginBottom: 16 }}>
+			<Box data-edit-label="Subject Line" display="flex" gap="4" style={{ alignItems: "baseline", color: "#6B6B6B", fontSize: 13, fontWeight: 650, marginBottom: 16 }}>
 				<span>Subject:</span>
 				<EditableText ariaLabel="subject line" value={text("email-subject", "Your Boston Marathon week starts with Stride")} onChange={(v) => onEditText("email-subject", v)} style={{ color: "#6B6B6B", fontSize: 13, fontWeight: 650 }} />
 			</Box>
 
 			<Box style={{ marginBottom: 20 }}>
 				<EditableImage
-					slot="email-hero"
 					aspectRatio="16 / 9"
 					image={resolveSlotImage("email-hero", imageOverrides)}
 					imageAlt={meta.altText}
-					label="the email hero image"
-					onQueueEdit={onQueueEdit}
-					onRemoveQueuedEdit={onRemoveQueuedEdit}
-					queuedEdit={queuedEdits["email-hero"]}
+					label="Email Hero"
 				/>
 			</Box>
 
@@ -88,7 +78,7 @@ export function EmailPreview({
 					</span>
 				</div>
 
-				<Box style={{ margin: "0 0 14px", textAlign: "center" }}>
+				<Box data-edit-label="Headline" style={{ margin: "0 0 14px", textAlign: "center" }}>
 					<EditableText
 						ariaLabel="email headline"
 						value={text("email-headline", "Make marathon Monday your momentum moment.")}

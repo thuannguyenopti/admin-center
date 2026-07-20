@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import { Box } from "@optiaxiom/react";
 import { EditableImage } from "./EditableImage";
 import { EditableText } from "./EditableText";
-import { IMG, SLOT_META, resolveSlotImage, type ImageOverrides, type ImageSlotId } from "./assets";
+import { IMG, SLOT_META, resolveSlotImage, type ImageOverrides } from "./assets";
 
 const styles: Record<string, CSSProperties> = {
 	article: {
@@ -162,18 +162,12 @@ export function BlogPost({
 	buildStep,
 	imageOverrides,
 	onEditText,
-	onQueueEdit,
-	onRemoveQueuedEdit,
-	queuedEdits,
 	showRationale,
 	textOverrides,
 }: {
 	buildStep: number;
 	imageOverrides: ImageOverrides;
 	onEditText: (fieldId: string, value: string) => void;
-	onQueueEdit: (slot: ImageSlotId, description: string) => void;
-	onRemoveQueuedEdit: (slot: ImageSlotId) => void;
-	queuedEdits: Partial<Record<ImageSlotId, { description: string }>>;
 	showRationale: boolean;
 	textOverrides: Partial<Record<string, string>>;
 }) {
@@ -202,24 +196,20 @@ export function BlogPost({
 
 			<Box style={{ marginBottom: 34, maxWidth: 780 }}>
 				<EditableImage
-					slot="blog-hero"
 					aspectRatio="16 / 7"
 					image={resolveSlotImage("blog-hero", imageOverrides)}
 					imageAlt={meta.altText}
-					label="the blog hero image"
-					onQueueEdit={onQueueEdit}
-					onRemoveQueuedEdit={onRemoveQueuedEdit}
-					queuedEdit={queuedEdits["blog-hero"]}
+					label="Blog Hero"
 				/>
 			</Box>
 
 			{/* Each EditableText renders an inline-flex button (text + edit pencil), so
 			    consecutive instances need their own block wrapper — otherwise the kicker
 			    and headline collapse onto one run-on line instead of stacking. */}
-			<Box>
+			<Box data-edit-label="Kicker">
 				<EditableText ariaLabel="kicker" value={text("blog-kicker", "Stride Event Guide • Boston Marathon 2026")} onChange={(v) => onEditText("blog-kicker", v)} style={styles.kicker} />
 			</Box>
-			<Box>
+			<Box data-edit-label="Headline">
 				<EditableText ariaLabel="headline" value={text("blog-headline", "Boston Starts Long Before the Starting Line")} onChange={(v) => onEditText("blog-headline", v)} style={styles.title} />
 			</Box>
 			<p style={styles.text}>

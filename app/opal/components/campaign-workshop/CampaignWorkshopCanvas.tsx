@@ -8,10 +8,28 @@ import { SocialPosts } from "./SocialPosts";
 import { EmailPreview } from "./EmailPreview";
 import { WorkflowDrawer } from "./WorkflowDrawer";
 import { CanvasReadyCard } from "./CanvasReadyCard";
+import { QueuedEditsCard } from "./QueuedEditsCard";
 import { IMAGE_LIBRARY, SLOT_META, resolveSlotImage, type ImageOverrides, type ImageSlotId } from "./assets";
 
 type Mode = "canvas" | "workflow";
-type QueuedEdits = Partial<Record<ImageSlotId, { description: string }>>;
+
+// A freeform edit request dropped anywhere on the canvas (not just on an
+// image) — see CanvasStage's click-to-place comment tool. `x`/`y` are
+// world-space coordinates (pre-scale/translate), so pins pan and zoom with
+// the content that's rendered alongside them.
+export type EditPin = { id: string; number: number; label: string; description: string; x: number; y: number };
+
+// Pin labels that correspond to an actual image slot (set via `data-edit-label`
+// on each EditableImage) — only these can be meaningfully "run" by swapping
+// the underlying photo. Everything else (headline/kicker/subject/body clicks)
+// has no regenerated-content library to draw from.
+const LABEL_TO_SLOT: Record<string, ImageSlotId> = {
+	"Blog Hero": "blog-hero",
+	"Email Hero": "email-hero",
+	"LinkedIn Photo": "social-linkedin",
+	"Reel Photo": "social-reel",
+	"Facebook Photo": "social-facebook",
+};
 
 const WORKFLOW_CHECK_IDS = ["blog", "email", "social"];
 
@@ -31,16 +49,16 @@ const CARRIED_OVER_TRANSCRIPT: Array<{ role: "user" | "assistant"; content: stri
 // The canvas view opened from the "suite ready" message card — renders inline
 // as `leftCanvas` in the real Opal Chats page (app/opal/page.tsx), not a
 // separate route. Owns its own view state (tab/mode/per-image/per-text
-// overrides plus queued image edits); the surrounding conversation lives in
+// overrides plus the edit-pin queue); the surrounding conversation lives in
 // real ChatMessages, not scene state.
 //
-// Editing an image is commenting directly on it (EditableImage/EditPopover)
-// rather than navigating to a separate screen — a queued edit just sits in
-// `queuedEdits` until the toolbar's "Run Now" resolves it. There is no
-// canvas-owned chat panel: the one real, shared Opal panel
+// Editing anything is commenting directly on it: a comment-tool toggle
+// (CanvasStage) lets the user click anywhere on the canvas to drop a
+// numbered pin, which sits in `pins` until the toolbar's "Run Now" resolves
+// it. There is no canvas-owned chat panel: the one real, shared Opal panel
 // (useLayout().opalPanelControls) opens automatically on arrival, pinned
-// with a "suite ready" card, instead of rendering a second, out-of-sync
-// lookalike.
+// with the pin queue (or a "suite ready" card when empty), instead of
+// rendering a second, out-of-sync lookalike.
 export function CampaignWorkshopCanvas({
 	initialShowRationale = false,
 	initialTab = "blog",
@@ -56,11 +74,45 @@ export function CampaignWorkshopCanvas({
 	const [mode, setMode] = useState<Mode>("canvas");
 	const [imageOverrides, setImageOverrides] = useState<ImageOverrides>({});
 	const [textOverrides, setTextOverrides] = useState<Partial<Record<string, string>>>({});
-	const [queuedEdits, setQueuedEdits] = useState<QueuedEdits>({});
+	const [pins, setPins] = useState<EditPin[]>([]);
+	const [commentMode, setCommentMode] = useState(false);
 	const [workflowChecks, setWorkflowChecks] = useState<Record<string, boolean>>({});
 	const [workflowComplete, setWorkflowComplete] = useState(false);
-	const queuedEditsCount = Object.keys(queuedEdits).length;
 	const hasSeededOpal = useRef(false);
+
+	const addPin = (label: string, x: number, y: number, description: string) => {
+		setPins((current) => [...current, { id: crypto.randomUUID(), number: current.length + 1, label, x, y, description }]);
+	};
+
+	const updatePin = (id: string, description: string) => {
+		setPins((current) => current.map((pin) => (pin.id === id ? { ...pin, description } : pin)));
+	};
+
+	const removePin = (id: string) => {
+		setPins((current) => current.filter((pin) => pin.id !== id).map((pin, index) => ({ ...pin, number: index + 1 })));
+	};
+
+	// Resolves every queued pin at once. Pins whose label matches a known
+	// image slot move that slot to a library photo not already showing
+	// elsewhere in the workshop, simulating "here's the regenerated version"
+	// the same honest way the rest of this prototype does. Pins with no
+	// matching slot (headline/kicker/subject/body clicks) have no
+	// regenerated-content library to draw from, so they're simply cleared
+	// rather than faking a text rewrite.
+	const runQueuedEdits = () => {
+		setImageOverrides((current) => {
+			const next = { ...current };
+			for (const pin of pins) {
+				const slot = LABEL_TO_SLOT[pin.label];
+				if (!slot) continue;
+				const usedImages = new Set((Object.keys(SLOT_META) as ImageSlotId[]).map((s) => resolveSlotImage(s, next)));
+				const alternative = IMAGE_LIBRARY.find((image) => !usedImages.has(image.src));
+				next[slot] = alternative ? alternative.src : IMAGE_LIBRARY[0].src;
+			}
+			return next;
+		});
+		setPins([]);
+	};
 
 	// Arriving at the canvas always surfaces the real Opal panel, continuing
 	// the brief/audience/angle conversation that already happened in Messages
@@ -73,42 +125,20 @@ export function CampaignWorkshopCanvas({
 		if (hasSeededOpal.current || !opalPanelControls) return;
 		hasSeededOpal.current = true;
 		opalPanelControls.seedChat(CARRIED_OVER_TRANSCRIPT);
-		setOpalActionCard(<CanvasReadyCard />);
 		return () => setOpalActionCard(null);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [opalPanelControls]);
 
+	// Keeps the pinned action card in sync with the pin queue — the
+	// completion announcement until a pin is placed, then the running queue
+	// list, mirroring the Figma "Queued Image Edits" panel.
+	useEffect(() => {
+		setOpalActionCard(pins.length === 0 ? <CanvasReadyCard /> : <QueuedEditsCard onRemove={removePin} onRunNow={runQueuedEdits} pins={pins} />);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [pins]);
+
 	const askOpal = () => {
 		opalPanelControls?.openPanel();
-	};
-
-	const queueEdit = (slot: ImageSlotId, description: string) => {
-		setQueuedEdits((current) => ({ ...current, [slot]: { description } }));
-	};
-
-	const removeQueuedEdit = (slot: ImageSlotId) => {
-		setQueuedEdits((current) => {
-			const next = { ...current };
-			delete next[slot];
-			return next;
-		});
-	};
-
-	// Resolves every queued edit at once: each affected slot moves to a
-	// library photo not already showing anywhere else in the workshop,
-	// simulating "here's the regenerated version" the same honest way the
-	// rest of this prototype does, then the queue clears.
-	const runQueuedEdits = () => {
-		setImageOverrides((current) => {
-			const next = { ...current };
-			for (const slot of Object.keys(queuedEdits) as ImageSlotId[]) {
-				const usedImages = new Set((Object.keys(SLOT_META) as ImageSlotId[]).map((s) => resolveSlotImage(s, next)));
-				const alternative = IMAGE_LIBRARY.find((image) => !usedImages.has(image.src));
-				next[slot] = alternative ? alternative.src : IMAGE_LIBRARY[0].src;
-			}
-			return next;
-		});
-		setQueuedEdits({});
 	};
 
 	const editText = (fieldId: string, value: string) => {
@@ -134,17 +164,22 @@ export function CampaignWorkshopCanvas({
 				<div className="cmp-workflow-canvas-column" style={{ flex: "1 1 656px", minHeight: 0, minWidth: 0 }}>
 					<CanvasStage
 						activeTab={tab}
+						commentMode={commentMode}
+						onAddPin={addPin}
 						onAskOpal={askOpal}
 						onClose={onClose}
 						onOpenWorkflow={() => setMode("workflow")}
+						onRemovePin={removePin}
 						onRunQueuedEdits={runQueuedEdits}
 						onTabChange={setTab}
+						onToggleCommentMode={() => setCommentMode((v) => !v)}
 						onToggleRationale={() => setShowRationale((v) => !v)}
-						queuedEditsCount={queuedEditsCount}
+						onUpdatePin={updatePin}
+						pins={pins}
 						showRationale={false}
 						showWorkflow
 					>
-						<SocialPosts imageOverrides={imageOverrides} onQueueEdit={queueEdit} onRemoveQueuedEdit={removeQueuedEdit} queuedEdits={queuedEdits} />
+						<SocialPosts imageOverrides={imageOverrides} />
 					</CanvasStage>
 				</div>
 				<WorkflowDrawer
@@ -161,13 +196,18 @@ export function CampaignWorkshopCanvas({
 	return (
 		<CanvasStage
 			activeTab={tab}
+			commentMode={commentMode}
+			onAddPin={addPin}
 			onAskOpal={askOpal}
 			onClose={onClose}
 			onOpenWorkflow={() => setMode("workflow")}
+			onRemovePin={removePin}
 			onRunQueuedEdits={runQueuedEdits}
 			onTabChange={setTab}
+			onToggleCommentMode={() => setCommentMode((v) => !v)}
 			onToggleRationale={() => setShowRationale((v) => !v)}
-			queuedEditsCount={queuedEditsCount}
+			onUpdatePin={updatePin}
+			pins={pins}
 			showRationale={showRationale}
 		>
 			{tab === "blog" && (
@@ -175,22 +215,16 @@ export function CampaignWorkshopCanvas({
 					buildStep={3}
 					imageOverrides={imageOverrides}
 					onEditText={editText}
-					onQueueEdit={queueEdit}
-					onRemoveQueuedEdit={removeQueuedEdit}
-					queuedEdits={queuedEdits}
 					showRationale={showRationale}
 					textOverrides={textOverrides}
 				/>
 			)}
-			{tab === "social" && <SocialPosts imageOverrides={imageOverrides} onQueueEdit={queueEdit} onRemoveQueuedEdit={removeQueuedEdit} queuedEdits={queuedEdits} />}
+			{tab === "social" && <SocialPosts imageOverrides={imageOverrides} />}
 			{tab === "email" && (
 				<EmailPreview
 					buildStep={3}
 					imageOverrides={imageOverrides}
 					onEditText={editText}
-					onQueueEdit={queueEdit}
-					onRemoveQueuedEdit={removeQueuedEdit}
-					queuedEdits={queuedEdits}
 					showRationale={showRationale}
 					textOverrides={textOverrides}
 				/>

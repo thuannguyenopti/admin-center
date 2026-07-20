@@ -6,6 +6,7 @@ import {
 	IconArrowRotateRight,
 	IconArrowsMaximize,
 	IconCode,
+	IconCommentPlus,
 	IconCopy,
 	IconEllipsisStroke,
 	IconEye,
@@ -24,22 +25,26 @@ import type { ContentTab } from "./CanvasStage";
 // than rendering a second, out-of-sync lookalike.
 export function Toolbar({
 	activeTab,
+	commentMode,
 	onAskOpal,
 	onClose,
 	onOpenWorkflow,
 	onRunQueuedEdits,
 	onTabChange,
+	onToggleCommentMode,
 	onToggleRationale,
 	queuedEditsCount,
 	showRationale,
 	showWorkflow,
 }: {
 	activeTab: ContentTab;
+	commentMode: boolean;
 	onAskOpal: () => void;
 	onClose: () => void;
 	onOpenWorkflow: () => void;
 	onRunQueuedEdits: () => void;
 	onTabChange: (tab: ContentTab) => void;
+	onToggleCommentMode: () => void;
 	onToggleRationale: () => void;
 	queuedEditsCount: number;
 	showRationale: boolean;
@@ -81,6 +86,9 @@ export function Toolbar({
 						Run Now ({queuedEditsCount})
 					</Button>
 				)}
+				<Tooltip content="Comment on anything">
+					<ToggleButton size="sm" appearance="subtle" pressed={commentMode} icon={<IconCommentPlus size={17} />} aria-label="Comment" onPressedChange={onToggleCommentMode} />
+				</Tooltip>
 				<Tooltip content="Ask Opal">
 					<Button appearance="subtle" size="sm" icon={<img alt="" src="/opal-orb.png" style={{ borderRadius: 4, height: 18, width: 18 }} />} aria-label="Ask Opal" onClick={onAskOpal} />
 				</Tooltip>
