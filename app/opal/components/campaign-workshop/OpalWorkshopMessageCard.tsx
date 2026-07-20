@@ -14,26 +14,29 @@ import type { ContentTab } from "./CanvasStage";
 // fullscreen and the conversation continues there, not in this thread.
 export type OpalWorkshopMessageId = "opal-brief" | "opal-audience" | "opal-angle";
 
+// Stride is participating in the marathon — this is a promotional task to
+// market that participation, not a generic "pick a persona" exercise, so the
+// options are grounded in who Stride would actually be talking to and why.
 const AUDIENCE_Q = {
 	id: "audience",
-	label: "Who is the audience?",
+	label: "Who is this promotional push speaking to?",
 	options: [
-		{ value: "runners", label: "Runners" },
-		{ value: "sponsors", label: "Sponsors" },
-		{ value: "fans", label: "General fans" },
-		{ value: "corporate", label: "Corporate partners" },
+		{ value: "runners", label: "Registered runners" },
+		{ value: "prospective", label: "Prospective runners" },
+		{ value: "community", label: "Stride customers & community" },
+		{ value: "spectators", label: "Local spectators & fans" },
 		{ value: "other", label: "Something else" },
 	],
 };
 
 const ANGLE_Q = {
 	id: "angle",
-	label: "What's the angle or key message?",
+	label: "What's the angle for this promotion?",
 	options: [
-		{ value: "recap", label: "Recap" },
-		{ value: "motivational", label: "Motivational Piece" },
-		{ value: "fundraising", label: "Fundraising push" },
-		{ value: "announcement", label: "Event Announcement" },
+		{ value: "motivational", label: "Motivational send-off" },
+		{ value: "sponsorship", label: "Sponsorship spotlight" },
+		{ value: "prep", label: "Race-week prep guide" },
+		{ value: "community", label: "Community celebration" },
 		{ value: "other", label: "Something else" },
 	],
 };
@@ -57,8 +60,8 @@ export function OpalWorkshopMessageCard({
 				<CampaignBriefOptions
 					onYes={() =>
 						onAdvance(
-							"Yes, create a brief",
-							"I'm putting together a campaign brief for the Boston Marathon April 2026. Who's the primary audience you're targeting for this campaign?",
+							"Yes, open the brief",
+							"Stride's participating in Boston Marathon 2027, so this is all about promoting that. Who's the primary audience for this push?",
 							"opal-audience",
 						)
 					}
@@ -69,12 +72,13 @@ export function OpalWorkshopMessageCard({
 			return (
 				<>
 					<AskQuestionsActionCard
-						title="Let's create your Boston Marathon content suite"
+						title="Let's shape Stride's Boston Marathon promotion"
 						questions={[AUDIENCE_Q]}
 						submitLabel="Continue"
-						onSubmit={(answers) =>
-							onAdvance(labelFor(AUDIENCE_Q, answers.audience), "Got it — runners it is! One more thing before I start generating.", "opal-angle")
-						}
+						onSubmit={(answers) => {
+							const audience = labelFor(AUDIENCE_Q, answers.audience);
+							onAdvance(audience, `Got it — ${audience.toLowerCase()} it is! One more thing before I start generating.`, "opal-angle");
+						}}
 					/>
 					<QuickActionRow onEditInCanvas={() => onOpenCanvas("blog", false)} />
 				</>

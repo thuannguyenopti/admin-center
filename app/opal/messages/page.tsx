@@ -640,12 +640,12 @@ const THREADS: Record<string, Message[]> = {
   opal: [
     {
       id: "1", from: "user",
-      text: "Create a campaign for the Boston Marathon in April 2026",
+      text: "What do we have set up for the Boston Marathon?",
     },
     {
       id: "2", from: "vau",
       senderName: "Opal", senderAvatar: "/opal-orb.png",
-      text: "To get started, I can create a campaign brief for this. Want me to go ahead?",
+      text: "Found it — you're running Boston Marathon 2027 (CPN-42), with one task already in motion: Boston Marathon blog post (TSK-2720). Want me to open the brief and get started on the content?",
     },
     {
       id: "opal-brief", from: "vau", type: "hitl",

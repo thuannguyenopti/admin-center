@@ -33,17 +33,20 @@ const LABEL_TO_SLOT: Record<string, ImageSlotId> = {
 
 const WORKFLOW_CHECK_IDS = ["blog", "email", "social"];
 
-// Carries over the brief/audience/angle conversation that already happened in
-// the Opal Messages thread (see OpalWorkshopMessageCard.tsx) into the real
-// panel, so arriving at the canvas continues that chat instead of resetting
-// to Opal's default empty-chat greeting.
+// Carries over the full lookup → brief → audience → angle conversation that
+// already happened in the Opal Messages thread (see OpalWorkshopMessageCard.tsx
+// and messages/page.tsx's seeded "opal" thread) into the real panel, so
+// arriving at the canvas continues that chat instead of resetting to Opal's
+// default empty-chat greeting. Mirror any copy changes there here too.
 const CARRIED_OVER_TRANSCRIPT: Array<{ role: "user" | "assistant"; content: string }> = [
-	{ role: "user", content: "Yes, create a brief" },
-	{ role: "assistant", content: "I'm putting together a campaign brief for the Boston Marathon April 2026. Who's the primary audience you're targeting for this campaign?" },
-	{ role: "user", content: "Runners" },
-	{ role: "assistant", content: "Got it — runners it is! One more thing before I start generating." },
-	{ role: "user", content: "Motivational Piece" },
-	{ role: "assistant", content: "I've finished generating your Boston Marathon 2026 campaign — blog post, social posts, and email are ready for your review." },
+	{ role: "user", content: "What do we have set up for the Boston Marathon?" },
+	{ role: "assistant", content: "Found it — you're running Boston Marathon 2027 (CPN-42), with one task already in motion: Boston Marathon blog post (TSK-2720). Want me to open the brief and get started on the content?" },
+	{ role: "user", content: "Yes, open the brief" },
+	{ role: "assistant", content: "Stride's participating in Boston Marathon 2027, so this is all about promoting that. Who's the primary audience for this push?" },
+	{ role: "user", content: "Registered runners" },
+	{ role: "assistant", content: "Got it — registered runners it is! One more thing before I start generating." },
+	{ role: "user", content: "Motivational send-off" },
+	{ role: "assistant", content: "I've finished generating your Boston Marathon campaign — blog post, social posts, and email are ready for your review." },
 ];
 
 // The canvas view opened from the "suite ready" message card — renders inline

@@ -12,7 +12,7 @@ export function CampaignBriefOptions({ onNo, onYes }: { onNo: () => void; onYes:
 	return (
 		<Box display="flex" gap="8" pt="8" flexWrap="wrap">
 			<Button appearance="primary" size="sm" onClick={onYes}>
-				Yes, create a brief
+				Yes, open the brief
 			</Button>
 			<Button appearance="subtle" size="sm" onClick={onNo} style={{ border: "1px solid var(--ax-colors-border-secondary)" }}>
 				No, something else
