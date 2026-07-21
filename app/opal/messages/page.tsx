@@ -97,7 +97,6 @@ import {
   IconTrashCan,
   IconSliders,
 } from "@optiaxiom/icons";
-import { IconSparkles } from "@optimizely/axiom-icons";
 
 const IconMarkEmailUnread = ({ size = 16 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" height={size} width={size} viewBox="0 -960 960 960" fill="currentColor">
@@ -2341,10 +2340,10 @@ function IMSidebar({
         {!collapsed && (
           <Box px="8" pb="4" display="flex" gap="6">
             {([
-              { key: "unread" as const, label: "Unreads", icon: <IconMarkEmailUnread size={14} />, active: unreadFilter, toggle: () => setUnreadFilter(v => !v) },
-              { key: "vt" as const,     label: "VTs",     icon: <IconSparkles size={14} />,          active: vtFilter,     toggle: () => setVtFilter(v => !v) },
+              { key: "unread" as const, label: "Unreads", active: unreadFilter, toggle: () => setUnreadFilter(v => !v) },
+              { key: "vt" as const,     label: "Virtual", active: vtFilter,     toggle: () => setVtFilter(v => !v) },
             ]).map(pill => (
-              <Box key={pill.key} display="inline-flex" alignItems="center" gap="6" px="10" py="4" rounded="full"
+              <Box key={pill.key} display="inline-flex" alignItems="center" px="10" py="4" rounded="full"
                 onClick={pill.toggle}
                 style={{
                   cursor: "pointer",
@@ -2352,7 +2351,6 @@ function IMSidebar({
                   background: pill.active ? "var(--ax-colors-bg-default-hovered)" : "var(--ax-colors-bg-default)",
                   userSelect: "none" as const,
                 }}>
-                <Box style={{ color: "var(--ax-colors-fg-secondary)", display: "flex", alignItems: "center" }}>{pill.icon}</Box>
                 <Text fontSize="sm" fontWeight="500" color="fg.default">{pill.label}</Text>
               </Box>
             ))}
@@ -2615,7 +2613,7 @@ function IMSidebar({
                 ))}
                 {s.id === "groups" && [...(extraGroups ?? []), ...GROUPS].filter(g => {
                     if (movedItems.includes(g.id) || leftConvos?.has(g.id)) return false;
-                    if (vtFilter) return false;
+                    if (vtFilter && !(GROUP_VAU_IDS[g.id]?.length)) return false;
                     if (unreadFilter || getSectionSettings("groups").view === "unread")
                       return (g.unread ?? 0) > 0 || !!manualUnreadConvos?.has(g.id);
                     return true;
