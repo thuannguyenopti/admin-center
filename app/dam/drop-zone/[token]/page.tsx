@@ -1,15 +1,33 @@
 "use client";
 
-import { Box, Field, Input, Textarea } from "@optiaxiom/react";
+import { Badge, Box, Field, Input, Textarea } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconCheck, IconFile, IconUpload, IconXmark } from "@optimizely/axiom-icons";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import StrideHeader from "@/app/site/StrideHeader";
 import { useDropZoneUpload } from "@/app/shared/hooks/useDropZoneUpload";
-import { DROP_ZONES } from "../data";
-import { addSubmission } from "../submissions";
+import { SUBMISSION_STATUS_BADGE } from "@/app/cmp/library/components/assets-review/DropZoneSubmissionCard";
+import { getDropZoneByToken, subscribeDropZones } from "../dropZones";
+import { addSubmission, getSubmissionsForZone, subscribeSubmissions } from "../submissions";
+
+const VISITOR_ID_KEY = "dropZoneVisitorId";
+
+/** Identifies "your" submissions on this unauthenticated public page — a
+ * random ID generated once per browser and persisted, not real auth. */
+function getOrCreateVisitorId(): string {
+	if (typeof window === "undefined") return "server";
+	try {
+		const existing = localStorage.getItem(VISITOR_ID_KEY);
+		if (existing) return existing;
+		const generated = crypto.randomUUID();
+		localStorage.setItem(VISITOR_ID_KEY, generated);
+		return generated;
+	} catch {
+		return "anonymous";
+	}
+}
 
 const PAGE_BG = "#F2F8FC";
 
@@ -30,13 +48,21 @@ function formatFileSize(bytes: number) {
 export default function DropZoneLandingPage() {
 	const params = useParams();
 	const token = params.token as string;
-	const link = DROP_ZONES.find((d) => d.token === token);
+	const link = useSyncExternalStore(subscribeDropZones, () => getDropZoneByToken(token), () => getDropZoneByToken(token));
 
 	const upload = useDropZoneUpload();
+	const uploadBoxRef = useRef<HTMLDivElement | null>(null);
 	const [submitted, setSubmitted] = useState(false);
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [notes, setNotes] = useState("");
+	const [visitorId] = useState(getOrCreateVisitorId);
+	const allSubmissionsForZone = useSyncExternalStore(
+		subscribeSubmissions,
+		() => getSubmissionsForZone(link?.id ?? ""),
+		() => getSubmissionsForZone(link?.id ?? ""),
+	);
+	const mySubmissions = allSubmissionsForZone.filter((submission) => submission.visitorId === visitorId);
 
 	if (!link || link.status === "expired") {
 		return (
@@ -89,8 +115,15 @@ export default function DropZoneLandingPage() {
 			submitterEmail: email.trim(),
 			files: upload.files.map((file) => ({ name: file.name, sizeMb: file.size / (1024 * 1024) })),
 			notes: notes.trim(),
+			visitorId,
 		});
 		setSubmitted(true);
+	}
+
+	function handleReupload() {
+		upload.reset();
+		uploadBoxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+		upload.triggerFileInput();
 	}
 
 	return (
@@ -117,8 +150,43 @@ export default function DropZoneLandingPage() {
 					</p>
 				</Box>
 
+				{/* Your submissions — visible on a return visit to this same link, so a
+				    rejected upload's reviewer comment shows up back where it was submitted. */}
+				{mySubmissions.length > 0 && (
+					<Box display="flex" flexDirection="column" gap="8" style={{ marginBottom: 28 }}>
+						<Text color="fg.tertiary" fontSize="sm" fontWeight="600">Your submissions</Text>
+						{mySubmissions.map((submission) => {
+							const badge = SUBMISSION_STATUS_BADGE[submission.status];
+							return (
+								<Box key={submission.id} bg="bg.default" border="1" borderColor="border.tertiary" display="flex" flexDirection="column" gap="8" p="16" rounded="lg">
+									<Box display="flex" alignItems="center" justifyContent="space-between" gap="8">
+										<Text color="fg.default" fontSize="sm" fontWeight="600" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+											{submission.files.map((file) => file.name).join(", ")}
+										</Text>
+										<Badge intent={badge.intent}>{badge.label}</Badge>
+									</Box>
+									<Text color="fg.tertiary" fontSize="sm">Submitted {submission.submittedAt}</Text>
+									{submission.status === "rejected" && (
+										<>
+											{submission.reviewerComment && (
+												<Text color="fg.default" fontSize="sm" style={{ background: "var(--ax-colors-bg-error-subtle)", borderRadius: 6, padding: "8px 10px" }}>
+													&ldquo;{submission.reviewerComment}&rdquo;
+												</Text>
+											)}
+											<Button appearance="subtle" size="sm" onClick={handleReupload} style={{ alignSelf: "flex-start" }}>
+												Re-upload
+											</Button>
+										</>
+									)}
+								</Box>
+							);
+						})}
+					</Box>
+				)}
+
 				{/* Upload surface */}
 				<Box
+					ref={uploadBoxRef}
 					onDragOver={upload.handleDragOver}
 					onDragLeave={upload.handleDragLeave}
 					onDrop={upload.handleDrop}

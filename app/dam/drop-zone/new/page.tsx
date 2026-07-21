@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DamBreadcrumb } from "../../components/DamBreadcrumb";
 import { getOpalBriefSuggestion, type OpalBriefSuggestion } from "../data";
+import { addDropZone } from "../dropZones";
 
 type Phase = "brief" | "review" | "created";
 
@@ -22,6 +23,8 @@ const BREADCRUMB = [
 export default function NewDropZonePage() {
 	const router = useRouter();
 	const [phase, setPhase] = useState<Phase>("brief");
+	const [creatorName, setCreatorName] = useState("");
+	const [creatorEmail, setCreatorEmail] = useState("");
 	const [brief, setBrief] = useState("");
 	const [suggestion, setSuggestion] = useState<OpalBriefSuggestion | null>(null);
 	const [campaignTag, setCampaignTag] = useState("");
@@ -41,7 +44,27 @@ export default function NewDropZonePage() {
 	}
 
 	const token = campaignTag.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-+|-+$)/g, "") || "campaign";
-	const url = `dam.optimizely.com/drop/${token}`;
+	// Real internal route, not a cosmetic domain — resolves correctly wherever this
+	// prototype is actually deployed (localhost, PR preview, or production), matching
+	// the same pattern used for the copy-link action in ../page.tsx.
+	const url = typeof window !== "undefined" ? `${window.location.origin}/dam/drop-zone/${token}` : `/dam/drop-zone/${token}`;
+
+	function createDropZone() {
+		if (!suggestion) return;
+		addDropZone({
+			token,
+			name: campaignTag,
+			brief,
+			campaign: campaignTag,
+			expiresAt,
+			allowedFileTypes: fileTypes,
+			maxFileSizeMb,
+			requiredFields: suggestion.requiredFields,
+			creatorName: creatorName.trim(),
+			creatorEmail: creatorEmail.trim(),
+		});
+		setPhase("created");
+	}
 
 	if (phase === "created") {
 		return (
@@ -62,7 +85,7 @@ export default function NewDropZonePage() {
 							size="sm"
 							icon={copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
 							onClick={() => {
-								navigator.clipboard?.writeText(`https://${url}`);
+								navigator.clipboard?.writeText(url);
 								setCopied(true);
 								setTimeout(() => setCopied(false), 1500);
 							}}
@@ -90,6 +113,19 @@ export default function NewDropZonePage() {
 						</Text>
 					</Box>
 
+					<Box display="flex" gap="16">
+						<Box style={{ flex: 1 }}>
+							<Field label="Your name" required>
+								<Input size="lg" value={creatorName} onChange={(e) => setCreatorName(e.target.value)} disabled={phase === "review"} />
+							</Field>
+						</Box>
+						<Box style={{ flex: 1 }}>
+							<Field label="Your email" required>
+								<Input size="lg" type="email" value={creatorEmail} onChange={(e) => setCreatorEmail(e.target.value)} disabled={phase === "review"} />
+							</Field>
+						</Box>
+					</Box>
+
 					<Field label="Campaign brief" required>
 						<Textarea
 							placeholder="e.g. Collecting finish-line and crowd-energy footage from the Autumn Series races for the highlights reel..."
@@ -106,7 +142,7 @@ export default function NewDropZonePage() {
 							appearance="primary"
 							size="md"
 							icon={<IconSparkles size={16} />}
-							disabled={!brief.trim()}
+							disabled={!brief.trim() || !creatorName.trim() || !creatorEmail.trim()}
 							onClick={analyzeBrief}
 							style={{ alignSelf: "flex-start" }}
 						>
@@ -174,7 +210,7 @@ export default function NewDropZonePage() {
 							</Field>
 
 							<Box display="flex" gap="8">
-								<Button appearance="primary" size="md" onClick={() => setPhase("created")}>
+								<Button appearance="primary" size="md" onClick={createDropZone}>
 									Create Drop Zone link
 								</Button>
 								<Button appearance="default" size="md" onClick={() => setPhase("brief")}>

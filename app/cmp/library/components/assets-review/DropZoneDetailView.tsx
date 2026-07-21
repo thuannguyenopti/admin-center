@@ -20,6 +20,7 @@ import { getAllSubmissions, getSubmissionsForZone, setSubmissionStatus, subscrib
 import { DropZoneFilterPanel, type DropZoneFilterSection } from "./DropZoneFilterPanel";
 import { DropZoneSubmissionCard, SUBMISSION_STATUS_BADGE } from "./DropZoneSubmissionCard";
 import { DropZoneUploadTile } from "./DropZoneUploadTile";
+import { RejectSubmissionDialog } from "./RejectSubmissionDialog";
 import { ShareLinkSettingsDialog } from "./ShareLinkSettingsDialog";
 
 type ViewMode = "cards" | "grid" | "table";
@@ -52,6 +53,7 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 	const [filterSelected, setFilterSelected] = useState<Set<string>>(new Set());
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [shareOpen, setShareOpen] = useState(false);
+	const [rejectTarget, setRejectTarget] = useState<{ ids: string[]; submitterName: string } | null>(null);
 
 	const submissions = getSubmissionsForZone(zone.id);
 
@@ -115,9 +117,20 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 		});
 	}
 
-	function bulkSetStatus(status: "approved" | "rejected") {
-		selected.forEach((id) => setSubmissionStatus(id, status));
+	function bulkApprove() {
+		selected.forEach((id) => setSubmissionStatus(id, "approved"));
 		setSelected(new Set());
+	}
+
+	function requestReject(ids: string[], submitterName: string) {
+		setRejectTarget({ ids, submitterName });
+	}
+
+	function confirmReject(reason: string) {
+		if (!rejectTarget) return;
+		rejectTarget.ids.forEach((id) => setSubmissionStatus(id, "rejected", reason));
+		setSelected(new Set());
+		setRejectTarget(null);
 	}
 
 	function copyLink() {
@@ -223,8 +236,8 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 							<Text color="fg.default" fontSize="sm" fontWeight="500">{selected.size} selected</Text>
 							<Box display="flex" gap="8">
 								<Button appearance="subtle" size="sm" onClick={() => setSelected(new Set())}>Clear</Button>
-								<Button appearance="subtle" size="sm" style={{ color: "var(--ax-colors-fg-error)" }} onClick={() => bulkSetStatus("rejected")}>Reject</Button>
-								<Button appearance="primary" size="sm" onClick={() => bulkSetStatus("approved")}>Approve</Button>
+								<Button appearance="subtle" size="sm" style={{ color: "var(--ax-colors-fg-error)" }} onClick={() => requestReject(Array.from(selected), selected.size === 1 ? sorted.find((s) => selected.has(s.id))?.submitterName ?? "this submitter" : "these submitters")}>Reject</Button>
+								<Button appearance="primary" size="sm" onClick={bulkApprove}>Approve</Button>
 							</Box>
 						</Box>
 					)}
@@ -260,7 +273,7 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 											<Td type="button">
 												{submission.status === "pending" && (
 													<Box display="flex" gap="4" justifyContent="flex-end">
-														<Button appearance="subtle" size="sm" style={{ color: "var(--ax-colors-fg-error)" }} onClick={() => setSubmissionStatus(submission.id, "rejected")}>Reject</Button>
+														<Button appearance="subtle" size="sm" style={{ color: "var(--ax-colors-fg-error)" }} onClick={() => requestReject([submission.id], submission.submitterName)}>Reject</Button>
 														<Button appearance="primary" size="sm" onClick={() => setSubmissionStatus(submission.id, "approved")}>Approve</Button>
 													</Box>
 												)}
@@ -279,7 +292,7 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 									selected={selected.has(submission.id)}
 									submission={submission}
 									onApprove={() => setSubmissionStatus(submission.id, "approved")}
-									onReject={() => setSubmissionStatus(submission.id, "rejected")}
+									onReject={() => requestReject([submission.id], submission.submitterName)}
 									onToggleSelect={() => toggleSelect(submission.id)}
 								/>
 							))}
@@ -289,6 +302,12 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 			</Box>
 
 			<ShareLinkSettingsDialog open={shareOpen} zone={zone} onClose={() => setShareOpen(false)} />
+			<RejectSubmissionDialog
+				open={!!rejectTarget}
+				submitterName={rejectTarget?.submitterName ?? ""}
+				onCancel={() => setRejectTarget(null)}
+				onConfirm={confirmReject}
+			/>
 		</Box>
 	);
 }
