@@ -39,7 +39,8 @@ export function AssetReviewActionsPanel({ item, onAction }: { item: LibraryItem;
 			requiresDraft: true,
 			draftDefault: rejectDraft,
 			draftLabel: "Rejection reason",
-			draftHint: "OPAL drafted this — edit before sending.",
+			draftEyebrow: "Rejecting",
+			draftIntent: "danger",
 		},
 		{
 			key: "changes",
@@ -49,7 +50,7 @@ export function AssetReviewActionsPanel({ item, onAction }: { item: LibraryItem;
 			requiresDraft: true,
 			draftDefault: changesDraft,
 			draftLabel: "Feedback to submitter",
-			draftHint: "OPAL drafted this — edit before sending.",
+			draftEyebrow: "Requesting changes on",
 		},
 	];
 
@@ -61,6 +62,8 @@ export function AssetReviewActionsPanel({ item, onAction }: { item: LibraryItem;
 	return (
 		<OpalAssessmentPanel
 			actions={actions}
+			assetImage={item.image}
+			assetName={item.title}
 			completedStates={completedStates}
 			eyebrow="OPAL Brand Review"
 			flags={flags}

@@ -2,15 +2,29 @@
 	flex: 1;
 	min-height: 0;
 	min-width: 0;
-	padding: 24px 32px;
+	padding: 32px 40px;
 }
 
 .compareGrid {
 	display: grid;
 	flex: 1;
-	gap: 24px;
+	gap: 32px;
 	grid-template-columns: 1fr 1fr;
 	min-height: 0;
+}
+
+.frame {
+	background: var(--ax-colors-bg-secondary);
+	border: 1px solid var(--ax-colors-border-secondary);
+	border-radius: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+	padding: 20px;
 }
 
 @media (max-width: 860px) {
