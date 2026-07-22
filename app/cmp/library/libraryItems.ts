@@ -348,6 +348,15 @@ export function addLibraryItem(item: LibraryItem) {
 	notify();
 }
 
+/** Mutates an existing item in place (e.g. clearing opalStatus/pendingVersion when a Review Queue decision is actually approved — see AssetFocusViewer.tsx and VersionReviewDialog.tsx). No-ops if the id isn't found. */
+export function updateLibraryItem(id: string, patch: Partial<LibraryItem>) {
+	const index = allLibraryItems.findIndex((item) => item.id === id);
+	if (index === -1) return;
+	allLibraryItems = allLibraryItems.map((item, i) => (i === index ? { ...item, ...patch } : item));
+	persist();
+	notify();
+}
+
 export function getAllLibraryItems(): LibraryItem[] {
 	return allLibraryItems;
 }

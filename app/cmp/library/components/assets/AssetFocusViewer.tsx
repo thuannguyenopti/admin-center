@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Box, Dialog, DialogContent } from "@optiaxiom/react";
 import { CURRENT_USER, recordDecision, type DecisionAction } from "../../auditTrail";
+import { updateLibraryItem } from "../../libraryItems";
 import { AssetFocusPanel } from "./AssetFocusPanel";
 import { AssetFocusStage } from "./AssetFocusStage";
 import { AssetFocusToolbar, stepZoom } from "./AssetFocusToolbar";
@@ -127,7 +128,7 @@ export function AssetFocusViewer({
 				</Box>
 			</Box>
 
-			<VersionReviewDialog item={item} open={reviewingVersion} onClose={() => setReviewingVersion(false)} />
+			<VersionReviewDialog item={item} open={reviewingVersion} onApproved={onClose} onClose={() => setReviewingVersion(false)} />
 
 			{needsOpalAction && (
 				<Dialog open={reviewingAssessment} onOpenChange={setReviewingAssessment}>
@@ -155,7 +156,9 @@ export function AssetFocusViewer({
 				onCancel={() => setShowOverrideDialog(false)}
 				onConfirm={(reason, folder) => {
 					recordDecision({ action: "overridden", actor: CURRENT_USER, itemId: item.id, itemTitle: item.title, note: `${reason} — filed to ${folder}` });
+					updateLibraryItem(item.id, { opalStatus: "cleared" });
 					setShowOverrideDialog(false);
+					onClose();
 				}}
 			/>
 		</>

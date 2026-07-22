@@ -8,6 +8,7 @@ import { FeedbackComposeView } from "@/app/dam/components/FeedbackComposeView";
 import { Text } from "@/app/components/Text";
 import type { VersionSubmission } from "@/app/dam/versions/data";
 import { CURRENT_USER, recordDecision, type DecisionAction } from "../../auditTrail";
+import { updateLibraryItem } from "../../libraryItems";
 import type { LibraryItem } from "../../page";
 import styles from "./VersionReviewDialog.module.css";
 
@@ -49,7 +50,18 @@ export function toVersionSubmission(item: LibraryItem): VersionSubmission | null
  * tasks, so each gets the dialog's full width rather than the compose step being
  * squeezed into ChangeSummaryPanel's narrow sidebar column.
  */
-export function VersionReviewDialog({ item, open, onClose }: { item: LibraryItem; open: boolean; onClose: () => void }) {
+export function VersionReviewDialog({
+	item,
+	open,
+	onClose,
+	onApproved,
+}: {
+	item: LibraryItem;
+	open: boolean;
+	onClose: () => void;
+	/** Fired right before onClose when the version is actually approved (not on reject/changes) — lets the caller close the whole asset focus view, since the approved item's opalStatus/pendingVersion just changed underneath its stale item prop. */
+	onApproved?: () => void;
+}) {
 	const submission = toVersionSubmission(item);
 	const [draftAction, setDraftAction] = useState<ActionKey | null>(null);
 	const [draftMsg, setDraftMsg] = useState("");
@@ -71,6 +83,10 @@ export function VersionReviewDialog({ item, open, onClose }: { item: LibraryItem
 			note: draftMsg,
 		});
 		setDraftAction(null);
+		if (draftAction === "approved") {
+			updateLibraryItem(item.id, { opalStatus: "cleared", pendingVersion: undefined });
+			onApproved?.();
+		}
 		onClose();
 	}
 
