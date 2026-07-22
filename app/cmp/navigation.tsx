@@ -1,3 +1,4 @@
+import { Box } from "@optiaxiom/react";
 import {
 	IconPlus,
 	IconHouse,
@@ -10,6 +11,25 @@ import {
 	IconGear,
 } from "@optiaxiom/icons";
 import IconResourceManagement from "@/app/cmp/assets/resource-management.svg";
+
+// Figma's Sidenav "Add" item is a plus glyph on a circular accent-green badge
+// (node 19270:7115, fill var(--colors/fg/accent/base, #abff44)) — there's no
+// matching semantic token in the currently-installed @optiaxiom/react theme
+// (grepped the compiled CSS for both the token name and this literal hex —
+// neither exists), so the exact Figma value is hardcoded here rather than
+// guessing at a token that might resolve to a different color.
+function CreateIcon() {
+	return (
+		<Box
+			alignItems="center"
+			display="flex"
+			justifyContent="center"
+			style={{ background: "#abff44", borderRadius: "999px", flexShrink: 0, height: 32, width: 32 }}
+		>
+			<IconPlus />
+		</Box>
+	);
+}
 
 // Order and icon set match Figma "Plan View (Master)" node 6507:17285 and the
 // Axiom Design System "Sidenav Products/CMP_LIVE" component (node 19270:7209):
@@ -30,7 +50,7 @@ import IconResourceManagement from "@/app/cmp/assets/resource-management.svg";
 export const cmpNav = [
 	{
 		label: "Create",
-		icon: <IconPlus />,
+		icon: <CreateIcon />,
 		isMenuTrigger: true,
 		menuOptions: [
 			{label: "Campaign", url: "/cmp/create/campaign"},
@@ -74,11 +94,15 @@ export const cmpNav = [
 		label: "Resource Management",
 		url: "/cmp/resource-management",
 		highlight: "/cmp/resource-management",
-		// @optiaxiom/icons components default to a 20px box via their own internal
-		// CSS class; a raw SVGR-imported file doesn't get that class, so it renders
-		// at whatever width/height are hardcoded in the source SVG (15x16 here) —
-		// explicit sizing keeps it visually consistent with the rest of the rail.
-		icon: <IconResourceManagement width={20} height={20} />,
+		// NavItem wraps every icon in its own <Icon> component, which applies a CSS
+		// class forcing `height: var(--ax-size-2xs)` (16px) + `width: auto`. For
+		// @optiaxiom/icons components that's overridden by the icon's own (more
+		// specific-order) 20px class, but a raw SVGR-imported file has no such
+		// class to compete with it — so plain width/height HTML attributes (which
+		// CSS always outranks) were silently overridden and had no visible effect.
+		// An inline `style` wins over any external stylesheet class, which is why
+		// this is set via style, not width/height props.
+		icon: <IconResourceManagement style={{ width: 20, height: 20 }} />,
 		hidePageHeader: true,
 	},
 	{
