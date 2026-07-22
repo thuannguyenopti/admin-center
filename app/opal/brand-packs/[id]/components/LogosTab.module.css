@@ -1,0 +1,253 @@
+.formLabel {
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.addRow {
+	display: grid;
+	gap: 8px;
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+
+/* Placement zones — neutral inline pills */
+.zoneChips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.zoneChip {
+	align-items: center;
+	background: var(--ax-colors-bg-secondary);
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: 999px;
+	display: inline-flex;
+	gap: 6px;
+	padding: 4px 6px 4px 12px;
+}
+
+.zoneChipDelete {
+	align-items: center;
+	background: var(--ax-colors-bg-default);
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: 999px;
+	color: var(--ax-colors-fg-secondary);
+	cursor: pointer;
+	display: inline-flex;
+	flex: 0 0 auto;
+	height: 20px;
+	justify-content: center;
+	padding: 0;
+	transition:
+		background 120ms ease,
+		color 120ms ease;
+	width: 20px;
+}
+
+.zoneChipDelete:hover,
+.zoneChipDelete:focus-visible {
+	background: var(--ax-colors-bg-secondary);
+	color: var(--ax-colors-fg-default);
+	outline: none;
+}
+
+/* Do not alter — full-width red rows */
+.alterChip {
+	align-items: center;
+	background: color-mix(in srgb, #f2d2d2 48%, var(--ax-colors-bg-secondary));
+	border: 1px solid color-mix(in srgb, #e5a3a3 50%, var(--ax-colors-border-tertiary));
+	border-radius: 10px;
+	display: flex;
+	gap: 8px;
+	justify-content: space-between;
+	padding: 10px 12px;
+}
+
+.alterChipDelete {
+	align-items: center;
+	background: transparent;
+	border: 0;
+	border-radius: 999px;
+	color: var(--ax-colors-fg-secondary);
+	cursor: pointer;
+	display: inline-flex;
+	flex: 0 0 auto;
+	height: 22px;
+	justify-content: center;
+	padding: 0;
+	transition:
+		background 120ms ease,
+		color 120ms ease;
+	width: 22px;
+}
+
+.alterChipDelete:hover,
+.alterChipDelete:focus-visible {
+	background: var(--ax-colors-bg-default);
+	color: var(--ax-colors-fg-default);
+	outline: none;
+}
+
+/* Add-row trigger (variants + devices) */
+.addTrigger {
+	align-items: center;
+	background: transparent;
+	border: 1px dashed var(--ax-colors-border-secondary);
+	border-radius: 10px;
+	color: var(--ax-colors-fg-secondary);
+	cursor: pointer;
+	display: flex;
+	font-size: 14px;
+	font-weight: 600;
+	gap: 8px;
+	justify-content: center;
+	padding: 12px;
+	transition:
+		border-color 120ms ease,
+		color 120ms ease;
+	width: 100%;
+}
+
+.addTrigger:hover,
+.addTrigger:focus-visible {
+	border-color: color-mix(in srgb, #abff44 60%, var(--ax-colors-border-secondary));
+	color: var(--ax-colors-fg-default);
+	outline: none;
+}
+
+.inlineForm {
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 16px;
+}
+
+.variantFormGrid {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.deviceFormGrid {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Shared row list for variants + devices */
+.rowList {
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: 10px;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.variantRow {
+	align-items: center;
+	background: var(--ax-colors-bg-default);
+	border-bottom: 1px solid var(--ax-colors-border-tertiary);
+	display: grid;
+	gap: 12px;
+	grid-template-columns: 48px minmax(0, 1fr) auto;
+	padding: 12px 14px;
+}
+
+.variantRow:last-child,
+.deviceRow:last-child {
+	border-bottom: 0;
+}
+
+.variantThumb {
+	align-items: center;
+	background: var(--ax-colors-bg-secondary);
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: 8px;
+	display: flex;
+	height: 40px;
+	justify-content: center;
+	overflow: hidden;
+	width: 48px;
+}
+
+.variantThumbDark {
+	background: #202320;
+}
+
+.variantThumbImage {
+	max-height: 28px;
+	max-width: 40px;
+	object-fit: contain;
+}
+
+.variantThumbDark .variantThumbImage {
+	filter: invert(1);
+}
+
+.variantThumbMonogram {
+	color: var(--ax-colors-fg-secondary);
+	font-size: 15px;
+	font-weight: 800;
+}
+
+.variantThumbDark .variantThumbMonogram {
+	color: #f9fcf8;
+}
+
+.deviceRow {
+	align-items: start;
+	background: var(--ax-colors-bg-default);
+	border-bottom: 1px solid var(--ax-colors-border-tertiary);
+	display: grid;
+	gap: 16px;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+	padding: 14px;
+}
+
+.deviceRestriction {
+	background: color-mix(in srgb, #f2d2d2 48%, var(--ax-colors-bg-secondary));
+	border: 1px solid color-mix(in srgb, #e5a3a3 50%, var(--ax-colors-border-tertiary));
+	border-radius: 8px;
+	color: var(--ax-colors-fg-default);
+	padding: 6px 10px;
+	width: fit-content;
+}
+
+.rowDelete {
+	align-items: center;
+	background: transparent;
+	border: 0;
+	border-radius: 999px;
+	color: var(--ax-colors-fg-tertiary);
+	cursor: pointer;
+	display: inline-flex;
+	flex: 0 0 auto;
+	height: 24px;
+	justify-content: center;
+	padding: 0;
+	transition:
+		background 120ms ease,
+		color 120ms ease;
+	width: 24px;
+}
+
+.rowDelete:hover,
+.rowDelete:focus-visible {
+	background: var(--ax-colors-bg-secondary);
+	color: var(--ax-colors-fg-default);
+	outline: none;
+}
+
+@media (max-width: 760px) {
+	.addRow,
+	.variantFormGrid,
+	.deviceFormGrid {
+		grid-template-columns: 1fr;
+	}
+
+	.deviceRow {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+}

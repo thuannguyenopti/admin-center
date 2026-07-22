@@ -11,8 +11,7 @@ import {
 	SearchInput,
 	Text,
 } from "@optiaxiom/react";
-import { IconAngleDown } from "@optiaxiom/icons";
-import { IconFilter } from "@optimizely/axiom-icons";
+import { IconAngleDown, IconFilter } from "@optiaxiom/icons";
 import { BrandPackCard, NewBrandPackCard } from "./BrandPackCard";
 import { BrandPackHero } from "./BrandPackHero";
 import { activePack, brandPacks } from "../data";
@@ -33,6 +32,7 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 	const router = useRouter();
 	const [search, setSearch] = useState("");
 	const [statusFilter, setStatusFilter] = useState<BrandPackStatus | "all">("all");
+	const [defaultPackId, setDefaultPackId] = useState<string | null>(null);
 
 	const nonActivePacks = useMemo(() => {
 		return brandPacks.filter((p) => p.status !== "active");
@@ -176,7 +176,7 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 						</Box>
 					</Box>
 
-					{/* Brand grid */}
+					{/* Pack grid */}
 					{filtered.length === 0 && search ? (
 						<Box
 							alignItems="center"
@@ -196,11 +196,16 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 					) : (
 						<Box
 							display="grid"
-							gap="20"
+							gap="16"
 							style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}
 						>
 							{filtered.map((pack) => (
-								<BrandPackCard key={pack.id} pack={pack} />
+								<BrandPackCard
+									key={pack.id}
+									pack={pack}
+									isDefault={defaultPackId === pack.id}
+									onSetDefault={() => setDefaultPackId(defaultPackId === pack.id ? null : pack.id)}
+								/>
 							))}
 							<NewBrandPackCard onClick={() => router.push("/opal/brand-packs/new/opal")} />
 						</Box>

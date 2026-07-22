@@ -1,0 +1,47 @@
+.avoidAddRow {
+	display: grid;
+	gap: 8px;
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.avoidChip {
+	align-items: center;
+	background: color-mix(in srgb, #f2d2d2 48%, var(--ax-colors-bg-secondary));
+	border: 1px solid color-mix(in srgb, #e5a3a3 50%, var(--ax-colors-border-tertiary));
+	border-radius: 10px;
+	display: flex;
+	gap: 8px;
+	justify-content: space-between;
+	padding: 10px 12px;
+}
+
+.avoidChipDelete {
+	align-items: center;
+	background: transparent;
+	border: 0;
+	border-radius: 999px;
+	color: var(--ax-colors-fg-secondary);
+	cursor: pointer;
+	display: inline-flex;
+	flex: 0 0 auto;
+	height: 22px;
+	justify-content: center;
+	padding: 0;
+	transition:
+		background 120ms ease,
+		color 120ms ease;
+	width: 22px;
+}
+
+.avoidChipDelete:hover,
+.avoidChipDelete:focus-visible {
+	background: var(--ax-colors-bg-default);
+	color: var(--ax-colors-fg-default);
+	outline: none;
+}
+
+@media (max-width: 760px) {
+	.avoidAddRow {
+		grid-template-columns: 1fr;
+	}
+}

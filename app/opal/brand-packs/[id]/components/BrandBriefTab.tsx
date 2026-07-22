@@ -26,6 +26,19 @@ import {
 } from "@optimizely/axiom-icons";
 import type {BrandPack, CmpOrgChannel, CmpPlatform} from "../../types";
 import {orgCmpChannels} from "../../data";
+import {getBrandInstructionText, getBrandTypographySummary, getToneOfVoice} from "../../adapters";
+import {
+	EditorDivider,
+	EditorField,
+	EditorFieldStack,
+	EditorGrid,
+	EditorHeader,
+	EditorPage,
+	EditorPanel,
+	EditorPills,
+	EditorPreview,
+	EditorTextValue,
+} from "./EditorPrimitives";
 
 type BrandBriefTabProps = {
 	pack: BrandPack;
@@ -48,6 +61,81 @@ function SectionCard({title, children}: {title: string; children: React.ReactNod
 				{title}
 			</Text>
 			{children}
+		</Box>
+	);
+}
+
+function BriefPreview({text}: {text: string}) {
+	return (
+		<Box display="flex" flexDirection="column" gap="10">
+			{text
+				.split("\n")
+				.filter((line) => line.trim().length > 0)
+				.map((line, index) => {
+					const trimmed = line.trim();
+					const clean = trimmed.replace(/^[-# ]+/, "").replace(/\*\*/g, "");
+
+					if (trimmed.startsWith("# ")) {
+						return (
+							<Text
+								key={`${line}-${index}`}
+								fontWeight="700"
+								style={{fontSize: 17, lineHeight: 1.25}}
+							>
+								{clean}
+							</Text>
+						);
+					}
+
+					if (trimmed.startsWith("## ")) {
+						return (
+							<Text
+								key={`${line}-${index}`}
+								color="fg.default"
+								fontWeight="700"
+								style={{
+									fontSize: 14,
+									lineHeight: 1.25,
+									marginTop: index === 0 ? 0 : 8,
+								}}
+							>
+								{clean}
+							</Text>
+						);
+					}
+
+					if (trimmed.startsWith("-")) {
+						return (
+							<Box
+								key={`${line}-${index}`}
+								alignItems="start"
+								display="grid"
+								gap="8"
+								style={{gridTemplateColumns: "6px minmax(0, 1fr)"}}
+							>
+								<Box
+									bg="bg.success"
+									rounded="full"
+									style={{height: 5, marginTop: 8, width: 5}}
+								/>
+								<Text color="fg.secondary" fontSize="sm" style={{lineHeight: 1.55}}>
+									{clean}
+								</Text>
+							</Box>
+						);
+					}
+
+					return (
+						<Text
+							key={`${line}-${index}`}
+							color="fg.secondary"
+							fontSize="sm"
+							style={{lineHeight: 1.6}}
+						>
+							{clean}
+						</Text>
+					);
+				})}
 		</Box>
 	);
 }
@@ -183,10 +271,10 @@ function ConnectionRow({
 					<PlatformIcon platform={conn.platform} size={13} />
 				</Box>
 				<Box display="flex" flexDirection="column" gap="2">
-					<Text fontWeight="500" style={{fontSize: 13}}>
+					<Text fontWeight="500" style={{fontSize: 14}}>
 						{conn.name}
 					</Text>
-					<Text color="fg.tertiary" style={{fontSize: 11}}>
+					<Text color="fg.tertiary" style={{fontSize: 12}}>
 						{typeLabel[conn.type] ?? conn.type}
 						{!conn.connected && " · Not connected in CMP"}
 					</Text>
@@ -200,9 +288,9 @@ function ConnectionRow({
 					style={{
 						alignItems: "center",
 						background: isApproved
-							? "var(--ax-colors-bg-success-subtle)"
+							? "var(--ax-colors-bg-accent-subtle)"
 							: "var(--ax-colors-bg-secondary)",
-						border: `1.5px solid ${isApproved ? "var(--ax-colors-border-success)" : "var(--ax-colors-border-default)"}`,
+						border: `1.5px solid ${isApproved ? "var(--ax-colors-border-accent)" : "var(--ax-colors-border-default)"}`,
 						borderRadius: 6,
 						cursor: conn.connected ? "pointer" : "default",
 						display: "flex",
@@ -212,11 +300,11 @@ function ConnectionRow({
 				>
 					{isApproved ? (
 						<>
-							<IconCheck size={11} style={{color: "var(--ax-colors-fg-success)"}} />
+							<IconCheck size={11} style={{color: "var(--ax-colors-fg-accent)"}} />
 							<span
 								style={{
-									color: "var(--ax-colors-fg-success)",
-									fontSize: 11,
+									color: "var(--ax-colors-fg-accent)",
+									fontSize: 12,
 									fontWeight: 600,
 								}}
 							>
@@ -227,7 +315,7 @@ function ConnectionRow({
 						<span
 							style={{
 								color: "var(--ax-colors-fg-tertiary)",
-								fontSize: 11,
+								fontSize: 12,
 								fontWeight: 500,
 							}}
 						>
@@ -239,13 +327,13 @@ function ConnectionRow({
 				<>
 					{isApproved ? (
 						<Box alignItems="center" display="flex" gap="4">
-							<IconCheck size={11} style={{color: "var(--ax-colors-fg-success)"}} />
-							<Text color="fg.success" style={{fontSize: 11, fontWeight: 600}}>
+							<IconCheck size={11} style={{color: "var(--ax-colors-fg-accent)"}} />
+							<Text color="fg.accent" style={{fontSize: 12, fontWeight: 600}}>
 								Approved
 							</Text>
 						</Box>
 					) : conn.connected ? (
-						<Text color="fg.tertiary" style={{fontSize: 11}}>
+						<Text color="fg.tertiary" style={{fontSize: 12}}>
 							Available
 						</Text>
 					) : (
@@ -254,7 +342,7 @@ function ConnectionRow({
 								size={11}
 								style={{color: "var(--ax-colors-fg-tertiary)"}}
 							/>
-							<Text color="fg.tertiary" style={{fontSize: 11}}>
+							<Text color="fg.tertiary" style={{fontSize: 12}}>
 								Not connected
 							</Text>
 						</Box>
@@ -313,8 +401,11 @@ function ChannelConnections({
 
 export function BrandBriefTab({pack}: BrandBriefTabProps) {
 	const [isEditing, setIsEditing] = useState(false);
-	const [briefText, setBriefText] = useState(pack.brandBrief);
+	const [briefText, setBriefText] = useState(getBrandInstructionText(pack));
+	const [isRegenerating, setIsRegenerating] = useState(false);
 	const [saved, setSaved] = useState(false);
+	const typography = getBrandTypographySummary(pack);
+	const tone = getToneOfVoice(pack);
 
 	// Channel expand state
 	const [expandedChannels, setExpandedChannels] = useState<Set<string>>(new Set());
@@ -338,6 +429,22 @@ export function BrandBriefTab({pack}: BrandBriefTabProps) {
 		setTimeout(() => setSaved(false), 2000);
 	};
 
+	const handleRegenerate = () => {
+		setIsRegenerating(true);
+		setIsEditing(false);
+		window.setTimeout(() => {
+			setBriefText(getBrandInstructionText(pack));
+			setIsRegenerating(false);
+			setSaved(true);
+			window.setTimeout(() => setSaved(false), 2000);
+		}, 450);
+	};
+
+	const handleManageOrgChannels = () => {
+		setIsEditingChannels(true);
+		setExpandedChannels(new Set(pack.channels));
+	};
+
 	const toggleApproval = (category: string, connId: string) => {
 		setChannelEdits((prev) => {
 			const current = prev[category] ?? [];
@@ -349,32 +456,22 @@ export function BrandBriefTab({pack}: BrandBriefTabProps) {
 	};
 
 	return (
-		<Box display="flex" flexDirection="column" gap="16" style={{maxWidth: 760}}>
-			{/* Brand Brief editor */}
-			<Box
-				bg="bg.default"
-				border="1"
-				borderColor="border.tertiary"
-				display="flex"
-				flexDirection="column"
-				gap="16"
-				p="20"
-				rounded="xl"
-				shadow="sm"
-			>
-				<Box alignItems="center" display="flex" justifyContent="space-between">
-					<Text fontWeight="600" style={{fontSize: 14}}>
-						Brand Brief
-					</Text>
-					<Box alignItems="center" display="flex" gap="8">
+		<EditorPage>
+			<EditorHeader
+				eyebrow="Brand Instruction"
+				title="AI-executable brand brief"
+				description="Editable structured guidance plus the generated instruction preview Opal uses before creating brand assets."
+				actions={
+					<>
 						{!isEditing && (
 							<Button
 								appearance="subtle"
 								size="sm"
 								icon={<IconSparkles />}
-								style={{color: "var(--ax-colors-fg-default)"}}
+								onClick={handleRegenerate}
+								style={{color: "var(--ax-colors-fg-accent)"}}
 							>
-								Regenerate with Opal
+								{isRegenerating ? "Regenerating..." : "Regenerate with Opal"}
 							</Button>
 						)}
 						{isEditing ? (
@@ -405,374 +502,296 @@ export function BrandBriefTab({pack}: BrandBriefTabProps) {
 								Edit
 							</Button>
 						)}
-					</Box>
-				</Box>
+					</>
+				}
+			/>
 
-				{isEditing ? (
-					<Textarea
-						value={briefText}
-						onChange={(e) => setBriefText(e.target.value)}
-						rows={8}
-						style={{lineHeight: 1.6}}
-					/>
-				) : (
-					<Text
-						color="fg.secondary"
-						fontSize="sm"
-						style={{lineHeight: 1.7, whiteSpace: "pre-wrap"}}
-					>
-						{briefText}
-					</Text>
-				)}
-			</Box>
-
-			{/* Tone keywords */}
-			<SectionCard title="Tone of Voice">
-				<Box display="flex" flexDirection="column" gap="12">
-					<Box display="flex" gap="8" style={{flexWrap: "wrap"}}>
-						{pack.toneKeywords.map((kw) => (
-							<Badge
-								key={kw}
-								intent="success"
-								variant="subtle"
-								style={{width: "fit-content", whiteSpace: "nowrap"}}
+			<EditorGrid
+				aside={
+					<Box display="flex" flexDirection="column" gap="16">
+						<EditorPanel
+							title="Instruction signals"
+							description="The main facts that feed the generated brief."
+						>
+							<EditorFieldStack>
+								<EditorField label="Tone">
+									<EditorPills items={tone.key_traits} />
+								</EditorField>
+								<EditorField label="Heading type">
+									<EditorTextValue>{typography.heading}</EditorTextValue>
+								</EditorField>
+								<EditorField label="Body type">
+									<EditorTextValue>{typography.body}</EditorTextValue>
+								</EditorField>
+								<EditorField label="Channels">
+									<EditorPills items={pack.channels} />
+								</EditorField>
+							</EditorFieldStack>
+						</EditorPanel>
+						<EditorPreview>
+							<Text color="fg.success" fontSize="xs" fontWeight="700">
+								Generation posture
+							</Text>
+							<Text
+								fontWeight="700"
+								style={{fontSize: 18, lineHeight: 1.25, marginTop: 8}}
 							>
-								{kw}
-							</Badge>
-						))}
+								Bold, energetic, direct.
+							</Text>
+							<Text
+								color="fg.secondary"
+								fontSize="sm"
+								style={{lineHeight: 1.5, marginTop: 8}}
+							>
+								Lead with the athlete outcome. Use sharp contrast, clean structure,
+								and approved brand marks only.
+							</Text>
+						</EditorPreview>
 					</Box>
-					<Box style={{height: 1, background: "var(--ax-colors-border-tertiary)"}} />
-					<Text color="fg.secondary" fontSize="sm">
-						These keywords guide Opal's language when generating content using this
-						brand pack. They influence word choice, sentence structure, and overall
-						communication style.
-					</Text>
-				</Box>
-			</SectionCard>
-
-			{/* Approved Channels — linked to org CMP connections */}
-			<Box
-				bg="bg.default"
-				border="1"
-				borderColor="border.tertiary"
-				display="flex"
-				flexDirection="column"
-				gap="0"
-				p="20"
-				rounded="xl"
-				shadow="sm"
+				}
 			>
-				{/* Section header */}
-				<Box
-					alignItems="start"
-					display="flex"
-					justifyContent="space-between"
-					style={{marginBottom: 16}}
-				>
-					<Box display="flex" flexDirection="column" gap="4">
-						<Text fontWeight="600" style={{fontSize: 14}}>
-							Approved Channels
-						</Text>
-						<Text color="fg.tertiary" style={{fontSize: 12}}>
-							Maps brand-pack channel types to your org's live CMP publishing
-							connections.
-						</Text>
-					</Box>
-					<Box alignItems="center" display="flex" gap="6">
-						{isEditingChannels ? (
-							<>
+				<Box display="flex" flexDirection="column" gap="16">
+					<EditorPanel
+						title="Brand brief"
+						description="Edit the source instruction or review the formatted preview."
+					>
+						{isEditing ? (
+							<Textarea
+								value={briefText}
+								onChange={(e) => setBriefText(e.target.value)}
+								rows={14}
+								style={{lineHeight: 1.6}}
+							/>
+						) : (
+							<BriefPreview text={briefText} />
+						)}
+					</EditorPanel>
+
+					<EditorPanel
+						title="Approved channels"
+						description="Maps brand channel types to your org's live CMP publishing connections."
+						actions={
+							isEditingChannels ? (
+								<>
+									<Button
+										appearance="subtle"
+										size="sm"
+										onClick={() => {
+											setIsEditingChannels(false);
+											setChannelEdits(pack.approvedChannelConnections ?? {});
+										}}
+									>
+										Cancel
+									</Button>
+									<Button
+										appearance="primary"
+										size="sm"
+										icon={<IconCheck />}
+										onClick={() => setIsEditingChannels(false)}
+									>
+										Save
+									</Button>
+								</>
+							) : (
 								<Button
 									appearance="subtle"
 									size="sm"
+									icon={<IconEdit />}
 									onClick={() => {
-										setIsEditingChannels(false);
-										setChannelEdits(pack.approvedChannelConnections ?? {});
+										setIsEditingChannels(true);
+										setExpandedChannels(new Set(pack.channels));
 									}}
 								>
-									Cancel
+									Edit
 								</Button>
-								<Button
-									appearance="primary"
-									size="sm"
-									icon={<IconCheck />}
-									onClick={() => setIsEditingChannels(false)}
-								>
-									Save
-								</Button>
-							</>
-						) : (
+							)
+						}
+					>
+						<Box display="flex" flexDirection="column" gap="0">
+							{pack.channels.map((category, idx) => {
+								const approvedIds =
+									(isEditingChannels
+										? channelEdits
+										: pack.approvedChannelConnections)?.[category] ?? [];
+								const cmpConnections = orgCmpChannels.filter(
+									(c) => c.channelCategory === category
+								);
+								const approvedCount = approvedIds.filter((id) =>
+									cmpConnections.some((c) => c.id === id)
+								).length;
+								const isExpanded = expandedChannels.has(category);
+								const hasCmpConnections = cmpConnections.length > 0;
+								const previewConns = cmpConnections
+									.filter((c) => approvedIds.includes(c.id))
+									.slice(0, 3);
+
+								return (
+									<Box key={category}>
+										{idx > 0 && <EditorDivider />}
+										<button
+											type="button"
+											onClick={() =>
+												hasCmpConnections && toggleChannel(category)
+											}
+											style={{
+												alignItems: "center",
+												background: "transparent",
+												border: 0,
+												cursor: hasCmpConnections ? "pointer" : "default",
+												display: "flex",
+												gap: 12,
+												justifyContent: "space-between",
+												padding: "12px 0",
+												textAlign: "left",
+												width: "100%",
+											}}
+										>
+											<Box alignItems="center" display="flex" gap="12">
+												<Box
+													alignItems="center"
+													bg="bg.secondary"
+													display="flex"
+													justifyContent="center"
+													rounded="md"
+													style={{flexShrink: 0, height: 32, width: 32}}
+												>
+													<CategoryIcon category={category} />
+												</Box>
+												<Box display="flex" flexDirection="column" gap="2">
+													<Text fontWeight="600" style={{fontSize: 14}}>
+														{category}
+													</Text>
+													<Text
+														color="fg.tertiary"
+														style={{fontSize: 12}}
+													>
+														{!hasCmpConnections
+															? "Managed outside CMP"
+															: approvedCount > 0
+																? `${approvedCount} connection${approvedCount !== 1 ? "s" : ""} approved`
+																: "No connections approved"}
+													</Text>
+												</Box>
+											</Box>
+
+											<Box alignItems="center" display="flex" gap="8">
+												{previewConns.length > 0 && (
+													<Box alignItems="center" display="flex" gap="4">
+														{previewConns.map((c) => (
+															<Box
+																key={c.id}
+																alignItems="center"
+																bg="bg.default"
+																display="flex"
+																justifyContent="center"
+																rounded="full"
+																style={{
+																	border: "1.5px solid var(--ax-colors-border-tertiary)",
+																	flexShrink: 0,
+																	height: 22,
+																	width: 22,
+																}}
+															>
+																<PlatformIcon
+																	platform={c.platform}
+																	size={11}
+																/>
+															</Box>
+														))}
+														{approvedCount > 3 && (
+															<Box
+																alignItems="center"
+																bg="bg.secondary"
+																display="flex"
+																justifyContent="center"
+																rounded="full"
+																style={{
+																	border: "1.5px solid var(--ax-colors-border-tertiary)",
+																	flexShrink: 0,
+																	height: 22,
+																	width: 22,
+																}}
+															>
+																<Text
+																	color="fg.tertiary"
+																	style={{
+																		fontSize: 12,
+																		fontWeight: 600,
+																	}}
+																>
+																	+{approvedCount - 3}
+																</Text>
+															</Box>
+														)}
+													</Box>
+												)}
+												{hasCmpConnections &&
+													(isExpanded ? (
+														<IconChevronDown
+															size={13}
+															style={{
+																color: "var(--ax-colors-fg-tertiary)",
+																flexShrink: 0,
+															}}
+														/>
+													) : (
+														<IconChevronRight
+															size={13}
+															style={{
+																color: "var(--ax-colors-fg-tertiary)",
+																flexShrink: 0,
+															}}
+														/>
+													))}
+											</Box>
+										</button>
+
+										{isExpanded && hasCmpConnections && (
+											<Box style={{marginBottom: 8}}>
+												<ChannelConnections
+													category={category}
+													approvedIds={approvedIds}
+													isEditing={isEditingChannels}
+													onToggle={(id) => toggleApproval(category, id)}
+												/>
+											</Box>
+										)}
+									</Box>
+								);
+							})}
+						</Box>
+
+						<EditorDivider />
+						<Box
+							alignItems="center"
+							display="flex"
+							gap="6"
+							justifyContent="space-between"
+						>
+							<Box alignItems="center" display="flex" gap="6">
+								<IconCircleInfo
+									size={12}
+									style={{color: "var(--ax-colors-fg-tertiary)", flexShrink: 0}}
+								/>
+								<Text color="fg.tertiary" style={{fontSize: 12}}>
+									Approved connections appear as publishing destinations in CMP
+									tasks using this brand.
+								</Text>
+							</Box>
 							<Button
 								appearance="subtle"
 								size="sm"
-								icon={<IconEdit />}
-								onClick={() => {
-									setIsEditingChannels(true);
-									setExpandedChannels(new Set(pack.channels));
-								}}
+								icon={<IconArrowUpRightFromSquare size={12} />}
+								iconPosition="end"
+								onClick={handleManageOrgChannels}
+								style={{flexShrink: 0}}
 							>
-								Edit
+								Manage org channels
 							</Button>
-						)}
-					</Box>
+						</Box>
+					</EditorPanel>
 				</Box>
-
-				{/* Channel rows */}
-				<Box display="flex" flexDirection="column" gap="0">
-					{pack.channels.map((category, idx) => {
-						const approvedIds =
-							(isEditingChannels ? channelEdits : pack.approvedChannelConnections)?.[
-								category
-							] ?? [];
-						const cmpConnections = orgCmpChannels.filter(
-							(c) => c.channelCategory === category
-						);
-						const approvedCount = approvedIds.filter((id) =>
-							cmpConnections.some((c) => c.id === id)
-						).length;
-						const isExpanded = expandedChannels.has(category);
-						const hasCmpConnections = cmpConnections.length > 0;
-
-						// Collect small platform icons to preview in collapsed state
-						const previewConns = cmpConnections
-							.filter((c) => approvedIds.includes(c.id))
-							.slice(0, 3);
-
-						return (
-							<Box key={category}>
-								{idx > 0 && (
-									<Box
-										style={{
-											background: "var(--ax-colors-border-tertiary)",
-											height: 1,
-										}}
-									/>
-								)}
-
-								{/* Category row — clickable header */}
-								<button
-									type="button"
-									onClick={() => hasCmpConnections && toggleChannel(category)}
-									style={{
-										alignItems: "center",
-										background: "transparent",
-										border: 0,
-										cursor: hasCmpConnections ? "pointer" : "default",
-										display: "flex",
-										gap: 12,
-										justifyContent: "space-between",
-										padding: "12px 0",
-										textAlign: "left",
-										width: "100%",
-									}}
-								>
-									{/* Left: icon + name + status */}
-									<Box alignItems="center" display="flex" gap="12">
-										<Box
-											alignItems="center"
-											bg="bg.secondary"
-											display="flex"
-											justifyContent="center"
-											rounded="md"
-											style={{flexShrink: 0, height: 32, width: 32}}
-										>
-											<CategoryIcon category={category} />
-										</Box>
-										<Box display="flex" flexDirection="column" gap="2">
-											<Text fontWeight="500" style={{fontSize: 14}}>
-												{category}
-											</Text>
-											<Text color="fg.tertiary" style={{fontSize: 12}}>
-												{!hasCmpConnections
-													? "Managed outside CMP"
-													: approvedCount > 0
-														? `${approvedCount} connection${approvedCount !== 1 ? "s" : ""} approved`
-														: "No connections approved"}
-											</Text>
-										</Box>
-									</Box>
-
-									{/* Right: connection dots + chevron */}
-									<Box alignItems="center" display="flex" gap="8">
-										{previewConns.length > 0 && (
-											<Box alignItems="center" display="flex" gap="4">
-												{previewConns.map((c) => (
-													<Box
-														key={c.id}
-														alignItems="center"
-														bg="bg.default"
-														display="flex"
-														justifyContent="center"
-														rounded="full"
-														style={{
-															border: "1.5px solid var(--ax-colors-border-tertiary)",
-															flexShrink: 0,
-															height: 22,
-															width: 22,
-														}}
-													>
-														<PlatformIcon
-															platform={c.platform}
-															size={11}
-														/>
-													</Box>
-												))}
-												{approvedCount > 3 && (
-													<Box
-														alignItems="center"
-														bg="bg.secondary"
-														display="flex"
-														justifyContent="center"
-														rounded="full"
-														style={{
-															border: "1.5px solid var(--ax-colors-border-tertiary)",
-															flexShrink: 0,
-															height: 22,
-															width: 22,
-														}}
-													>
-														<Text
-															color="fg.tertiary"
-															style={{fontSize: 10, fontWeight: 600}}
-														>
-															+{approvedCount - 3}
-														</Text>
-													</Box>
-												)}
-											</Box>
-										)}
-										{hasCmpConnections &&
-											(isExpanded ? (
-												<IconChevronDown
-													size={13}
-													style={{
-														color: "var(--ax-colors-fg-tertiary)",
-														flexShrink: 0,
-													}}
-												/>
-											) : (
-												<IconChevronRight
-													size={13}
-													style={{
-														color: "var(--ax-colors-fg-tertiary)",
-														flexShrink: 0,
-													}}
-												/>
-											))}
-									</Box>
-								</button>
-
-								{/* Expanded connections */}
-								{isExpanded && hasCmpConnections && (
-									<Box style={{marginBottom: 8}}>
-										<ChannelConnections
-											category={category}
-											approvedIds={approvedIds}
-											isEditing={isEditingChannels}
-											onToggle={(id) => toggleApproval(category, id)}
-										/>
-									</Box>
-								)}
-							</Box>
-						);
-					})}
-				</Box>
-
-				{/* Footer note */}
-				<Box
-					style={{
-						height: 1,
-						background: "var(--ax-colors-border-tertiary)",
-						marginBottom: 12,
-						marginTop: 4,
-					}}
-				/>
-				<Box alignItems="center" display="flex" gap="6" justifyContent="space-between">
-					<Box alignItems="center" display="flex" gap="6">
-						<IconCircleInfo
-							size={12}
-							style={{color: "var(--ax-colors-fg-tertiary)", flexShrink: 0}}
-						/>
-						<Text color="fg.tertiary" style={{fontSize: 12}}>
-							Approved connections appear as publishing destinations in CMP tasks
-							using this brand pack.
-						</Text>
-					</Box>
-					<Button
-						appearance="subtle"
-						size="sm"
-						icon={<IconArrowUpRightFromSquare size={12} />}
-						iconPosition="end"
-						style={{flexShrink: 0}}
-					>
-						Manage org channels
-					</Button>
-				</Box>
-			</Box>
-
-			{/* Typography guidance */}
-			<SectionCard title="Typography Guidance">
-				<Box display="flex" flexDirection="column" gap="16">
-					<Box display="flex" flexDirection="column" gap="4">
-						<Text
-							color="fg.tertiary"
-							fontSize="xs"
-							fontWeight="600"
-							style={{letterSpacing: "0.06em", textTransform: "uppercase"}}
-						>
-							Heading Font
-						</Text>
-						<Text fontWeight="700" style={{fontSize: 28, lineHeight: 1.1}}>
-							{pack.typography.heading}
-						</Text>
-						<Text color="fg.secondary" style={{fontSize: 13}}>
-							Use for all titles, section headers, and display copy
-						</Text>
-					</Box>
-
-					<Box style={{height: 1, background: "var(--ax-colors-border-tertiary)"}} />
-
-					<Box display="flex" flexDirection="column" gap="4">
-						<Text
-							color="fg.tertiary"
-							fontSize="xs"
-							fontWeight="600"
-							style={{letterSpacing: "0.06em", textTransform: "uppercase"}}
-						>
-							Body Font
-						</Text>
-						<Text fontWeight="400" style={{fontSize: 15, lineHeight: 1.6}}>
-							The quick brown fox jumps over the lazy dog.
-						</Text>
-						<Text color="fg.secondary" fontSize="xs">
-							{pack.typography.body} · 15–16px recommended for body copy
-						</Text>
-					</Box>
-
-					{pack.typography.mono && (
-						<>
-							<Box
-								style={{height: 1, background: "var(--ax-colors-border-tertiary)"}}
-							/>
-							<Box display="flex" flexDirection="column" gap="4">
-								<Text
-									color="fg.tertiary"
-									fontSize="xs"
-									fontWeight="600"
-									style={{letterSpacing: "0.06em", textTransform: "uppercase"}}
-								>
-									Monospace
-								</Text>
-								<Text style={{fontFamily: "monospace", fontSize: 13}}>
-									const brand = "optimizely";
-								</Text>
-								<Text color="fg.secondary" fontSize="xs">
-									{pack.typography.mono} · For code and technical content
-								</Text>
-							</Box>
-						</>
-					)}
-				</Box>
-			</SectionCard>
-		</Box>
+			</EditorGrid>
+		</EditorPage>
 	);
 }

@@ -1,0 +1,222 @@
+.addRow {
+	display: grid;
+	gap: 8px;
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+
+/* Neutral pills (recurring language, brand values, approved descriptors) */
+.pillWrap {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.neutralChip {
+	align-items: center;
+	background: var(--ax-colors-bg-secondary);
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: 999px;
+	display: inline-flex;
+	gap: 6px;
+	padding: 4px 6px 4px 12px;
+}
+
+.positiveChip {
+	background: color-mix(in srgb, #abff44 16%, var(--ax-colors-bg-secondary));
+	border-color: color-mix(in srgb, #abff44 40%, var(--ax-colors-border-tertiary));
+}
+
+.pillDelete {
+	align-items: center;
+	background: var(--ax-colors-bg-default);
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: 999px;
+	color: var(--ax-colors-fg-secondary);
+	cursor: pointer;
+	display: inline-flex;
+	flex: 0 0 auto;
+	height: 20px;
+	justify-content: center;
+	padding: 0;
+	transition:
+		background 120ms ease,
+		color 120ms ease;
+	width: 20px;
+}
+
+.pillDelete:hover,
+.pillDelete:focus-visible {
+	background: var(--ax-colors-bg-secondary);
+	color: var(--ax-colors-fg-default);
+	outline: none;
+}
+
+/* Full-width do / dont cards */
+.cardStack {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.card {
+	align-items: flex-start;
+	border: 1px solid transparent;
+	border-radius: 10px;
+	display: flex;
+	gap: 8px;
+	padding: 10px 12px;
+}
+
+.doCard {
+	background: color-mix(in srgb, #abff44 16%, var(--ax-colors-bg-secondary));
+	border-color: color-mix(in srgb, #abff44 40%, var(--ax-colors-border-tertiary));
+}
+
+.dontCard {
+	background: color-mix(in srgb, #f2d2d2 48%, var(--ax-colors-bg-secondary));
+	border-color: color-mix(in srgb, #e5a3a3 50%, var(--ax-colors-border-tertiary));
+}
+
+.cardIcon {
+	align-items: center;
+	display: inline-flex;
+	flex: 0 0 auto;
+	height: 20px;
+}
+
+.doCard .cardIcon {
+	color: var(--ax-colors-fg-success);
+}
+
+.dontCard .cardIcon {
+	color: var(--ax-colors-fg-warning);
+}
+
+.cardText {
+	flex: 1 1 auto;
+	font-size: 14px;
+	line-height: 1.45;
+	min-width: 0;
+}
+
+.cardDelete {
+	align-items: center;
+	background: transparent;
+	border: 0;
+	border-radius: 999px;
+	color: var(--ax-colors-fg-secondary);
+	cursor: pointer;
+	display: inline-flex;
+	flex: 0 0 auto;
+	height: 20px;
+	justify-content: center;
+	padding: 0;
+	transition:
+		background 120ms ease,
+		color 120ms ease;
+	width: 20px;
+}
+
+.cardDelete:hover,
+.cardDelete:focus-visible {
+	background: var(--ax-colors-bg-default);
+	color: var(--ax-colors-fg-default);
+	outline: none;
+}
+
+/* Preferred terms add-row */
+.addTrigger {
+	align-items: center;
+	background: transparent;
+	border: 1px dashed var(--ax-colors-border-secondary);
+	border-radius: 10px;
+	color: var(--ax-colors-fg-secondary);
+	cursor: pointer;
+	display: flex;
+	font-size: 14px;
+	font-weight: 600;
+	gap: 8px;
+	justify-content: center;
+	padding: 12px;
+	transition:
+		border-color 120ms ease,
+		color 120ms ease;
+	width: 100%;
+}
+
+.addTrigger:hover,
+.addTrigger:focus-visible {
+	border-color: color-mix(in srgb, #abff44 60%, var(--ax-colors-border-secondary));
+	color: var(--ax-colors-fg-default);
+	outline: none;
+}
+
+.termForm {
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 16px;
+}
+
+.termGrid {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.termColLabel {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.termList {
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: 10px;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.termRow {
+	align-items: center;
+	background: var(--ax-colors-bg-default);
+	border-bottom: 1px solid var(--ax-colors-border-tertiary);
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+	padding: 12px 14px;
+}
+
+.termRow:last-child {
+	border-bottom: 0;
+}
+
+.termAvoid {
+	color: var(--ax-colors-fg-warning);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: line-through;
+}
+
+.termUse {
+	color: var(--ax-colors-fg-success);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.termContext {
+	color: var(--ax-colors-fg-tertiary);
+	font-size: 13px;
+}
+
+@media (max-width: 760px) {
+	.addRow,
+	.termGrid,
+	.termRow {
+		grid-template-columns: 1fr;
+	}
+}

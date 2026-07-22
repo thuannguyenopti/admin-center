@@ -1,8 +1,8 @@
 "use client";
 
-import {useState} from "react";
-import {useRouter} from "next/navigation";
-import {Box, Button, Text} from "@optiaxiom/react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Box, Button, Text } from "@optiaxiom/react";
 import {
 	IconArrowLeft,
 	IconArrowRight,
@@ -10,65 +10,51 @@ import {
 	IconPlus,
 	IconXmark,
 } from "@optimizely/axiom-icons";
-import {BrandPackPageHeader} from "../../components/BrandPackPageHeader";
+import { BrandPackPageHeader } from "../../components/BrandPackPageHeader";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type Step = "basics" | "colors" | "typography" | "tone" | "channels";
 
-const STEPS: Array<{id: Step; label: string; description: string}> = [
-	{id: "basics", label: "Basics", description: "Name and purpose"},
-	{id: "colors", label: "Colors", description: "Brand palette"},
-	{id: "typography", label: "Typography", description: "Fonts & scale"},
-	{id: "tone", label: "Tone of Voice", description: "Writing style"},
-	{id: "channels", label: "Channels", description: "Where you publish"},
+const STEPS: Array<{ id: Step; label: string; description: string }> = [
+	{ id: "basics", label: "Basics", description: "Name and purpose" },
+	{ id: "colors", label: "Colors", description: "Brand palette" },
+	{ id: "typography", label: "Typography", description: "Fonts & scale" },
+	{ id: "tone", label: "Tone of Voice", description: "Writing style" },
+	{ id: "channels", label: "Channels", description: "Where you publish" },
 ];
 
 const TONE_KEYWORDS = [
-	"Bold",
-	"Playful",
-	"Professional",
-	"Approachable",
-	"Authoritative",
-	"Warm",
-	"Innovative",
-	"Trustworthy",
-	"Energetic",
-	"Minimal",
-	"Friendly",
-	"Sophisticated",
-	"Direct",
-	"Empathetic",
-	"Witty",
+	"Bold", "Playful", "Professional", "Approachable", "Authoritative",
+	"Warm", "Innovative", "Trustworthy", "Energetic", "Minimal",
+	"Friendly", "Sophisticated", "Direct", "Empathetic", "Witty",
 ];
 
-const CHANNEL_OPTIONS = ["Email", "Social", "Paid", "Blog", "Video", "Print", "Events", "Web"];
+const CHANNEL_OPTIONS = [
+	"Email", "Social", "Paid", "Blog", "Video", "Print", "Events", "Web",
+];
 
 const COLOR_ROLES = [
-	{role: "primary", label: "Primary"},
-	{role: "secondary", label: "Secondary"},
-	{role: "accent", label: "Accent"},
-	{role: "neutral", label: "Neutral"},
-	{role: "background", label: "Background"},
-	{role: "text", label: "Text"},
+	{ role: "primary", label: "Primary" },
+	{ role: "secondary", label: "Secondary" },
+	{ role: "accent", label: "Accent" },
+	{ role: "neutral", label: "Neutral" },
+	{ role: "extended", label: "Extended" },
+	{ role: "do_not_use", label: "Do not use" },
 ] as const;
 
 const BRAND_PACKS_HOME = "/opal/context?tab=brand";
 
 // ── Stepper ──────────────────────────────────────────────────────────────────
 
-function Stepper({current, steps}: {current: Step; steps: typeof STEPS}) {
+function Stepper({ current, steps }: { current: Step; steps: typeof STEPS }) {
 	const currentIdx = steps.findIndex((s) => s.id === current);
 	return (
 		<Box
 			alignItems="center"
 			display="flex"
 			gap="0"
-			style={{
-				borderBottom: "1px solid var(--ax-colors-border-tertiary)",
-				flexShrink: 0,
-				padding: "0 32px",
-			}}
+			style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", flexShrink: 0, padding: "0 32px" }}
 		>
 			{steps.map((s, i) => {
 				const isDone = i < currentIdx;
@@ -92,23 +78,17 @@ function Stepper({current, steps}: {current: Step; steps: typeof STEPS}) {
 							rounded="full"
 							style={{
 								background: isDone
-									? "var(--ax-colors-fg-default)"
+									? "var(--ax-colors-bg-accent)"
 									: isActive
-										? "var(--ax-colors-bg-default)"
-										: "var(--ax-colors-bg-secondary)",
-								border: isActive
-									? "1.5px solid var(--ax-colors-border-default)"
-									: "none",
+									? "var(--ax-colors-bg-default)"
+									: "var(--ax-colors-bg-secondary)",
+								border: isActive ? "1.5px solid var(--ax-colors-border-default)" : "none",
 								flexShrink: 0,
 								fontSize: 11,
 								fontWeight: 600,
 								height: 22,
 								width: 22,
-								color: isDone
-									? "var(--ax-colors-fg-default-inverse)"
-									: isActive
-										? "var(--ax-colors-fg-default)"
-										: "var(--ax-colors-fg-tertiary)",
+								color: isDone ? "var(--ax-colors-fg-default-inverse)" : isActive ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
 							}}
 						>
 							{isDone ? <IconCheck size={11} /> : i + 1}
@@ -117,11 +97,7 @@ function Stepper({current, steps}: {current: Step; steps: typeof STEPS}) {
 							<Text
 								fontWeight={isActive ? "600" : "400"}
 								style={{
-									color: isActive
-										? "var(--ax-colors-fg-default)"
-										: isDone
-											? "var(--ax-colors-fg-default)"
-											: "var(--ax-colors-fg-tertiary)",
+									color: isActive ? "var(--ax-colors-fg-default)" : isDone ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
 									fontSize: 13,
 								}}
 							>
@@ -137,15 +113,7 @@ function Stepper({current, steps}: {current: Step; steps: typeof STEPS}) {
 
 // ── Section wrapper ───────────────────────────────────────────────────────────
 
-function Section({
-	title,
-	description,
-	children,
-}: {
-	title: string;
-	description?: string;
-	children: React.ReactNode;
-}) {
+function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
 	return (
 		<Box
 			bg="bg.default"
@@ -159,16 +127,10 @@ function Section({
 			shadow="sm"
 		>
 			<Box display="flex" flexDirection="column" gap="4">
-				<Text fontWeight="600" style={{fontSize: 15}}>
-					{title}
-				</Text>
-				{description && (
-					<Text color="fg.secondary" fontSize="sm">
-						{description}
-					</Text>
-				)}
+				<Text fontWeight="600" style={{ fontSize: 15 }}>{title}</Text>
+				{description && <Text color="fg.secondary" fontSize="sm">{description}</Text>}
 			</Box>
-			<Box style={{height: 1, background: "var(--ax-colors-border-tertiary)"}} />
+			<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)" }} />
 			{children}
 		</Box>
 	);
@@ -205,7 +167,7 @@ function ColorRow({
 	return (
 		<Box alignItems="center" display="flex" gap="12">
 			{/* Color swatch (clickable native color input) */}
-			<label style={{cursor: "pointer", flexShrink: 0}}>
+			<label style={{ cursor: "pointer", flexShrink: 0 }}>
 				<Box
 					rounded="md"
 					style={{
@@ -219,7 +181,7 @@ function ColorRow({
 					type="color"
 					value={hex || "#cccccc"}
 					onChange={(e) => onChange("hex", e.target.value)}
-					style={{display: "none"}}
+					style={{ display: "none" }}
 				/>
 			</label>
 
@@ -228,13 +190,9 @@ function ColorRow({
 				value={hex}
 				onChange={(e) => onChange("hex", e.target.value)}
 				placeholder="#000000"
-				style={{...inputStyle, width: 100}}
-				onFocus={(e) => {
-					e.currentTarget.style.borderColor = "var(--ax-colors-border-focus)";
-				}}
-				onBlur={(e) => {
-					e.currentTarget.style.borderColor = "var(--ax-colors-border-default)";
-				}}
+				style={{ ...inputStyle, width: 100 }}
+				onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)"; }}
+				onBlur={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-default)"; }}
 			/>
 
 			{/* Name */}
@@ -242,21 +200,18 @@ function ColorRow({
 				value={name}
 				onChange={(e) => onChange("name", e.target.value)}
 				placeholder={`${label} color name`}
-				style={{...inputStyle, flex: 1}}
-				onFocus={(e) => {
-					e.currentTarget.style.borderColor = "var(--ax-colors-border-focus)";
-				}}
-				onBlur={(e) => {
-					e.currentTarget.style.borderColor = "var(--ax-colors-border-default)";
-				}}
+				style={{ ...inputStyle, flex: 1 }}
+				onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)"; }}
+				onBlur={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-default)"; }}
 			/>
 
 			{/* Role badge */}
-			<Box bg="bg.secondary" rounded="full" style={{flexShrink: 0, padding: "2px 10px"}}>
-				<Text
-					color="fg.tertiary"
-					style={{fontSize: 11, fontWeight: 600, textTransform: "capitalize"}}
-				>
+			<Box
+				bg="bg.secondary"
+				rounded="full"
+				style={{ flexShrink: 0, padding: "2px 10px" }}
+			>
+				<Text color="fg.tertiary" style={{ fontSize: 11, fontWeight: 600, textTransform: "capitalize" }}>
 					{label}
 				</Text>
 			</Box>
@@ -299,7 +254,7 @@ export default function BrandPackManualPage() {
 
 	// Colors
 	const [colors, setColors] = useState(
-		COLOR_ROLES.map((r) => ({role: r.role, label: r.label, hex: "", name: ""}))
+		COLOR_ROLES.map((r) => ({ role: r.role, label: r.label, hex: "", name: "" }))
 	);
 
 	// Typography
@@ -328,7 +283,7 @@ export default function BrandPackManualPage() {
 	}
 
 	function updateColor(idx: number, field: "hex" | "name", val: string) {
-		setColors((prev) => prev.map((c, i) => (i === idx ? {...c, [field]: val} : c)));
+		setColors((prev) => prev.map((c, i) => (i === idx ? { ...c, [field]: val } : c)));
 	}
 
 	function toggleTone(kw: string) {
@@ -364,7 +319,9 @@ export default function BrandPackManualPage() {
 
 	return (
 		<Box display="flex" flexDirection="column" h="full" overflow="hidden">
-			<Box style={{flexShrink: 0, padding: "32px 32px 16px"}}>
+			<Box
+				style={{ flexShrink: 0, padding: "32px 32px 16px" }}
+			>
 				<BrandPackPageHeader
 					onBack={() => router.push(BRAND_PACKS_HOME)}
 					title="New Brand"
@@ -376,66 +333,35 @@ export default function BrandPackManualPage() {
 			<Stepper current={step} steps={STEPS} />
 
 			{/* Content */}
-			<Box style={{flex: 1, overflowY: "auto", padding: "32px 24px 80px"}}>
-				<Box
-					display="flex"
-					flexDirection="column"
-					gap="16"
-					style={{margin: "0 auto", maxWidth: 600}}
-				>
+			<Box style={{ flex: 1, overflowY: "auto", padding: "32px 24px 80px" }}>
+				<Box display="flex" flexDirection="column" gap="16" style={{ margin: "0 auto", maxWidth: 600 }}>
+
 					{/* BASICS */}
 					{step === "basics" && (
-						<Section
-							title="Brand Basics"
-							description="Give your brand a name and a short description."
-						>
+						<Section title="Brand Basics" description="Give your brand a name and a short description.">
 							<Box display="flex" flexDirection="column" gap="16">
 								<Box display="flex" flexDirection="column" gap="6">
-									<Text fontWeight="500" style={{fontSize: 13}}>
-										Pack name
-									</Text>
+									<Text fontWeight="500" style={{ fontSize: 13 }}>Brand name</Text>
 									<input
 										value={packName}
 										onChange={(e) => setPackName(e.target.value)}
 										placeholder="e.g. Acme Core Brand"
 										style={inputStyle}
 										autoFocus
-										onFocus={(e) => {
-											e.currentTarget.style.borderColor =
-												"var(--ax-colors-border-focus)";
-										}}
-										onBlur={(e) => {
-											e.currentTarget.style.borderColor =
-												"var(--ax-colors-border-default)";
-										}}
+										onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)"; }}
+										onBlur={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-default)"; }}
 									/>
 								</Box>
 								<Box display="flex" flexDirection="column" gap="6">
-									<Text fontWeight="500" style={{fontSize: 13}}>
-										Description{" "}
-										<span
-											style={{
-												color: "var(--ax-colors-fg-tertiary)",
-												fontWeight: 400,
-											}}
-										>
-											(optional)
-										</span>
-									</Text>
+									<Text fontWeight="500" style={{ fontSize: 13 }}>Description <span style={{ color: "var(--ax-colors-fg-tertiary)", fontWeight: 400 }}>(optional)</span></Text>
 									<textarea
 										value={description}
 										onChange={(e) => setDescription(e.target.value)}
-										placeholder="Describe the purpose of this brand pack…"
+										placeholder="Describe the purpose of this brand…"
 										rows={3}
-										style={{...inputStyle, resize: "vertical"}}
-										onFocus={(e) => {
-											e.currentTarget.style.borderColor =
-												"var(--ax-colors-border-focus)";
-										}}
-										onBlur={(e) => {
-											e.currentTarget.style.borderColor =
-												"var(--ax-colors-border-default)";
-										}}
+										style={{ ...inputStyle, resize: "vertical" }}
+										onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)"; }}
+										onBlur={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-default)"; }}
 									/>
 								</Box>
 							</Box>
@@ -444,10 +370,7 @@ export default function BrandPackManualPage() {
 
 					{/* COLORS */}
 					{step === "colors" && (
-						<Section
-							title="Brand Colors"
-							description="Define your palette. Click a swatch to pick a color."
-						>
+						<Section title="Brand Colors" description="Define your palette. Click a swatch to pick a color.">
 							<Box display="flex" flexDirection="column" gap="12">
 								{colors.map((c, i) => (
 									<ColorRow
@@ -465,61 +388,25 @@ export default function BrandPackManualPage() {
 
 					{/* TYPOGRAPHY */}
 					{step === "typography" && (
-						<Section
-							title="Typography"
-							description="Choose the fonts Opal uses in generated content."
-						>
+						<Section title="Typography" description="Choose the fonts Opal uses in generated content.">
 							<Box display="flex" flexDirection="column" gap="16">
 								{[
-									{
-										label: "Heading font",
-										hint: "Used for titles and display copy",
-										value: headingFont,
-										set: setHeadingFont,
-										placeholder: "e.g. Inter, Playfair Display",
-									},
-									{
-										label: "Body font",
-										hint: "Used for paragraphs and body copy",
-										value: bodyFont,
-										set: setBodyFont,
-										placeholder: "e.g. Inter, Georgia",
-									},
-									{
-										label: "Monospace font",
-										hint: "Optional — for code and technical content",
-										value: monoFont,
-										set: setMonoFont,
-										placeholder: "e.g. JetBrains Mono",
-									},
+									{ label: "Heading font", hint: "Used for titles and display copy", value: headingFont, set: setHeadingFont, placeholder: "e.g. Inter, Playfair Display" },
+									{ label: "Body font", hint: "Used for paragraphs and body copy", value: bodyFont, set: setBodyFont, placeholder: "e.g. Inter, Georgia" },
+									{ label: "Monospace font", hint: "Optional — for code and technical content", value: monoFont, set: setMonoFont, placeholder: "e.g. JetBrains Mono" },
 								].map((f) => (
-									<Box
-										key={f.label}
-										display="flex"
-										flexDirection="column"
-										gap="6"
-									>
+									<Box key={f.label} display="flex" flexDirection="column" gap="6">
 										<Box display="flex" flexDirection="column" gap="2">
-											<Text fontWeight="500" style={{fontSize: 13}}>
-												{f.label}
-											</Text>
-											<Text color="fg.tertiary" fontSize="xs">
-												{f.hint}
-											</Text>
+											<Text fontWeight="500" style={{ fontSize: 13 }}>{f.label}</Text>
+											<Text color="fg.tertiary" fontSize="xs">{f.hint}</Text>
 										</Box>
 										<input
 											value={f.value}
 											onChange={(e) => f.set(e.target.value)}
 											placeholder={f.placeholder}
 											style={inputStyle}
-											onFocus={(e) => {
-												e.currentTarget.style.borderColor =
-													"var(--ax-colors-border-focus)";
-											}}
-											onBlur={(e) => {
-												e.currentTarget.style.borderColor =
-													"var(--ax-colors-border-default)";
-											}}
+											onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)"; }}
+											onBlur={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-default)"; }}
 										/>
 									</Box>
 								))}
@@ -529,12 +416,9 @@ export default function BrandPackManualPage() {
 
 					{/* TONE */}
 					{step === "tone" && (
-						<Section
-							title="Tone of Voice"
-							description="Select keywords that guide how Opal writes copy for this brand."
-						>
+						<Section title="Tone of Voice" description="Select keywords that guide how Opal writes copy for this brand.">
 							<Box display="flex" flexDirection="column" gap="16">
-								<Box display="flex" gap="8" style={{flexWrap: "wrap"}}>
+								<Box display="flex" gap="8" style={{ flexWrap: "wrap" }}>
 									{TONE_KEYWORDS.map((kw) => {
 										const active = selectedTone.has(kw);
 										return (
@@ -543,14 +427,10 @@ export default function BrandPackManualPage() {
 												type="button"
 												onClick={() => toggleTone(kw)}
 												style={{
-													background: active
-														? "var(--ax-colors-bg-default-pressed)"
-														: "var(--ax-colors-bg-secondary)",
-													border: `1.5px solid ${active ? "var(--ax-colors-border-default)" : "var(--ax-colors-border-tertiary)"}`,
+													background: active ? "var(--ax-colors-bg-accent)" : "var(--ax-colors-bg-secondary)",
+													border: `1.5px solid ${active ? "var(--ax-colors-border-accent)" : "var(--ax-colors-border-tertiary)"}`,
 													borderRadius: 999,
-													color: active
-														? "var(--ax-colors-fg-default)"
-														: "var(--ax-colors-fg-default)",
+													color: active ? "var(--ax-colors-fg-default-inverse)" : "var(--ax-colors-fg-default)",
 													cursor: "pointer",
 													fontSize: 13,
 													fontWeight: active ? 600 : 400,
@@ -565,68 +445,38 @@ export default function BrandPackManualPage() {
 								</Box>
 
 								<Box display="flex" flexDirection="column" gap="6">
-									<Text fontWeight="500" style={{fontSize: 13}}>
-										Custom keywords
-									</Text>
+									<Text fontWeight="500" style={{ fontSize: 13 }}>Custom keywords</Text>
 									<input
 										value={customTone}
 										onChange={(e) => setCustomTone(e.target.value)}
 										placeholder="Add your own, separated by commas"
 										style={inputStyle}
-										onFocus={(e) => {
-											e.currentTarget.style.borderColor =
-												"var(--ax-colors-border-focus)";
-										}}
-										onBlur={(e) => {
-											e.currentTarget.style.borderColor =
-												"var(--ax-colors-border-default)";
-										}}
+										onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)"; }}
+										onBlur={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-default)"; }}
 									/>
 								</Box>
 
 								{selectedTone.size > 0 && (
 									<Box display="flex" flexDirection="column" gap="8">
-										<Text
-											color="fg.tertiary"
-											fontSize="xs"
-											fontWeight="600"
-											style={{
-												letterSpacing: "0.06em",
-												textTransform: "uppercase",
-											}}
-										>
+										<Text color="fg.tertiary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.06em", textTransform: "uppercase" }}>
 											Selected ({selectedTone.size})
 										</Text>
-										<Box display="flex" gap="6" style={{flexWrap: "wrap"}}>
+										<Box display="flex" gap="6" style={{ flexWrap: "wrap" }}>
 											{Array.from(selectedTone).map((kw) => (
 												<Box
 													key={kw}
 													alignItems="center"
-													bg="bg.default.pressed"
+													bg="bg.accent.subtle"
 													display="inline-flex"
 													gap="6"
 													rounded="full"
-													style={{padding: "4px 10px 4px 12px"}}
+													style={{ padding: "4px 10px 4px 12px" }}
 												>
-													<Text
-														color="fg.default"
-														fontWeight="500"
-														style={{fontSize: 12}}
-													>
-														{kw}
-													</Text>
+													<Text color="fg.accent" fontWeight="500" style={{ fontSize: 12 }}>{kw}</Text>
 													<button
 														type="button"
 														onClick={() => toggleTone(kw)}
-														style={{
-															alignItems: "center",
-															background: "transparent",
-															border: 0,
-															color: "var(--ax-colors-fg-default)",
-															cursor: "pointer",
-															display: "flex",
-															padding: 0,
-														}}
+														style={{ alignItems: "center", background: "transparent", border: 0, color: "var(--ax-colors-fg-accent)", cursor: "pointer", display: "flex", padding: 0 }}
 													>
 														<IconXmark size={10} />
 													</button>
@@ -641,11 +491,8 @@ export default function BrandPackManualPage() {
 
 					{/* CHANNELS */}
 					{step === "channels" && (
-						<Section
-							title="Channels"
-							description="Which channels does this brand publish to? Opal generates appropriately-sized templates for each."
-						>
-							<Box display="grid" gap="10" style={{gridTemplateColumns: "1fr 1fr"}}>
+						<Section title="Channels" description="Which channels does this brand publish to? Opal generates appropriately-sized templates for each.">
+							<Box display="grid" gap="10" style={{ gridTemplateColumns: "1fr 1fr" }}>
 								{CHANNEL_OPTIONS.map((ch) => {
 									const active = selectedChannels.has(ch);
 									return (
@@ -655,10 +502,8 @@ export default function BrandPackManualPage() {
 											onClick={() => toggleChannel(ch)}
 											style={{
 												alignItems: "center",
-												background: active
-													? "var(--ax-colors-bg-default-pressed)"
-													: "var(--ax-colors-bg-secondary)",
-												border: `1.5px solid ${active ? "var(--ax-colors-border-default)" : "var(--ax-colors-border-tertiary)"}`,
+												background: active ? "var(--ax-colors-bg-accent-subtle)" : "var(--ax-colors-bg-secondary)",
+												border: `1.5px solid ${active ? "var(--ax-colors-border-accent)" : "var(--ax-colors-border-tertiary)"}`,
 												borderRadius: 10,
 												cursor: "pointer",
 												display: "flex",
@@ -674,28 +519,16 @@ export default function BrandPackManualPage() {
 												justifyContent="center"
 												rounded="full"
 												style={{
-													background: active
-														? "var(--ax-colors-bg-default-pressed)"
-														: "var(--ax-colors-bg-default)",
-													border: `1.5px solid ${active ? "var(--ax-colors-border-default)" : "var(--ax-colors-border-default)"}`,
+													background: active ? "var(--ax-colors-bg-accent)" : "var(--ax-colors-bg-default)",
+													border: `1.5px solid ${active ? "var(--ax-colors-border-accent)" : "var(--ax-colors-border-default)"}`,
 													flexShrink: 0,
 													height: 20,
 													width: 20,
 												}}
 											>
-												{active && (
-													<IconCheck
-														size={10}
-														style={{
-															color: "var(--ax-colors-fg-default-inverse)",
-														}}
-													/>
-												)}
+												{active && <IconCheck size={10} style={{ color: "var(--ax-colors-fg-default-inverse)" }} />}
 											</Box>
-											<Text
-												fontWeight={active ? "600" : "400"}
-												style={{fontSize: 14}}
-											>
+											<Text fontWeight={active ? "600" : "400"} style={{ fontSize: 14 }}>
 												{ch}
 											</Text>
 										</button>
@@ -705,8 +538,7 @@ export default function BrandPackManualPage() {
 
 							{selectedChannels.size > 0 && (
 								<Text color="fg.secondary" fontSize="sm">
-									{selectedChannels.size} channel
-									{selectedChannels.size !== 1 ? "s" : ""} selected
+									{selectedChannels.size} channel{selectedChannels.size !== 1 ? "s" : ""} selected
 								</Text>
 							)}
 						</Section>
@@ -746,8 +578,8 @@ export default function BrandPackManualPage() {
 									s.id === step
 										? "var(--ax-colors-fg-default)"
 										: i < stepIdx
-											? "var(--ax-colors-fg-secondary)"
-											: "var(--ax-colors-border-default)",
+										? "var(--ax-colors-fg-accent)"
+										: "var(--ax-colors-border-default)",
 								height: 6,
 								transition: "all 0.2s ease",
 								width: s.id === step ? 20 : 6,
@@ -764,7 +596,7 @@ export default function BrandPackManualPage() {
 					onClick={goNext}
 					disabled={step === "basics" && !packName.trim()}
 				>
-					{isLast ? "Create Pack" : "Continue"}
+					{isLast ? "Create Brand" : "Continue"}
 				</Button>
 			</Box>
 		</Box>

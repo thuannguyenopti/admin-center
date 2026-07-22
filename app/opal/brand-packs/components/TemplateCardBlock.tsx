@@ -8,8 +8,11 @@
  * via getAdaptiveBlockComponent("template_card").
  */
 
-import { registerAdaptiveBlock, type AdaptiveBlockComponentProps } from "@/app/components/ai/AdaptiveBlockRegistry";
-import { Box, Text } from "@optiaxiom/react";
+import {
+	registerAdaptiveBlock,
+	type AdaptiveBlockComponentProps,
+} from "@/app/components/ai/AdaptiveBlockRegistry";
+import {Box, Text} from "@optiaxiom/react";
 
 type TemplateCardMeta = {
 	template: {
@@ -22,8 +25,8 @@ type TemplateCardMeta = {
 	};
 };
 
-function TemplateCardBlock({ metadata }: AdaptiveBlockComponentProps) {
-	const { template } = metadata as unknown as TemplateCardMeta;
+function TemplateCardBlock({metadata}: AdaptiveBlockComponentProps) {
+	const {template} = metadata as unknown as TemplateCardMeta;
 
 	return (
 		<Box
@@ -51,12 +54,12 @@ function TemplateCardBlock({ metadata }: AdaptiveBlockComponentProps) {
 				<img
 					src={template.thumb}
 					alt={template.name}
-					style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+					style={{width: "100%", height: "100%", objectFit: "cover", display: "block"}}
 				/>
 			</Box>
 
 			{/* Info */}
-			<Box display="flex" flexDirection="column" gap="2" style={{ minWidth: 0 }}>
+			<Box display="flex" flexDirection="column" gap="2" style={{minWidth: 0}}>
 				<Text
 					fontWeight="600"
 					style={{
@@ -71,7 +74,7 @@ function TemplateCardBlock({ metadata }: AdaptiveBlockComponentProps) {
 				</Text>
 				<Text
 					style={{
-						fontSize: 11,
+						fontSize: 12,
 						color: "var(--ax-colors-fg-tertiary)",
 						overflow: "hidden",
 						textOverflow: "ellipsis",
@@ -85,14 +88,17 @@ function TemplateCardBlock({ metadata }: AdaptiveBlockComponentProps) {
 					alignItems="center"
 					gap="4"
 					style={{
-						background: "linear-gradient(135deg, #ABFF44 0%, #00C9A7 60%, #2979FF 100%)",
+						background:
+							"linear-gradient(135deg, #ABFF44 0%, #00C9A7 60%, #2979FF 100%)",
 						borderRadius: 999,
 						padding: "1px 8px",
 						marginTop: 2,
 						width: "fit-content",
 					}}
 				>
-					<Text style={{ fontSize: 10, fontWeight: 700, color: "#1a2e1a", letterSpacing: "0.03em" }}>
+					<Text
+						style={{fontSize: 12, fontWeight: 700, color: "#1a2e1a", letterSpacing: 0}}
+					>
 						TEMPLATE SELECTED
 					</Text>
 				</Box>
@@ -104,4 +110,4 @@ function TemplateCardBlock({ metadata }: AdaptiveBlockComponentProps) {
 // Register at module load time — runs once when this file is imported
 registerAdaptiveBlock("template_card", TemplateCardBlock);
 
-export { TemplateCardBlock };
+export {TemplateCardBlock};

@@ -2,16 +2,25 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-import {Box, Button, Text} from "@optiaxiom/react";
-import {IconEllipsisStroke as IconEllipsis, IconPaintRoller} from "@optimizely/axiom-icons";
+import {
+	Box,
+	Button,
+	Menu,
+	MenuContent,
+	MenuTrigger,
+	Text,
+} from "@optiaxiom/react";
+import {IconEllipsisStroke as IconEllipsis, IconPaintRoller, IconStar} from "@optiaxiom/icons";
 import {StatusBadge} from "./StatusBadge";
 import type {BrandPack} from "../types";
 
 type BrandPackCardProps = {
+	isDefault?: boolean;
+	onSetDefault?: () => void;
 	pack: BrandPack;
 };
 
-export function BrandPackCard({pack}: BrandPackCardProps) {
+export function BrandPackCard({isDefault = false, onSetDefault, pack}: BrandPackCardProps) {
 	const router = useRouter();
 	const [hovered, setHovered] = useState(false);
 
@@ -26,7 +35,7 @@ export function BrandPackCard({pack}: BrandPackCardProps) {
 		<Box
 			bg="bg.default"
 			border="1"
-			borderColor="border.tertiary"
+			borderColor={isDefault ? "border.accent" : "border.tertiary"}
 			display="flex"
 			flexDirection="column"
 			overflow="hidden"
@@ -42,9 +51,9 @@ export function BrandPackCard({pack}: BrandPackCardProps) {
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 		>
-			{/* Image — square, matching app/cmp/library's asset-card aesthetic */}
+			{/* Image — single, clean, fixed height */}
 			{heroThumb ? (
-				<Box overflow="hidden" style={{aspectRatio: "1", flexShrink: 0}}>
+				<Box overflow="hidden" style={{height: 160, flexShrink: 0, position: "relative"}}>
 					<img
 						alt={heroThumb.name}
 						src={heroThumb.thumb}
@@ -56,6 +65,28 @@ export function BrandPackCard({pack}: BrandPackCardProps) {
 							objectPosition: "center top",
 						}}
 					/>
+					{isDefault && (
+						<Box
+							alignItems="center"
+							display="flex"
+							gap="4"
+							style={{
+								position: "absolute",
+								top: 8,
+								left: 8,
+								background: "var(--ax-colors-fg-default)",
+								color: "var(--ax-colors-bg-default)",
+								borderRadius: 999,
+								padding: "3px 8px",
+								fontSize: 12,
+								fontWeight: 600,
+								letterSpacing: 0,
+							}}
+						>
+							<IconStar size={10} />
+							Default
+						</Box>
+					)}
 				</Box>
 			) : (
 				<Box
@@ -63,9 +94,31 @@ export function BrandPackCard({pack}: BrandPackCardProps) {
 					bg="bg.secondary"
 					display="flex"
 					justifyContent="center"
-					style={{aspectRatio: "1", flexShrink: 0}}
+					style={{height: 160, flexShrink: 0, position: "relative"}}
 				>
 					<IconPaintRoller style={{color: "var(--ax-colors-fg-tertiary)"}} />
+					{isDefault && (
+						<Box
+							alignItems="center"
+							display="flex"
+							gap="4"
+							style={{
+								position: "absolute",
+								top: 8,
+								left: 8,
+								background: "var(--ax-colors-fg-default)",
+								color: "var(--ax-colors-bg-default)",
+								borderRadius: 999,
+								padding: "3px 8px",
+								fontSize: 12,
+								fontWeight: 600,
+								letterSpacing: 0,
+							}}
+						>
+							<IconStar size={10} />
+							Default
+						</Box>
+					)}
 				</Box>
 			)}
 
@@ -87,15 +140,33 @@ export function BrandPackCard({pack}: BrandPackCardProps) {
 						{pack.name}
 					</Text>
 					<StatusBadge status={pack.status} />
-					<Button
-						appearance="subtle"
-						aria-label={`More actions for ${pack.name}`}
-						icon={<IconEllipsis />}
-						onClick={(e) => e.stopPropagation()}
-						size="sm"
-						style={{flexShrink: 0}}
-						title={`More actions for ${pack.name}`}
-					/>
+					<Menu
+						options={[
+							{
+								label: isDefault ? "Remove as default" : "Set as default",
+								execute: () => onSetDefault?.(),
+							},
+							{
+								label: "Duplicate",
+								group: { label: "", hidden: true, separator: true },
+							},
+							{
+								label: isArchived ? "Restore" : "Archive",
+							},
+						]}
+					>
+						<MenuTrigger asChild>
+							<Button
+								appearance="subtle"
+								aria-label={`More actions for ${pack.name}`}
+								icon={<IconEllipsis />}
+								onClick={(e) => e.stopPropagation()}
+								size="sm"
+								style={{flexShrink: 0}}
+							/>
+						</MenuTrigger>
+						<MenuContent align="end" onClick={(e) => e.stopPropagation()} />
+					</Menu>
 				</Box>
 
 				{/* Template count + date — light, not bold */}
@@ -133,15 +204,20 @@ export function NewBrandPackCard({onClick}: {onClick: () => void}) {
 
 	return (
 		<Box
+			alignItems="center"
 			border="1"
 			borderColor="border.tertiary"
 			display="flex"
 			flexDirection="column"
-			overflow="hidden"
+			gap="12"
+			justifyContent="center"
 			rounded="xl"
 			shadow={hovered ? "sm" : undefined}
 			style={{
+				borderStyle: "dashed",
 				cursor: "pointer",
+				minHeight: 240,
+				padding: "32px 24px",
 				transform: hovered ? "translateY(-2px)" : "none",
 				transition: "box-shadow 0.18s ease, transform 0.18s ease",
 			}}
@@ -149,39 +225,27 @@ export function NewBrandPackCard({onClick}: {onClick: () => void}) {
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 		>
-			{/* Square dashed tile — matches the real cards' image proportions so the grid stays aligned */}
 			<Box
 				alignItems="center"
+				bg={hovered ? "bg.accent.subtle" : "bg.secondary"}
 				display="flex"
 				justifyContent="center"
+				rounded="xl"
 				style={{
-					aspectRatio: "1",
-					borderBottom: "1px dashed var(--ax-colors-border-tertiary)",
-					flexShrink: 0,
+					height: 44,
+					width: 44,
+					transition: "background 0.18s ease",
 				}}
 			>
-				<Box
-					alignItems="center"
-					bg={hovered ? "bg.default.hovered" : "bg.secondary"}
-					display="flex"
-					justifyContent="center"
-					rounded="xl"
+				<IconPaintRoller
 					style={{
-						height: 44,
-						width: 44,
-						transition: "background 0.18s ease",
+						color: hovered
+							? "var(--ax-colors-fg-accent)"
+							: "var(--ax-colors-fg-secondary)",
 					}}
-				>
-					<IconPaintRoller
-						style={{
-							color: hovered
-								? "var(--ax-colors-fg-default)"
-								: "var(--ax-colors-fg-secondary)",
-						}}
-					/>
-				</Box>
+				/>
 			</Box>
-			<Box alignItems="center" display="flex" flexDirection="column" gap="4" p="16" style={{textAlign: "center"}}>
+			<Box display="flex" flexDirection="column" gap="4" style={{textAlign: "center"}}>
 				<Text fontWeight="600" style={{fontSize: 14}}>
 					New Brand
 				</Text>

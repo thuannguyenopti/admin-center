@@ -23,8 +23,19 @@ import { IconCheck, IconChevronDown, IconFolder, IconUpload } from "@optiaxiom/i
 import styles from "./TypographyTab.module.css";
 
 type AddTypefaceDialogProps = {
+	onAddTypeface?: (typeface: AddedTypefacePayload) => void;
 	onOpenChange: (open: boolean) => void;
 	open: boolean;
+};
+
+export type AddedTypefacePayload = {
+	category: "Primary" | "Secondary" | "Mono" | "Display" | "System";
+	family: string;
+	meta: string;
+	role: string;
+	source: "library" | "upload" | "web" | "custom";
+	styles: number;
+	weight: number;
 };
 
 type TypefaceSource = "adobe" | "google" | "upload" | "library";
@@ -256,6 +267,22 @@ const ROLE_OPTIONS = [
 	{ label: "Display", value: "display" },
 ];
 
+const ROLE_CATEGORY: Record<string, AddedTypefacePayload["category"]> = {
+	display: "Display",
+	mono: "Mono",
+	none: "Secondary",
+	primary: "Primary",
+	secondary: "Secondary",
+};
+
+const ROLE_LABEL: Record<string, string> = {
+	display: "Display",
+	mono: "Code and tokens",
+	none: "Brand typeface",
+	primary: "Product UI",
+	secondary: "Marketing",
+};
+
 function sourceIconBg(source: TypefaceSource): "bg.default.inverse" | undefined {
 	return source === "adobe" ? "bg.default.inverse" : undefined;
 }
@@ -283,13 +310,14 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 	);
 }
 
-export function AddTypefaceDialog({ onOpenChange, open }: AddTypefaceDialogProps) {
+export function AddTypefaceDialog({ onAddTypeface, onOpenChange, open }: AddTypefaceDialogProps) {
 	const [selectedSource, setSelectedSource] = useState<TypefaceSource>("adobe");
 	const [selectedTypeface, setSelectedTypeface] = useState(SOURCE_RESULTS.adobe[0]);
 	const [uploadedFileName, setUploadedFileName] = useState("");
 	const [weight, setWeight] = useState(400);
 	const [role, setRole] = useState("none");
 	const [usedFor, setUsedFor] = useState(["Product UI", "Marketing"]);
+	const [visibleResultCount, setVisibleResultCount] = useState(3);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const toggleUsedFor = (label: string) => {
@@ -309,13 +337,16 @@ export function AddTypefaceDialog({ onOpenChange, open }: AddTypefaceDialogProps
 			variable: /variable|var|vf/i.test(uploadedFileName),
 		}
 		: UPLOAD_EMPTY_TYPEFACE;
-	const sourceResults = selectedSource === "upload" ? (uploadedFileName ? [uploadedTypeface] : []) : SOURCE_RESULTS[selectedSource];
+	const sourceResultsAll = selectedSource === "upload" ? (uploadedFileName ? [uploadedTypeface] : []) : SOURCE_RESULTS[selectedSource];
+	const sourceResults = selectedSource === "upload" ? sourceResultsAll : sourceResultsAll.slice(0, visibleResultCount);
+	const canShowMoreResults = selectedSource !== "upload" && visibleResultCount < sourceResultsAll.length;
 	const activeTypeface = selectedSource === "upload" ? uploadedTypeface : selectedTypeface;
 	const previewFont = `"${activeTypeface.family}", Inter, sans-serif`;
 	const sourceMeta = SOURCE_META[selectedSource];
 
 	const selectSource = (source: TypefaceSource) => {
 		setSelectedSource(source);
+		setVisibleResultCount(3);
 		if (source !== "upload") {
 			setSelectedTypeface(SOURCE_RESULTS[source][0]);
 		}
@@ -325,6 +356,23 @@ export function AddTypefaceDialog({ onOpenChange, open }: AddTypefaceDialogProps
 		const file = event.target.files?.[0];
 		if (!file) return;
 		setUploadedFileName(file.name);
+	};
+
+	const handleAddTypeface = () => {
+		onAddTypeface?.({
+			category: ROLE_CATEGORY[role] ?? "Secondary",
+			family: activeTypeface.family,
+			meta: activeTypeface.meta,
+			role: ROLE_LABEL[role] ?? "Brand typeface",
+			source: selectedSource === "library" ? "library" : selectedSource === "upload" ? "upload" : "web",
+			styles: activeTypeface.styles,
+			weight,
+		});
+		onOpenChange(false);
+	};
+
+	const showMoreResults = () => {
+		setVisibleResultCount((count) => Math.min(count + 3, sourceResultsAll.length));
 	};
 
 	return (
@@ -340,7 +388,7 @@ export function AddTypefaceDialog({ onOpenChange, open }: AddTypefaceDialogProps
 					width: "min(92vw, 960px)",
 				}}
 			>
-				<DialogHeader description="Add a new typeface to your brand pack.">
+				<DialogHeader description="Add a new typeface to your brand.">
 					Add typeface
 				</DialogHeader>
 
@@ -528,11 +576,13 @@ export function AddTypefaceDialog({ onOpenChange, open }: AddTypefaceDialogProps
 										>
 											<Button
 												appearance="subtle"
+												disabled={!canShowMoreResults}
 												icon={<IconChevronDown size={16} />}
 												iconPosition="end"
+												onClick={showMoreResults}
 												size="sm"
 											>
-												Show more results
+												{canShowMoreResults ? "Show more results" : "All results shown"}
 											</Button>
 										</Box>
 									)}
@@ -665,7 +715,7 @@ export function AddTypefaceDialog({ onOpenChange, open }: AddTypefaceDialogProps
 					<Button
 						appearance="primary"
 						disabled={selectedSource === "upload" && !uploadedFileName}
-						onClick={() => onOpenChange(false)}
+						onClick={handleAddTypeface}
 						size="md"
 						style={{ minWidth: 144 }}
 					>

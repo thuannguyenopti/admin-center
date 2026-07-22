@@ -4,11 +4,11 @@ import {useRouter} from "next/navigation";
 import {Box, Button, Text} from "@optiaxiom/react";
 import {
 	IconArrowRight,
+	IconBolt,
 	IconCalendarDays,
 	IconGrid2,
 	IconShareNodes,
-	IconBolt,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 import type {BrandPack} from "../types";
 
 type BrandPackHeroProps = {
@@ -64,7 +64,7 @@ export function BrandPackHero({pack}: BrandPackHeroProps) {
 					<Box bg="bg.success.subtle" rounded="full" style={{padding: "3px 10px"}}>
 						<Text
 							color="fg.success"
-							style={{fontSize: 10, fontWeight: 700, letterSpacing: 0}}
+							style={{fontSize: 12, fontWeight: 700, letterSpacing: 0}}
 						>
 							ACTIVE PACK
 						</Text>
@@ -100,7 +100,7 @@ export function BrandPackHero({pack}: BrandPackHeroProps) {
 						<Text
 							color="fg.tertiary"
 							style={{
-								fontSize: 10,
+								fontSize: 12,
 								fontWeight: 600,
 								letterSpacing: 0,
 								textTransform: "uppercase",
@@ -132,7 +132,7 @@ export function BrandPackHero({pack}: BrandPackHeroProps) {
 						<Text
 							color="fg.tertiary"
 							style={{
-								fontSize: 10,
+								fontSize: 12,
 								fontWeight: 600,
 								letterSpacing: 0,
 								textTransform: "uppercase",
@@ -360,7 +360,7 @@ export function BrandPackHero({pack}: BrandPackHeroProps) {
 							borderRadius: 999,
 							background:
 								i === 0
-									? "var(--ax-colors-fg-secondary)"
+									? "var(--ax-colors-bg-accent)"
 									: "var(--ax-colors-border-secondary)",
 						}}
 					/>
