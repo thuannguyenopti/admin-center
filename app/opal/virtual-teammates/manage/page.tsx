@@ -12,6 +12,7 @@ import {
 	IconSearch,
 	IconTrashCan,
 	IconUserPlus,
+	IconUserCheck,
 } from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import { VAUS } from "@/app/opal/data/vaus";
@@ -119,7 +120,7 @@ export default function VirtualTeammatesManagePage() {
 							<VAUCard
 								key={vau.id}
 								vau={vau}
-								onSelect={(v) => router.push(`/opal/virtual-teammates/manage/${v.id}`)}
+								onSelect={(v) => router.push(`/opal/virtual-teammates/manage/${v.id}/activity`)}
 							/>
 						))}
 					</Box>
@@ -131,15 +132,13 @@ export default function VirtualTeammatesManagePage() {
 								<Th>Principle User</Th>
 								<Th>Type</Th>
 								<Th>Status</Th>
-								<Th>Attention Required</Th>
 								<Th />
 							</tr>
 						</thead>
 						<tbody>
 							{filtered.map((vau) => {
-								const needsReview = NEEDS_REVIEW_IDS.has(vau.id);
 								return (
-									<Tr key={vau.id} onClick={() => router.push(`/opal/virtual-teammates/manage/${vau.id}`)}>
+									<Tr key={vau.id} onClick={() => router.push(`/opal/virtual-teammates/manage/${vau.id}/activity`)}>
 										<Td style={{ paddingLeft: 16 }}>
 											<Box display="flex" alignItems="center" gap="12">
 												<Box style={{ width: 36, height: 36, borderRadius: 8, background: vau.avatarBg, overflow: "hidden", flexShrink: 0 }}>
@@ -169,13 +168,6 @@ export default function VirtualTeammatesManagePage() {
 												</Badge>
 											)}
 										</Td>
-										<Td>
-											{needsReview && (
-												<Badge style={{ background: "#FEF3C7", color: "#92400E", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-													Needs Review
-												</Badge>
-											)}
-										</Td>
 										<Td type="button">
 											<Box onClick={(e: React.MouseEvent) => e.stopPropagation()}>
 												<Menu
@@ -186,12 +178,17 @@ export default function VirtualTeammatesManagePage() {
 															execute: () => router.push("/opal/im"),
 														},
 														{
+															label: `Sign in as ${vau.characterName ?? vau.name}`,
+															addon: <IconUserCheck />,
+															execute: () => {},
+														},
+														{
 															label: "Pause",
 															addon: <IconCirclePause />,
 															execute: () => {},
 														},
 														{
-															label: "Delete",
+															label: "Deactivate",
 															addon: <IconTrashCan />,
 															intent: "danger" as const,
 															execute: () => {},

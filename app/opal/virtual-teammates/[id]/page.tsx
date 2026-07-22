@@ -1,9 +1,9 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Box, Button, Field, Heading, Input, Text, Tooltip } from "@optiaxiom/react";
-import { IconArrowLeft, IconArrowRight, IconCheckCircleSolid, IconChevronDown, IconChevronLeft, IconChevronRight, IconChevronUp, IconCircleInfo, IconFolderBookmark, IconGear, IconMagnifyingGlass, IconPen, IconSparkles, IconUpload, IconUserGroup, IconXmark } from "@optiaxiom/icons";
+import { IconArrowLeft, IconArrowRight, IconArrowsRotate, IconCheckCircleSolid, IconChevronDown, IconChevronLeft, IconChevronRight, IconChevronUp, IconCircleInfo, IconFolderBookmark, IconGear, IconMagnifyingGlass, IconPen, IconSparkles, IconUpload, IconUserGroup, IconXmark } from "@optiaxiom/icons";
 import Image from "next/image";
 import { DEFAULT_VAU_EXAMPLES, VAUS, type VAU, type VAUCandidate, type VAUExample } from "@/app/opal/data/vaus";
 import { TOOL_ICONS } from "../tool-icons";
@@ -357,7 +357,7 @@ const BRIEFING_CARDS = [
 function BriefingActionCards({ animKey, bg }: { animKey: number; bg?: string }) {
 	return (
 		<div key={animKey} style={{ width: "100%", height: "100%", background: bg ?? "#91dbda", display: "flex", alignItems: "center", justifyContent: "center" }}>
-			<img src="/vau-icons/newspaper.png" alt="Daily briefing" style={{ width: "70%", height: "70%", objectFit: "contain" }} />
+			<img src="/vau-icons/newspaper.png" alt="Daily briefing" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
 		</div>
 	);
 }
@@ -380,19 +380,23 @@ function CapabilityPanel({ vau, title, onClose }: { vau: VAU; title: string; onC
 					<Badge intent="primary">PREVIEW</Badge>
 					<Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} aria-label="Close panel" onClick={onClose} />
 				</Box>
-				<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "#202320" }}>
-					{title}
-				</Text>
-				{example?.description && (
-					<Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5", letterSpacing: "0.32px" }}>
-						{example.description}
-					</Text>
-				)}
-				{example?.icon && (
-					<Box style={{ position: "relative", height: 357, flexShrink: 0, borderRadius: 8, border: "1px solid var(--ax-colors-border-default)", overflow: "hidden", background: vau.cardBg ?? vau.avatarBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-						<img src={example.icon} alt={title} style={{ width: "70%", height: "70%", objectFit: "contain" }} />
+				<Box display="flex" gap="16">
+					{example?.icon && (
+						<Box style={{ width: 113, height: 116, flexShrink: 0, borderRadius: 8, border: "1px solid var(--ax-colors-border-default)", overflow: "hidden", background: vau.cardBg ?? vau.avatarBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+							<img src={example.icon} alt={title} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+						</Box>
+					)}
+					<Box>
+						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "#202320" }}>
+							{title}
+						</Text>
+						{example?.description && (
+							<Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5", letterSpacing: "0.32px", display: "block", marginTop: 6 }}>
+								{example.description}
+							</Text>
+						)}
 					</Box>
-				)}
+				</Box>
 				{thirdPartyTools.length > 0 && (
 					<Box display="flex" flexDirection="column" gap="12" style={{ marginTop: 8 }}>
 						<PanelSectionHeader label="Connectors" count={thirdPartyTools.length} info />
@@ -464,42 +468,25 @@ function DailyBriefingPanel({ vau, onClose }: { vau: VAU; onClose: () => void })
 					/>
 				</Box>
 
-				{/* Title */}
-				<Text
-					style={{
-						fontFamily: "var(--ax-font-family-headings)",
-						fontSize: 28,
-						fontWeight: 800,
-						lineHeight: "1.04",
-						letterSpacing: "0.56px",
-						color: "#202320",
-					}}
-				>
-					Daily briefing
-				</Text>
+				{/* Thumbnail + title + description */}
+				<Box display="flex" gap="16">
+					<Box style={{ width: 113, height: 116, flexShrink: 0, borderRadius: 8, border: "1px solid var(--ax-colors-border-default)", overflow: "hidden", background: vau.cardBg ?? vau.avatarBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+						<img src="/vau-icons/newspaper.png" alt="Daily briefing" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+					</Box>
+					<Box>
+						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "#202320" }}>
+							Daily briefing
+						</Text>
+						<Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5", letterSpacing: "0.32px", display: "block", marginTop: 6 }}>
+							No more opening six tabs to figure out what happened overnight. Randy reads your inbox,
+							calendar, and Slack while you slept — and tells you the three things that actually need
+							you today.
+						</Text>
+					</Box>
+				</Box>
 
-				{/* Description */}
-				<Text
-					fontSize="md"
-					color="fg.secondary"
-					style={{ lineHeight: "1.5", letterSpacing: "0.32px" }}
-				>
-					No more opening six tabs to figure out what happened overnight. Randy reads your inbox,
-					calendar, and Slack while you slept — and tells you the three things that actually need
-					you today.
-				</Text>
-
-				{/* Slideshow */}
-				<Box
-					style={{
-						position: "relative",
-						height: 357,
-						flexShrink: 0,
-						borderRadius: 8,
-						border: "1px solid var(--ax-colors-border-default)",
-						overflow: "hidden",
-					}}
-				>
+				{/* Slideshow (hidden — kept for slide state logic) */}
+				<Box style={{ display: "none" }}>
 					{BRIEFING_SLIDES[slide].component
 						? <BriefingActionCards animKey={slide} bg={vau.cardBg ?? vau.avatarBg} />
 						: <img
@@ -663,8 +650,37 @@ export default function VAUDetailPage() {
 	const [selectedPersonality, setSelectedPersonality] = useState<number | null>(null);
 	const [expandedPersonality, setExpandedPersonality] = useState<number | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const [typedText, setTypedText] = useState<string>("");
+	const [isTyping, setIsTyping] = useState(false);
+	const isFirstRender = useRef(true);
 
 	const vau = useMemo(() => VAUS.find((v) => v.id === params?.id), [params?.id]);
+
+	const currentSampleChat = vau?.personalities?.[activePersonality]?.sampleChat ?? "";
+
+	// Typing animation: skip on first render, animate on personality swap
+	useEffect(() => {
+		if (isFirstRender.current) {
+			isFirstRender.current = false;
+			setTypedText(currentSampleChat);
+			return;
+		}
+		if (!currentSampleChat) return;
+		setIsTyping(true);
+		setTypedText("");
+		const dotTimer = setTimeout(() => {
+			setIsTyping(false);
+			let i = 0;
+			const interval = setInterval(() => {
+				i++;
+				setTypedText(currentSampleChat.slice(0, i));
+				if (i >= currentSampleChat.length) clearInterval(interval);
+			}, 18);
+			return () => clearInterval(interval);
+		}, 420);
+		return () => clearTimeout(dotTimer);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [activePersonality]);
 	const candidates = useMemo<VAUCandidate[]>(() => {
 		if (!vau) return [];
 		if (vau.candidates && vau.candidates.length > 0) return vau.candidates;
@@ -1248,152 +1264,21 @@ export default function VAUDetailPage() {
 	const personalities = vau.personalities ?? [];
 	const staticDescription = vau.longDescription ?? personalities[0]?.description ?? vau.description;
 
+	const activePersonalityLabel = personalities[activePersonality]?.label ?? "";
+	const personalityBadge = activePersonalityLabel.startsWith("The ")
+		? activePersonalityLabel.slice(4).toUpperCase()
+		: activePersonalityLabel.toUpperCase();
+	const activeSampleChat = personalities[activePersonality]?.sampleChat;
+	const activeAvatarSrc = activePersonalityLabel === "The Tastemaker" ? "/vau-icons/T.png"
+		: activePersonalityLabel === "The Hype Machine" ? "/vau-icons/HM.png"
+		: activePersonalityLabel === "The Stress Tester" ? "/vau-icons/ST.png"
+		: (vau.cardImage ?? vau.avatar);
+
 	return (
 		<>
-			<Box display="flex" style={{ height: "100%", minHeight: 0 }}>
+			<Box style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#F9FCF8" }}>
+				<Box style={{ maxWidth: 997, margin: "0 auto", padding: "32px 40px 64px" }}>
 
-				{/* ── LEFT SIDEBAR ── */}
-				<Box
-					style={{
-						width: 349,
-						minWidth: 349,
-						flexShrink: 0,
-						borderRight: "1px solid var(--ax-colors-border-secondary)",
-						overflowY: "auto",
-						background: "#FFFFFF",
-						padding: "32px 20px",
-						display: "flex",
-						flexDirection: "column",
-						gap: 20,
-						boxSizing: "border-box",
-					}}
-				>
-					{/* Avatar with teal border + pencil edit */}
-					<Box style={{ position: "relative" }}>
-						<Box style={{ border: "3px solid #197a94", borderRadius: 14, padding: 2, display: "block" }}>
-							<Box
-								style={{
-									width: "100%",
-									aspectRatio: "1 / 1",
-									border: "1px solid var(--ax-colors-border-default)",
-									borderRadius: 10,
-									overflow: "hidden",
-									backgroundColor: vau.cardBg ?? vau.avatarBg,
-									boxSizing: "border-box",
-								}}
-							>
-								<Image
-									src={personalities[activePersonality]?.label === "The Tastemaker" ? "/vau-icons/T.png" : personalities[activePersonality]?.label === "The Hype Machine" ? "/vau-icons/HM.png" : personalities[activePersonality]?.label === "The Stress Tester" ? "/vau-icons/ST.png" : (vau.cardImage ?? vau.avatar)}
-									alt={vau.name}
-									width={309}
-									height={258}
-									unoptimized
-									style={{ width: "100%", height: "100%", objectFit: "contain" }}
-								/>
-							</Box>
-						</Box>
-					</Box>
-
-					{/* Personalities + sample chat OR connectors/skills */}
-					{personalities.length > 0 ? (
-						<>
-							<Box display="flex" flexDirection="column" gap="8">
-								<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>
-									Explore other personalities
-								</span>
-								<Box display="flex" gap="8" style={{ flexWrap: "wrap" }}>
-									{personalities.map((p, i) => (
-										<Button
-											key={p.label}
-											size="md"
-											appearance="default"
-											style={i === activePersonality ? { boxShadow: "0 0 0 2px #197a94" } : undefined}
-											onClick={() => setActivePersonality(i)}
-										>
-											{p.label}
-										</Button>
-									))}
-								</Box>
-							</Box>
-
-							{personalities[activePersonality]?.sampleChat && (
-								<>
-									<PanelDivider />
-									<Box display="flex" flexDirection="column" gap="8">
-										<Text fontSize="sm" color="fg.tertiary">Sample chat</Text>
-										<Box display="flex" alignItems="start" style={{ gap: 10 }}>
-											<Box
-												style={{
-													width: 32,
-													height: 32,
-													borderRadius: "50%",
-													overflow: "hidden",
-													flexShrink: 0,
-													backgroundColor: vau.cardBg ?? vau.avatarBg,
-													border: "1px solid var(--ax-colors-border-default)",
-												}}
-											>
-												<Image
-													src={personalities[activePersonality]?.label === "The Tastemaker" ? "/vau-icons/T.png" : personalities[activePersonality]?.label === "The Hype Machine" ? "/vau-icons/HM.png" : personalities[activePersonality]?.label === "The Stress Tester" ? "/vau-icons/ST.png" : (vau.cardImage ?? vau.avatar)}
-													alt=""
-													width={32}
-													height={32}
-													unoptimized
-													style={{ width: "100%", height: "100%", objectFit: "contain" }}
-												/>
-											</Box>
-											<Box
-												style={{
-													background: "rgba(95, 147, 31, 0.08)",
-													border: "1px solid var(--ax-colors-border-default)",
-													borderRadius: "0 12px 12px 12px",
-													padding: "10px 12px",
-													flex: 1,
-												}}
-											>
-												<Text fontSize="sm" fontWeight="500" color="fg.secondary" style={{ lineHeight: "1.5", letterSpacing: "0.24px" }}>
-													{personalities[activePersonality].sampleChat}
-												</Text>
-											</Box>
-										</Box>
-									</Box>
-								</>
-							)}
-						</>
-					) : (
-						<>
-							<PanelDivider />
-
-							{/* Connectors */}
-							<Box display="flex" flexDirection="column" gap="12">
-								<PanelSectionHeader label="Connectors" count={thirdPartyTools.length} />
-								<Box display="flex" flexDirection="column" gap="8">
-									{thirdPartyTools.map((toolKey, idx) => (
-										<PanelConnector key={toolKey} toolKey={toolKey} index={idx} />
-									))}
-								</Box>
-							</Box>
-
-							{allSkills.length > 0 && (
-								<>
-									<PanelDivider />
-									<Box display="flex" flexDirection="column" gap="12">
-										<PanelSectionHeader label="Skills" count={allSkills.length} />
-										<Box display="flex" style={{ flexWrap: "wrap", gap: 4 }}>
-											{allSkills.map((skill) => (
-												<Badge key={skill} variant="subtle">{skill}</Badge>
-											))}
-										</Box>
-									</Box>
-								</>
-							)}
-						</>
-					)}
-				</Box>
-
-				{/* ── RIGHT MAIN CONTENT ── */}
-				<Box style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#F9FCF8" }}>
-				<Box style={{ maxWidth: 1020, padding: "32px 40px 64px" }}>
 					{/* Breadcrumb */}
 					<Box display="flex" alignItems="center" gap="4" style={{ marginBottom: 32 }}>
 						<Text
@@ -1408,48 +1293,172 @@ export default function VAUDetailPage() {
 						<Text fontSize="sm" color="fg.default">{vau.name}</Text>
 					</Box>
 
-					{/* Heading + category badge */}
-					<Box display="flex" flexDirection="column" gap="12" style={{ marginBottom: 16 }}>
-						<Text
-							style={{
-								fontFamily: "var(--ax-font-family-headings)",
-								fontSize: 50,
-								fontWeight: 800,
-								lineHeight: "1.04",
-								letterSpacing: "0.5px",
-								color: "#202320",
-								WebkitTextStroke: "1px #202320",
-							}}
-						>
-							{heading}
-						</Text>
-						{vau.cardCategory && (
-							<Box>
-								<Badge intent="information" variant="subtle">{vau.cardCategory}</Badge>
+					{/* ── Two-column header ── */}
+					<Box display="flex" gap="48" style={{ marginBottom: 48, alignItems: "flex-start" }}>
+
+						{/* Left: avatar column */}
+						<Box style={{ width: 300, flexShrink: 0, display: "flex", flexDirection: "column", gap: 16 }}>
+							{/* Avatar with teal border + PRAGMATIST badge */}
+							<Box style={{ position: "relative" }}>
+								<Box style={{ border: "3px solid #197a94", borderRadius: 14, padding: 2 }}>
+									<Box
+										style={{
+											width: "100%",
+											aspectRatio: "1 / 1",
+											border: "1px solid var(--ax-colors-border-default)",
+											borderRadius: 10,
+											overflow: "hidden",
+											backgroundColor: vau.cardBg ?? vau.avatarBg,
+											boxSizing: "border-box",
+											display: "flex",
+											alignItems: "flex-end",
+											justifyContent: "center",
+										}}
+									>
+										<Image
+											src={activeAvatarSrc}
+											alt={vau.name}
+											width={294}
+											height={294}
+											unoptimized
+											style={{ width: "92%", height: "92%", objectFit: "contain", display: "block" }}
+										/>
+									</Box>
+								</Box>
+								{/* Personality badge overlay */}
+								{personalityBadge && (
+									<Box style={{ position: "absolute", top: 12, right: 12 }}>
+										<Badge variant="subtle">{personalityBadge}</Badge>
+									</Box>
+								)}
 							</Box>
-						)}
-					</Box>
 
-					{/* Description */}
-					<Text
-						fontSize="md"
-						color="fg.secondary"
-						style={{ lineHeight: "1.5", letterSpacing: "0.32px", maxWidth: 580, display: "block", marginBottom: 24 }}
-					>
-						{staticDescription}
-					</Text>
+							</Box>
 
-					{/* CTAs */}
-					<Box display="flex" gap="16" alignItems="center" style={{ marginBottom: 48 }}>
-						<Button
-							appearance="primary"
-							size="lg"
-							addonAfter={<IconArrowRight />}
-							style={{ paddingLeft: 48, paddingRight: 48, minWidth: 220 }}
-							onClick={() => setShowOnboarding(true)}
-						>
-							Work with
-						</Button>
+						{/* Right: content column */}
+						<Box style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
+							{/* Heading */}
+							<Text
+								style={{
+									fontFamily: "var(--ax-font-family-headings)",
+									fontSize: 50,
+									fontWeight: 800,
+									lineHeight: "1.04",
+									letterSpacing: "0.5px",
+									color: "#202320",
+									WebkitTextStroke: "1px #202320",
+								}}
+							>
+								{heading}
+							</Text>
+
+							{/* Category badge — 8px below heading */}
+							{vau.cardCategory && (
+								<Box style={{ marginTop: -12 }}>
+									<Badge intent="information" variant="subtle">{vau.cardCategory}</Badge>
+								</Box>
+							)}
+
+							{/* Intro message bubble */}
+							{activeSampleChat && (
+								<Box display="flex" alignItems="center" gap="8">
+									{/* Circle avatar */}
+									<Box
+										style={{
+											width: 32,
+											height: 32,
+											borderRadius: "50%",
+											overflow: "hidden",
+											flexShrink: 0,
+											backgroundColor: vau.cardBg ?? vau.avatarBg,
+											border: "1px solid var(--ax-colors-border-default)",
+										}}
+									>
+										<Image
+											src={activeAvatarSrc}
+											alt=""
+											width={32}
+											height={32}
+											unoptimized
+											style={{ width: "100%", height: "100%", objectFit: "contain" }}
+										/>
+									</Box>
+									{/* Message bubble */}
+									<Box
+										style={{
+											background: "#EEFFD9",
+											borderRadius: 8,
+											padding: "8px 12px",
+											flex: 1,
+											minHeight: 40,
+											display: "flex",
+											alignItems: "center",
+										}}
+									>
+										{isTyping ? (
+											<Box display="flex" alignItems="center" gap="4" style={{ padding: "2px 0" }}>
+												<span className="vau-typing-dot" />
+												<span className="vau-typing-dot" />
+												<span className="vau-typing-dot" />
+											</Box>
+										) : (
+											<Text
+												fontSize="sm"
+												color="fg.default"
+												style={{
+													lineHeight: "1.5",
+													letterSpacing: "0.24px",
+													display: "-webkit-box",
+													WebkitLineClamp: 2,
+													WebkitBoxOrient: "vertical",
+													overflow: "hidden",
+												}}
+											>
+												{typedText}
+												{typedText.length > 0 && typedText.length < currentSampleChat.length && (
+													<span className="vau-cursor" />
+												)}
+											</Text>
+										)}
+									</Box>
+									{/* Swap button */}
+									{personalities.length > 1 && (
+										<Tooltip content="Try a different personality" delayDuration={300}>
+											<Button
+												appearance="subtle"
+												size="lg"
+												icon={<IconArrowsRotate />}
+												aria-label="Try a different personality"
+												style={{ flexShrink: 0 }}
+												onClick={() => setActivePersonality((prev) => (prev + 1) % personalities.length)}
+											/>
+										</Tooltip>
+									)}
+								</Box>
+							)}
+
+							{/* Description */}
+							<Text
+								fontSize="md"
+								color="fg.secondary"
+								style={{ lineHeight: "1.6", letterSpacing: "0.32px", display: "block" }}
+							>
+								{staticDescription}
+							</Text>
+
+							{/* Work together CTA */}
+							<Box style={{ alignSelf: "flex-start" }}>
+								<Button
+									appearance="primary"
+									size="lg"
+									addonAfter={<IconArrowRight />}
+									style={{ paddingLeft: 62, paddingRight: 62 }}
+									onClick={() => setShowOnboarding(true)}
+								>
+									Work together
+								</Button>
+							</Box>
+						</Box>
 					</Box>
 
 					{/* My pitch */}
@@ -1472,7 +1481,7 @@ export default function VAUDetailPage() {
 									What your {vau.name.toLowerCase()} will bring to the table
 								</Text>
 							</Box>
-							<Box style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+							<Box style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
 								{vau.pitchStats.map((stat) => {
 									const cardContent = (
 										<Box
@@ -1492,84 +1501,83 @@ export default function VAUDetailPage() {
 												justifyContent: "space-between",
 											}}
 										>
-										<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>{stat.label}</span>
-										{/* Value row — number + tool icons side by side */}
-										<Box display="flex" alignItems="center" gap="8">
-											<Heading level="2" style={{ color: "var(--ax-colors-fg-default)", flexShrink: 0, lineHeight: 1 }}>
-											{stat.value}
-										</Heading>
-											{stat.showTools && vau.tools.length > 0 && (
-												<Box display="flex" alignItems="center">
-													{vau.tools.filter((k) => !k.startsWith("opti-")).slice(0, 5).map((toolKey, idx) => {
-														const connector = PANEL_CONNECTORS[idx] ?? PANEL_CONNECTORS[PANEL_CONNECTORS.length - 1];
-														return (
-															<Tooltip key={toolKey} content={connector.name} delayDuration={200}>
-																<Box
-																	style={{
-																		width: 24,
-																		height: 24,
-																		borderRadius: "50%",
-																		border: "1.5px solid white",
-																		backgroundColor: "white",
-																		display: "flex",
-																		alignItems: "center",
-																		justifyContent: "center",
-																		marginLeft: idx > 0 ? -6 : 0,
-																		flexShrink: 0,
-																		zIndex: 10 - idx,
-																		overflow: "hidden",
-																		position: "relative",
-																	}}
-																>
-																	<img src={connector.icon} alt={connector.name} style={{ width: "80%", height: "80%", objectFit: "contain" }} />
-																</Box>
-															</Tooltip>
-														);
-													})}
-													{vau.tools.filter((k) => !k.startsWith("opti-")).length > 5 && (
-														<Box
-															style={{
-																width: 24,
-																height: 24,
-																borderRadius: "50%",
-																border: "1.5px solid white",
-																backgroundColor: "var(--ax-colors-bg-neutral)",
-																display: "flex",
-																alignItems: "center",
-																justifyContent: "center",
-																marginLeft: -6,
-																fontSize: 10,
-																fontWeight: 700,
-																color: "var(--ax-colors-fg-secondary)",
-																flexShrink: 0,
-																position: "relative",
-															}}
-														>
-															+{vau.tools.filter((k) => !k.startsWith("opti-")).length - 5}
-														</Box>
-													)}
-												</Box>
-											)}
+											<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>{stat.label}</span>
+											<Box display="flex" alignItems="center" gap="8">
+												<Heading level="2" style={{ color: "var(--ax-colors-fg-default)", flexShrink: 0, lineHeight: 1 }}>
+													{stat.value}
+												</Heading>
+												{stat.showTools && vau.tools.length > 0 && (
+													<Box display="flex" alignItems="center">
+														{vau.tools.filter((k) => !k.startsWith("opti-")).slice(0, 5).map((toolKey, idx) => {
+															const connector = PANEL_CONNECTORS[idx] ?? PANEL_CONNECTORS[PANEL_CONNECTORS.length - 1];
+															return (
+																<Tooltip key={toolKey} content={connector.name} delayDuration={200}>
+																	<Box
+																		style={{
+																			width: 24,
+																			height: 24,
+																			borderRadius: "50%",
+																			border: "1.5px solid white",
+																			backgroundColor: "white",
+																			display: "flex",
+																			alignItems: "center",
+																			justifyContent: "center",
+																			marginLeft: idx > 0 ? -6 : 0,
+																			flexShrink: 0,
+																			zIndex: 10 - idx,
+																			overflow: "hidden",
+																			position: "relative",
+																		}}
+																	>
+																		<img src={connector.icon} alt={connector.name} style={{ width: "80%", height: "80%", objectFit: "contain" }} />
+																	</Box>
+																</Tooltip>
+															);
+														})}
+														{vau.tools.filter((k) => !k.startsWith("opti-")).length > 5 && (
+															<Box
+																style={{
+																	width: 24,
+																	height: 24,
+																	borderRadius: "50%",
+																	border: "1.5px solid white",
+																	backgroundColor: "var(--ax-colors-bg-neutral)",
+																	display: "flex",
+																	alignItems: "center",
+																	justifyContent: "center",
+																	marginLeft: -6,
+																	fontSize: 10,
+																	fontWeight: 700,
+																	color: "var(--ax-colors-fg-secondary)",
+																	flexShrink: 0,
+																	position: "relative",
+																}}
+															>
+																+{vau.tools.filter((k) => !k.startsWith("opti-")).length - 5}
+															</Box>
+														)}
+													</Box>
+												)}
+											</Box>
+											<Text fontSize="sm" color="fg.tertiary" style={{ lineHeight: "1.4", letterSpacing: "0.24px" }}>
+												{stat.sub}
+											</Text>
 										</Box>
-										<Text fontSize="sm" color="fg.tertiary" style={{ lineHeight: "1.4", letterSpacing: "0.24px" }}>
-											{stat.sub}
-										</Text>
-									</Box>
-								);
-								if (stat.showSkills && allSkills.length > 0) {
-									return (
-										<Tooltip key={stat.label} content={allSkills.join(", ")} delayDuration={200}>
-											{cardContent}
-										</Tooltip>
 									);
-								}
-								return cardContent;
-							})}
+									if (stat.showSkills && allSkills.length > 0) {
+										return (
+											<Tooltip key={stat.label} content={allSkills.join(", ")} delayDuration={200}>
+												{cardContent}
+											</Tooltip>
+										);
+									}
+									return cardContent;
+								})}
+							</Box>
 						</Box>
-					</Box>
 					)}
 
-					{/* Divider between My pitch and What I do */}
+					{/* Divider */}
 					{vau.pitchStats && vau.pitchStats.length > 0 && (
 						<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", marginBottom: 32 }} />
 					)}
@@ -1596,7 +1604,7 @@ export default function VAUDetailPage() {
 						<Box
 							style={{
 								display: "grid",
-								gridTemplateColumns: "repeat(2, 462px)",
+								gridTemplateColumns: "repeat(2, 1fr)",
 								gap: 16,
 							}}
 						>
@@ -1609,7 +1617,6 @@ export default function VAUDetailPage() {
 							))}
 						</Box>
 					</Box>
-				</Box>
 				</Box>
 			</Box>
 
