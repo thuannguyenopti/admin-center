@@ -74,7 +74,11 @@ export const cmpNav = [
 		label: "Resource Management",
 		url: "/cmp/resource-management",
 		highlight: "/cmp/resource-management",
-		icon: <IconResourceManagement />,
+		// @optiaxiom/icons components default to a 20px box via their own internal
+		// CSS class; a raw SVGR-imported file doesn't get that class, so it renders
+		// at whatever width/height are hardcoded in the source SVG (15x16 here) —
+		// explicit sizing keeps it visually consistent with the rest of the rail.
+		icon: <IconResourceManagement width={20} height={20} />,
 		hidePageHeader: true,
 	},
 	{
