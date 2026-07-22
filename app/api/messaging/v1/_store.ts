@@ -610,6 +610,13 @@ export async function markRead(convId: string, userId: string): Promise<void> {
   }
 }
 
+export async function updateUserDisplayName(userId: string, displayName: string): Promise<void> {
+  const store = await load();
+  const user = store.users.find((u) => u.user_id === userId);
+  if (user) user.display_name = displayName;
+  await persist();
+}
+
 export async function searchUsers(query?: string): Promise<UserProfile[]> {
   const store = await load();
   if (!query) return store.users;

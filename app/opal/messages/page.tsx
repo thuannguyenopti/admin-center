@@ -96,8 +96,10 @@ import {
   IconBan,
   IconTrashCan,
   IconSliders,
+  IconScissors,
 } from "@optiaxiom/icons";
-import { IconSparkles } from "@optimizely/axiom-icons";
+import { clipToTracker } from "@/app/opal/tracker/useSessionTasks";
+import { usePlannerLabel } from "@/app/opal/tracker/usePlannerLabel";
 
 const IconMarkEmailUnread = ({ size = 16 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" height={size} width={size} viewBox="0 -960 960 960" fill="currentColor">
@@ -1614,6 +1616,15 @@ function MessageBubble({ msg, time, onOpenThread, isPinned, onPin, onMarkConvoUn
   useEffect(() => { setDisplayText(msg.text ?? ""); setEditText(msg.text ?? ""); }, [msg.text]);
   const [unread, setUnread] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [clipped, setClipped] = useState(false);
+  const plannerLabel = usePlannerLabel();
+
+  const handleClip = () => {
+    const selection = typeof window !== "undefined" ? window.getSelection()?.toString().trim() : "";
+    clipToTracker(selection && selection.length > 0 ? selection : displayText);
+    setClipped(true);
+    setTimeout(() => setClipped(false), 1500);
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(displayText).catch(() => {});
@@ -1748,6 +1759,11 @@ function MessageBubble({ msg, time, onOpenThread, isPinned, onPin, onMarkConvoUn
             icon={<IconThumbtack size={15} />} />
         </Tooltip>
       )}
+      {/* Add to Planner */}
+      <Tooltip content={clipped ? "Added!" : `Add to ${plannerLabel}`} delayDuration={300}>
+        <Button size="sm" appearance="subtle" aria-label={`Add to ${plannerLabel}`} style={{ width: 30, height: 30, padding: 0 }}
+          icon={<IconScissors size={15} />} onClick={handleClip} />
+      </Tooltip>
       {/* More options */}
       <Menu
         options={isUser ? [
@@ -1755,9 +1771,11 @@ function MessageBubble({ msg, time, onOpenThread, isPinned, onPin, onMarkConvoUn
           { label: "Delete message", execute: () => setDeleted(true), intent: "danger" },
           { label: unread ? "Mark read" : "Mark unread", execute: () => { const next = !unread; setUnread(next); onMarkConvoUnread?.(next); } },
           { label: copied ? "Copied!" : "Copy text", execute: handleCopy },
+          { label: `Add to ${plannerLabel}`, addon: <IconScissors size={16} />, execute: handleClip },
         ] : [
           { label: unread ? "Mark read" : "Mark unread", execute: () => { const next = !unread; setUnread(next); onMarkConvoUnread?.(next); } },
           { label: copied ? "Copied!" : "Copy text", execute: handleCopy },
+          { label: `Add to ${plannerLabel}`, addon: <IconScissors size={16} />, execute: handleClip },
         ]}
         onOpenChange={(open) => { setMenuOpen(open); if (!open && !hovered) setHovered(false); }}
       >
@@ -1990,6 +2008,8 @@ function IMSidebar({
   const [sectionPickerQuery, setSectionPickerQuery] = React.useState("");
   const [globalSearch, setGlobalSearch] = React.useState("");
   const [sidebarSearchVisible, setSidebarSearchVisible] = React.useState(false);
+  const [unreadFilter, setUnreadFilter] = React.useState(false);
+  const [vtFilter, setVtFilter] = React.useState(false);
   const [filterOpen, setFilterOpen] = React.useState(false);
   const [filterTimeRange, setFilterTimeRange] = React.useState<"all" | "7d" | "30d">("all");
   const [filterTypes, setFilterTypes] = React.useState<Set<"attachment" | "link">>(new Set());
@@ -2143,13 +2163,13 @@ function IMSidebar({
         <>
       {/* Messages header */}
       <Box display="flex" alignItems="center" px="8" pt="6" pb="4" style={{ flexShrink: 0 }}>
-        <Text fontSize="lg" fontWeight="700" color="fg.default" style={{ flex: 1, paddingLeft: 8 }}>Messages</Text>
         <Tooltip content="Search messages" delayDuration={300}>
           <Button appearance="subtle" size="lg"
             icon={<IconSearch style={{ width: 20, height: 20 }} />}
             aria-label="Search messages"
             onClick={() => { setSidebarSearchVisible(v => !v); setTimeout(() => searchRef.current?.focus(), 50); }} />
         </Tooltip>
+        <Box style={{ flex: 1 }} />
         <Tooltip content="New message" delayDuration={300}>
           <Button appearance="subtle" size="lg"
             icon={<IconPenToSquare style={{ width: 20, height: 20 }} />}
@@ -2335,6 +2355,27 @@ function IMSidebar({
           /* ── Normal nav ── */
           <>
 
+        {/* Filter pills */}
+        {!collapsed && (
+          <Box px="8" pb="4" display="flex" gap="6">
+            {([
+              { key: "unread" as const, label: "Unreads", active: unreadFilter, toggle: () => setUnreadFilter(v => !v) },
+              { key: "vt" as const,     label: "Virtual", active: vtFilter,     toggle: () => setVtFilter(v => !v) },
+            ]).map(pill => (
+              <Box key={pill.key} display="inline-flex" alignItems="center" px="10" py="4" rounded="full"
+                onClick={pill.toggle}
+                style={{
+                  cursor: "pointer",
+                  border: `1px solid ${pill.active ? "var(--ax-colors-border-focus)" : "var(--ax-colors-border-secondary)"}`,
+                  background: pill.active ? "var(--ax-colors-bg-default-hovered)" : "var(--ax-colors-bg-default)",
+                  userSelect: "none" as const,
+                }}>
+                <Text fontSize="sm" fontWeight="500" color="fg.default">{pill.label}</Text>
+              </Box>
+            ))}
+          </Box>
+        )}
+
         {/* Quick Views */}
         {!collapsed && (
           <Box display="flex" flexDirection="column" gap="2">
@@ -2342,7 +2383,6 @@ function IMSidebar({
               Quick Views
             </Text>
             {([
-              { id: "unreads",    label: "Unreads",      icon: <IconMarkEmailUnread size={15} /> },
               { id: "mentions",   label: "Mentions",     icon: <IconAt size={15} /> },
               { id: "threads",    label: "Threads",      icon: <IconMessageLines size={15} /> },
               { id: "needsreview", label: "Needs Review", icon: <IconCircleCheck size={15} /> },
@@ -2517,7 +2557,8 @@ function IMSidebar({
               <Box display="flex" flexDirection="column" pt="4">
                 {s.id === "dms" && [...activeDMS].filter(dm => {
                     if (movedItems.includes(dm.id) || ARCHIVED_DM_IDS.includes(dm.id)) return false;
-                    if (getSectionSettings("dms").view === "unread")
+                    if (vtFilter && !dm.isVAU) return false;
+                    if (unreadFilter || getSectionSettings("dms").view === "unread")
                       return (dm.unread ?? 0) > 0 || (VAU_DELIVERABLES[dm.id]?.length ?? 0) > 0 || !!manualUnreadConvos?.has(dm.id);
                     return true;
                   }).sort((a, b) => {
@@ -2591,7 +2632,8 @@ function IMSidebar({
                 ))}
                 {s.id === "groups" && [...(extraGroups ?? []), ...GROUPS].filter(g => {
                     if (movedItems.includes(g.id) || leftConvos?.has(g.id)) return false;
-                    if (getSectionSettings("groups").view === "unread")
+                    if (vtFilter && !(GROUP_VAU_IDS[g.id]?.length)) return false;
+                    if (unreadFilter || getSectionSettings("groups").view === "unread")
                       return (g.unread ?? 0) > 0 || !!manualUnreadConvos?.has(g.id);
                     return true;
                   }).sort((a, b) => {
@@ -2649,7 +2691,8 @@ function IMSidebar({
                 ))}
                 {s.id === "channels" && [...allChannels].filter(ch => {
                     if (movedItems.includes(ch.id) || leftConvos?.has(ch.id)) return false;
-                    if (getSectionSettings("channels").view === "unread")
+                    if (vtFilter) return false;
+                    if (unreadFilter || getSectionSettings("channels").view === "unread")
                       return (ch.unread ?? 0) > 0 || !!manualUnreadConvos?.has(ch.id);
                     return true;
                   }).sort((a, b) => {
@@ -3562,8 +3605,8 @@ function IMMain({
     }}>
       <div
         role="button" tabIndex={0}
-        onClick={() => setVauMenuOpen(false)}
-        onKeyDown={e => e.key === "Enter" && setVauMenuOpen(false)}
+        onClick={() => { setVauMenuOpen(false); if (selected === "bubs") imRouter.push("/opal/virtual-teammates/manage/frank"); }}
+        onKeyDown={e => { if (e.key === "Enter") { setVauMenuOpen(false); if (selected === "bubs") imRouter.push("/opal/virtual-teammates/manage/frank"); } }}
         style={{ display: "flex", alignItems: "center", padding: "10px 12px", cursor: "pointer", borderRadius: 6 }}
         onMouseEnter={e => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
         onMouseLeave={e => (e.currentTarget.style.background = "transparent")}

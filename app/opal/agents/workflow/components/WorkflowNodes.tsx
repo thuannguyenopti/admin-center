@@ -231,7 +231,7 @@ export function ActionNode({id, data, selected}: NodeProps) {
 						p="4"
 						bg={(data.bg as BoxProps["bg"]) || "bg.tertiary"}
 						rounded={
-							data.type === "trigger" || data.category === "Logic" ? "full" : "sm"
+							data.type === "trigger" || data.category === "Logic" ? "full" : "md"
 						}
 					>
 						{/* Render Icon component from data.icon which might be a React Element */}

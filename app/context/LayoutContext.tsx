@@ -25,6 +25,12 @@ type CodePanelControls = {
 	isOpen: boolean;
 };
 
+export type FormBuilderControls = {
+	applyGraph: (nodes: any[], edges: any[]) => void;
+	removeEdge: (edgeId: string) => void;
+	deleteNode: (nodeId: string) => void;
+};
+
 type LayoutContextType = {
 	asideContent: ReactNode | null;
 	setAsideContent: (content: ReactNode | null) => void;
@@ -42,6 +48,8 @@ type LayoutContextType = {
 	setOpalPanelWidth: (width: number) => void;
 	codePanelControls: CodePanelControls | null;
 	setCodePanelControls: (controls: CodePanelControls | null) => void;
+	formBuilderControls: FormBuilderControls | null;
+	setFormBuilderControls: (controls: FormBuilderControls | null) => void;
 	topContent: ReactNode | null;
 	setTopContent: (content: ReactNode | null) => void;
 	titleActions: ReactNode | null;
@@ -62,6 +70,7 @@ export function LayoutProvider({children}: {children: ReactNode}) {
 	const [opalPanelControls, setOpalPanelControls] = useState<OpalPanelControls | null>(null);
 	const [opalPanelWidth, setOpalPanelWidth] = useState<number>(0);
 	const [codePanelControls, setCodePanelControls] = useState<CodePanelControls | null>(null);
+	const [formBuilderControls, setFormBuilderControls] = useState<FormBuilderControls | null>(null);
 	const [titleActions, setTitleActions] = useState<ReactNode | null>(null);
 	const [opalActionCard, setOpalActionCard] = useState<ReactNode | null>(null);
 
@@ -86,6 +95,8 @@ export function LayoutProvider({children}: {children: ReactNode}) {
 				setOpalPanelWidth,
 				codePanelControls,
 				setCodePanelControls,
+				formBuilderControls,
+				setFormBuilderControls,
 				titleActions,
 				setTitleActions,
 				opalActionCard,

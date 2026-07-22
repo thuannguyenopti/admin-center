@@ -1,24 +1,24 @@
 ---
 name: figma-builder
-description: "Converts an Axiom Play app page into a Figma design using real Axiom V2 library component instances (not drawn shapes). Use when the user wants to build a Figma screen from a running page, translate an app route or file into Figma, or produce a design using real Axiom components. Triggers: 'build a Figma for...', 'create a Figma design from...', '/figma-builder', 'translate this page to Figma'."
+description: "Converts an Axiom Play app page into a Figma design using real Axiom V3 library component instances (not drawn shapes). Use when the user wants to build a Figma screen from a running page, translate an app route or file into Figma, or produce a design using real Axiom components. Triggers: 'build a Figma for...', 'create a Figma design from...', '/figma-builder', 'translate this page to Figma'."
 ---
 
 # Figma Builder
 
-Converts an Axiom Play page into a Figma design using real Axiom V2 library component instances.
+Converts an Axiom Play page into a Figma design using real Axiom V3 library component instances.
 
-Library references — **read the relevant file before any Figma work**:
-- **`.claude/FIGMA_LIBRARY_V2.md`** — Axiom V2 component keys, color tokens (light + dark), typography, spacing, icons. Also contains the **Opal Components** section (fileKey `GH25lYLDM34molSm1yhQO3`) for Opal-specific components.
-- **`.claude/FIGMA_LIBRARY_V3.md`** — Axiom V3 foundation tokens (colors, typography, spacing, radius). Component keys TBD — library still in progress.
+Library reference — **read before any Figma work**:
+- **`.claude/FIGMA_LIBRARY_V3.md`** — Axiom V3 component keys, color/spacing/radius variables, **full typography table** (heading + body styles with confirmed keys). All core components available. Library fileKey: `qs72V79n1s9wYOcZ1TzBwM`
 
 ---
 
 ## Step 0 — Collect inputs
 
-Use `AskUserQuestion` to ask all three questions at once:
+Use `AskUserQuestion` to ask both questions at once:
 1. **Source** — a running page URL (e.g. `http://localhost:3000/opal`), app route (e.g. `/opal`), or file path (e.g. `app/opal/page.tsx`). If URL, dev server must be running.
 2. **Figma destination** — a Figma file URL to add a new page to, or "new" to create a new file
-3. **Axiom version** — Axiom v2 or Axiom v3 ⚠️ (v2 = Components V2 Legacy, fileKey `JYy51au6YaA4QZKpQy1ZRg`; **v3 = experimental, all core components available — see FIGMA_LIBRARY_V3.md**)
+
+> **Axiom version is always V3.** Library: "Axiom Design System", fileKey `qs72V79n1s9wYOcZ1TzBwM`. Every component and variable key must resolve to this library.
 
 ---
 
@@ -89,33 +89,174 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 >
 > 1. Invoke the `figma-use` skill — required before ANY `use_figma` call.
 > 2. Invoke the `figma-generate-design` skill — follow its workflow.
-> 3. Read the correct library reference file:
->    - **V2** → `.claude/FIGMA_LIBRARY_V2.md` — has component keys, variant names, full token tables (light + dark), Opal section.
->    - **V3 (experimental)** → `.claude/FIGMA_LIBRARY_V3.md` — has foundation tokens AND component keys for all core components (Button, Badge, Avatar, Input, Search, TextArea, Checkbox, Spinner, Tooltip, Data Cell, Column Header Cell, SubNav, Sidenav Base, Sidenav item, Alert, Menu Label Button, etc.). Use real instances for all components. **Library fileKey: `qs72V79n1s9wYOcZ1TzBwM`**
+> 3. Read `.claude/FIGMA_LIBRARY_V3.md` — V3 component keys, variable keys, **confirmed typography table** (heading + body styles). Library: **"Axiom Design System"**, fileKey: `qs72V79n1s9wYOcZ1TzBwM`
+> 4. **⛔ Library verification:** After creating any component instance, verify it shows **"Axiom Design System"** as the library name in Figma's inspector. If it shows any other library, you used the wrong key — stop immediately and replace it with the correct key from `FIGMA_LIBRARY_V3.md`.
+>
+> ## Pre-build Setup — run this as the FIRST `use_figma` call, before any content
+>
+> This single call loads all fonts and caches variable keys so every subsequent call can bind fills and apply text styles without extra round-trips. **Do not skip this.**
+>
+> ```js
+> // ── 1. Load fonts V3 uses ─────────────────────────────────────────────────
+> // ⚠️ Do NOT loadFontAsync for "VC Nudge" — the actual Figma font name is
+> //    "Nudge SemiNormal" and it's only available via library text styles.
+> //    Always use importStyleByKeyAsync → textStyleId for any heading text.
+> //    Only load Die Grotesk B (body) + Inter (nav chips, status bar only).
+> await Promise.all([
+>   figma.loadFontAsync({ family: "DI Grotesk B", style: "Regular" }),
+>   figma.loadFontAsync({ family: "DI Grotesk B", style: "Medium" }),
+>   figma.loadFontAsync({ family: "DI Grotesk B", style: "Bold" }),
+>   figma.loadFontAsync({ family: "Roboto Mono", style: "Regular" }),
+>   figma.loadFontAsync({ family: "Inter", style: "Regular" }),      // nav chips only
+>   figma.loadFontAsync({ family: "Inter", style: "Semi Bold" }),
+> ]);
+>
+> // ── 2. Pre-import the most-used V3 semantic variables ─────────────────────
+> // Keys from .claude/FIGMA_LIBRARY_V3.md → Variables section
+> // At build time, also search_design_system for any token not listed here.
+> const V3_VAR_KEYS = {
+>   // Backgrounds
+>   'bg.default':     'YOUR_KEY', // look up in FIGMA_LIBRARY_V3.md or search_design_system
+>   'bg.secondary':   'YOUR_KEY',
+>   'bg.page':        'YOUR_KEY',
+>   // Foregrounds
+>   'fg.default':     'YOUR_KEY',
+>   'fg.secondary':   'YOUR_KEY',
+>   'fg.tertiary':    'YOUR_KEY',
+>   // Borders
+>   'border.default': 'YOUR_KEY',
+>   'border.secondary':'YOUR_KEY',
+>   // Avatar tokens (confirmed keys)
+>   'avatar.bg-purple':  'f05403a78a33245b53514ce37f4dcf2a26759304',
+>   'avatar.fg-purple':  '832603931203c3dacfaf995889a810ac49e3a28b',
+>   'avatar.bg-neutral': 'bef7d61ffebcb0b4c9c3d1957b65e6fb8638f953',
+>   'avatar.fg-neutral': '4cb932d35cd48ae685f9198f09c7a70a7cc03f4d',
+> };
+> // Store variable objects for reuse across calls
+> const cache = {};
+> for (const [name, key] of Object.entries(V3_VAR_KEYS)) {
+>   if (key && key !== 'YOUR_KEY') {
+>     try { cache[name] = await figma.variables.importVariableByKeyAsync(key); } catch(e) {}
+>   }
+> }
+> // Store cache on root so other calls can retrieve it
+> figma.root.setPluginData('varCache', JSON.stringify(
+>   Object.fromEntries(Object.entries(cache).map(([k, v]) => [k, v.id]))
+> ));
+> return { fontsLoaded: true, cachedVars: Object.keys(cache) };
+> ```
+>
+> **bg/fg/border variable keys**: Look them up via `search_design_system` in Step 2B and fill in `V3_VAR_KEYS` before continuing. The avatar keys are already confirmed above.
+>
+> ### Helper: bind a fill to a variable (use everywhere)
+> ```js
+> async function bindFill(node, variableId) {
+>   const variable = await figma.variables.getVariableByIdAsync(variableId)
+>     || await figma.variables.importVariableByKeyAsync(variableId);
+>   let fills = JSON.parse(JSON.stringify(node.fills));
+>   if (!fills.length) fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 }, opacity: 1 }];
+>   fills[0] = figma.variables.setBoundVariableForPaint(fills[0], 'color', variable);
+>   node.fills = fills;
+> }
+> ```
+>
+> ### Helper: apply a V3 text style — USE THIS ON EVERY TEXT NODE YOU CREATE
+> ```js
+> // ⚠️ MANDATORY for ALL text nodes — never set fontName/fontSize directly.
+> //    The heading font "Nudge SemiNormal" is only available via library styles.
+> //    Setting fontName = { family: "Nudge SemiNormal", ... } causes "Missing font".
+> async function applyTextStyle(textNode, styleKey) {
+>   const style = await figma.importStyleByKeyAsync(styleKey);
+>   textNode.textStyleId = style.id;
+>   // After textStyleId is set, load the font from the node itself (safe — no hardcoding)
+>   await figma.loadFontAsync(textNode.fontName);
+> }
+> // Keys by role:
+> const TEXT_STYLES = {
+>   h1:        'a09b6330732317550f89995464841bc6221ee0d4', // 50px Nudge SemiNormal ExtraBold
+>   h2:        '0f390bdbab1aa2567e514a688a2720f921f484c5', // 28px Nudge SemiNormal ExtraBold
+>   h3:        '65d1ad725186853c5e927203afbd64f0b01aefa1', // 20px Nudge SemiNormal SemiBold
+>   h4:        '961be639091acbc4478c68e8a9804df7eed2774d', // 16px Nudge SemiNormal SemiBold
+>   bodyLgBold:'7d1aedb043b4fe329944270d8e182d8df5c26532', // 16px Die Grotesk B Bold
+>   bodyMdBold:'863bb50b204bcd99ea43f23de1b0db2b8240d2e7', // 14px Die Grotesk B Medium
+>   bodyMd:    'c20d5252d9eb7abd7184fe5e9e63188d8bb67cb6', // 14px Die Grotesk B Regular
+>   bodySmBold:'61679cba9e57f2ad9d079be913a0bb301504c825', // 12px Die Grotesk B Medium
+>   bodySm:    '20dcc541d8693a94f49c64b86cbceb90bd35b82e', // 12px Die Grotesk B Regular
+> };
+> // Usage: await applyTextStyle(node, TEXT_STYLES.h1); node.characters = "Notification Center";
+> ```
 >
 > ---
 >
-> ## Axiom V2 Component Keys (critical — use exact strings)
+> ## ⚠️ V3 API Gotchas — read before writing any plugin code
+>
+> These are real failures that occur silently or with cryptic errors. Burn these in:
+>
+> **1. Page switching** — `figma.currentPage = page` throws. Always use:
+> ```js
+> const page = figma.root.children.find(p => p.name === "Opal Mobile");
+> await figma.setCurrentPageAsync(page);
+> ```
+>
+> **2. Text style discovery** — `figma.teamLibrary.getAvailableLibraryTextStylesAsync()` does NOT exist in the plugin API. Use confirmed keys from `.claude/FIGMA_LIBRARY_V3.md` directly. Never attempt runtime discovery for text styles.
+>
+> **3. Variable fill binding** — `node.setBoundVariable('fills', variable)` throws "fills must be set on paints directly". Correct pattern:
+> ```js
+> const variable = await figma.variables.importVariableByKeyAsync(variableKey);
+> let fills = JSON.parse(JSON.stringify(node.fills));
+> if (fills.length === 0) fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 0 }, opacity: 1 }];
+> fills[0] = figma.variables.setBoundVariableForPaint(fills[0], 'color', variable);
+> node.fills = fills;
+> ```
+>
+> **4. Font loading before text edits** — For body/UI text (Die Grotesk B), pre-load in setup. For heading text (Nudge SemiNormal), use `applyTextStyle()` which loads the font from the node automatically. Never `loadFontAsync({ family: "VC Nudge", ... })` or `loadFontAsync({ family: "Nudge SemiNormal", ... })` directly — the font name varies by style and the font is only reliably available via `importStyleByKeyAsync`:
+> ```js
+> // ✅ Correct pattern for any text node
+> const node = figma.createText();
+> await applyTextStyle(node, TEXT_STYLES.h1);  // imports style, loads correct font
+> node.characters = "Notification Center";
+>
+> // ❌ Wrong — causes "Missing font: Nudge SemiNormal" dialog
+> await figma.loadFontAsync({ family: "VC Nudge", style: "SemiNormal ExtraBold" });
+> node.fontName = { family: "Nudge SemiNormal", style: "ExtraBold" };
+> node.characters = "Notification Center";
+> ```
+>
+> **5. `setProperties` with wrong variant value throws** — always inspect variant names first:
+> ```js
+> const comp = await figma.importComponentSetByKeyAsync(KEY);
+> const variantNames = comp.children.map(c => c.name);
+> // e.g. ["Variant=Subtle, Intent=Info, Numeric=False", ...] — NOT "Information", it's "Info"
+> ```
+> Then use exact strings from the names array. Never guess intent/variant values.
+>
+> **6. Resizing frames inside auto-layout** — `node.resize()` has no effect until sizing mode is set to FIXED:
+> ```js
+> node.layoutSizingHorizontal = 'FIXED';
+> node.layoutSizingVertical = 'FIXED';
+> node.resize(targetW, targetH);
+> ```
+>
+> **7. `teamLibrary` has only two methods** — `getAvailableLibraryVariableCollectionsAsync()` and `getVariablesInLibraryCollectionAsync()`. Nothing else. No text styles, no component search.
+>
+> ---
+>
+> ## Axiom V3 Component Keys (critical — use exact strings)
+>
+> All keys are from the **"Axiom Design System"** library (fileKey `qs72V79n1s9wYOcZ1TzBwM`). See `.claude/FIGMA_LIBRARY_V3.md` for the full list.
 >
 > | Component | componentKey | Key variant props |
 > |---|---|---|
-> | Button | `3296fc4820c3d0194d963b89c435b3e5b4dcc0ea` | Appearance: Primary/Default/Subtle/Danger/Default Opal/Primary Opal; Size: sm/md/lg |
-> | Toggle Button | `d8956657543d7623c4056abc4f6b8a4a98b5b4a7` | Appearance: Default/Subtle; Size: sm/md/lg; Pressed: true/false |
-> | Switch | `e52ee25a8593663d155cb6cd10528155d3f6c06d` | Checked: on/off; Size: Default 20; State: Default/Hover/Disabled; Label right: True/False — ⚠️ see Switch pattern below |
-> | Input | `87412b4b78df5711c2906719875b7b9168da2be6` | Size: md/lg/xl (min md!); State: Default/Focused/Disabled/Error |
-> | Text Area | `cd05ef35c0e28cc3e4c1d8586e01fc29991ee60b` | State: Default/Focused/Disabled/Error; Resize: none/auto/vertical |
-> | Badge | `d853342dd778628f8f008ef2ceb342957ce3a50f` | Intent: Information/Success/Warning/Danger/Neutral/Primary |
-> | Avatar | `07a871d4a8a3bfd2d6cd236b0547ee7ec3a31fe4` | Size: 2xs/xs/sm/md/lg/xl/3xl; Color Scheme: Purple/Neutral |
-> | Tooltip | `8620b20c2c6850f25f50a7ab83d00e3cdf734ca1` | Side: Top/Bottom/Left/Right |
-> | Checkbox | `832bf13d26272af25bc6385a154108e990a053db` | State: Unchecked/Checked/Indeterminate |
-> | Spinner | `6663c184ae5339e6a21af419fc95eb8f6326f764` | Appearance: Default/Inverse; Size: sm/md/lg |
-> | Sidenav Base | `95186ccb7d62d7bd1afde6ef2a12a49cbce3d298` | ⚠️ MANDATORY — always use this for the sidebar shell, never a custom frame |
-> | Sidenav item | `42e6d60b2bb7bdcc91adfa35eff29e0c27d09750` | ⚠️ MANDATORY — use for every nav item row, never a custom frame |
-> | Column Header Cell | `d473cabd925eb8cd7066d03b3122f7ce01241484` | ⚠️ MANDATORY — use for every table header cell; variants: `Variant=Text`, `Variant=Numeric`, `Variant=Select All`; `Hover=false` |
-> | Data Cell | `a051c4754e3ea047feb07b5e30ceae244c63b6a2` | ⚠️ MANDATORY — use for every table body cell; variants: `Type=Row Header` (name col), `Type=Text`, `Type=Date`, `Type=Badge`, `Type=Avatar`; always fix required props (see below) |
-> | Menu Label Button | look up in `.claude/FIGMA_LIBRARY_V2.md` | Label (small, fg.secondary above) + selected value + chevron-down; used for toolbar filter chips like "Type / All ▾" |
+> | Button | `8bb2661a46f1bb6c35f928e12b5ac0b950eda634` | Appearance: Primary/Default/Subtle/Danger; Size: Sm - 24/Md - 32/Lg - 40 |
+> | Badge | `f0a4e90b5415081932a85616bb0dd63dff0ce59b` | Intent: Info/Success/Warning/Danger/Neutral/Primary (NOT "Information") |
+> | Avatar | `78b07b467e9e5b5d3c68270c368be35c1c5ed5c9` | Size: xs/sm/md/lg |
+> | Checkbox | `1b51f2a59548085582454116eecc3835d2d5dbc0` | State: Unchecked/Checked/Indeterminate |
+> | Sidenav Base | `d902d4aacc11620d63b083878aee026015c5b135` | ⚠️ MANDATORY — always use this for the sidebar shell, never a custom frame |
+> | Sidenav item | `2a9c06ac3c1926fbbe2ad8dd0b0d5badab3fb984` | ⚠️ MANDATORY — use for every nav item row, never a custom frame |
+> | Data Cell | `827bab63db023b922abd275f6aa5229f569c4025` | ⚠️ MANDATORY — use for every table body cell |
+> | Menu Label Button | `bed4de19dc3b95439bd0beba3f4a69599ff8eaef` | Label above + selected value + chevron-down; toolbar filter chips like "Type / All ▾" |
 >
-> **Components library fileKey:** `JYy51au6YaA4QZKpQy1ZRg`
+> For any component not in this table, run `search_design_system` before building — never approximate with a custom frame.
 >
 > ## ⛔ NEVER approximate these with custom frames
 >
@@ -123,33 +264,30 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 >
 > | Element | Wrong | Right |
 > |---|---|---|
-> | Sidebar shell | Custom rectangle/frame | `Sidenav Base` instance (`95186ccb...`) |
-> | Sidebar nav item | Custom frame with icon + text | `Sidenav item` instance (`42e6d60b...`) per row |
-> | Table header cell | Text in a rectangle | `Column Header Cell` instance (`d473cabd...`) per column |
-> | Table body cell | Text/badge in a rectangle | `Data Cell` instance (`a051c4754...`) per cell, correct Type variant |
+> | Sidebar shell | Custom rectangle/frame | `Sidenav Base` instance (`d902d4aacc11...`) |
+> | Sidebar nav item | Custom frame with icon + text | `Sidenav item` instance (`2a9c06ac3c19...`) per row |
+> | Table body cell | Text/badge in a rectangle | `Data Cell` instance (`827bab63db02...`) per cell, correct Type variant |
 > | Table Type column cell | A dash "—" or empty frame | 32×32 frame, `bg.secondary` fill, `cornerRadius=6`, containing the agent's icon (e.g. `IconAgent`) centered inside |
 > | Top nav dropdowns ("Stride ▾", "Opal ▾") | Chip frames with fills/border | Plain frame `fills=[] strokes=[] px=8 py=10 gap=8 cornerRadius=6`, text + angle-down icon only |
-> | Toolbar search box | `Input` component or any plain text field | `Search` component, `Variant=Placeholder, Size=Large-40, State=Default`, key `80f3bfa879cfaa191679e85fc992cf72ddfd090b` — set placeholder text to `"Search..."` |
-> | Toolbar filter chips ("Type / All ▾") | Button `Variant=Default` or Chip/Pill | `Menu Label Button`, `State=Default`, key `cd23ed933d5012834a7e5f35de20fa6200ddd558` (h=40) — two text nodes: label (10px, e.g. "Type") above value (12px, e.g. "All") |
-> | Primary action button (e.g. "Add Agent") | Button `Size=Sm-24` or `Sm` | Button `Variant=Primary Size=Lg-40`, key `86a13eae728be1ba4e64a6f5825e1ce9e40d84cd` |
-> | Active tab underline | All-sides stroke or left border | `strokeBottomWeight=2`, all other weights=0, color = `#0066FF`; inactive tabs `strokes=[]` |
-> | Switch / Toggle row | V3 Switch, or custom frame | V2 Switch key `e52ee25a8593663d155cb6cd10528155d3f6c06d`, resized to **40×20px** (knob only). **Hide the internal Label text container** (`visible=false`) — it collapses to 1px wide and renders characters stacked vertically. Place a standalone `Text` node beside the instance for the label instead. Set checked state: `setProperties({ "Checked": "on" })`. |
-> | Select / pick-one dropdown | Custom frame with text + chevron icon | `Select` component, `Variant=Select, Open=True`, key `231c90292aa960cb39e3506b2501c122cee8a8f5`. Set `Text value` TEXT → selected option. Hide `Label` instance + `Form note` when no field label needed. Set list item labels via `findAll(n => n.name.includes("Listitem"))`. Full pattern in `FIGMA_LIBRARY_V2.md` → "Select (full)" section. |
+> | Toolbar search box | `Input` component or any plain text field | Use `search_design_system "Search"` to get V3 Search key — set placeholder to `"Search..."` |
+> | Toolbar filter chips ("Type / All ▾") | Button `Variant=Default` or Chip/Pill | `Menu Label Button`, `State=Default`, key `bed4de19dc3b95439bd0beba3f4a69599ff8eaef` — two text nodes: label above value |
+> | Primary action button (e.g. "Add Agent") | Small button or custom frame | Button `Appearance=Primary Size=Lg-40`, key `8bb2661a46f1bb6c35f928e12b5ac0b950eda634` |
+> | Active tab underline | All-sides stroke or left border | `strokeBottomWeight=2`, all other weights=0, color = `var(--ax-colors-fg-default)`; inactive tabs `strokes=[]` |
+> | Switch / Toggle row | Custom frame | V3 Toggle, key `874be68474689cf5f96831d5029bf55258651f37` |
+> | Select / pick-one dropdown | Custom frame with text + chevron icon | Use `search_design_system "Select"` to get V3 Select key |
 >
 > ### ✅ Toolbar Pattern — EXACT SPEC (SearchInput + Filters + Primary CTA)
->
-> **Reference:** File `FRGZTNaIzrWZ6QZ5oXswjO`, frame `12:75` — this is the canonical Axiom toolbar. Match it exactly.
 >
 > **Frame:** `name="Toolbar"`, `layoutMode=HORIZONTAL`, `primaryAxisAlignItems=SPACE_BETWEEN`, `counterAxisAlignItems=CENTER`, `h=40`, `fills=[]`, no padding.
 >
 > **Left group** (`layoutMode=HORIZONTAL`, `gap=8`, HUG both axes):
-> 1. **SearchInput** — `importComponentByKeyAsync("80f3bfa879cfaa191679e85fc992cf72ddfd090b")`, resize to `264×40`, set placeholder text node where `characters==="Placeholder"` → `"Search..."`
-> 2. **Filter buttons** — one `Menu Label Button` per filter, `State=Default`, key `cd23ed933d5012834a7e5f35de20fa6200ddd558`. After creating each instance, find its two TEXT nodes: `fontSize===10` → set to filter label (e.g. `"Type"`), `fontSize===12` → set to `"All"`. Typical filters: Type, Category, Created by.
+> 1. **SearchInput** — use `search_design_system "Search V3"` to get the V3 Search component key, resize to `264×40`, set placeholder text node → `"Search..."`
+> 2. **Filter buttons** — one `Menu Label Button` per filter, `State=Default`, key `bed4de19dc3b95439bd0beba3f4a69599ff8eaef`. After creating each instance, find its two TEXT nodes: the smaller one → filter label (e.g. `"Type"`), the larger → `"All"`. Typical filters: Type, Category, Created by.
 >
-> **Right group:** `Button` Primary Lg-40 — key `86a13eae728be1ba4e64a6f5825e1ce9e40d84cd`. Set label TEXT node `characters==="Button"` → CTA label (e.g. `"Add Agent"`).
+> **Right group:** `Button` Appearance=Primary, Size=Lg-40 — key `8bb2661a46f1bb6c35f928e12b5ac0b950eda634`. Set label TEXT node → CTA label (e.g. `"Add Agent"`).
 >
 > ```js
-> // Canonical toolbar build
+> // Canonical V3 toolbar build
 > const toolbar = figma.createFrame();
 > toolbar.name = "Toolbar";
 > toolbar.layoutMode = "HORIZONTAL";
@@ -172,46 +310,35 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 > leftGroup.layoutSizingHorizontal = "HUG";
 > leftGroup.layoutSizingVertical = "HUG";
 >
-> // 1. SearchInput
-> const searchComp = await figma.importComponentByKeyAsync("80f3bfa879cfaa191679e85fc992cf72ddfd090b");
-> const searchInst = searchComp.createInstance();
-> leftGroup.appendChild(searchInst);
-> searchInst.resize(264, 40);
-> const phText = searchInst.findOne(n => n.type === "TEXT" && n.characters === "Placeholder");
-> if (phText) phText.characters = "Search...";
+> // 1. SearchInput — look up V3 Search key via search_design_system first
+> // const searchComp = await figma.importComponentByKeyAsync("V3_SEARCH_KEY");
+> // const searchInst = searchComp.createInstance();
+> // leftGroup.appendChild(searchInst);
+> // searchInst.resize(264, 40);
 >
 > // 2. Filter buttons (repeat per filter)
-> const filterComp = await figma.importComponentByKeyAsync("cd23ed933d5012834a7e5f35de20fa6200ddd558");
+> const filterComp = await figma.importComponentByKeyAsync("bed4de19dc3b95439bd0beba3f4a69599ff8eaef");
 > for (const { label } of [{ label: "Type" }, { label: "Category" }, { label: "Created by" }]) {
 >   const inst = filterComp.createInstance();
 >   leftGroup.appendChild(inst);
->   inst.findAll(n => n.type === "TEXT").forEach(t => {
->     if (t.fontSize === 10) t.characters = label;
->     if (t.fontSize === 12) t.characters = "All";
+>   const textNodes = inst.findAll(n => n.type === "TEXT");
+>   textNodes.forEach(t => {
+>     if (t.fontSize <= 11) t.characters = label;
+>     else t.characters = "All";
 >   });
 > }
 >
-> // 3. Primary CTA
-> const btnComp = await figma.importComponentByKeyAsync("86a13eae728be1ba4e64a6f5825e1ce9e40d84cd");
-> const btnInst = btnComp.createInstance();
+> // 3. Primary CTA — V3 Button Lg-40
+> const btnComp = await figma.importComponentSetByKeyAsync("8bb2661a46f1bb6c35f928e12b5ac0b950eda634");
+> const primaryVariant = btnComp.children.find(c => c.name.includes("Appearance=Primary") && c.name.includes("Lg - 40")) ?? btnComp.defaultVariant;
+> const btnInst = primaryVariant.createInstance();
 > toolbar.appendChild(btnInst);
 > const btnLabel = btnInst.findOne(n => n.type === "TEXT");
 > if (btnLabel) btnLabel.characters = "Add Agent";
 > ```
 >
-> **Data Cell: required property fixes after every instance creation:**
-> ```js
-> // Without these, cells show doubled text / extra UI
-> cell.setProperties({
->   "Show Description#3225:6": false,
->   "User Name#10846:19": false,
-> });
-> // For Date cells — clear Time to get single-line display
-> cell.setProperties({ "Time#5950:76": "" });
-> ```
->
 > **Table header row container: NO background fill**
-> The Column Header Cell component has no background itself. The row container frame wrapping all header cells must also have no fill — set `fills = []`. Never apply `bg.secondary` or any gray fill to the header row container. The header sits directly on the white page background.
+> The header row container frame wrapping all header cells must have no fill — set `fills = []`. Never apply `bg.secondary` or any gray fill to the header row container.
 >
 > ## Color tokens — match the screenshot, never hardcode dark mode
 >
@@ -245,15 +372,9 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 > | border.secondary | `#4F576E` |
 > | border.tertiary | `#2E3442` |
 >
-> Full token table (all tokens, light + dark): `.claude/FIGMA_LIBRARY_V2.md`
+> Full token table (all tokens, light + dark): `.claude/FIGMA_LIBRARY_V3.md`
 >
-> ## Icons — V2
->
-> Icon naming: `kebab-case` in Figma → `Icon` + PascalCase in React
-> e.g. `pen-to-square` → `IconPenToSquare`, `arrows-rotate` → `IconArrowsRotate`
-> Variants: base (regular), `-thin` (lighter stroke), `-solid` (filled)
->
-> ## Icons — V3
+> ## Icons
 >
 > V3 icons are individual component sets with `Active=False / Active=True` variants.
 > Full React→Figma name mapping + componentKeys: `.claude/FIGMA_LIBRARY_V3.md` (Icons section).
@@ -288,6 +409,79 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 > if (slot) slot.swapComponent(iconComp);
 > ```
 > **V3 Button size property values:** `"Sm - 24"`, `"Md - 32"` ← use this for toolbars, `"Lg - 40"`
+>
+> ## V3 Typography — confirmed keys (use directly, no runtime discovery needed)
+>
+> V3 has **two** font families — headings are NOT Die Grotesk B:
+>
+> | Style name | key | Font | Size |
+> |---|---|---|---|
+> | `Header/Heading 1` | `a09b6330732317550f89995464841bc6221ee0d4` | VC Nudge ExtraBold | 50px |
+> | `Header/Heading 2` | `0f390bdbab1aa2567e514a688a2720f921f484c5` | VC Nudge ExtraBold | 28px |
+> | `Header/Heading 3` | `65d1ad725186853c5e927203afbd64f0b01aefa1` | VC Nudge SemiBold | 20px |
+> | `Header/Heading 4` | `961be639091acbc4478c68e8a9804df7eed2774d` | VC Nudge SemiBold | 16px |
+> | `Body/Large/Bold` | `7d1aedb043b4fe329944270d8e182d8df5c26532` | Die Grotesk B Bold | 16px |
+> | `Body/Medium/Bold` | `863bb50b204bcd99ea43f23de1b0db2b8240d2e7` | Die Grotesk B Medium | 14px |
+> | `Body/Medium/Regular` | `c20d5252d9eb7abd7184fe5e9e63188d8bb67cb6` | Die Grotesk B Regular | 14px |
+> | `Body/Small/Regular` | `20dcc541d8693a94f49c64b86cbceb90bd35b82e` | Die Grotesk B Regular | 12px |
+> | `Body/Small/Bold` | `61679cba9e57f2ad9d079be913a0bb301504c825` | Die Grotesk B Medium | 12px |
+>
+> Role mapping: screen/section title → H3 or H4 (H1 at 50px is too large for product UI, H2 at 28px for top-level headers). Row titles → `Body/Medium/Bold`. Body → `Body/Medium/Regular`. Timestamps → `Body/Small/Regular`.
+>
+> Apply: `const style = await figma.importStyleByKeyAsync(KEY); textNode.textStyleId = style.id;`
+>
+> ⚠️ Never hardcode `fontFamily` — always apply via style key.
+>
+> ## V3 Badge — correct intent values and font loading
+>
+> componentKey: `f0a4e90b5415081932a85616bb0dd63dff0ce59b`
+>
+> Intent values: `Info` (NOT `Information`), `Success`, `Warning`, `Danger`, `Neutral`, `Primary`
+> Variant format: `Variant=Subtle, Intent=Info, Numeric=False`
+>
+> ```js
+> // Always load fonts first — Badge uses Roboto Mono internally
+> await figma.loadFontAsync({ family: "Roboto Mono", style: "Regular" });
+> await figma.loadFontAsync({ family: "Die Grotesk B", style: "Medium" });
+>
+> const badgeSet = await figma.importComponentSetByKeyAsync("f0a4e90b5415081932a85616bb0dd63dff0ce59b");
+> const variant = badgeSet.children.find(c => c.name === "Variant=Subtle, Intent=Info, Numeric=False")
+>   ?? badgeSet.defaultVariant;
+> const inst = variant.createInstance();
+> parent.appendChild(inst);
+> // Set label by finding the first TEXT node (setProperties with Label key also works)
+> const labelNode = inst.findOne(n => n.type === 'TEXT');
+> if (labelNode) labelNode.characters = "Needs input";
+> ```
+>
+> ## V3 Avatar — color token binding
+>
+> componentKey: `78b07b467e9e5b5d3c68270c368be35c1c5ed5c9`
+>
+> For custom initials circles (when not using the Avatar component directly), bind fills to V3 tokens:
+> - `component/Avatar/bg-purple` → `f05403a78a33245b53514ce37f4dcf2a26759304` (blue/purple avatars)
+> - `component/Avatar/fg-purple` → `832603931203c3dacfaf995889a810ac49e3a28b`
+> - `component/Avatar/bg-neutral` → `bef7d61ffebcb0b4c9c3d1957b65e6fb8638f953` (all other colors)
+> - `component/Avatar/fg-neutral` → `4cb932d35cd48ae685f9198f09c7a70a7cc03f4d`
+>
+> Use `setBoundVariableForPaint` (see API Gotchas #3 above). Always bind both bg fill and fg text fill.
+>
+> ## Fixing pill-shaped avatar frames
+>
+> Pill shapes occur when a frame has `width ≠ height` with a large `cornerRadius`. Fix:
+> ```js
+> const size = 36; // or 44 for larger slots
+> node.layoutSizingHorizontal = 'FIXED';
+> node.layoutSizingVertical = 'FIXED';
+> node.resize(size, size);
+> node.cornerRadius = size / 2;
+> // Re-center child (text initial or emoji)
+> if ('children' in node && node.children[0]) {
+>   const child = node.children[0];
+>   child.x = (size - child.width) / 2;
+>   child.y = (size - child.height) / 2;
+> }
+> ```
 >
 > ---
 >
@@ -379,9 +573,10 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 >    }];
 >    // White "O" centred inside
 >    const logoText = figma.createText();
->    logoText.characters = "O";
->    logoText.fontSize = 18;
+>    await figma.loadFontAsync({ family: "Inter", style: "Bold" });
 >    logoText.fontName = { family: "Inter", style: "Bold" };
+>    logoText.fontSize = 18;
+>    logoText.characters = "O";
 >    logoText.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
 >    logoFrame.appendChild(logoText);
 >    logoText.x = (32 - logoText.width) / 2;
@@ -389,7 +584,7 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 >    ```
 >
 > 2. **"Stride" dropdown chip** — HORIZONTAL frame, `paddingLeft=8 paddingRight=8 paddingTop=4 paddingBottom=4 itemSpacing=6 cornerRadius=6`, `fills=[]`, CENTER align:
->    - Text node "Stride": Inter 14px Medium (#2E3442)
+>    - Text node "Stride": Inter 14px Medium (#2E3442) — Inter is pre-loaded in setup, safe to set fontName directly
 >    - Chevron: `importComponentByKeyAsync("8dc5a493b96d8e97df1b1ae487cb5a18d2f28c25")` → `createInstance()`, color `#66708C`
 >
 > 3. **"Opal" dropdown chip** — identical structure, text "Opal"
@@ -398,7 +593,7 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 >
 > **Right cluster** (HORIZONTAL frame, `gap=4`, CENTER align, HUG both axes) — left to right:
 >
-> 1. **"System" button** — Button instance (key `3296fc4820c3d0194d963b89c435b3e5b4dcc0ea`), Appearance=Subtle, Size=sm, set label text property to "System".
+> 1. **"System" button** — V3 Button instance (key `8bb2661a46f1bb6c35f928e12b5ac0b950eda634`), Appearance=Subtle, Size=Md - 32, set label text to "System".
 >
 > 2. **Opal orb** — 28×28 frame, `cornerRadius=14` (full circle):
 >    ```js
@@ -413,22 +608,15 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 >    }];
 >    ```
 >
-> 3–7. **Icon-only buttons** (Subtle md, `"Icon Button"="True"`, icon via `swapComponent`):
->
-> | # | Icon | componentKey |
-> |---|---|---|
-> | 3 | Search | `bc585dfd171e7301a658a5fc09f90bd136f9fb51` |
-> | 4 | Notifications | `1de5afa669027f45f28ce446bfb2aa8207855084` |
-> | 5 | Help | `d733ad5214f664970008b9cf2b03ae767eeeb713` |
-> | 6 | Code | `ff36366d7fa96e047996d8f9e0f3860b6002d47b` |
-> | 7 | User | `f286b22126c5b4145fb34e63b4dedf6c9f075f35` |
+> 3–7. **Icon-only buttons** (Subtle Md-32, `"Icon Button"="True"`, icon via `swapComponent`):
+> Use `search_design_system` to look up V3 icon keys for Search, Notifications, Help, Code, and User. The V3 icon component set keys are in `.claude/FIGMA_LIBRARY_V3.md` (Icons section).
 >
 > ```js
-> // Reusable icon-button factory — import ONCE, call per icon
-> const btnSet = await figma.importComponentSetByKeyAsync("3296fc4820c3d0194d963b89c435b3e5b4dcc0ea");
+> // Reusable V3 icon-button factory — import ONCE, call per icon
+> const btnSet = await figma.importComponentSetByKeyAsync("8bb2661a46f1bb6c35f928e12b5ac0b950eda634");
 > const subtleMd = btnSet.children.find(c => {
 >   const p = Object.fromEntries(c.name.split(', ').map(x => x.split('=')));
->   return p["Appearance"] === "Subtle" && p["Size"] === "md";
+>   return p["Appearance"] === "Subtle" && p["Size"] === "Md - 32";
 > }) ?? btnSet.defaultVariant;
 >
 > async function makeIconBtn(iconKey, parent) {
@@ -493,13 +681,13 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 > ### How to insert a real library component instance (Plugin API)
 >
 > ```js
-> // Import by componentKey from the Axiom V2 library
-> const buttonSet = await figma.importComponentSetByKeyAsync("3296fc4820c3d0194d963b89c435b3e5b4dcc0ea");
+> // Import by componentKey from the Axiom V3 library ("Axiom Design System", fileKey qs72V79n1s9wYOcZ1TzBwM)
+> const buttonSet = await figma.importComponentSetByKeyAsync("8bb2661a46f1bb6c35f928e12b5ac0b950eda634");
 >
 > // Find the right variant — parse the variant name string
 > const variant = buttonSet.children.find(c => {
 >   const props = Object.fromEntries(c.name.split(', ').map(p => p.split('=')));
->   return props["Appearance"] === "Subtle" && props["Size"] === "sm";
+>   return props["Appearance"] === "Subtle" && props["Size"] === "Md - 32";
 > }) ?? buttonSet.defaultVariant;
 >
 > const instance = variant.createInstance();
@@ -530,6 +718,42 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 > textNode.textStyleId = style.id;
 > ```
 >
+> ### V3 UI element → component decision table
+>
+> Before building any element, look it up here. If it's in this table, use the component — never a custom frame.
+>
+> | UI element | V3 component | Key | Notes |
+> |---|---|---|---|
+> | Status / intent label | Badge | `f0a4e90b5415081932a85616bb0dd63dff0ce59b` | Intent: Info/Success/Warning/Danger/Neutral/Primary; Variant: Subtle |
+> | Person avatar | Avatar | `78b07b467e9e5b5d3c68270c368be35c1c5ed5c9` | Size: xs/sm/md/lg; set Name prop for initials |
+> | Notification / system alert | Alert | `03d2f87e47aab9cca1cf94969454df6a6050c0ee` | Use this, never a custom colored frame |
+> | Primary action | Button `Lg-40` | `8bb2661a46f1bb6c35f928e12b5ac0b950eda634` | Appearance=Primary |
+> | Secondary / ghost action | Button `Md-32` or `Sm-24` | same | Appearance=Default or Subtle |
+> | Text input | Input | look up via `search_design_system "Input text field"` | Size: md/lg/xl only |
+> | Dropdown / select | Select | look up via `search_design_system "Select dropdown V3"` | |
+> | Search field | Search (SearchInput) | look up via `search_design_system "Search"` | |
+> | Sidebar shell | Sidenav Base | `d902d4aacc11620d63b083878aee026015c5b135` | MANDATORY — never custom frame |
+> | Sidebar nav item | Sidenav item (FA icon) | `2a9c06ac3c1926fbbe2ad8dd0b0d5badab3fb984` | MANDATORY per row |
+> | Loading state | Spinner | `7b7af13ed805bcff4a0401591b07e86f347e1808` | |
+> | Checkbox | Checkbox | `1b51f2a59548085582454116eecc3835d2d5dbc0` | |
+> | Toggle/switch | Toggle | `874be68474689cf5f96831d5029bf55258651f37` | |
+>
+> **If a component isn't in this table:** run `search_design_system` before building — never approximate with a custom frame.
+>
+> ### Typography decision table — apply to EVERY text node
+>
+> | Text role | Style key |
+> |---|---|
+> | Screen / page title | H3 `65d1ad725186853c5e927203afbd64f0b01aefa1` |
+> | Section heading, dialog title | H4 `961be639091acbc4478c68e8a9804df7eed2774d` |
+> | Large card title | Body/Large/Bold `7d1aedb043b4fe329944270d8e182d8df5c26532` |
+> | Row name / item title | Body/Medium/Bold `863bb50b204bcd99ea43f23de1b0db2b8240d2e7` |
+> | Body / description | Body/Medium/Regular `c20d5252d9eb7abd7184fe5e9e63188d8bb67cb6` |
+> | Secondary / preview text | Body/Small/Regular `20dcc541d8693a94f49c64b86cbceb90bd35b82e` |
+> | Timestamp / label / tag | Body/Small/Bold `61679cba9e57f2ad9d079be913a0bb301504c825` |
+>
+> Apply with `applyTextStyle(node, key)` (helper defined in Pre-build Setup). Every text node must have a `textStyleId` — the audit will catch any without one.
+>
 > ### Layout rules
 > - Set `layoutSizingHorizontal` / `layoutSizingVertical` **after** appending to parent
 > - Use `primaryAxisSizingMode = "HUG"` for containers that should wrap content
@@ -554,58 +778,92 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 >
 > ---
 >
-> ## Step 6 — Pre-delivery audit (MANDATORY — fix before reporting)
+> ## Step 6 — Executable Compliance Audit (MANDATORY GATE — 0 issues required)
 >
-> Before taking the final screenshot, run this audit on every frame built. Fix any failure before proceeding.
+> **Do NOT proceed to Step 7 until this script returns `{ issues: [] }`.**
+> Run → fix all reported issues → run again → repeat until clean.
 >
-> ### Audit checklist
->
-> **A. Real components — no custom approximations for these:**
-> - [ ] Every banner / alert uses a real `Alert` component instance (key `fd2f5d933b6b697eb909b769b17b71f86c0a61cf`) — never a custom Box with a colored fill
-> - [ ] Every sidebar shell uses `Sidenav Base` (`95186ccb...`) — never a custom frame
-> - [ ] Every table cell uses `Column Header Cell` / `Data Cell` — never plain text in a rectangle
-> - [ ] Every toolbar search box uses the `Search` component — never a plain Input or text field
->
-> **B. Color tokens — bound to the correct library version:**
-> - [ ] No node has a raw unbound hex fill (e.g. `#eff6ff`, `#ede9fe`, `#3b82f6`, `#16a34a`)
-> - [ ] All fills bound to variables use the **correct library for the selected Axiom version**:
->   - **V2** → variables must come from **Foundations V2** (collection in fileKey `JYy51au6YaA4QZKpQy1ZRg`). When calling `search_design_system`, always pass `fileKey: "JYy51au6YaA4QZKpQy1ZRg"`. After importing, verify the variable's `variableCollectionId` belongs to this file — reject any variable from the V3 library (`qs72V79n1s9wYOcZ1TzBwM`) or any other library.
->   - **V3** → variables must come from the V3 foundation library (`qs72V79n1s9wYOcZ1TzBwM`).
-> - [ ] Tokens to check: `bg.default`, `bg.secondary`, `bg.page`, `fg.default`, `fg.secondary`, `fg.tertiary`, `border.default`, `border.secondary`, intent tokens (`bg.success.subtle`, `fg.information.default`, etc.)
-> - ⚠️ **Never mix V2 and V3 variable bindings in the same frame.** If a wrong-library binding is found, re-import the equivalent token from the correct library and rebind.
->
-> **C. Spacing — matches spec:**
-> - [ ] DialogHeader: `paddingLeft=24, paddingRight=16, paddingTop=20, paddingBottom=20`
-> - [ ] DialogBody: `paddingLeft=24, paddingRight=24, paddingTop=16, paddingBottom=16`, `itemSpacing=16`
-> - [ ] DialogFooter: `paddingLeft=24, paddingRight=20, paddingTop=16, paddingBottom=16`, `gap=8`
-> - [ ] Toolbar height = 40px, no extra padding
-> - [ ] Body section gaps use 16px (major sections) or 8px (within a section)
->
-> ### How to audit in Plugin API
+> Run this as a `use_figma` call on the root wrapper frame:
 >
 > ```js
-> // Check for hardcoded hex fills on any node
-> function auditFills(node, path = "") {
->   const issues = [];
->   if ("fills" in node && Array.isArray(node.fills)) {
->     for (const fill of node.fills) {
->       if (fill.type === "SOLID" && !fill.boundVariables?.color) {
->         const { r, g, b } = fill.color;
->         issues.push({ path: path + "/" + node.name, hex: `rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})` });
+> // ── Full V3 Compliance Audit ──────────────────────────────────────────────
+> // Replace ROOT_ID with the id returned when you created the wrapper frame.
+> const root = figma.getNodeById('ROOT_ID') ?? figma.currentPage;
+> const issues = [];
+>
+> // Nodes whose unbound fills are intentional (gradients, images, transparent)
+> function isFillExempt(fill) {
+>   if (fill.type !== 'SOLID') return true;                         // gradients, images: ok
+>   const { r, g, b, a } = fill.color;
+>   if ((a ?? fill.opacity ?? 1) === 0) return true;               // transparent: ok
+>   if (r === 1 && g === 1 && b === 1) return true;                // pure white bg: ok
+>   return false;
+> }
+>
+> root.findAll(n => {
+>   // ── A: Unbound solid fills ───────────────────────────────────────────────
+>   if ('fills' in n && Array.isArray(n.fills)) {
+>     for (const fill of n.fills) {
+>       if (!isFillExempt(fill) && !fill.boundVariables?.color) {
+>         const {r,g,b} = fill.color;
+>         issues.push({ rule:'unbound-fill', id:n.id, node:n.name,
+>           color:`rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})` });
 >       }
 >     }
 >   }
->   if ("children" in node) {
->     for (const child of node.children) {
->       issues.push(...auditFills(child, path + "/" + node.name));
+>
+>   // ── B: Text nodes without a V3 text style ───────────────────────────────
+>   if (n.type === 'TEXT') {
+>     if (!n.textStyleId || n.textStyleId === '') {
+>       issues.push({ rule:'missing-text-style', id:n.id, text:n.characters.slice(0,30),
+>         font:`${n.fontName?.family} ${n.fontName?.style}` });
+>     }
+>     // Flag Inter in product text (status bar time strings are exempt)
+>     if (n.fontName?.family === 'Inter' && !['9:41','StatusBar'].includes(n.parent?.name)) {
+>       issues.push({ rule:'wrong-font-inter', id:n.id, text:n.characters.slice(0,30) });
 >     }
 >   }
->   return issues;
-> }
-> return auditFills(figma.currentPage.selection[0] ?? figma.currentPage);
+>
+>   return false; // findAll: visit all nodes
+> });
+>
+> // Summary by rule
+> const byRule = issues.reduce((acc, i) => {
+>   acc[i.rule] = (acc[i.rule] || 0) + 1; return acc;
+> }, {});
+>
+> return { totalIssues: issues.length, byRule, issues: issues.slice(0, 30) };
 > ```
 >
-> Fix every issue found before taking the final screenshot.
+> ### Interpreting results and fixing
+>
+> | Rule | What to fix |
+> |---|---|
+> | `unbound-fill` | Find node by id, import the matching V3 semantic variable, call `setBoundVariableForPaint` |
+> | `missing-text-style` | Find text node by id, call `applyTextStyle(node, TEXT_STYLES.bodyMd)` (pick role by size) |
+> | `wrong-font-inter` | Apply the correct V3 text style key — never set fontName directly |
+>
+> **Acceptable exemptions** (do not try to fix these):
+> - Gradient fills (type ≠ SOLID) — logo marks, Opal orb, chip gradients
+> - Image fills — avatars with real photo src
+> - Pure white fills on icon containers where no semantic token exists
+> - Status bar time text ("9:41") uses Inter — intentional, ignore
+>
+> ⚠️ **Every variable binding in a frame must come from the "Axiom Design System" library** (fileKey `qs72V79n1s9wYOcZ1TzBwM`). Never bind a fill or stroke to a variable from any other library.
+>
+> ### Spacing reference (Axiom tokens → px)
+>
+> | Axiom token | px | Use for |
+> |---|---|---|
+> | `spacing-4` | 4px | Tight gaps, icon padding |
+> | `spacing-8` | 8px | Component-internal gaps |
+> | `spacing-12` | 12px | Row vertical padding |
+> | `spacing-16` | 16px | Section padding, major gaps |
+> | `spacing-20` | 20px | Dialog header/footer vertical pad |
+> | `spacing-24` | 24px | Dialog body horizontal pad |
+> | `spacing-32` | 32px | Section separation |
+>
+> Dialog spec: Header `pad=20/24`, Body `pad=16/24 gap=16`, Footer `pad=16/20 gap=8`.
 >
 > ## Step 7 — Visual fidelity comparison (MANDATORY — default behaviour)
 >
@@ -635,13 +893,50 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 
 ---
 
+## Confirmed keys & learnings (verified 2026-07-17, Planner panel build)
+
+**Confirmed V3 component keys — use directly:**
+- **Close / X icon:** `94021c35dea93d114eb2b1c081fecebc71c44c86` — "Close" component_set, Axiom Design System, `Active=False`. ⛔ NOT the legacy Axiom Icons `6824278e…` "xmark-thin 24".
+- **Inline text link (Link):** `Link2` component_set `ff05d48dbbc43caad618eaa86718ec30814d2f2b` — the real text-link (green, `State=Default, Type=Default, External=false`). ⚠️ The set literally named "Link" (`5c0af0d7…`) is a chain/hyperlink **icon** with no text node — do not use it for inline links. There is also a "Link (corrupted)" set — avoid.
+
+**Component-choice rules (these were corrected mid-build — bake them in):**
+- **Inline text links** ("Chat", "IM", "View work", etc.) → real `Link2` instance, never a color-token-bound text node. The DS Link is green; if the source shows another color (e.g. purple in-app), FLAG the conflict — do not hack a token (`Avatar/fg-purple`) to fake it.
+- **Delete button in dialog/detail footers** → Button `Variant=Danger Outline`, never solid `Danger`. (Inspect the Button set's `Variant` values by parsing `name.split(', ')` — the value is exactly `"Danger Outline"`.)
+- **Card left accent bar** → a child **RECT** pinned to the left edge, NOT `strokeLeftWeight` (a border won't round independently and reads as incomplete/square against a rounded card). Recipe: `layoutPositioning=ABSOLUTE`, `x=0 y=0`, `constraints={horizontal:MIN, vertical:STRETCH}` (spans full height), width 3–4px, `topLeftRadius=bottomLeftRadius=<card radius>`, `topRightRadius=bottomRightRadius=0`. Bind fill to `fg.success` (green) / `fg.warning` (amber).
+- **Reveal-on-hover row actions (pins, quick actions)** → place OUT of layout flow: a dedicated right column or absolute positioning, anchored **below the due date** (top-right). Never inline beside the date — an `opacity:0` sibling still reserves width and permanently shifts the date. Match the reference node's exact anchor; do not generalize to a "centered" position.
+
+**API gotchas confirmed:**
+- **Bind variables fresh.** `figma.variables.getVariableByIdAsync(id)` on a variable imported in a prior call can return a reference that `setBoundVariableForPaint` accepts but silently does NOT bind. Always `importVariableByKeyAsync(key)` fresh in the same script immediately before binding, and verify the bind afterward.
+
+**⛔ Audit scope — do NOT destroy user scaffolding:**
+- When the user places an EXAMPLE/reference node on the canvas to match, code-exported references are often non-compliant themselves (Inter fonts, unbound strokes). Extract their **structure/spacing** and re-map typography/color to compliant V3 styles — but **do not delete the reference node to make the audit return `{ issues: [] }`**. Run the audit against the **frame roots you built** (pass those ids), leaving user reference nodes untouched. The user may keep multiple reference nodes and expect them to persist.
+
+---
+
+## Learnings (verified 2026-07-21, Planner tray Rich + Fun build)
+
+**Capturing an interactive / stateful panel (tray, drawer, popover, aside).** `generate_figma_design` renders the URL fresh with empty state — an aside that only opens via a button click and whose variant is chosen from `localStorage` will NOT be captured. Don't hack the real page. Instead:
+1. Add a **temporary isolated fullscreen route** (e.g. `app/<area>/<thing>/preview/page.tsx`) that renders ONLY the panel on a plain canvas at its natural width, and **forces the state from a query param** (`?d=rich`) by writing the driving `localStorage` key synchronously during render before the panel's hook reads it. Register it as a `hidden: true, fullscreen: true` nav entry so the shell (sidebar/GlobalBar) is stripped.
+2. Inject the capture script **into that preview page only** (`next/script` `<Script src="https://mcp.figma.com/mcp/html-to-design/capture.js" strategy="afterInteractive" />`) — never into the shared root layout. (First check for a CSP header that would block it; axiom-play has none.)
+3. Generate one capture ID per state (parallel is fine once the file exists), `open` each hash URL with a generous `figmadelay` (≥3000ms so avatars/images load), poll to `completed`.
+4. **Clean up** after: delete the preview route + nav entry + script. Verify the app still builds and the temp route 404s.
+
+**Verify a component by its main component, NOT its node name.** After you `swapComponent` an icon into a Button (or rename any instance), the instance's `name` becomes the icon/custom name (e.g. "Search", "Close") — `get_metadata` then makes it look like a bare icon, not a Button. Don't conclude "this isn't an Axiom component" from the name. Resolve `await inst.getMainComponentAsync()` and read `mc.parent.name` (the component-set name) / compare `.key` against known Axiom keys. `remote: true` confirms it's from a linked library — then match the key to `qs72V79n1s9wYOcZ1TzBwM` to confirm it's Axiom (not Stride/Foundations-Legacy/Opal Components, which also appear in search).
+
+**Axiom Checkbox carries a built-in label slot.** A Checkbox instance renders an internal label ("Text frame") and reports ~80px wide, not 24×24. For a bare checkbox (checklist rows, leading slots), hide that node: `instance.findOne(n => n.name === 'Text frame').visible = false` — the instance then collapses to the box and, in a HORIZONTAL auto-layout row, the real text re-aligns automatically. ⚠️ **Never mask overflow with a clip** (`clipsContent`) — a clip hides real bugs (the stray "Label" only surfaced once the row was given height; the "cropped checklist" was that clip).
+
+**Read design INTENT, not just pixels.** When the source encodes one idea several ways (e.g. an "approval" shown as an orange rail + an "Approve" verb + being the one colored card), don't dutifully replicate all three — surface it and confirm. The user may want the concept stripped (here: no status framing at all; cards uniform; color reassigned to item **type**). A "row with a divider + left rail" and a "standalone bordered card" are different component metaphors — picking the right one is a design decision, not a styling one.
+
+---
+
 ## Output
 
 ```
 ✓ Scanned: [source]
-✓ Library: Axiom V2 — JYy51au6YaA4QZKpQy1ZRg
-✓ Real instances: N
-✓ Approximated: M
+✓ Library: Axiom V3 — "Axiom Design System" (qs72V79n1s9wYOcZ1TzBwM)
+✓ Real instances: N components
+✓ Typography: VC Nudge headings / Die Grotesk B body
+✓ Color tokens: all fills bound to V3 variables
 ✓ Audit: PASS (or list issues)
 ✓ Frame: https://figma.com/design/...
 

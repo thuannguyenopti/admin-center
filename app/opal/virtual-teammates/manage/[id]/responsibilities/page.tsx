@@ -561,7 +561,7 @@ export default function ResponsibilitiesPage() {
 	const jobsRef = useRef<HTMLDivElement>(null);
 	const interactionsRef = useRef<HTMLDivElement>(null);
 	const rulesRef = useRef<HTMLDivElement>(null);
-	const scrollTo = (ref: React.RefObject<HTMLDivElement>) => setTimeout(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+	const scrollTo = (ref: React.RefObject<HTMLDivElement | null>) => setTimeout(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
 
 	return (
 		<Box style={{ padding: "32px 40px" }}>

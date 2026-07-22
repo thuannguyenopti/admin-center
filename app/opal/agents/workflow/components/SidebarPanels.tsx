@@ -17,6 +17,12 @@ import {
     Disclosure,
     DisclosureTrigger,
     DisclosureContent,
+    Dialog,
+    DialogBody,
+    DialogClose,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
     type BoxProps,
 } from "@optiaxiom/react";
 import {
@@ -45,6 +51,9 @@ import {
     IconChevronDown,
     IconChevronRight,
     IconCode,
+    IconArrowsMaximize,
+    IconPlay,
+    IconDiagramSubtask,
 } from "@optiaxiom/icons";
 import { IconSparkles } from "@optimizely/axiom-icons";
 import { useReactFlow, MarkerType } from "@xyflow/react";
@@ -118,19 +127,6 @@ const PanelContainer = ({
 }) => (
     <DetailsPanel w="full">
         <DetailsPanelHeader
-            addonBefore={
-                <Box
-                    p="8"
-                    rounded="full"
-                    bg={iconBg}
-                    color="fg.default"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                >
-                    {icon}
-                </Box>
-            }
             addonAfter={
                 <Box display="flex" gap="8" alignItems="center">
                     {headerAction}
@@ -146,10 +142,24 @@ const PanelContainer = ({
                 </Box>
             }
         >
-            <Text fontWeight="600" fontSize="lg">{title}</Text>
+            <Box display="flex" alignItems="center" gap="8">
+                <Box
+                    p="8"
+                    rounded="md"
+                    bg={iconBg}
+                    color="fg.default"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    style={{ flexShrink: 0 }}
+                >
+                    {icon}
+                </Box>
+                <Text fontWeight="600" fontSize="lg">{title}</Text>
+            </Box>
         </DetailsPanelHeader>
 
-        <DetailsPanelBody p="20">
+        <DetailsPanelBody pt="12" px="20" pb="20">
             <Box bg="bg.secondary" rounded="md" p="16" display="flex" flexDirection="column" gap="24" flex="1">
                 {children}
             </Box>
@@ -162,9 +172,9 @@ const PanelContainer = ({
                 gap="8"
                 flex="1"
             >
-                {(hideCloseButton || onSave) && <Button appearance="subtle" onClick={onClose}>Cancel</Button>}
-                {!hideMenuButton && <Button appearance="subtle" icon={<IconEllipsisSolid size={16} />} aria-label="More options" />}
-                <Button appearance="primary" onClick={onSave}>Apply</Button>
+                {(hideCloseButton || onSave) && <Button appearance="subtle" size="md" onClick={onClose}>Cancel</Button>}
+                {!hideMenuButton && <Button appearance="subtle" size="md" icon={<IconEllipsisSolid size={16} />} aria-label="More options" />}
+                <Button appearance="primary" size="md" onClick={onSave}>Apply</Button>
             </Box>
         </DetailsPanelFooter>
     </DetailsPanel>
@@ -770,7 +780,7 @@ export function WorkflowSetupPanel({ onClose, onSave, workflowName, onNameChange
     return (
         <PanelContainer
             title="Workflow Setup"
-            icon={<IconCodeBranch />}
+            icon={<IconDiagramSubtask />}
             iconBg="bg.avatar.purple"
             onClose={onClose}
             onSave={onSave}
@@ -958,6 +968,550 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                 </Box>
             </DetailsPanelFooter>
         </DetailsPanel >
+    );
+}
+
+// ── Code Node ────────────────────────────────────────────────────────────────
+
+const LANGUAGE_OPTIONS = [
+    { label: "Python", value: "python" },
+    { label: "JavaScript (Node.js 22)", value: "javascript" },
+    { label: "Bash", value: "bash" },
+];
+
+const VARIABLE_TYPES = [
+    { label: "String", value: "string" },
+    { label: "Number", value: "number" },
+    { label: "Boolean", value: "boolean" },
+    { label: "Array", value: "array" },
+    { label: "Object", value: "object" },
+];
+
+const CODE_DEFAULT = `async def run(input_data: dict) -> dict:
+    user_email = input_data['user_email']
+    order_total = input_data['order_total']
+
+    transformed = []
+    for item in input_data['items']:
+        transformed.append({
+            'json': {
+                **item['json'],
+                'user_email': user_email,
+                'total': order_total,
+            }
+        })
+
+    return {'items': transformed}`;
+
+const SAMPLE_INPUT_DEFAULT = `{
+  "user_email": "john@example.com",
+  "order_total": 99.99,
+  "items": [
+    {
+      "json": {
+        "user_id": "123",
+        "email": "john@example.com"
+      }
+    }
+  ]
+}`;
+
+type InputVariable = {
+    name: string;
+    type: string;
+    description: string;
+};
+
+export function CodeNodePanel({ onClose }: PanelProps) {
+    const [name, setName] = useState("Transform User Data");
+    const [language, setLanguage] = useState("python");
+    const [variables, setVariables] = useState<InputVariable[]>([
+        { name: "user_email", type: "string", description: "The email address of the user from the Get User Info step" },
+        { name: "order_total", type: "number", description: "The total amount of the order from the webhook trigger payload" },
+    ]);
+    const [code, setCode] = useState(CODE_DEFAULT);
+    const [codeEditorOpen, setCodeEditorOpen] = useState(false);
+    const [testOpen, setTestOpen] = useState(false);
+    const [testRan, setTestRan] = useState(false);
+    const [sampleInput, setSampleInput] = useState(SAMPLE_INPUT_DEFAULT);
+    const [logsOpen, setLogsOpen] = useState(false);
+    const [stderrOpen, setStderrOpen] = useState(false);
+
+    const addVariable = () => {
+        setVariables((prev) => [...prev, { name: "", type: "string", description: "" }]);
+    };
+
+    const removeVariable = (index: number) => {
+        setVariables((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const updateVariable = (index: number, updates: Partial<InputVariable>) => {
+        setVariables((prev) => prev.map((v, i) => (i === index ? { ...v, ...updates } : v)));
+    };
+
+    return (
+        <>
+            <PanelContainer
+                title="Code"
+                icon={<IconCode />}
+                iconBg="bg.accent.subtle"
+                onClose={onClose}
+                hideMenuButton
+            >
+                <Field label="Name">
+                    <Input
+                        size="md"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Enter name..."
+                    />
+                </Field>
+
+                <Field label="Language">
+                    <Select
+                        value={getSelectValueInOptions(language, LANGUAGE_OPTIONS, "python")}
+                        onValueChange={setLanguage}
+                        options={LANGUAGE_OPTIONS}
+                    >
+                        <SelectTrigger size="md">
+                            {LANGUAGE_OPTIONS.find((l) => l.value === language)?.label ?? "Python"}
+                        </SelectTrigger>
+                        <SelectContent />
+                    </Select>
+                </Field>
+
+                {/* Input Variables */}
+                <Box display="flex" flexDirection="column" gap="12">
+                    <Box>
+                        <Text fontSize="md" fontWeight="500">Input Variables</Text>
+                        <Text fontSize="sm" color="fg.tertiary">
+                            Define variables that the workflow agent will map from previous steps
+                        </Text>
+                    </Box>
+
+                    {variables.map((variable, index) => (
+                        <Box
+                            key={index}
+                            border="1"
+                            borderColor="border.default"
+                            rounded="md"
+                            p="16"
+                            display="flex"
+                            flexDirection="column"
+                            gap="12"
+                            bg="bg.default"
+                        >
+                            <Box display="flex" justifyContent="space-between" alignItems="center">
+                                <Text fontSize="sm" fontWeight="500" color="fg.secondary">
+                                    Variable {index + 1}
+                                </Text>
+                                <Button
+                                    appearance="subtle"
+                                    size="sm"
+                                    icon={<IconXmark size={14} />}
+                                    aria-label="Remove variable"
+                                    onClick={() => removeVariable(index)}
+                                />
+                            </Box>
+                            <Box display="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                                <Field label="Name">
+                                    <Input
+                                        size="md"
+                                        value={variable.name}
+                                        onChange={(e) => updateVariable(index, { name: e.target.value })}
+                                        placeholder="e.g., user_email"
+                                    />
+                                </Field>
+                                <Field label="Type">
+                                    <Select
+                                        value={getSelectValueInOptions(variable.type, VARIABLE_TYPES, "string")}
+                                        onValueChange={(val) => updateVariable(index, { type: val })}
+                                        options={VARIABLE_TYPES}
+                                    >
+                                        <SelectTrigger size="md">
+                                            {VARIABLE_TYPES.find((t) => t.value === variable.type)?.label ?? "String"}
+                                        </SelectTrigger>
+                                        <SelectContent />
+                                    </Select>
+                                </Field>
+                            </Box>
+                            <Field label="Description">
+                                <Textarea
+                                    value={variable.description}
+                                    onChange={(e) => updateVariable(index, { description: e.target.value })}
+                                    placeholder="Describe what this variable should contain..."
+                                    resize="vertical"
+                                />
+                            </Field>
+                        </Box>
+                    ))}
+
+                    <Button
+                        appearance="subtle"
+                        icon={<IconPlus />}
+                        onClick={addVariable}
+                        style={{ width: "100%" }}
+                    >
+                        Add Variable
+                    </Button>
+                </Box>
+
+                {/* Code Editor */}
+                <Box display="flex" flexDirection="column" gap="8">
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Text fontSize="md" fontWeight="500">Code</Text>
+                        <Box display="flex" gap="6" alignItems="center">
+                            <Button
+                                appearance="subtle"
+                                size="sm"
+                                icon={<IconPlay size={12} />}
+                                onClick={() => setTestOpen(true)}
+                            >
+                                Test Code
+                            </Button>
+                            <Button
+                                appearance="subtle"
+                                size="sm"
+                                icon={<IconArrowsMaximize size={14} />}
+                                aria-label="Expand editor"
+                                onClick={() => setCodeEditorOpen(true)}
+                            />
+                        </Box>
+                    </Box>
+                    <Textarea
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        resize="none"
+                        className="h-80"
+                        style={{
+                            fontFamily: "'SF Mono', Monaco, 'Cascadia Code', Consolas, monospace",
+                            fontSize: "13px",
+                            lineHeight: "1.5",
+                        }}
+                    />
+                </Box>
+
+                {/* Info */}
+                <Box bg="bg.default" rounded="sm" py="8" px="12" style={{ textAlign: "center" }}>
+                    <Text fontSize="sm" color="fg.tertiary">
+                        Timeout: 300 seconds | Execution: Run once for all items
+                    </Text>
+                </Box>
+            </PanelContainer>
+
+            {/* Code Editor Dialog */}
+            <Dialog open={codeEditorOpen} onOpenChange={setCodeEditorOpen}>
+                <DialogContent style={{ width: "min(900px, 90vw)" }}>
+                    <DialogHeader>
+                        <Text fontWeight="600" fontSize="xl">Code Editor</Text>
+                    </DialogHeader>
+                    <DialogBody>
+                        <Box display="flex" flexDirection="column" gap="16">
+                            <Box display="flex" alignItems="center" justifyContent="space-between">
+                                <Box style={{ maxWidth: "250px" }}>
+                                    <Select
+                                        value={getSelectValueInOptions(language, LANGUAGE_OPTIONS, "python")}
+                                        onValueChange={setLanguage}
+                                        options={LANGUAGE_OPTIONS}
+                                    >
+                                        <SelectTrigger size="md">
+                                            {LANGUAGE_OPTIONS.find((l) => l.value === language)?.label ?? "Python"}
+                                        </SelectTrigger>
+                                        <SelectContent />
+                                    </Select>
+                                </Box>
+                                <Button
+                                    appearance="subtle"
+                                    size="sm"
+                                    icon={<IconPlay size={12} />}
+                                    onClick={() => {
+                                        setCodeEditorOpen(false);
+                                        setTestOpen(true);
+                                    }}
+                                >
+                                    Test Code
+                                </Button>
+                            </Box>
+                            <Textarea
+                                value={code}
+                                onChange={(e) => setCode(e.target.value)}
+                                resize="none"
+                                className="h-96"
+                                style={{
+                                    fontFamily: "'SF Mono', Monaco, 'Cascadia Code', Consolas, monospace",
+                                    fontSize: "14px",
+                                    lineHeight: "1.6",
+                                }}
+                            />
+                        </Box>
+                    </DialogBody>
+                    <DialogFooter>
+                        <Box display="flex" alignItems="center" justifyContent="space-between" flex="1">
+                            <Text fontSize="sm" color="fg.tertiary">
+                                Timeout: 300 seconds | Execution: Run once for all items
+                            </Text>
+                            <Box display="flex" gap="8">
+                                <Button appearance="subtle" onClick={() => setCodeEditorOpen(false)}>Cancel</Button>
+                                <Button appearance="primary" onClick={() => setCodeEditorOpen(false)}>Done</Button>
+                            </Box>
+                        </Box>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Test Code Dialog */}
+            <Dialog
+                open={testOpen}
+                onOpenChange={(open) => {
+                    setTestOpen(open);
+                    if (!open) setTestRan(false);
+                }}
+            >
+                <DialogContent style={{ width: "min(1200px, 95vw)" }}>
+                    <DialogHeader>
+                        <Text fontWeight="600" fontSize="xl">Test Code Execution</Text>
+                    </DialogHeader>
+                    <DialogBody>
+                        <Box
+                            display="grid"
+                            style={{ gridTemplateColumns: "1fr 1fr", gap: "24px", height: "60vh" }}
+                        >
+                            {/* Left: Sample Input */}
+                            <Box display="flex" flexDirection="column" gap="12">
+                                <Box>
+                                    <Text fontSize="md" fontWeight="600">Sample Input Data</Text>
+                                    <Text fontSize="sm" color="fg.tertiary">
+                                        Edit the input data structure to test different scenarios
+                                    </Text>
+                                </Box>
+                                <Textarea
+                                    value={sampleInput}
+                                    onChange={(e) => setSampleInput(e.target.value)}
+                                    resize="none"
+                                    style={{
+                                        fontFamily: "'SF Mono', Monaco, Consolas, monospace",
+                                        fontSize: "13px",
+                                        flex: 1,
+                                        height: "100%",
+                                    }}
+                                />
+                            </Box>
+
+                            {/* Right: Execution Results */}
+                            <Box display="flex" flexDirection="column" gap="12">
+                                <Box display="flex" justifyContent="space-between" alignItems="end">
+                                    <Box>
+                                        <Text fontSize="md" fontWeight="600">Execution Results</Text>
+                                        <Text fontSize="sm" color="fg.tertiary">
+                                            Output from running your code
+                                        </Text>
+                                    </Box>
+                                    <Button
+                                        appearance="primary"
+                                        icon={<IconPlay />}
+                                        onClick={() => setTestRan(true)}
+                                    >
+                                        Run Test
+                                    </Button>
+                                </Box>
+
+                                <Box
+                                    border="1"
+                                    borderColor="border.secondary"
+                                    rounded="md"
+                                    bg="bg.secondary"
+                                    flex="1"
+                                    overflowY="auto"
+                                >
+                                    {!testRan ? (
+                                        <Box
+                                            display="flex"
+                                            flexDirection="column"
+                                            alignItems="center"
+                                            justifyContent="center"
+                                            gap="12"
+                                            p="32"
+                                            h="full"
+                                        >
+                                            <IconPlay
+                                                size={48}
+                                                style={{ opacity: 0.3, color: "var(--ax-colors-fg-tertiary)" }}
+                                            />
+                                            <Text fontSize="sm" color="fg.tertiary">
+                                                Click "Run Test" to execute your code
+                                            </Text>
+                                        </Box>
+                                    ) : (
+                                        <Box display="flex" flexDirection="column" gap="16" p="16">
+                                            {/* Status */}
+                                            <Box display="flex" flexDirection="column" gap="8">
+                                                <Text
+                                                    fontSize="xs"
+                                                    fontWeight="600"
+                                                    color="fg.secondary"
+                                                    style={{ textTransform: "uppercase", letterSpacing: "0.5px" }}
+                                                >
+                                                    Status
+                                                </Text>
+                                                <Box display="flex" alignItems="center" gap="12">
+                                                    <Badge intent="success">Success</Badge>
+                                                    <Text fontSize="sm" color="fg.tertiary">
+                                                        Exit Code:{" "}
+                                                        <strong style={{ color: "var(--ax-colors-fg-default)" }}>0</strong>
+                                                    </Text>
+                                                    <Text fontSize="sm" color="fg.tertiary">
+                                                        Execution Time:{" "}
+                                                        <strong style={{ color: "var(--ax-colors-fg-default)" }}>247ms</strong>
+                                                    </Text>
+                                                </Box>
+                                            </Box>
+
+                                            {/* Stdout */}
+                                            <Box display="flex" flexDirection="column" gap="8">
+                                                <Text
+                                                    fontSize="xs"
+                                                    fontWeight="600"
+                                                    color="fg.secondary"
+                                                    style={{ textTransform: "uppercase", letterSpacing: "0.5px" }}
+                                                >
+                                                    Standard Output (stdout)
+                                                </Text>
+                                                <Box
+                                                    p="12"
+                                                    border="1"
+                                                    borderColor="border.default"
+                                                    rounded="md"
+                                                    bg="bg.default"
+                                                    style={{
+                                                        fontFamily: "monospace",
+                                                        fontSize: "13px",
+                                                        whiteSpace: "pre-wrap",
+                                                        lineHeight: "1.5",
+                                                    }}
+                                                >
+                                                    {`Processing 1 items...\nTransformed user: john@example.com\nTotal: 99.99`}
+                                                </Box>
+                                            </Box>
+
+                                            {/* Returned Items */}
+                                            <Box display="flex" flexDirection="column" gap="8">
+                                                <Text
+                                                    fontSize="xs"
+                                                    fontWeight="600"
+                                                    color="fg.secondary"
+                                                    style={{ textTransform: "uppercase", letterSpacing: "0.5px" }}
+                                                >
+                                                    Returned Items
+                                                </Text>
+                                                <Box
+                                                    p="12"
+                                                    border="1"
+                                                    borderColor="border.default"
+                                                    rounded="md"
+                                                    bg="bg.success.subtle"
+                                                    style={{
+                                                        fontFamily: "monospace",
+                                                        fontSize: "13px",
+                                                        whiteSpace: "pre-wrap",
+                                                        lineHeight: "1.5",
+                                                    }}
+                                                >
+                                                    {`{\n  "items": [\n    {\n      "json": {\n        "user_id": "123",\n        "email": "john@example.com",\n        "user_email": "john@example.com",\n        "total": 99.99,\n        "processed_at": "2026-07-22T10:05:23.142Z"\n      }\n    }\n  ]\n}`}
+                                                </Box>
+                                            </Box>
+
+                                            {/* Collapsible Logs */}
+                                            <Disclosure open={logsOpen} onOpenChange={setLogsOpen}>
+                                                <DisclosureTrigger>
+                                                    <Box
+                                                        display="flex"
+                                                        justifyContent="space-between"
+                                                        alignItems="center"
+                                                        px="12"
+                                                        py="10"
+                                                        bg="bg.default"
+                                                        border="1"
+                                                        borderColor="border.default"
+                                                        rounded="sm"
+                                                    >
+                                                        <Text fontSize="sm" fontWeight="600">Logs (3 messages)</Text>
+                                                    </Box>
+                                                </DisclosureTrigger>
+                                                <DisclosureContent>
+                                                    <Box
+                                                        px="12"
+                                                        py="12"
+                                                        bg="bg.default"
+                                                        border="1"
+                                                        borderColor="border.default"
+                                                        rounded="sm"
+                                                        style={{
+                                                            fontFamily: "monospace",
+                                                            fontSize: "12px",
+                                                            whiteSpace: "pre-wrap",
+                                                            lineHeight: "1.5",
+                                                            maxHeight: "200px",
+                                                            overflowY: "auto",
+                                                        }}
+                                                    >
+                                                        {`[INFO] Starting execution\n[DEBUG] Parsed input variables: user_email=john@example.com, order_total=99.99\n[INFO] Transformation complete`}
+                                                    </Box>
+                                                </DisclosureContent>
+                                            </Disclosure>
+
+                                            {/* Collapsible Stderr */}
+                                            <Disclosure open={stderrOpen} onOpenChange={setStderrOpen}>
+                                                <DisclosureTrigger>
+                                                    <Box
+                                                        display="flex"
+                                                        justifyContent="space-between"
+                                                        alignItems="center"
+                                                        px="12"
+                                                        py="10"
+                                                        bg="bg.default"
+                                                        border="1"
+                                                        borderColor="border.default"
+                                                        rounded="sm"
+                                                    >
+                                                        <Text fontSize="sm" fontWeight="600">Standard Error (stderr)</Text>
+                                                    </Box>
+                                                </DisclosureTrigger>
+                                                <DisclosureContent>
+                                                    <Box
+                                                        px="12"
+                                                        py="12"
+                                                        bg="bg.default"
+                                                        border="1"
+                                                        borderColor="border.default"
+                                                        rounded="sm"
+                                                        style={{
+                                                            fontFamily: "monospace",
+                                                            fontSize: "12px",
+                                                            color: "var(--ax-colors-fg-tertiary)",
+                                                            fontStyle: "italic",
+                                                        }}
+                                                    >
+                                                        (empty)
+                                                    </Box>
+                                                </DisclosureContent>
+                                            </Disclosure>
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Box>
+                        </Box>
+                    </DialogBody>
+                    <DialogFooter>
+                        <Box display="flex" alignItems="center" justifyContent="space-between" flex="1">
+                            <Text fontSize="sm" color="fg.tertiary">
+                                Timeout: 300 seconds | Execution: Sandboxed Python environment
+                            </Text>
+                            <Button appearance="primary" onClick={() => setTestOpen(false)}>Close</Button>
+                        </Box>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }
 

@@ -243,3 +243,226 @@
 	opacity: 1;
 	pointer-events: auto;
 }
+
+/* Tracker — list/board/calendar row hover */
+.tracker-row {
+	transition: background 120ms ease;
+}
+.tracker-row:hover {
+	background: var(--ax-colors-bg-secondary);
+}
+/* Tracker — detail header: truncate a long title instead of wrapping the
+   pin/close buttons to a second line (Axiom DetailsPanelHeader wraps by
+   default and its title Heading is min-width:auto). */
+.planner-detail-header {
+	flex-wrap: nowrap;
+	align-items: center;
+}
+.planner-detail-header > h2 {
+	min-width: 0;
+}
+
+/* Tracker — quick pin: reveal on row hover, stay visible while pinned */
+.row-pin {
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+.tracker-row:hover .row-pin,
+.row-pin.pinned {
+	opacity: 1;
+}
+
+/* Planner rich cards — leading avatar flips (3D rotateY) into a completion
+   checkbox on row hover, and stays a checkbox once the card is checked. */
+.planner-lead {
+	perspective: 300px;
+}
+.planner-lead-avatar,
+.planner-lead-check {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform 240ms ease, opacity 240ms ease;
+	backface-visibility: hidden;
+}
+.planner-lead-avatar {
+	transform: rotateY(0deg);
+	opacity: 1;
+}
+.planner-lead-check {
+	transform: rotateY(-180deg);
+	opacity: 0;
+	pointer-events: none;
+}
+.tracker-row:hover .planner-lead .planner-lead-avatar,
+.planner-lead.is-done .planner-lead-avatar {
+	transform: rotateY(180deg);
+	opacity: 0;
+}
+.tracker-row:hover .planner-lead .planner-lead-check,
+.planner-lead.is-done .planner-lead-check {
+	transform: rotateY(0deg);
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* Planner rich cards — hover lift: page background + md drop shadow. */
+.planner-card {
+	background: var(--ax-colors-bg-default);
+	transition: background 120ms ease, box-shadow 120ms ease;
+}
+.planner-card:hover {
+	background: #f9fcf8;
+	box-shadow: var(--ax-shadows-md);
+}
+/* Nudge the footer trash-can Indicator badge out to the top-right corner. */
+.trash-bin-indicator > :last-child {
+	transform: translate(4px, -4px);
+}
+
+/* "Good to go" cards playfully tilt on hover (rich divider-rows do not). */
+.planner-card-toss {
+	transition: transform 160ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+.planner-card-toss:hover {
+	transform: rotate(-0.8deg);
+}
+/* "Good to go" tray — rich cards reveal a Toss button on hover (crumple-to-bin,
+   reusing .fun-doc-actions / .fun-crumpling). Base opacity:0 is set on
+   .fun-doc-actions below. */
+.planner-card:hover .fun-doc-actions {
+	opacity: 1;
+}
+/* Hovering the Toss button previews removal by striking the card title. */
+.planner-card:has(.fun-done-btn:hover) .planner-card-title {
+	text-decoration: line-through;
+	text-decoration-color: var(--ax-colors-fg-error);
+	text-decoration-thickness: 2px;
+}
+
+/* Fun tray design — sticky notes straighten and lift on hover. */
+.fun-note {
+	transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.fun-note:hover {
+	transform: rotate(0deg) scale(1.03) !important;
+	box-shadow: var(--ax-shadows-lg);
+	z-index: 1;
+}
+
+/* Fun editorial board — paper cards, hover straighten/lift, crumple-to-bin */
+.fun-doc {
+	transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.fun-doc:hover {
+	transform: rotate(0deg) translateY(-2px) !important;
+	box-shadow: var(--ax-shadows-lg);
+	z-index: 2;
+}
+.fun-doc-actions {
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+.fun-doc:hover .fun-doc-actions {
+	opacity: 1;
+}
+/* Hovering the lime Done button previews completion by striking the title. */
+.fun-doc-title {
+	text-decoration-color: #3ab533;
+	text-decoration-thickness: 2px;
+}
+.fun-doc:has(.fun-done-btn:hover) .fun-doc-title {
+	text-decoration: line-through;
+}
+
+/* Recently-tossed list — strike by default; hover un-strikes and swaps the
+   trash icon for an arrow (click to send back). */
+.trash-title {
+	text-decoration: line-through;
+	text-decoration-color: var(--ax-colors-fg-tertiary);
+}
+.trash-item:hover .trash-title {
+	text-decoration: none;
+}
+.trash-ico-hover {
+	display: none !important;
+}
+.trash-item:hover .trash-ico-default {
+	display: none !important;
+}
+.trash-item:hover .trash-ico-hover {
+	display: inline-flex !important;
+}
+@keyframes fun-crumple {
+	0%   { transform: rotate(0deg) scale(1); opacity: 1; }
+	35%  { transform: rotate(-10deg) scale(0.5); opacity: 1; }
+	100% { transform: translate(120px, 260px) rotate(560deg) scale(0.04); opacity: 0; }
+}
+.fun-crumpling {
+	animation: fun-crumple 650ms cubic-bezier(0.5, -0.2, 0.75, 1) forwards;
+	pointer-events: none;
+	position: relative;
+	z-index: 5;
+}
+@keyframes fun-bin-wiggle {
+	0%, 100% { transform: rotate(0deg) scale(1); }
+	25% { transform: rotate(-14deg) scale(1.08); }
+	55% { transform: rotate(11deg) scale(1.05); }
+	80% { transform: rotate(-5deg) scale(1); }
+}
+.fun-bin.tossing {
+	animation: fun-bin-wiggle 450ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+	.fun-crumpling { animation: none; opacity: 0; transform: scale(0.9); transition: opacity 150ms ease; }
+	.fun-doc, .fun-note, .fun-bin.tossing { transition: none; animation: none; }
+	.planner-card-toss:hover { transform: none; }
+}
+
+/* Tracker — note editor (rich-text surface) */
+.note-title-input {
+	width: 100%;
+	border: none;
+	outline: none;
+	background: transparent;
+	font-family: inherit;
+	font-size: 18px;
+	font-weight: 500;
+	color: var(--ax-colors-fg-default);
+}
+.note-title-input::placeholder {
+	color: var(--ax-colors-fg-tertiary);
+}
+.note-editor:empty:before {
+	content: attr(data-placeholder);
+	color: var(--ax-colors-fg-tertiary);
+	pointer-events: none;
+}
+.note-editor ul {
+	padding-left: 20px;
+	list-style: disc;
+}
+.note-editor ol {
+	padding-left: 20px;
+	list-style: decimal;
+}
+.note-editor h3 {
+	font-size: 15px;
+	font-weight: 700;
+	margin: 8px 0 4px;
+}
+.note-editor .note-todo {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+.note-editor .note-todo input {
+	margin-top: 4px;
+	accent-color: var(--ax-colors-fg-accent-strong);
+}
+.note-editor .note-ai {
+	color: var(--ax-colors-fg-accent-strong);
+	font-weight: 600;
+}
