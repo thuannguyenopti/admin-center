@@ -11,6 +11,7 @@ import {
 	IconGear,
 } from "@optiaxiom/icons";
 import IconResourceManagement from "@/app/cmp/assets/resource-management.svg";
+import styles from "./navigation.module.css";
 
 // Figma's Sidenav "Add" item is a plus glyph on a circular accent-green badge
 // (node 19270:7115, fill var(--colors/fg/accent/base, #abff44)) — there's no
@@ -94,15 +95,9 @@ export const cmpNav = [
 		label: "Resource Management",
 		url: "/cmp/resource-management",
 		highlight: "/cmp/resource-management",
-		// NavItem wraps every icon in its own <Icon> component, which applies a CSS
-		// class forcing `height: var(--ax-size-2xs)` (16px) + `width: auto`. For
-		// @optiaxiom/icons components that's overridden by the icon's own (more
-		// specific-order) 20px class, but a raw SVGR-imported file has no such
-		// class to compete with it — so plain width/height HTML attributes (which
-		// CSS always outranks) were silently overridden and had no visible effect.
-		// An inline `style` wins over any external stylesheet class, which is why
-		// this is set via style, not width/height props.
-		icon: <IconResourceManagement style={{ width: 20, height: 20 }} />,
+		// See navigation.module.css for why this needs a real stylesheet class
+		// with !important rather than an inline style.
+		icon: <IconResourceManagement className={styles.resourceManagementIcon} />,
 		hidePageHeader: true,
 	},
 	{
