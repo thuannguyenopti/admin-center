@@ -15,8 +15,9 @@ import {
 	IconLink,
 	IconList,
 } from "@optimizely/axiom-icons";
-import type { DropZoneLink } from "@/app/dam/drop-zone/data";
+import type { DropZoneLink, DropZoneSubmission } from "@/app/dam/drop-zone/data";
 import { getAllSubmissions, getSubmissionsForZone, setSubmissionStatus, subscribeSubmissions } from "@/app/dam/drop-zone/submissions";
+import { addLibraryItem, type AssetKind, type AssetLabel, type LibraryItem } from "@/app/cmp/library/libraryItems";
 import { DropZoneFilterPanel, type DropZoneFilterSection } from "./DropZoneFilterPanel";
 import { DropZoneSubmissionCard, SUBMISSION_STATUS_BADGE } from "./DropZoneSubmissionCard";
 import { DropZoneUploadTile } from "./DropZoneUploadTile";
@@ -35,6 +36,32 @@ const SORT_LABEL: Record<SortKey, string> = {
 
 function fileExtension(name: string) {
 	return (name.split(".").pop() ?? "").toUpperCase();
+}
+
+function inferAssetInfo(filename: string): { label: AssetLabel; type: AssetKind } {
+	const ext = (filename.split(".").pop() ?? "").toLowerCase();
+	if (ext === "jpg" || ext === "jpeg") return { label: "JPG", type: "image" };
+	if (ext === "png") return { label: "PNG", type: "image" };
+	if (ext === "tif" || ext === "tiff") return { label: "TIFF", type: "image" };
+	if (ext === "pdf") return { label: "PDF", type: "document" };
+	return { label: "File", type: "file" };
+}
+
+/** An approved Drop Zone submission becomes a real Review Queue item — otherwise
+ * approving here was a dead end that never surfaced anywhere else in the DAM. */
+function submissionToLibraryItem(submission: DropZoneSubmission): LibraryItem {
+	const primaryFile = submission.files[0]?.name ?? "Untitled";
+	const { label, type } = inferAssetInfo(primaryFile);
+	return {
+		id: `dz-${submission.id}`,
+		title: primaryFile,
+		label,
+		type,
+		image: submission.image,
+		opalStatus: "pending",
+		submittedBy: submission.submitterName,
+		submittedAt: submission.submittedAt,
+	};
 }
 
 /**
@@ -117,8 +144,17 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 		});
 	}
 
+	function approveSubmission(submission: DropZoneSubmission) {
+		addLibraryItem(submissionToLibraryItem(submission));
+		setSubmissionStatus(submission.id, "approved");
+		toaster.create(`${submission.files[0]?.name ?? "Submission"} added to the Review Queue`, { intent: "success" });
+	}
+
 	function bulkApprove() {
-		selected.forEach((id) => setSubmissionStatus(id, "approved"));
+		selected.forEach((id) => {
+			const submission = sorted.find((s) => s.id === id);
+			if (submission) approveSubmission(submission);
+		});
 		setSelected(new Set());
 	}
 
@@ -274,7 +310,7 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 												{submission.status === "pending" && (
 													<Box display="flex" gap="4" justifyContent="flex-end">
 														<Button appearance="subtle" size="sm" style={{ color: "var(--ax-colors-fg-error)" }} onClick={() => requestReject([submission.id], submission.submitterName)}>Reject</Button>
-														<Button appearance="primary" size="sm" onClick={() => setSubmissionStatus(submission.id, "approved")}>Approve</Button>
+														<Button appearance="primary" size="sm" onClick={() => approveSubmission(submission)}>Approve</Button>
 													</Box>
 												)}
 											</Td>
@@ -291,7 +327,7 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 									key={submission.id}
 									selected={selected.has(submission.id)}
 									submission={submission}
-									onApprove={() => setSubmissionStatus(submission.id, "approved")}
+									onApprove={() => approveSubmission(submission)}
 									onReject={() => requestReject([submission.id], submission.submitterName)}
 									onToggleSelect={() => toggleSelect(submission.id)}
 								/>
