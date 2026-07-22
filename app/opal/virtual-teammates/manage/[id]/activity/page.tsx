@@ -4,8 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import {
 	Badge, Box, Button, Checkbox, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger,
-	Popover, PopoverContent, PopoverTrigger,
-	Tabs, TabsContent, TabsList, TabsTrigger, Text,
+	Popover, PopoverContent, PopoverTrigger, Text,
 } from "@optiaxiom/react";
 import { IconArrowDown, IconArrowRight, IconArrowUp, IconArrowUpRightFromSquare, IconDiagramSubtask, IconChevronLeft, IconChevronRight, IconGear, IconGripVertical, IconSearch } from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
@@ -142,6 +141,9 @@ export default function VATActivityPage() {
 	const [colOrder, setColOrder] = useState<ColKey[]>([...DEFAULT_COL_ORDER]);
 	const [colConfigOpen, setColConfigOpen] = useState(false);
 	const colConfigRef = useRef<HTMLDivElement>(null);
+	const completedRef = useRef<HTMLDivElement>(null);
+	const scrollToCompleted = () => completedRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+	const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 	const [dragColKey, setDragColKey] = useState<ColKey | null>(null);
 	const [dragOverColKey, setDragOverColKey] = useState<ColKey | null>(null);
 
@@ -264,15 +266,25 @@ export default function VATActivityPage() {
 				A breakdown of how {name} spends their time
 			</Text>
 
-			<Tabs defaultValue="overview">
-				<TabsList>
-					<TabsTrigger value="overview">Overview</TabsTrigger>
-					<TabsTrigger value="completed">Completed</TabsTrigger>
-				</TabsList>
+			{/* Scroll-nav tabs */}
+			<Box display="flex" gap="24" mb="32" style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
+				<Box
+					onClick={scrollToTop}
+					style={{ paddingBottom: 12, borderBottom: "2px solid var(--ax-colors-fg-default)", cursor: "pointer", fontWeight: 500, fontSize: 14, color: "var(--ax-colors-fg-default)" }}
+				>
+					Overview
+				</Box>
+				<Box
+					onClick={scrollToCompleted}
+					style={{ paddingBottom: 12, borderBottom: "2px solid transparent", cursor: "pointer", fontWeight: 500, fontSize: 14, color: "var(--ax-colors-fg-secondary)" }}
+				>
+					Completed
+				</Box>
+			</Box>
 
-				{/* ─── Overview ──────────────────────────────────────────────── */}
-				<TabsContent value="overview">
-					<Box pt="32">
+			{/* ─── Overview ──────────────────────────────────────────────── */}
+			<Box>
+				<Box pt="0">
 						{/* Upcoming work */}
 						<Box mb="40">
 							<Heading level="3" mb="4">
@@ -286,11 +298,10 @@ export default function VATActivityPage() {
 								<Box display="flex" alignItems="center" style={{ padding: "10px 20px", borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
 									<Box style={{ width: 24, flexShrink: 0 }} />
 									<span style={{ ...TABLE_HEADER, flex: 1 }}>Job</span>
-									<span style={{ ...TABLE_HEADER, width: 110 }}>Status</span>
-									<span style={{ ...TABLE_HEADER, width: 100 }}>Priority</span>
-									<span style={{ ...TABLE_HEADER, width: 110 }}>Trigger</span>
+									<span style={{ ...TABLE_HEADER, width: 120 }}>Status</span>
+									<span style={{ ...TABLE_HEADER, width: 120 }}>Priority</span>
+									<span style={{ ...TABLE_HEADER, width: 120 }}>Trigger</span>
 									<span style={{ ...TABLE_HEADER, width: 120 }}>Scheduled for</span>
-									<Box style={{ width: 80, flexShrink: 0 }} />
 								</Box>
 								{queueItems.map((item, i) => (
 									<Box
@@ -319,153 +330,28 @@ export default function VATActivityPage() {
 											<Text fontSize="md" color="fg.default" style={{ fontWeight: 500 }}>{item.task}</Text>
 											<Text fontSize="sm" color="fg.secondary">{item.sub}</Text>
 										</Box>
-										<Box style={{ width: 110 }}>
+										<Box style={{ width: 120 }}>
 											<QueueStatusBadge status={i === 0 ? "next_up" : "queued"} />
 										</Box>
-										<Box style={{ width: 100 }}>
+										<Box style={{ width: 120 }}>
 											<Badge intent="information" variant="subtle">Standard</Badge>
 										</Box>
-										<Box style={{ width: 110 }}>
+										<Box style={{ width: 120 }}>
 											<Badge intent="neutral" variant="subtle">Scheduled</Badge>
 										</Box>
 										<Text fontSize="sm" color="fg.secondary" style={{ width: 120 }}>{item.time}</Text>
-										<Box style={{ width: 80, flexShrink: 0 }}>
-											<Popover
-												open={confirmRemoveId === item.id}
-												onOpenChange={(open) => { if (!open) setConfirmRemoveId(null); }}
-											>
-												<PopoverTrigger asChild>
-													<Button appearance="subtle" size="sm" onClick={() => setConfirmRemoveId(item.id)}>Remove</Button>
-												</PopoverTrigger>
-												<PopoverContent align="end" style={{ width: 268, padding: 16 }}>
-													<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, display: "block", marginBottom: 6 }}>Remove this job?</Text>
-													<Text fontSize="sm" color="fg.secondary" style={{ display: "block", lineHeight: "1.5", marginBottom: 16 }}>
-														This will remove <strong>{item.task}</strong> from the schedule for today. You can re-add it from the responsibilities page.
-													</Text>
-													<Box display="flex" gap="8" justifyContent="flex-end">
-														<Button appearance="subtle" size="sm" onClick={() => setConfirmRemoveId(null)}>Cancel</Button>
-														<Button
-															appearance="primary"
-															size="sm"
-															onClick={() => {
-																setQueueItems(prev => prev.filter(q => q.id !== item.id));
-																setConfirmRemoveId(null);
-															}}
-														>
-															Remove
-														</Button>
-													</Box>
-												</PopoverContent>
-											</Popover>
-										</Box>
 									</Box>
 								))}
 							</Box>
 						</Box>
 
-						{/* Usage */}
-						<Box mt="40">
-							<Heading level="3" mb="4">Usage</Heading>
-							<Text color="fg.secondary" fontSize="md" mb="16">
-								{name}&apos;s credit usage for the current billing period
-							</Text>
-							<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px" }}>
-								<Text fontSize="sm" color="fg.tertiary" mb="4">Credits</Text>
-								<Box style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 12 }}>
-									<Text style={{ fontSize: 18, fontWeight: 700, lineHeight: "1", color: "var(--ax-colors-fg-default)" }}>3,400</Text>
-									<Text fontSize="md" color="fg.tertiary" style={{ fontWeight: 400 }}>/ 20,000</Text>
-								</Box>
-								<Box
-									style={{ display: "flex", alignItems: "center", gap: 12, position: "relative" }}
-									onMouseEnter={() => setHoveredBar("usage")}
-									onMouseLeave={() => setHoveredBar(null)}
-								>
-									<Box style={{ flex: 1, height: 8, background: "var(--ax-colors-bg-secondary)", borderRadius: 999, overflow: "hidden", cursor: "default" }}>
-										<Box style={{ width: "17%", height: "100%", background: "#616755", borderRadius: 999 }} />
-									</Box>
-									<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", whiteSpace: "nowrap" as const }}>17% USED</span>
-									{hoveredBar === "usage" && (
-										<Box style={{
-											position: "absolute",
-											bottom: "calc(100% + 10px)",
-											left: 0,
-											background: "var(--ax-colors-fg-default)",
-											color: "var(--ax-colors-bg-default)",
-											borderRadius: 8,
-											padding: "12px 16px",
-											minWidth: 240,
-											zIndex: 10,
-											pointerEvents: "none",
-											boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-										}}>
-											<Text fontSize="sm" style={{ fontWeight: 600, color: "inherit", display: "block", marginBottom: 10 }}>Credit usage</Text>
-											<Box style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-												<Box display="flex" justifyContent="space-between" gap="24">
-													<Text fontSize="sm" style={{ color: "inherit", opacity: 0.7 }}>Used</Text>
-													<Text fontSize="sm" style={{ color: "inherit", fontWeight: 500 }}>3,400 credits</Text>
-												</Box>
-												<Box display="flex" justifyContent="space-between" gap="24">
-													<Text fontSize="sm" style={{ color: "inherit", opacity: 0.7 }}>Remaining</Text>
-													<Text fontSize="sm" style={{ color: "inherit", fontWeight: 500 }}>16,600 credits</Text>
-												</Box>
-												<Box display="flex" justifyContent="space-between" gap="24">
-													<Text fontSize="sm" style={{ color: "inherit", opacity: 0.7 }}>Plan limit</Text>
-													<Text fontSize="sm" style={{ color: "inherit", fontWeight: 500 }}>20,000 credits</Text>
-												</Box>
-												<Box style={{ height: 1, background: "rgba(255,255,255,0.15)", margin: "2px 0" }} />
-												<Box display="flex" justifyContent="space-between" gap="24">
-													<Text fontSize="sm" style={{ color: "inherit", opacity: 0.7 }}>Billing period</Text>
-													<Text fontSize="sm" style={{ color: "inherit", fontWeight: 500 }}>Jul 1 – Jul 31</Text>
-												</Box>
-												<Box display="flex" justifyContent="space-between" gap="24">
-													<Text fontSize="sm" style={{ color: "inherit", opacity: 0.7 }}>Resets in</Text>
-													<Text fontSize="sm" style={{ color: "inherit", fontWeight: 500 }}>15 days</Text>
-												</Box>
-											</Box>
-										</Box>
-									)}
-								</Box>
-							</Box>
-						</Box>
-					</Box>
+				</Box>
+			</Box>
+			<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "32px 0" }} />
 
-					{/* Top jobs */}
-					<Box mt="24">
-						<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px" }}>
-							<Box display="flex" alignItems="center" justifyContent="space-between" mb="4">
-								<Text style={{ ...SECTION_HEADING, fontSize: 16 }}>Top jobs</Text>
-								<Text fontSize="sm" color="fg.tertiary">Last 30 days</Text>
-							</Box>
-							<Text fontSize="sm" color="fg.secondary" mb="16">Recurring tasks using the most credits</Text>
-							<Box>
-								{TOP_TASKS.map((task, i) => (
-									<Box
-										key={task.name}
-										display="flex"
-										alignItems="center"
-										justifyContent="space-between"
-										style={{
-											padding: "12px 0",
-											borderTop: i > 0 ? "1px solid var(--ax-colors-border-secondary)" : undefined,
-										}}
-									>
-										<Box display="flex" alignItems="center" gap="12">
-											<Box style={{ width: 32, height: 32, borderRadius: "50%", background: "#EEFFD9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-												<IconDiagramSubtask style={{ width: 16, height: 16, color: "var(--ax-colors-fg-secondary)" }} />
-											</Box>
-											<Text fontSize="md" color="fg.default" style={{ fontWeight: 500 }}>{task.name}</Text>
-										</Box>
-										<Text fontSize="md" color="fg.secondary">{task.credits} credits</Text>
-									</Box>
-								))}
-							</Box>
-						</Box>
-					</Box>
-				</TabsContent>
-
-				{/* ─── Completed ─────────────────────────────────────────────── */}
-				<TabsContent value="completed">
-					<Box pt="32">
+			{/* ─── Completed ─────────────────────────────────────────────── */}
+			<Box ref={completedRef}>
+				<Box pt="0">
 						<Heading level="3" mb="4">
 							Completed
 						</Heading>
@@ -478,7 +364,7 @@ export default function VATActivityPage() {
 							<Box display="flex" alignItems="center" gap="8">
 								<Box style={{ width: 260 }}>
 									<Input
-										placeholder="Search tasks or artifacts"
+										placeholder="Search jobs"
 										addonBefore={<IconSearch />}
 										value={completedQuery}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -630,10 +516,8 @@ export default function VATActivityPage() {
 								/>
 							</Box>
 						</Box>
-					</Box>
-				</TabsContent>
-
-			</Tabs>
+				</Box>
+			</Box>
 		</Box>
 	);
 }

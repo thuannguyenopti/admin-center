@@ -202,6 +202,36 @@
 	text-decoration-color: var(--ax-colors-border-default);
 }
 
+/* VAU detail — personality quote typing animation */
+@keyframes vau-dot-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+  40%           { transform: translateY(-4px); opacity: 1; }
+}
+.vau-typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ax-colors-fg-tertiary);
+  animation: vau-dot-bounce 1.1s infinite ease-in-out;
+}
+.vau-typing-dot:nth-child(2) { animation-delay: 0.18s; }
+.vau-typing-dot:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes vau-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.vau-cursor {
+  display: inline-block;
+  width: 1.5px;
+  height: 0.9em;
+  background: var(--ax-colors-fg-secondary);
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  animation: vau-cursor-blink 0.7s step-end infinite;
+}
+
 /* File card hover — pin button reveal */
 .file-card .file-hover-pin {
 	opacity: 0;

@@ -1,8 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { Badge, Box, Button, Text } from "@optiaxiom/react";
-import { IconArrowLeft, IconArrowsRotate } from "@optiaxiom/icons";
+import {
+	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
+	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
+	Badge, Box, Button, Menu, MenuContent, MenuTrigger, Text,
+} from "@optiaxiom/react";
+import { IconArrowLeft, IconArrowsRotate, IconCircleXmark, IconComments, IconEllipsisSolid, IconPause, IconUserSlash } from "@optiaxiom/icons";
 import Image from "next/image";
 import { VAUS } from "@/app/opal/data/vaus";
 
@@ -76,6 +81,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 	const router = useRouter();
 	const id = params?.id as string;
 	const vau = VAUS.find((v) => v.id === id);
+	const [showDeactivate, setShowDeactivate] = useState(false);
 
 	const isActivity = pathname?.endsWith("/activity");
 	const isPermissions = pathname?.endsWith("/permissions");
@@ -151,14 +157,26 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 								}}
 							/>
 						</Box>
-						<Box display="flex" flexDirection="column" gap="2">
+						<Box display="flex" flexDirection="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
 							<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, lineHeight: "1.2" }}>
-								{vau.name}
-							</Text>
-							<Text fontSize="sm" color="fg.tertiary" style={{ fontWeight: 400, lineHeight: "1.2" }}>
 								{vau.characterName ?? vau.name}
 							</Text>
+							<Text fontSize="sm" color="fg.tertiary" style={{ fontWeight: 400, lineHeight: "1.2" }}>
+								{vau.name}
+							</Text>
 						</Box>
+						<Menu
+							options={[
+								{ label: "Chat", addon: <IconComments />, execute: () => router.push("/opal/messages?conversation=bubs") },
+								{ label: "Pause", addon: <IconPause /> },
+								{ label: "Deactivate", addon: <IconCircleXmark />, intent: "danger" as const, execute: () => setShowDeactivate(true) },
+							]}
+						>
+							<MenuTrigger asChild>
+								<Button appearance="subtle" size="sm" icon={<IconEllipsisSolid />} aria-label="Options" style={{ flexShrink: 0 }} />
+							</MenuTrigger>
+							<MenuContent />
+						</Menu>
 					</Box>
 				)}
 
@@ -167,14 +185,14 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 				{/* SUPERVISE */}
 				<SectionLabel>Supervise</SectionLabel>
 				<NavItem
-					label="Work"
-					active={isWork}
-					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}`)}
-					/>
-				<NavItem
 					label="Activity"
 					active={isActivity}
 					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/activity`)}
+				/>
+				<NavItem
+					label="Work"
+					active={isWork}
+					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}`)}
 				/>
 
 				<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "6px 0" }} />
@@ -187,7 +205,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/identity`)}
 				/>
 				<NavItem
-					label="Permissions"
+					label="Tools"
 					active={isPermissions}
 					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/permissions`)}
 					badge={
@@ -210,6 +228,33 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 			<Box style={{ flex: 1, overflowY: "auto", background: "#F9FCF8" }}>
 				{children}
 			</Box>
+
+			{vau && (
+				<AlertDialog open={showDeactivate} onOpenChange={setShowDeactivate}>
+					<AlertDialogContent size="sm" style={{ width: 520, borderRadius: 24 }}>
+						<AlertDialogHeader>{"Are you sure you want to deactivate " + vau.name + "?"}</AlertDialogHeader>
+						<AlertDialogBody>
+							<Text fontSize="md" color="fg.default" style={{ lineHeight: "1.6" }}>
+								{"This can't be undone. Everything " + vau.name + " has learned — context, memory, conversation history, and all personal instructions — will be permanently deleted. All workflows will stop immediately."}
+							</Text>
+						</AlertDialogBody>
+						<AlertDialogFooter>
+							<AlertDialogCancel appearance="subtle" size="md" onClick={() => setShowDeactivate(false)}>
+								{"Keep " + vau.name + " active"}
+							</AlertDialogCancel>
+							<AlertDialogAction
+								appearance="primary"
+								size="md"
+								addonBefore={<IconUserSlash />}
+								style={{ background: "#7C3B5A", border: "none", color: "white" }}
+								onClick={() => setShowDeactivate(false)}
+							>
+								{"Deactivate " + vau.name}
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
+			)}
 		</Box>
 	);
 }

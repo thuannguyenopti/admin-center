@@ -120,7 +120,7 @@ export default function VirtualTeammatesManagePage() {
 							<VAUCard
 								key={vau.id}
 								vau={vau}
-								onSelect={(v) => router.push(`/opal/virtual-teammates/manage/${v.id}`)}
+								onSelect={(v) => router.push(`/opal/virtual-teammates/manage/${v.id}/activity`)}
 							/>
 						))}
 					</Box>
@@ -132,15 +132,13 @@ export default function VirtualTeammatesManagePage() {
 								<Th>Principle User</Th>
 								<Th>Type</Th>
 								<Th>Status</Th>
-								<Th>Attention Required</Th>
 								<Th />
 							</tr>
 						</thead>
 						<tbody>
 							{filtered.map((vau) => {
-								const needsReview = NEEDS_REVIEW_IDS.has(vau.id);
 								return (
-									<Tr key={vau.id} onClick={() => router.push(`/opal/virtual-teammates/manage/${vau.id}`)}>
+									<Tr key={vau.id} onClick={() => router.push(`/opal/virtual-teammates/manage/${vau.id}/activity`)}>
 										<Td style={{ paddingLeft: 16 }}>
 											<Box display="flex" alignItems="center" gap="12">
 												<Box style={{ width: 36, height: 36, borderRadius: 8, background: vau.avatarBg, overflow: "hidden", flexShrink: 0 }}>
@@ -170,7 +168,6 @@ export default function VirtualTeammatesManagePage() {
 												</Badge>
 											)}
 										</Td>
-										<Td></Td>
 										<Td type="button">
 											<Box onClick={(e: React.MouseEvent) => e.stopPropagation()}>
 												<Menu
@@ -191,7 +188,7 @@ export default function VirtualTeammatesManagePage() {
 															execute: () => {},
 														},
 														{
-															label: "Delete",
+															label: "Deactivate",
 															addon: <IconTrashCan />,
 															intent: "danger" as const,
 															execute: () => {},

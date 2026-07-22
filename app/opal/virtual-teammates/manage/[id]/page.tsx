@@ -319,6 +319,7 @@ export default function VATWorkPage() {
 	const router = useRouter();
 	const id = params?.id as string;
 	const vau = VAUS.find((v) => v.id === id);
+
 	const [showBreakDialog, setShowBreakDialog] = useState(false);
 	const [reviewItem, setReviewItem] = useState<{ title: string; description: string; source: string; priority: string } | null>(null);
 	const [dismissedTitles, setDismissedTitles] = useState<Set<string>>(new Set());
@@ -403,46 +404,8 @@ export default function VATWorkPage() {
 					<Heading level="1" mb="4">{name}&apos;s work</Heading>
 					<Text color="fg.secondary" fontSize="lg">What {name}&apos;s been up to and where he still needs your help</Text>
 				</Box>
-				<Box display="flex" alignItems="center" gap="8">
-					<Tooltip content={`Chat with ${name}`} delayDuration={300}>
-						<span>
-							<Button appearance="default" size="md" icon={<IconComments />} aria-label={`Chat with ${name}`} onClick={() => router.push("/opal/messages?conversation=bubs")} />
-						</span>
-					</Tooltip>
-					<Menu
-						options={[
-							{ label: `Sign in as ${vau.name}`, addon: <IconUserCheck /> },
-							{ label: "Pause", addon: <IconPause />, execute: () => setShowBreakDialog(true) },
-							{ label: "Delete", addon: <IconTrashCan />, intent: "danger" as const, group: { label: "", separator: true } },
-						]}
-					>
-						<MenuTrigger asChild>
-							<Button appearance="subtle" size="md" icon={<IconEllipsisSolid />} aria-label="Options" />
-						</MenuTrigger>
-						<MenuContent />
-					</Menu>
-				</Box>
 			</Box>
-			<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", marginBottom: 20, marginTop: 20 }} />
-			{/* Randy's Impact stats */}
-			<Box mb="40" mt="32">
-				<Heading level="3" mb="4">Impact</Heading>
-				<Text fontSize="md" color="fg.secondary" mb="16">Here&apos;s how {name}&apos;s been making your week easier</Text>
-				<Box style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12 }}>
-					{[
-						{ label: "JOBS INSTALLED", value: "7", sub: "Active and running" },
-						{ label: "TOTAL OUTPUT", value: "122", sub: "Tasks completed" },
-						{ label: "RESPONSE TIME", value: "~12 min", sub: "On average" },
-						{ label: "HOURS SAVED", value: "30", sub: "Per week" },
-					].map((stat) => (
-						<Box key={stat.label} bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "16px 20px" }}>
-							<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 8 }}>{stat.label}</span>
-							<Heading level="2" mb="4">{stat.value}</Heading>
-							<Text fontSize="sm" color="fg.secondary">{stat.sub}</Text>
-						</Box>
-					))}
-				</Box>
-			</Box>
+			<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", marginBottom: 32 }} />
 
 			{/* Give a break dialog */}
 			<AlertDialog open={showBreakDialog} onOpenChange={setShowBreakDialog}>

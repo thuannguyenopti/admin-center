@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
 	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
 	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
@@ -167,6 +167,7 @@ export function PersonalityTab({
 	const [editingPersonaName, setEditingPersonaName] = useState(false);
 	const [builtPersonalities, setBuiltPersonalities] = useState<Array<{ id: string; name: string; traits: string[]; toneLabels: string[]; toneExtra: number; createdAt: string }>>([]);
 	const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+	const buildSectionRef = useRef<HTMLDivElement>(null);
 	const [buildPrompt, setBuildPrompt] = useState("");
 	const [generating, setGenerating] = useState(false);
 	const [showAddTrait, setShowAddTrait] = useState(false);
@@ -186,11 +187,16 @@ export function PersonalityTab({
 	}
 
 	function handleTemplateClick(id: string) {
-		if (id === selectedTemplate) return;
 		if (id === "build-your-own") {
+			if (selectedTemplate === "build-your-own") {
+				setSelectedTemplate(null);
+				return;
+			}
 			setSelectedTemplate("build-your-own");
+			setTimeout(() => buildSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
 			return;
 		}
+		if (id === selectedTemplate) return;
 		if (selectedTemplate && selectedTemplate !== "build-your-own") {
 			setPendingTemplate(id);
 			setShowSwitchDialog(true);
@@ -466,7 +472,7 @@ export function PersonalityTab({
 
 				{/* Build your own progressive disclosure */}
 				{isBuildYourOwn && (
-					<Box style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+					<Box ref={buildSectionRef} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
 						{/* Section header */}
 						<Box style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>

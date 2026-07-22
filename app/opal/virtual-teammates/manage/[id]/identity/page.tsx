@@ -5,8 +5,7 @@ import { useParams } from "next/navigation";
 import {
 	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
 	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
-	Box, Button, Heading, Select, SelectContent, SelectTrigger, Tabs,
-	TabsContent, TabsList, TabsTrigger, Text, Tooltip,
+	Box, Button, Heading, Select, SelectContent, SelectTrigger, Text, Tooltip,
 } from "@optiaxiom/react";
 import { IconCircleQuestion, IconEye, IconPen, IconTrashCan, IconUpload, IconUserSlash, IconXmark } from "@optiaxiom/icons";
 import Image from "next/image";
@@ -100,8 +99,10 @@ export default function VATIdentityPage() {
 
 	const [previewOpen, setPreviewOpen] = useState(false);
 	const [previewPrompt, setPreviewPrompt] = useState("Summarize my week");
-	const [activeTab, setActiveTab] = useState("basics");
 	const [selectedPersonality, setSelectedPersonality] = useState<{ name: string; icon: string } | null>(null);
+	const personalityRef = useRef<HTMLDivElement>(null);
+	const scrollToPersonality = () => personalityRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+	const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
 	const isDirty = nameValue !== savedName;
 	const handleSave = () => setSavedName(nameValue);
@@ -113,31 +114,32 @@ export default function VATIdentityPage() {
 		<Box style={{ display: "flex", height: "100%", overflow: "hidden" }}>
 			<Box style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
 				<Box style={{ padding: "32px 40px 0" }}>
-					<Box style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+					<Box style={{ marginBottom: 4 }}>
 						<Heading level="1">Identity</Heading>
-						{activeTab === "personality" && (
-							<Button
-								size="md"
-								icon={<IconEye size={16} />}
-								onClick={() => setPreviewOpen((p) => !p)}
-							>
-								{previewOpen ? "Close preview" : "Open personality preview"}
-							</Button>
-						)}
 					</Box>
 					<Text color="fg.secondary" fontSize="lg" style={{ display: "block", marginBottom: 24 }}>
 						Define who {name} is and how they show up in the workplace
 					</Text>
 
-					<Tabs value={activeTab} onValueChange={setActiveTab}>
-						<TabsList mb="24">
-							<TabsTrigger value="basics">The basics</TabsTrigger>
-							<TabsTrigger value="personality">Personality</TabsTrigger>
-						</TabsList>
+					{/* Scroll-nav tabs */}
+					<Box display="flex" gap="24" mb="32" style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
+						<Box
+							onClick={scrollToTop}
+							style={{ paddingBottom: 12, borderBottom: "2px solid var(--ax-colors-fg-default)", cursor: "pointer", fontWeight: 500, fontSize: 14, color: "var(--ax-colors-fg-default)" }}
+						>
+							The basics
+						</Box>
+						<Box
+							onClick={scrollToPersonality}
+							style={{ paddingBottom: 12, borderBottom: "2px solid transparent", cursor: "pointer", fontWeight: 500, fontSize: 14, color: "var(--ax-colors-fg-secondary)" }}
+						>
+							Personality
+						</Box>
+					</Box>
 
-						{/* ── The basics tab ── */}
-						<TabsContent value="basics">
-							<Box style={{ paddingBottom: 40 }}>
+					{/* ── The basics ── */}
+					<Box>
+						<Box>
 								{/* Identity card */}
 								<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "28px 32px" }}>
 									<Box style={{ display: "flex", alignItems: "flex-start", gap: 20, marginBottom: 24 }}>
@@ -191,18 +193,7 @@ export default function VATIdentityPage() {
 												style={{ width: "100%" }}
 											/>
 										</Box>
-										<Box>
-											<Text fontSize="sm" color="fg.secondary" mb="6" style={{ fontWeight: 500 }}>Visibility</Text>
-											<Select
-												value={visibility}
-												onValueChange={setVisibility}
-												options={["Private", "Team", "Public"].map((opt) => ({ label: opt, value: opt }))}
-											>
-												<SelectTrigger size="lg" style={{ width: "100%", fontFamily: "inherit", fontSize: 16, fontWeight: 400 }} />
-												<SelectContent />
-											</Select>
-										</Box>
-										<Box>
+												<Box>
 											<Box display="flex" alignItems="center" gap="4" mb="6">
 												<Text fontSize="sm" color="fg.secondary" style={{ fontWeight: 500 }}>Email</Text>
 												<Tooltip content="This field is not editable" delayDuration={300}>
@@ -262,24 +253,26 @@ export default function VATIdentityPage() {
 									</Button>
 								</Box>
 							</Box>
-						</TabsContent>
+					</Box>
 
-						{/* ── Personality tab ── */}
-						<TabsContent value="personality">
-							<PersonalityTab
-								name={name}
-								cardImage={vau?.cardImage}
-								previewOpen={previewOpen}
-								setPreviewOpen={setPreviewOpen}
-								onTemplateSelect={setSelectedPersonality}
-							/>
-						</TabsContent>
-					</Tabs>
+					{/* Divider */}
+					<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "32px 0" }} />
+
+					{/* ── Personality ── */}
+					<Box ref={personalityRef}>
+						<PersonalityTab
+							name={name}
+							cardImage={vau?.cardImage}
+							previewOpen={previewOpen}
+							setPreviewOpen={setPreviewOpen}
+							onTemplateSelect={setSelectedPersonality}
+						/>
+					</Box>
 				</Box>
 			</Box>
 
-			{/* Preview panel — only on personality tab */}
-			{previewOpen && activeTab === "personality" && (
+			{/* Preview panel */}
+			{previewOpen && (
 				<Box
 					bg="bg.default"
 					style={{

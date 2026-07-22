@@ -698,12 +698,11 @@ export default function VATPermissionsPage() {
 
 	return (
 		<Box style={{ padding: "32px 40px" }}>
-			<Heading level="1" mb="4">Permissions</Heading>
+			<Heading level="1" mb="4">Tools</Heading>
 			<Text color="fg.secondary" fontSize="lg" mb="24">{"What " + name + " has access to and what's off limits"}</Text>
 
-			<Tabs defaultValue="access">
+			<Tabs defaultValue="connectors">
 				<TabsList mb="24">
-					<TabsTrigger value="access">Access</TabsTrigger>
 					<TabsTrigger value="connectors">
 						<Box asChild display="inline-flex" alignItems="center" gap="6">
 							<span>
@@ -718,66 +717,6 @@ export default function VATPermissionsPage() {
 					</TabsTrigger>
 					<TabsTrigger value="tools">Tools</TabsTrigger>
 				</TabsList>
-
-				{/* ── Access tab ── */}
-				<TabsContent value="access">
-					{/* People section header */}
-					<Box display="flex" alignItems="start" justifyContent="space-between" mb="20">
-						<Box>
-							<Heading level="3" mb="0">{name}&apos;s team</Heading>
-							<Text fontSize="md" color="fg.secondary" style={{ marginTop: 4 }}>Who can manage, review, and collaborate with {name}.</Text>
-						</Box>
-						<AddUserPopover
-							reportsTo={reportsTo}
-							worksWith={worksWith}
-							onAdd={(u, section) => {
-								if (section === "reports-to") setReportsTo((prev) => [...prev, u]);
-								else setWorksWith((prev) => [...prev, u]);
-							}}
-						/>
-					</Box>
-
-					{/* People card */}
-					<Box style={CARD}>
-						<Box mb="20">
-							<Text fontSize="md" color="fg.default" style={{ fontWeight: 500, display: "block", marginBottom: 4 }}>Managed by</Text>
-							<Text fontSize="sm" color="fg.tertiary">People who can direct, review, and approve {name}&apos;s work.</Text>
-							<Box display="flex" alignItems="center" gap="8" style={{ flexWrap: "wrap", marginTop: 12 }}>
-								{reportsTo.map((u) => (
-									<UserChip key={u.name} user={u} onRemove={() => setReportsTo((prev) => prev.filter((x) => x.name !== u.name))} />
-								))}
-							</Box>
-						</Box>
-
-						<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "0 0 20px" }} />
-
-						<Box>
-							<Text fontSize="md" color="fg.default" style={{ fontWeight: 500, display: "block", marginBottom: 4 }}>Collaborates with</Text>
-							<Text fontSize="sm" color="fg.tertiary">Teammates {name} can message, share updates with, and receive requests from.</Text>
-							<Box display="flex" alignItems="center" gap="8" style={{ flexWrap: "wrap", marginTop: 12 }}>
-								{worksWith.map((u) => (
-									<UserChip key={u.name} user={u} onRemove={() => setWorksWith((prev) => prev.filter((x) => x.name !== u.name))} />
-								))}
-							</Box>
-						</Box>
-					</Box>
-
-					{/* Conversation guardrails */}
-					<Box mt="32">
-						<Box mb="20">
-							<Heading level="3" mb="0">Conversation guardrails</Heading>
-							<Text fontSize="md" color="fg.secondary" style={{ marginTop: 4 }}>
-								The boundaries {name} works within — what {name} will and won&apos;t share
-							</Text>
-						</Box>
-						<GuardrailsSection
-							name={name}
-							customGuardrails={customGuardrails}
-							onRemoveCustom={(id) => setCustomGuardrails((p) => p.filter((g) => g.id !== id))}
-							onAddCustom={(text, appliesTo, category) => setCustomGuardrails((p) => [...p, { id: String(Date.now()), text, appliesTo, category }])}
-						/>
-					</Box>
-				</TabsContent>
 
 				{/* ── Connectors tab ── */}
 				<TabsContent value="connectors">
