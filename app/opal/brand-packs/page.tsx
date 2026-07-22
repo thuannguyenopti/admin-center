@@ -1,7 +1,5 @@
-"use client";
-
-import { BrandPacksOverview } from "./components/BrandPacksOverview";
+import { redirect } from "next/navigation";
 
 export default function BrandPacksPage() {
-	return <BrandPacksOverview />;
+	redirect("/opal/context?tab=brand");
 }

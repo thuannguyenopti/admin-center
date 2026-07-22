@@ -25,7 +25,11 @@ const statusFilters: Array<{ label: string; value: BrandPackStatus | "all" }> = 
 	{ label: "Archived", value: "archived" },
 ];
 
-export function BrandPacksOverview() {
+type BrandPacksOverviewProps = {
+	embedded?: boolean;
+};
+
+export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps) {
 	const router = useRouter();
 	const [search, setSearch] = useState("");
 	const [statusFilter, setStatusFilter] = useState<BrandPackStatus | "all">("all");
@@ -49,18 +53,22 @@ export function BrandPacksOverview() {
 				flexDirection="column"
 				gap="32"
 				style={{
-					margin: "0 auto",
-					maxWidth: 1200,
-					padding: "32px 40px 64px",
+					margin: embedded ? 0 : "0 auto",
+					maxWidth: embedded ? "none" : 1200,
+					// embedded: 0 top padding — the context page tabs already provide 16px
+					// of visual separation via their mb="16" before this content area
+					padding: embedded ? "0 32px 64px" : "32px 40px 64px",
 					width: "100%",
 				}}
 			>
 				{/* Header row */}
 				<Box alignItems="start" display="flex" justifyContent="space-between">
 					<Box display="flex" flexDirection="column" gap="4">
-						<Text fontWeight="700" style={{ fontSize: 28, color: "var(--ax-colors-fg-default)" }}>
-							Brand
-						</Text>
+						{!embedded && (
+							<Text fontWeight="700" style={{ fontSize: 28, color: "var(--ax-colors-fg-default)" }}>
+								Brand
+							</Text>
+						)}
 						<Text color="fg.secondary" style={{ fontSize: 14 }}>
 							Visually consistent. On-brand. Agentic by design.
 						</Text>

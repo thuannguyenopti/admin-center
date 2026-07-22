@@ -21,7 +21,7 @@ import { TestPublishTab } from "./components/TestPublishTab";
 import { getBrandPackById } from "../data";
 import styles from "./BrandPackDetailPage.module.css";
 
-const BRAND_HOME = "/opal/brand-packs";
+const BRAND_HOME = "/opal/context?tab=brand";
 
 type PageProps = {
 	params: Promise<{ id: string }>;

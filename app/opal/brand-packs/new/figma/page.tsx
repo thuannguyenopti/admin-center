@@ -37,7 +37,7 @@ const PREVIEW_DATA = {
 	styles: 12,
 };
 
-const BRAND_PACKS_HOME = "/opal/brand-packs";
+const BRAND_PACKS_HOME = "/opal/context?tab=brand";
 
 function ColorDot({hex, name}: {hex: string; name: string}) {
 	return (

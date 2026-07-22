@@ -84,7 +84,7 @@ const ANALYZING_STEPS = [
 	"Building brand pack…",
 ];
 
-const BRAND_PACKS_HOME = "/opal/brand-packs";
+const BRAND_PACKS_HOME = "/opal/context?tab=brand";
 
 // ── Chat history ──────────────────────────────────────────────────────────────
 

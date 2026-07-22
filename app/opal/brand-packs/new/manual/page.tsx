@@ -53,7 +53,7 @@ const COLOR_ROLES = [
 	{role: "text", label: "Text"},
 ] as const;
 
-const BRAND_PACKS_HOME = "/opal/brand-packs";
+const BRAND_PACKS_HOME = "/opal/context?tab=brand";
 
 // ── Stepper ──────────────────────────────────────────────────────────────────
 
