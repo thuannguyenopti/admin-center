@@ -3605,8 +3605,8 @@ function IMMain({
     }}>
       <div
         role="button" tabIndex={0}
-        onClick={() => setVauMenuOpen(false)}
-        onKeyDown={e => e.key === "Enter" && setVauMenuOpen(false)}
+        onClick={() => { setVauMenuOpen(false); if (selected === "bubs") imRouter.push("/opal/virtual-teammates/manage/frank"); }}
+        onKeyDown={e => { if (e.key === "Enter") { setVauMenuOpen(false); if (selected === "bubs") imRouter.push("/opal/virtual-teammates/manage/frank"); } }}
         style={{ display: "flex", alignItems: "center", padding: "10px 12px", cursor: "pointer", borderRadius: 6 }}
         onMouseEnter={e => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
         onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
