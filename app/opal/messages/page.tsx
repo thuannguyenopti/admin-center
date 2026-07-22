@@ -96,7 +96,10 @@ import {
   IconBan,
   IconTrashCan,
   IconSliders,
+  IconScissors,
 } from "@optiaxiom/icons";
+import { clipToTracker } from "@/app/opal/tracker/useSessionTasks";
+import { usePlannerLabel } from "@/app/opal/tracker/usePlannerLabel";
 
 const IconMarkEmailUnread = ({ size = 16 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" height={size} width={size} viewBox="0 -960 960 960" fill="currentColor">
@@ -1613,6 +1616,15 @@ function MessageBubble({ msg, time, onOpenThread, isPinned, onPin, onMarkConvoUn
   useEffect(() => { setDisplayText(msg.text ?? ""); setEditText(msg.text ?? ""); }, [msg.text]);
   const [unread, setUnread] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [clipped, setClipped] = useState(false);
+  const plannerLabel = usePlannerLabel();
+
+  const handleClip = () => {
+    const selection = typeof window !== "undefined" ? window.getSelection()?.toString().trim() : "";
+    clipToTracker(selection && selection.length > 0 ? selection : displayText);
+    setClipped(true);
+    setTimeout(() => setClipped(false), 1500);
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(displayText).catch(() => {});
@@ -1747,6 +1759,11 @@ function MessageBubble({ msg, time, onOpenThread, isPinned, onPin, onMarkConvoUn
             icon={<IconThumbtack size={15} />} />
         </Tooltip>
       )}
+      {/* Add to Planner */}
+      <Tooltip content={clipped ? "Added!" : `Add to ${plannerLabel}`} delayDuration={300}>
+        <Button size="sm" appearance="subtle" aria-label={`Add to ${plannerLabel}`} style={{ width: 30, height: 30, padding: 0 }}
+          icon={<IconScissors size={15} />} onClick={handleClip} />
+      </Tooltip>
       {/* More options */}
       <Menu
         options={isUser ? [
@@ -1754,9 +1771,11 @@ function MessageBubble({ msg, time, onOpenThread, isPinned, onPin, onMarkConvoUn
           { label: "Delete message", execute: () => setDeleted(true), intent: "danger" },
           { label: unread ? "Mark read" : "Mark unread", execute: () => { const next = !unread; setUnread(next); onMarkConvoUnread?.(next); } },
           { label: copied ? "Copied!" : "Copy text", execute: handleCopy },
+          { label: `Add to ${plannerLabel}`, addon: <IconScissors size={16} />, execute: handleClip },
         ] : [
           { label: unread ? "Mark read" : "Mark unread", execute: () => { const next = !unread; setUnread(next); onMarkConvoUnread?.(next); } },
           { label: copied ? "Copied!" : "Copy text", execute: handleCopy },
+          { label: `Add to ${plannerLabel}`, addon: <IconScissors size={16} />, execute: handleClip },
         ]}
         onOpenChange={(open) => { setMenuOpen(open); if (!open && !hovered) setHovered(false); }}
       >

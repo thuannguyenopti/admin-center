@@ -16,10 +16,10 @@ import {
 	MenuContent,
 	SearchInput,
 	Switch,
+	Tooltip,
 } from "@optiaxiom/react";
 import {Layout} from "@optiaxiom/react/unstable";
 import {IconSparkles as IconWand} from "@optimizely/axiom-icons";
-import {IconAgent} from "@optimizely/axiom-icons";
 import {
 	IconSearch,
 	IconBars,
@@ -39,6 +39,12 @@ import {
 	IconXmark,
 	IconEllipsisStroke,
 	IconFileArrowUp,
+	IconCode,
+	IconDiagramSubtask,
+	IconAgent,
+	IconCheck,
+	IconEye,
+	IconShareNodes,
 } from "@optiaxiom/icons";
 import {useState, useRef, useCallback, useMemo, useEffect, Suspense} from "react";
 import {useRouter, useSearchParams} from "next/navigation";
@@ -49,6 +55,7 @@ import {
 	SchedulerPanel,
 	WorkflowSetupPanel,
 	AgentNodePanel,
+	CodeNodePanel,
 } from "./components/SidebarPanels";
 import {
 	ActionNode,
@@ -287,7 +294,7 @@ const CMP_NODES: any[] = [
 		position: {x: 750, y: 20},
 		data: {
 			label: "Brief Enrichment Agent",
-			icon: <IconAgent />,
+			icon: <IconDiagramSubtask />,
 			bg: "bg.avatar.purple",
 			description: "Reads an incoming campaign brief, enriches it with seasonal context,...",
 			outputType: "JSON",
@@ -299,7 +306,7 @@ const CMP_NODES: any[] = [
 		position: {x: 920, y: 220},
 		data: {
 			label: "Campaign Strategy Agent",
-			icon: <IconAgent />,
+			icon: <IconDiagramSubtask />,
 			bg: "bg.avatar.purple",
 			description:
 				"Reads an enriched campaign brief and produces a full campaign strategy —...",
@@ -312,7 +319,7 @@ const CMP_NODES: any[] = [
 		position: {x: 820, y: 400},
 		data: {
 			label: "Asset Requirements Agent",
-			icon: <IconAgent />,
+			icon: <IconDiagramSubtask />,
 			bg: "bg.avatar.purple",
 			description:
 				"Translates a campaign strategy into a complete asset requirements list —...",
@@ -325,7 +332,7 @@ const CMP_NODES: any[] = [
 		position: {x: 250, y: 620},
 		data: {
 			label: "Image Creation Agent",
-			icon: <IconAgent />,
+			icon: <IconDiagramSubtask />,
 			bg: "bg.avatar.purple",
 			description:
 				"Reads the asset requirements from a campaign brief and generates chann...",
@@ -338,7 +345,7 @@ const CMP_NODES: any[] = [
 		position: {x: 620, y: 620},
 		data: {
 			label: "Content Creation Agent",
-			icon: <IconAgent />,
+			icon: <IconDiagramSubtask />,
 			bg: "bg.avatar.purple",
 			description:
 				"Reads a fully developed campaign brief and produces copy for every asset in...",
@@ -487,7 +494,28 @@ function WorkflowBuilder() {
 			},
 			{
 				name: "Hypothesis Creator",
-				icon: <IconCodeBranch />,
+				icon: <IconDiagramSubtask />,
+				bg: "bg.avatar.purple",
+				type: "action",
+				outputType: "JSON",
+			},
+			{
+				name: "Content Writer",
+				icon: <IconDiagramSubtask />,
+				bg: "bg.avatar.purple",
+				type: "action",
+				outputType: "JSON",
+			},
+			{
+				name: "Data Analyzer",
+				icon: <IconDiagramSubtask />,
+				bg: "bg.avatar.purple",
+				type: "action",
+				outputType: "JSON",
+			},
+			{
+				name: "SEO Optimizer",
+				icon: <IconDiagramSubtask />,
 				bg: "bg.avatar.purple",
 				type: "action",
 				outputType: "JSON",
@@ -504,6 +532,7 @@ function WorkflowBuilder() {
 		Inputs: [
 			{name: "Skill", icon: <IconBook />, bg: "bg.accent.subtle", type: "action"},
 			{name: "Prompts", icon: <IconTerminal />, bg: "bg.accent.subtle", type: "action"},
+			{name: "Code", icon: <IconCode />, bg: "bg.accent.subtle", type: "action"},
 		],
 		Triggers: [
 			{name: "Chat Input", icon: <IconComments />, bg: "bg.success.subtle", type: "trigger"},
@@ -1020,22 +1049,34 @@ function WorkflowBuilder() {
 							) : (
 								<>
 									<Button
-										appearance="subtle"
-										onClick={() => {
-											if (isViewingExisting) {
-												setIsEditing(false);
-												setIsLibraryOpen(false);
-											}
-										}}
+										appearance="primary"
+										size="lg"
+										icon={<IconCheck />}
 									>
-										{isViewingExisting ? "Cancel" : "Discard"}
+										Update
 									</Button>
-									<Button appearance="primary">Save</Button>
 									<Button
-										appearance="subtle"
+										size="lg"
 										icon={<IconPlay />}
-										aria-label="Test"
-									/>
+									>
+										Test
+									</Button>
+									<Tooltip content="Share">
+										<Button
+											appearance="subtle"
+											size="lg"
+											icon={<IconShareNodes />}
+											aria-label="Share"
+										/>
+									</Tooltip>
+									<Tooltip content="Preview">
+										<Button
+											appearance="subtle"
+											size="lg"
+											icon={<IconEye />}
+											aria-label="Preview"
+										/>
+									</Tooltip>
 									<Menu
 										options={[
 											{
@@ -1045,13 +1086,24 @@ function WorkflowBuilder() {
 													setIsSetupPanelOpen(true);
 												},
 											},
+											{
+												label: isViewingExisting ? "Cancel changes" : "Discard",
+												intent: "danger",
+												execute: () => {
+													if (isViewingExisting) {
+														setIsEditing(false);
+														setIsLibraryOpen(false);
+													}
+												},
+											},
 										]}
 									>
 										<MenuTrigger asChild>
 											<Button
 												appearance="subtle"
+												size="lg"
 												icon={<IconEllipsisStroke />}
-												aria-label="Context Menu"
+												aria-label="More options"
 											/>
 										</MenuTrigger>
 										<MenuContent align="end" />
@@ -1171,11 +1223,18 @@ function WorkflowBuilder() {
 																				"Triggers" ||
 																			category === "Logic"
 																				? "full"
-																				: "sm"
+																				: "md"
 																		}
-																		// @ts-ignore - explicitly ignoring type check for bg prop here as tokens are dynamically assigned and valid
+																		// @ts-ignore
 																		bg={
-																			item.bg || "bg.tertiary"
+																			category === "Agents"
+																				? undefined
+																				: (item.bg || "bg.tertiary")
+																		}
+																		style={
+																			category === "Agents"
+																				? { background: "linear-gradient(90deg, rgba(186, 158, 245, 0.2), rgba(168, 184, 240, 0.17) 60%, rgba(119, 236, 133, 0.14)), linear-gradient(#fff, #fff)" }
+																				: undefined
 																		}
 																		color="fg.default"
 																		display="flex"
@@ -1238,6 +1297,8 @@ function WorkflowBuilder() {
 								return <InAppEventPanel onClose={() => setSelectedNodeId(null)} />;
 							case "Scheduler":
 								return <SchedulerPanel onClose={() => setSelectedNodeId(null)} />;
+							case "Code":
+								return <CodeNodePanel onClose={() => setSelectedNodeId(null)} />;
 							default:
 								if ((selectedNode.data as any)?.outputType) {
 									return (
