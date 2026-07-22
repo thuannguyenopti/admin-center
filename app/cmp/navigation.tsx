@@ -2,17 +2,26 @@ import {
 	IconPlus,
 	IconHouse,
 	IconList,
-	IconChartLine,
-	IconUserGroup,
-	IconBook,
+	IconChartMixed,
+	IconBookOpen,
 	IconStore,
 	IconSparkles,
 	IconFileLines,
 	IconGear,
 } from "@optiaxiom/icons";
+import IconResourceManagement from "@/app/cmp/assets/resource-management.svg";
 
-// Order and icon set match Figma "Library — Master" node 4033:31766 (Sidenav):
+// Order and icon set match Figma "Plan View (Master)" node 6507:17285 and the
+// Axiom Design System "Sidenav Products/CMP_LIVE" component (node 19270:7209):
 // +, Home, Plan, Dashboard, Resource management, Library, Store, Work Request.
+// Icon-to-Figma-glyph mapping (Optiaxiom icon names mirror Material Symbol names,
+// so these were verified by matching the package's internal aliases 1:1 against
+// each Figma layer's glyph name): IconHouse=home, IconList=format_list_bulleted,
+// IconChartMixed=monitoring, IconBookOpen=menu_book, IconStore=storefront,
+// IconFileLines=article/"docs". "Resource management" has no Material Symbol
+// equivalent in the package — it's a bespoke Optimizely icon, vendored as
+// app/cmp/assets/resource-management.svg (SVGR import, fill="currentColor" so
+// it themes like every other nav icon).
 //
 // Real CMP has no auto-generated page-title headings — every visible entry below sets
 // hidePageHeader: true (or customLayout: true, which bypasses the whole template wrapper
@@ -58,21 +67,21 @@ export const cmpNav = [
 		label: "Dashboard",
 		url: "/cmp/reports",
 		highlight: "/cmp/reports",
-		icon: <IconChartLine />,
+		icon: <IconChartMixed />,
 		hidePageHeader: true,
 	},
 	{
 		label: "Resource Management",
 		url: "/cmp/resource-management",
 		highlight: "/cmp/resource-management",
-		icon: <IconUserGroup />,
+		icon: <IconResourceManagement />,
 		hidePageHeader: true,
 	},
 	{
 		label: "Library",
 		url: "/cmp/library",
 		highlight: "/cmp/library",
-		icon: <IconBook />,
+		icon: <IconBookOpen />,
 		hidePageHeader: true,
 	},
 	{
