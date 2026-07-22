@@ -1,21 +1,15 @@
-.detailPage {
+.detailContent {
 	padding-inline: 40px;
 }
 
-.tabsList {
-	flex-wrap: wrap;
-	height: auto;
-	row-gap: 4px;
-}
-
 @media (max-width: 1100px) {
-	.detailPage {
+	.detailContent {
 		padding-inline: 24px;
 	}
 }
 
 @media (max-width: 760px) {
-	.detailPage {
+	.detailContent {
 		padding-inline: 16px;
 	}
 }

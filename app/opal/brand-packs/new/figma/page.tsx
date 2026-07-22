@@ -37,7 +37,7 @@ const PREVIEW_DATA = {
 	styles: 12,
 };
 
-const BRAND_PACKS_HOME = "/opal/context?tab=brand-packs";
+const BRAND_PACKS_HOME = "/opal/brand-packs";
 
 function ColorDot({hex, name}: {hex: string; name: string}) {
 	return (
@@ -131,7 +131,7 @@ export default function BrandPackFigmaPage() {
 					<BrandPackPageHeader
 						maxWidth={960}
 						onBack={() => router.push(BRAND_PACKS_HOME)}
-						title="New Brand Pack"
+						title="New Brand"
 						subtitle="Import from Figma"
 					/>
 				</Box>

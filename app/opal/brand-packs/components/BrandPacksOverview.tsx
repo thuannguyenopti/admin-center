@@ -25,11 +25,7 @@ const statusFilters: Array<{ label: string; value: BrandPackStatus | "all" }> = 
 	{ label: "Archived", value: "archived" },
 ];
 
-type BrandPacksOverviewProps = {
-	embedded?: boolean;
-};
-
-export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps) {
+export function BrandPacksOverview() {
 	const router = useRouter();
 	const [search, setSearch] = useState("");
 	const [statusFilter, setStatusFilter] = useState<BrandPackStatus | "all">("all");
@@ -53,28 +49,23 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 				flexDirection="column"
 				gap="32"
 				style={{
-					margin: embedded ? 0 : "0 auto",
-					maxWidth: embedded ? "none" : 1200,
-					// embedded: 0 top padding — the context page tabs already provide 16px
-					// of visual separation via their mb="16" before this content area
-					padding: embedded ? "0 32px 64px" : "32px 40px 64px",
+					margin: "0 auto",
+					maxWidth: 1200,
+					padding: "32px 40px 64px",
 					width: "100%",
 				}}
 			>
 				{/* Header row */}
 				<Box alignItems="start" display="flex" justifyContent="space-between">
 					<Box display="flex" flexDirection="column" gap="4">
-						{!embedded && (
-							<Text fontWeight="700" style={{ fontSize: 28, color: "var(--ax-colors-fg-default)" }}>
-								Brand Packs
-							</Text>
-						)}
+						<Text fontWeight="700" style={{ fontSize: 28, color: "var(--ax-colors-fg-default)" }}>
+							Brand
+						</Text>
 						<Text color="fg.secondary" style={{ fontSize: 14 }}>
 							Visually consistent. On-brand. Agentic by design.
 						</Text>
 					</Box>
 
-					{/* Dropdown — chevron now means dropdown, not modal */}
 					<Menu
 						options={[
 							{
@@ -102,7 +93,7 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 								icon={<IconAngleDown />}
 								iconPosition="end"
 							>
-								New Brand Pack
+								New Brand
 							</Button>
 						</MenuTrigger>
 						<MenuContent align="end" />
@@ -121,10 +112,10 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 					>
 						<Box display="flex" flexDirection="column" gap="2">
 							<Text fontWeight="600" style={{ fontSize: 16 }}>
-								Explore Brand Systems
+								Explore Brands
 							</Text>
 							<Text color="fg.tertiary" style={{ fontSize: 13 }}>
-								Find the right pack for your channel, campaign, or audience.
+								Find the right brand for your channel, campaign, or audience.
 							</Text>
 						</Box>
 
@@ -159,7 +150,7 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 
 							<Box style={{ width: 200 }}>
 								<SearchInput
-									placeholder="Search packs..."
+									placeholder="Search brands..."
 									size="md"
 									value={search}
 									onChange={(e) => setSearch(e.target.value)}
@@ -168,16 +159,16 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 
 							<Button
 								appearance="default"
-								aria-label="Filter brand packs"
+								aria-label="Filter brands"
 								icon={<IconFilter />}
 								size="md"
 								style={{ flexShrink: 0 }}
-								title="Filter brand packs"
+								title="Filter brands"
 							/>
 						</Box>
 					</Box>
 
-					{/* Pack grid */}
+					{/* Brand grid */}
 					{filtered.length === 0 && search ? (
 						<Box
 							alignItems="center"
@@ -189,7 +180,7 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 							py="48"
 							rounded="xl"
 						>
-							<Text fontWeight="500">No packs match &ldquo;{search}&rdquo;</Text>
+							<Text fontWeight="500">No brands match &ldquo;{search}&rdquo;</Text>
 							<Text color="fg.secondary" fontSize="sm">
 								Try a different name or clear the filter
 							</Text>
@@ -197,7 +188,7 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 					) : (
 						<Box
 							display="grid"
-							gap="16"
+							gap="20"
 							style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}
 						>
 							{filtered.map((pack) => (

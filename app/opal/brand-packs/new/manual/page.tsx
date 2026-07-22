@@ -53,7 +53,7 @@ const COLOR_ROLES = [
 	{role: "text", label: "Text"},
 ] as const;
 
-const BRAND_PACKS_HOME = "/opal/context?tab=brand-packs";
+const BRAND_PACKS_HOME = "/opal/brand-packs";
 
 // ── Stepper ──────────────────────────────────────────────────────────────────
 
@@ -367,7 +367,7 @@ export default function BrandPackManualPage() {
 			<Box style={{flexShrink: 0, padding: "32px 32px 16px"}}>
 				<BrandPackPageHeader
 					onBack={() => router.push(BRAND_PACKS_HOME)}
-					title="New Brand Pack"
+					title="New Brand"
 					subtitle="Build manually"
 				/>
 			</Box>
@@ -386,8 +386,8 @@ export default function BrandPackManualPage() {
 					{/* BASICS */}
 					{step === "basics" && (
 						<Section
-							title="Brand Pack Basics"
-							description="Give your brand pack a name and a short description."
+							title="Brand Basics"
+							description="Give your brand a name and a short description."
 						>
 							<Box display="flex" flexDirection="column" gap="16">
 								<Box display="flex" flexDirection="column" gap="6">

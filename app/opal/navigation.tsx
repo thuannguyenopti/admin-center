@@ -11,6 +11,7 @@ import {
 	IconPuzzlePiece,
 	IconGear,
 	IconImagePortrait,
+	IconPaintRoller,
 } from "@optiaxiom/icons";
 
 export function useOpalNav() {
@@ -125,6 +126,13 @@ export function useOpalNav() {
 			highlight: "/opal/context",
 			customLayout: true,
 			icon: <IconFolderBookmark filled={active("/opal/context")} />,
+		},
+		{
+			label: "Brand",
+			url: "/opal/brand-packs",
+			highlight: "/opal/brand-packs",
+			icon: <IconPaintRoller filled={active("/opal/brand-packs")} />,
+			customLayout: true,
 		},
 		{
 			label: "Connectors",

@@ -84,7 +84,7 @@ const ANALYZING_STEPS = [
 	"Building brand pack…",
 ];
 
-const BRAND_PACKS_HOME = "/opal/context?tab=brand-packs";
+const BRAND_PACKS_HOME = "/opal/brand-packs";
 
 // ── Chat history ──────────────────────────────────────────────────────────────
 
@@ -1055,7 +1055,7 @@ export default function BrandPackOpalSetupPage() {
 				<Box style={{flexShrink: 0, padding: "32px 32px 16px"}}>
 					<BrandPackPageHeader
 						onBack={handleDismiss}
-						title="New Brand Pack"
+						title="New Brand"
 						subtitle="Set up with Opal"
 					/>
 				</Box>

@@ -46,12 +46,11 @@ import {
 	IconPaintRoller,
 	IconAgent,
 } from "@optiaxiom/icons";
-import {useRouter, useSearchParams} from "next/navigation";
+import {useRouter} from "next/navigation";
 import {FileUpload, FileUploadDropzone} from "@optiaxiom/react/unstable";
 import {CollaborativeEditorPanel} from "@/app/components/Opal/CollaborativeEditorPanel";
 import {OpalShareDialog} from "@/app/components/Opal/CodeCanvasPanel";
 import {VersionHistory} from "@/app/opal/agents/setup/components/VersionHistory";
-import {BrandPacksOverview} from "@/app/opal/brand-packs/components/BrandPacksOverview";
 import EmptyList from "@/app/components/EmptyList";
 
 import {
@@ -87,7 +86,6 @@ import {DSComponentPanel} from "./components/ds/DSComponentPanel";
 
 export function FilesPage() {
 	const router = useRouter();
-	const searchParams = useSearchParams();
 	const [treeData, setTreeData] = useState<FileNode[]>(INITIAL_FILE_TREE);
 	const [selectedFileId, setSelectedFileId] = useState("1-1");
 	const [activeContextTab, setActiveContextTab] = useState<
@@ -131,8 +129,7 @@ export function FilesPage() {
 			return DS_COMPONENT_LIST;
 		}
 	}, [dsRegistryJson]);
-	const activeTab = searchParams.get("tab") === "brand-packs" ? "brand-packs" : activeContextTab;
-	const isBrandPacksTab = activeTab === "brand-packs";
+	const activeTab = activeContextTab;
 	const [isEditing, setIsEditing] = useState(false);
 	const [editorMode, setEditorMode] = useState<"source" | "preview">("preview");
 	const [detailsOpen, setDetailsOpen] = useState(false);
@@ -303,25 +300,20 @@ export function FilesPage() {
 			<Tabs
 				value={activeTab}
 				onValueChange={(val: string) => {
-					if (val === "brand-packs") {
-						router.push("/opal/context?tab=brand-packs");
-					} else {
-						setActiveContextTab(val as typeof activeContextTab);
-						router.push("/opal/context");
-					}
+					setActiveContextTab(val as typeof activeContextTab);
+					router.push("/opal/context");
 				}}
 			>
 				<TabsList mb="16">
 					<TabsTrigger value="skills">Skills</TabsTrigger>
 					<TabsTrigger value="files">Files</TabsTrigger>
 					<TabsTrigger value="design-system">Design System</TabsTrigger>
-					<TabsTrigger value="brand-packs">Brand Packs</TabsTrigger>
 					<TabsTrigger value="memory">Memory</TabsTrigger>
 					<TabsTrigger value="rag">RAG</TabsTrigger>
 				</TabsList>
 			</Tabs>
 			{/* Filter bar */}
-			{!isBrandPacksTab && dsRegistryJson && (
+			{dsRegistryJson && (
 				<Box display="flex" gap="12" alignItems="center">
 					<Box style={{flex: 1, maxWidth: 264}}>
 						<SearchInput size="lg" placeholder="Search files..." />
@@ -399,11 +391,7 @@ export function FilesPage() {
 				</Box>
 			)}
 			{/* Content body */}
-			{isBrandPacksTab ? (
-				<Box style={{flex: 1, minHeight: 0}}>
-					<BrandPacksOverview embedded />
-				</Box>
-			) : activeTab === "design-system" ? (
+			{activeTab === "design-system" ? (
 				<Box
 					pt="16"
 					style={{flex: 1, minHeight: 0, display: "flex", flexDirection: "column"}}

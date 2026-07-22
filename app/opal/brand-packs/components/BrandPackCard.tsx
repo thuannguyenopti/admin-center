@@ -42,9 +42,9 @@ export function BrandPackCard({pack}: BrandPackCardProps) {
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 		>
-			{/* Image — single, clean, fixed height */}
+			{/* Image — square, matching app/cmp/library's asset-card aesthetic */}
 			{heroThumb ? (
-				<Box overflow="hidden" style={{height: 160, flexShrink: 0}}>
+				<Box overflow="hidden" style={{aspectRatio: "1", flexShrink: 0}}>
 					<img
 						alt={heroThumb.name}
 						src={heroThumb.thumb}
@@ -63,7 +63,7 @@ export function BrandPackCard({pack}: BrandPackCardProps) {
 					bg="bg.secondary"
 					display="flex"
 					justifyContent="center"
-					style={{height: 160, flexShrink: 0}}
+					style={{aspectRatio: "1", flexShrink: 0}}
 				>
 					<IconPaintRoller style={{color: "var(--ax-colors-fg-tertiary)"}} />
 				</Box>
@@ -133,20 +133,15 @@ export function NewBrandPackCard({onClick}: {onClick: () => void}) {
 
 	return (
 		<Box
-			alignItems="center"
 			border="1"
 			borderColor="border.tertiary"
 			display="flex"
 			flexDirection="column"
-			gap="12"
-			justifyContent="center"
+			overflow="hidden"
 			rounded="xl"
 			shadow={hovered ? "sm" : undefined}
 			style={{
-				borderStyle: "dashed",
 				cursor: "pointer",
-				minHeight: 240,
-				padding: "32px 24px",
 				transform: hovered ? "translateY(-2px)" : "none",
 				transition: "box-shadow 0.18s ease, transform 0.18s ease",
 			}}
@@ -154,29 +149,41 @@ export function NewBrandPackCard({onClick}: {onClick: () => void}) {
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 		>
+			{/* Square dashed tile — matches the real cards' image proportions so the grid stays aligned */}
 			<Box
 				alignItems="center"
-				bg={hovered ? "bg.default.hovered" : "bg.secondary"}
 				display="flex"
 				justifyContent="center"
-				rounded="xl"
 				style={{
-					height: 44,
-					width: 44,
-					transition: "background 0.18s ease",
+					aspectRatio: "1",
+					borderBottom: "1px dashed var(--ax-colors-border-tertiary)",
+					flexShrink: 0,
 				}}
 			>
-				<IconPaintRoller
+				<Box
+					alignItems="center"
+					bg={hovered ? "bg.default.hovered" : "bg.secondary"}
+					display="flex"
+					justifyContent="center"
+					rounded="xl"
 					style={{
-						color: hovered
-							? "var(--ax-colors-fg-default)"
-							: "var(--ax-colors-fg-secondary)",
+						height: 44,
+						width: 44,
+						transition: "background 0.18s ease",
 					}}
-				/>
+				>
+					<IconPaintRoller
+						style={{
+							color: hovered
+								? "var(--ax-colors-fg-default)"
+								: "var(--ax-colors-fg-secondary)",
+						}}
+					/>
+				</Box>
 			</Box>
-			<Box display="flex" flexDirection="column" gap="4" style={{textAlign: "center"}}>
+			<Box alignItems="center" display="flex" flexDirection="column" gap="4" p="16" style={{textAlign: "center"}}>
 				<Text fontWeight="600" style={{fontSize: 14}}>
-					New Brand Pack
+					New Brand
 				</Text>
 				<Text color="fg.secondary" fontSize="xs">
 					Opal · Figma · Manual
