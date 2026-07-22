@@ -913,6 +913,22 @@ Spawn a sub-agent (fill in `PAGE_INVENTORY`, `SOURCE_URL`, `FIGMA_DESTINATION`, 
 
 ---
 
+## Learnings (verified 2026-07-21, Planner tray Rich + Fun build)
+
+**Capturing an interactive / stateful panel (tray, drawer, popover, aside).** `generate_figma_design` renders the URL fresh with empty state — an aside that only opens via a button click and whose variant is chosen from `localStorage` will NOT be captured. Don't hack the real page. Instead:
+1. Add a **temporary isolated fullscreen route** (e.g. `app/<area>/<thing>/preview/page.tsx`) that renders ONLY the panel on a plain canvas at its natural width, and **forces the state from a query param** (`?d=rich`) by writing the driving `localStorage` key synchronously during render before the panel's hook reads it. Register it as a `hidden: true, fullscreen: true` nav entry so the shell (sidebar/GlobalBar) is stripped.
+2. Inject the capture script **into that preview page only** (`next/script` `<Script src="https://mcp.figma.com/mcp/html-to-design/capture.js" strategy="afterInteractive" />`) — never into the shared root layout. (First check for a CSP header that would block it; axiom-play has none.)
+3. Generate one capture ID per state (parallel is fine once the file exists), `open` each hash URL with a generous `figmadelay` (≥3000ms so avatars/images load), poll to `completed`.
+4. **Clean up** after: delete the preview route + nav entry + script. Verify the app still builds and the temp route 404s.
+
+**Verify a component by its main component, NOT its node name.** After you `swapComponent` an icon into a Button (or rename any instance), the instance's `name` becomes the icon/custom name (e.g. "Search", "Close") — `get_metadata` then makes it look like a bare icon, not a Button. Don't conclude "this isn't an Axiom component" from the name. Resolve `await inst.getMainComponentAsync()` and read `mc.parent.name` (the component-set name) / compare `.key` against known Axiom keys. `remote: true` confirms it's from a linked library — then match the key to `qs72V79n1s9wYOcZ1TzBwM` to confirm it's Axiom (not Stride/Foundations-Legacy/Opal Components, which also appear in search).
+
+**Axiom Checkbox carries a built-in label slot.** A Checkbox instance renders an internal label ("Text frame") and reports ~80px wide, not 24×24. For a bare checkbox (checklist rows, leading slots), hide that node: `instance.findOne(n => n.name === 'Text frame').visible = false` — the instance then collapses to the box and, in a HORIZONTAL auto-layout row, the real text re-aligns automatically. ⚠️ **Never mask overflow with a clip** (`clipsContent`) — a clip hides real bugs (the stray "Label" only surfaced once the row was given height; the "cropped checklist" was that clip).
+
+**Read design INTENT, not just pixels.** When the source encodes one idea several ways (e.g. an "approval" shown as an orange rail + an "Approve" verb + being the one colored card), don't dutifully replicate all three — surface it and confirm. The user may want the concept stripped (here: no status framing at all; cards uniform; color reassigned to item **type**). A "row with a divider + left rail" and a "standalone bordered card" are different component metaphors — picking the right one is a design decision, not a styling one.
+
+---
+
 ## Output
 
 ```
