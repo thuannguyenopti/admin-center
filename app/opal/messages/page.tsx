@@ -1502,13 +1502,13 @@ const PROFILE_LOOKUP: Record<string, ProfileEntry> = {
   "Amara Osei":            { name: "Amara Osei",            email: "amara.osei@optimizely.com",    avatar: "https://i.pravatar.cc/150?img=38", isVAU: false },
   "Erika Schreiber":       { name: "Erika Schreiber",       email: "erika.schreiber@optimizely.com", avatar: "https://i.pravatar.cc/150?img=24", isVAU: false },
   "Me":                    { name: "Erika Schreiber",       email: "erika.schreiber@optimizely.com", avatar: "https://i.pravatar.cc/150?img=24", isVAU: false },
-  "Randy":                  { name: "Randy",                  email: "randy@opal.optimizely.com",    avatar: "/vau-bubs.svg",  isVAU: true, status: "Offline" },
+  "Randy":                  { name: "Randy",                  email: "randy@opal.optimizely.com",    avatar: "/vau-bubs.svg",  isVAU: true, status: "Available" },
   "Kara":                  { name: "Kara",                  email: "kara@opal.optimizely.com",     avatar: "/vau-kara.svg",  isVAU: true, status: "Available" },
   "Eric":                  { name: "Eric",                  email: "eric@opal.optimizely.com",     avatar: "/vau-eric.svg",  isVAU: true, status: "Out of Office" },
   "Sage":                  { name: "Sage",                  email: "sage@opal.optimizely.com",     avatar: "",               isVAU: true, status: "Deactivated" },
 };
 
-function AvatarWithHoverCard({ name, src, size, style }: { name: string; src?: string; size?: string; style?: React.CSSProperties }) {
+function AvatarWithHoverCard({ name, src, size, style, onManage }: { name: string; src?: string; size?: string; style?: React.CSSProperties; onManage?: () => void }) {
   const wrapRef    = useRef<HTMLDivElement>(null);
   const hideTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [visible, setVisible] = useState(false);
@@ -1520,7 +1520,7 @@ function AvatarWithHoverCard({ name, src, size, style }: { name: string; src?: s
     if (hideTimer.current) clearTimeout(hideTimer.current);
     if (!wrapRef.current) return;
     const rect = wrapRef.current.getBoundingClientRect();
-    const cardW = 230;
+    const cardW = 244;
     const spaceRight = window.innerWidth - rect.right;
     const placement = spaceRight >= cardW + 12 ? "right" : "left";
     setCardStyle({
@@ -1594,6 +1594,11 @@ function AvatarWithHoverCard({ name, src, size, style }: { name: string; src?: s
               )}
             </div>
           </div>
+          {onManage && (
+            <Button appearance="default" size="sm" onClick={onManage} style={{ marginTop: 12, marginLeft: 50 }}>
+              Manage virtual teammate
+            </Button>
+          )}
         </div>,
         document.body
       )}
@@ -4000,7 +4005,7 @@ function IMMain({
               <>
                 <Box style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
                   {dm.avatar ? (
-                    <AvatarWithHoverCard name={dm.name} src={dm.avatar} size="md" />
+                    <AvatarWithHoverCard name={dm.name} src={dm.avatar} size="md" onManage={dm.id === "bubs" ? () => imRouter.push("/opal/virtual-teammates/manage/frank") : undefined} />
                   ) : (
                     <Box style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--ax-colors-bg-secondary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 500, color: "var(--ax-colors-fg-secondary)", flexShrink: 0 }}>
                       {dm.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("")}
