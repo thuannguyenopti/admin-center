@@ -297,7 +297,7 @@ export function FilesPage() {
 	const selectedMarkdown = FILE_CONTENT[selectedFileId] ?? "";
 
 	return (
-		<Box px="32">
+		<Box display="flex" flexDirection="column" h="full" px="32" style={{minHeight: 0}}>
 			{/* Collapsible header */}
 			{/* Tabs */}
 			<Tabs
@@ -400,7 +400,7 @@ export function FilesPage() {
 			)}
 			{/* Content body */}
 			{isBrandTab ? (
-				<Box style={{flex: 1, minHeight: 0, marginLeft: -32, marginRight: -32}}>
+				<Box style={{flex: 1, minHeight: 0, overflow: "hidden", marginLeft: -32, marginRight: -32}}>
 					<BrandPacksOverview embedded />
 				</Box>
 			) : activeTab === "design-system" ? (
