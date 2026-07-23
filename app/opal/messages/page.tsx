@@ -44,6 +44,10 @@ import {
   Select,
   SelectTrigger,
   SelectContent,
+  Input,
+  Textarea,
+  Field,
+  Heading,
 } from "@optiaxiom/react";
 import {
   IconPlus,
@@ -97,6 +101,7 @@ import {
   IconTrashCan,
   IconSliders,
   IconScissors,
+  IconClock,
 } from "@optiaxiom/icons";
 import { clipToTracker } from "@/app/opal/tracker/useSessionTasks";
 import { usePlannerLabel } from "@/app/opal/tracker/usePlannerLabel";
@@ -1508,13 +1513,30 @@ const PROFILE_LOOKUP: Record<string, ProfileEntry> = {
   "Sage":                  { name: "Sage",                  email: "sage@opal.optimizely.com",     avatar: "",               isVAU: true, status: "Deactivated" },
 };
 
-function AvatarWithHoverCard({ name, src, size, style, onManage }: { name: string; src?: string; size?: string; style?: React.CSSProperties; onManage?: () => void }) {
+// VAUs whose hover card links to a manage page (name → manage route id)
+const VAU_MANAGE_ID: Record<string, string> = { "Randy": "frank" };
+
+// Seeded scheduled messages per conversation (prototype)
+type ScheduledMsg = { id: string; text: string; sendAt: string };
+const SCHEDULED_SEED: Record<string, ScheduledMsg[]> = {
+  bubs: [
+    { id: "sm1", text: "Morning Randy — can you pull the latest GEO metrics before our 10am sync?", sendAt: "Tomorrow, 8:00 AM" },
+    { id: "sm2", text: "Following up on the Q3 blog post — any blockers I can help clear?", sendAt: "Thu, 9:30 AM" },
+  ],
+  q4gs: [
+    { id: "sm3", text: "Reminder: Q4 brief drafts are due end of week — drop them here when ready.", sendAt: "Fri, 9:00 AM" },
+  ],
+};
+
+function AvatarWithHoverCard({ name, src, size, style }: { name: string; src?: string; size?: string; style?: React.CSSProperties }) {
   const wrapRef    = useRef<HTMLDivElement>(null);
   const hideTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [visible, setVisible] = useState(false);
   const [cardStyle, setCardStyle] = useState<React.CSSProperties>({});
 
+  const router = useRouter();
   const profile = PROFILE_LOOKUP[name];
+  const manageId = VAU_MANAGE_ID[name];
 
   const handleEnter = React.useCallback(() => {
     if (hideTimer.current) clearTimeout(hideTimer.current);
@@ -1594,8 +1616,8 @@ function AvatarWithHoverCard({ name, src, size, style, onManage }: { name: strin
               )}
             </div>
           </div>
-          {onManage && (
-            <Button appearance="default" size="sm" onClick={onManage} style={{ marginTop: 12, marginLeft: 50 }}>
+          {manageId && (
+            <Button appearance="default" size="sm" onClick={() => router.push(`/opal/virtual-teammates/manage/${manageId}`)} style={{ marginTop: 12, marginLeft: 50 }}>
               Manage virtual teammate
             </Button>
           )}
@@ -1944,6 +1966,7 @@ function IMSidebar({
   movedItems,
   setMovedItems,
   onHighlightSelect,
+  scheduledByConvo,
 }: {
   selected: string;
   onSelect: (id: string) => void;
@@ -1968,6 +1991,7 @@ function IMSidebar({
   setSections: React.Dispatch<React.SetStateAction<Section[]>>;
   movedItems: string[];
   setMovedItems: React.Dispatch<React.SetStateAction<string[]>>;
+  scheduledByConvo?: Record<string, ScheduledMsg[]>;
 }) {
   const [editingSectionId, setEditingSectionId] = React.useState<string | null>(null);
   const [editingLabel, setEditingLabel] = React.useState("");
@@ -2068,6 +2092,7 @@ function IMSidebar({
     mentions: mentionCount,
     threads: threadCount,
     needsreview: needsReviewCount,
+    scheduled: Object.values(scheduledByConvo ?? {}).flat().length,
   };
 
   return (
@@ -2075,9 +2100,9 @@ function IMSidebar({
       display="flex"
       flexDirection="column"
       style={{
-        width: collapsed ? 56 : 320,
+        width: collapsed ? 0 : 320,
         flexShrink: 0,
-        borderRight: "1px solid var(--ax-colors-border-default, #d8e4cb)",
+        borderRight: collapsed ? "none" : "1px solid var(--ax-colors-border-default, #d8e4cb)",
         background: "var(--ax-colors-bg-page)",
         height: "100%",
         overflow: "hidden",
@@ -2180,12 +2205,6 @@ function IMSidebar({
             icon={<IconPenToSquare style={{ width: 20, height: 20 }} />}
             aria-label="New message"
             onClick={onNewConversation} />
-        </Tooltip>
-        <Tooltip content="Collapse sidebar" delayDuration={300}>
-          <Button appearance="subtle" size="lg"
-            icon={<IconChevronLeft style={{ width: 20, height: 20 }} />}
-            aria-label="Collapse sidebar"
-            onClick={onToggle} />
         </Tooltip>
       </Box>
       {/* Global search bar + filter — shown on magnifying glass click */}
@@ -2391,6 +2410,7 @@ function IMSidebar({
               { id: "mentions",   label: "Mentions",     icon: <IconAt size={15} /> },
               { id: "threads",    label: "Threads",      icon: <IconMessageLines size={15} /> },
               { id: "needsreview", label: "Needs Review", icon: <IconCircleCheck size={15} /> },
+              { id: "scheduled",  label: "Scheduled",    icon: <IconClock size={15} /> },
             ] as const).map(qv => (
               <Box key={qv.id} display="flex" alignItems="center" gap="10" px="8" py="6" rounded="md"
                 style={{ cursor: "pointer", background: quickView === qv.id ? "var(--ax-colors-bg-default-hovered)" : "transparent" }}
@@ -3415,6 +3435,11 @@ function IMMain({
   onMoveToSection,
   highlightMsgId,
   onHighlightClear,
+  scheduledByConvo,
+  onCancelScheduled,
+  onEditScheduled,
+  onSendNowScheduled,
+  headerControls,
 }: {
   selected: string;
   highlightMsgId?: string | null;
@@ -3441,12 +3466,60 @@ function IMMain({
   onLeave: (id: string) => void;
   sections: Section[];
   onMoveToSection: (id: string, sectionId: string) => void;
+  scheduledByConvo?: Record<string, ScheduledMsg[]>;
+  onCancelScheduled?: (convId: string, id: string) => void;
+  onEditScheduled?: (convId: string, id: string, text: string, sendAt: string) => void;
+  onSendNowScheduled?: (convId: string, id: string, text: string) => void;
+  headerControls?: React.ReactNode;
 }) {
   const [message, setMessage] = useState("");
   const [typing, setTyping] = useState(false);
   const [pendingAttachments, setPendingAttachments] = useState<ContentItem[]>([]);
   const [activeTab, setActiveTab] = useState("messages");
   const [profileOpen, setProfileOpen] = useState(false);
+  // Scheduled messages for the current conversation + Edit-dialog state
+  const scheduledHere = scheduledByConvo?.[selected] ?? [];
+  const [editingScheduled, setEditingScheduled] = useState<{ convId: string; id: string } | null>(null);
+  const [schedEditText, setSchedEditText] = useState("");
+  const [schedEditWhen, setSchedEditWhen] = useState("");
+  useEffect(() => { if (activeTab === "scheduled" && scheduledHere.length === 0) setActiveTab("messages"); }, [activeTab, scheduledHere.length]);
+  const renderScheduledCard = (convId: string, m: ScheduledMsg, convLabel?: string) => (
+    <Box key={`${convId}-${m.id}`} display="flex" flexDirection="column" gap="10" px="12" py="12" rounded="lg"
+      style={{ border: "1px solid var(--ax-colors-border-secondary)", background: "var(--ax-colors-bg-default)", marginBottom: 6 }}>
+      {convLabel && <Text fontSize="sm" color="fg.tertiary">To {convLabel}</Text>}
+      <Text fontSize="md" color="fg.default" style={{ lineHeight: 1.5 }}>{m.text}</Text>
+      <Box display="flex" alignItems="center" gap="6">
+        <IconClock size={13} style={{ color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }} />
+        <Text fontSize="sm" color="fg.tertiary">Scheduled for {m.sendAt}</Text>
+      </Box>
+      <Box display="flex" alignItems="center" justifyContent="flex-end" gap="8">
+        <Button appearance="default" size="md" onClick={() => onSendNowScheduled?.(convId, m.id, m.text)}>Send now</Button>
+        <Button appearance="default" size="md" onClick={() => { setEditingScheduled({ convId, id: m.id }); setSchedEditText(m.text); setSchedEditWhen(m.sendAt); }}>Edit</Button>
+        <Button appearance="subtle" size="md" onClick={() => onCancelScheduled?.(convId, m.id)}>Cancel</Button>
+      </Box>
+    </Box>
+  );
+  const schedEditDialog = (
+    <Dialog open={!!editingScheduled} onOpenChange={o => { if (!o) setEditingScheduled(null); }}>
+      <DialogContent style={{ width: 480 }}>
+        <DialogHeader>Edit scheduled message</DialogHeader>
+        <DialogBody>
+          <Box display="flex" flexDirection="column" gap="16" py="8">
+            <Field label="Message">
+              <Textarea value={schedEditText} onChange={e => setSchedEditText(e.target.value)} rows={3} />
+            </Field>
+            <Field label="Send time">
+              <Input value={schedEditWhen} onChange={e => setSchedEditWhen(e.target.value)} />
+            </Field>
+          </Box>
+        </DialogBody>
+        <DialogFooter>
+          <DialogClose asChild><Button appearance="default" size="md">Cancel</Button></DialogClose>
+          <Button appearance="primary" size="md" onClick={() => { if (editingScheduled) onEditScheduled?.(editingScheduled.convId, editingScheduled.id, schedEditText, schedEditWhen); setEditingScheduled(null); }}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
   const [channelMembersOpen, setChannelMembersOpen] = useState(false);
   const [groupMembersOpen, setGroupMembersOpen] = useState(false);
   const isMuted = mutedConvos.has(selected);
@@ -3779,6 +3852,7 @@ function IMMain({
       threads:     { label: "Threads",      icon: <IconComments size={16} />,    desc: "Messages with active threads" },
       mentions:    { label: "Mentions",     icon: <IconAt size={16} />,          desc: "Messages where you were @mentioned" },
       needsreview: { label: "Needs Review", icon: <IconCircleCheck size={16} />, desc: "Deliverables waiting for your review" },
+      scheduled:   { label: "Scheduled",    icon: <IconClock size={16} />,       desc: "Messages scheduled to send later" },
     } as const;
     const meta = QUICK_VIEW_META[quickView as keyof typeof QUICK_VIEW_META];
 
@@ -3797,6 +3871,7 @@ function IMMain({
         {/* Header */}
         <Box display="flex" alignItems="center" gap="10" px="20"
           style={{ height: 56, borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}>
+          {headerControls}
           <Box style={{ color: "var(--ax-colors-fg-secondary)" }}>{meta?.icon}</Box>
           <Text fontSize="lg" fontWeight="500" color="fg.default">{meta?.label}</Text>
         </Box>
@@ -3979,7 +4054,17 @@ function IMMain({
               </Box>
             ));
           })()}
+          {quickView === "scheduled" && (() => {
+            const all = Object.entries(scheduledByConvo ?? {}).flatMap(([convId, msgs]) => msgs.map(m => ({ convId, m })));
+            if (all.length === 0) return <Box py="40" style={{ textAlign: "center" }}><Text color="fg.tertiary">No scheduled messages</Text></Box>;
+            return all.map(({ convId, m }) => {
+              const dm = activeDMS.find(d => d.id === convId);
+              const group = GROUPS.find(g => g.id === convId);
+              return renderScheduledCard(convId, m, dm?.name ?? group?.name ?? convId);
+            });
+          })()}
         </Box>
+        {schedEditDialog}
       </Box>
     );
   }
@@ -4001,11 +4086,12 @@ function IMMain({
         return (
           <Box display="flex" alignItems="center" gap="10" px="20"
             style={{ minHeight: 56, borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}>
+            {headerControls}
             {dm ? (
               <>
                 <Box style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
                   {dm.avatar ? (
-                    <AvatarWithHoverCard name={dm.name} src={dm.avatar} size="md" onManage={dm.id === "bubs" ? () => imRouter.push("/opal/virtual-teammates/manage/frank") : undefined} />
+                    <AvatarWithHoverCard name={dm.name} src={dm.avatar} size="md" />
                   ) : (
                     <Box style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--ax-colors-bg-secondary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 500, color: "var(--ax-colors-fg-secondary)", flexShrink: 0 }}>
                       {dm.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("")}
@@ -4253,6 +4339,16 @@ function IMMain({
                     </span>
                   </Box>
                 </TabsTrigger>
+                {scheduledHere.length > 0 && (
+                  <TabsTrigger value="scheduled">
+                    <Box asChild display="inline-flex" alignItems="center" gap="6">
+                      <span>
+                        Scheduled
+                        <Badge intent="information">{scheduledHere.length}</Badge>
+                      </span>
+                    </Box>
+                  </TabsTrigger>
+                )}
               </TabsList>
                 </>
               )}
@@ -4482,20 +4578,20 @@ function IMMain({
                   </Box>
                 );
                 return (
-                  <Box style={{ overflowY: "auto", flex: 1 }}>
+                  <Box display="flex" flexDirection="column" style={{ flex: 1, overflowY: "auto" }} px="16" py="16" gap="4">
                     {pinned.map((m, idx) => (
-                      <Box key={m.id} px="16" py="12" style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
-                        <Box display="flex" alignItems="center" gap="8" style={{ marginBottom: 6 }}>
+                      <Box key={m.id} display="flex" flexDirection="column" gap="10" px="12" py="12" rounded="lg"
+                        style={{ border: "1px solid var(--ax-colors-border-secondary)", background: "var(--ax-colors-bg-default)", marginBottom: 6 }}>
+                        <Box display="flex" alignItems="center" gap="8">
                           <IconThumbtack size={12} style={{ color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }} />
                           <Text fontSize="sm" color="fg.tertiary">
                             {m.from === "user" ? "You" : m.senderName ?? "Unknown"} · {getMockTime(idx)}
                           </Text>
                         </Box>
-                        <Text fontSize="md" color="fg.default">{m.text}</Text>
-                        <Box display="flex" justifyContent="flex-end" style={{ marginTop: 6 }}>
-                          <Button size="sm" appearance="subtle"
-                            onClick={() => setPinnedMsgIds(prev => ({ ...prev, [selected]: (prev[selected] ?? []).filter(x => x !== m.id) }))}
-                            style={{ color: "var(--ax-colors-fg-tertiary)", fontSize: 12 }}>
+                        <Text fontSize="md" color="fg.default" style={{ lineHeight: 1.5 }}>{m.text}</Text>
+                        <Box display="flex" alignItems="center" justifyContent="flex-end" gap="8">
+                          <Button size="md" appearance="subtle"
+                            onClick={() => setPinnedMsgIds(prev => ({ ...prev, [selected]: (prev[selected] ?? []).filter(x => x !== m.id) }))}>
                             Unpin
                           </Button>
                         </Box>
@@ -4504,6 +4600,15 @@ function IMMain({
                   </Box>
                 );
               })()}
+            </TabsContent>
+
+            {/* Scheduled tab */}
+            <TabsContent value="scheduled" style={{ flex: 1, minHeight: 0, display: activeTab === "scheduled" ? "flex" : "none", flexDirection: "column", overflow: "hidden" }}>
+              <Box display="flex" flexDirection="column" style={{ flex: 1, overflowY: "auto" }} px="16" py="16" gap="4">
+                {scheduledHere.length === 0
+                  ? <Box py="40" style={{ textAlign: "center" }}><Text color="fg.tertiary">No scheduled messages</Text></Box>
+                  : scheduledHere.map(m => renderScheduledCard(selected, m))}
+              </Box>
             </TabsContent>
 
             {/* Artifacts tab */}
@@ -5467,6 +5572,8 @@ function IMMain({
         </Box>
       </Box>
 
+      {schedEditDialog}
+
       {/* ── Group Members Modal ── */}
       {(() => {
         const group = selectedGroup;
@@ -5995,9 +6102,10 @@ const RECENT_CONTACTS: (DMItem & { role: string })[] = [
   { id: "eric", name: "Eric",                avatar: "/vau-eric.svg",                    status: "ooo",    isVAU: true, role: "A/B Testing & Experimentation" },
 ];
 
-function NewMessagePane({ onStartConversation, onClose }: {
+function NewMessagePane({ onStartConversation, onClose, headerControls }: {
   onStartConversation: (chips: typeof RECENT_CONTACTS, message: string) => void;
   onClose: () => void;
+  headerControls?: React.ReactNode;
 }) {
   const [query, setQuery] = useState("");
   const [chips, setChips] = useState<typeof RECENT_CONTACTS>([]);
@@ -6010,6 +6118,8 @@ function NewMessagePane({ onStartConversation, onClose }: {
   const filtered = RECENT_CONTACTS.filter(c =>
     !chipIds.includes(c.id) && (!query.trim() || c.name.toLowerCase().includes(query.toLowerCase()))
   );
+  const virtualTeammates = filtered.filter(c => c.isVAU);
+  const teammates = filtered.filter(c => !c.isVAU);
 
   const addChip = (c: typeof RECENT_CONTACTS[0]) => {
     setChips(prev => [...prev, c]);
@@ -6024,11 +6134,32 @@ function NewMessagePane({ onStartConversation, onClose }: {
     onStartConversation(chips, msg);
   };
 
+  const renderContact = (c: typeof RECENT_CONTACTS[0]) => (
+    <Box key={c.id} display="flex" alignItems="center" gap="12" px="20" py="8"
+      onClick={() => addChip(c)}
+      style={{ cursor: "pointer" }}
+      onMouseEnter={e => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
+      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+    >
+      <Box style={{ position: "relative", flexShrink: 0 }}>
+        <Avatar name={c.name} src={c.avatar} size="md" />
+        {c.status && <Box rounded="full" style={{ position: "absolute", bottom: 0, right: 0, width: 10, height: 10, background: PRESENCE_COLOR[c.status], border: "1.5px solid var(--ax-colors-bg-default)" }} />}
+      </Box>
+      <Box style={{ minWidth: 0 }}>
+        <Box display="flex" alignItems="center" gap="6">
+          <Text fontSize="md" color="fg.default">{c.name}</Text>
+        </Box>
+        {c.isVAU && <Text fontSize="sm" color="fg.tertiary">{c.role}</Text>}
+      </Box>
+    </Box>
+  );
+
   return (
     <Box display="flex" flexDirection="column" style={{ flex: 1, height: "100%", background: "var(--ax-colors-bg-default)", minWidth: 0 }}>
       {/* Header */}
-      <Box display="flex" alignItems="center" px="20"
+      <Box display="flex" alignItems="center" gap="8" px="20"
         style={{ height: 52, borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}>
+        {headerControls}
         <Text fontWeight="600" fontSize="lg" color="fg.default">New message</Text>
         <Box style={{ flex: 1 }} />
         <Button appearance="subtle" size="sm" icon={<IconXmark style={{ width: 14, height: 14 }} />}
@@ -6063,42 +6194,34 @@ function NewMessagePane({ onStartConversation, onClose }: {
         />
       </Box>
 
-      {/* Recent contacts */}
+      {/* Recipients — grouped into Virtual Teammates and Teammates */}
       <Box display="flex" flexDirection="column" style={{ flex: 1, overflowY: "auto" }}>
-        <Box px="20" pt="16" pb="8">
-          <Text fontSize="sm" fontWeight="500" color="fg.tertiary" style={{ letterSpacing: "0.05em", textTransform: "uppercase" }}>
-            {query.trim() ? "Results" : "Recent"}
-          </Text>
-        </Box>
-        {filtered.map(c => (
-          <Box key={c.id} display="flex" alignItems="center" gap="12" px="20" py="8"
-            onClick={() => addChip(c)}
-            style={{ cursor: "pointer" }}
-            onMouseEnter={e => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-          >
-            <Box style={{ position: "relative", flexShrink: 0 }}>
-              <Avatar name={c.name} src={c.avatar} size="md" />
-              {c.status && <Box rounded="full" style={{ position: "absolute", bottom: 0, right: 0, width: 10, height: 10, background: PRESENCE_COLOR[c.status], border: "1.5px solid var(--ax-colors-bg-default)" }} />}
+        {virtualTeammates.length > 0 && (
+          <>
+            <Box px="20" pt="16" pb="8">
+              <Text fontSize="sm" fontWeight="500" color="fg.tertiary" style={{ letterSpacing: "0.05em", textTransform: "uppercase" }}>Virtual Teammates</Text>
             </Box>
-            <Box>
-              <Box display="flex" alignItems="center" gap="6">
-                <Text fontSize="md" color="fg.default">{c.name}</Text>
-              </Box>
-              <Text fontSize="sm" color="fg.tertiary">{c.role}</Text>
+            {virtualTeammates.map(renderContact)}
+          </>
+        )}
+        {teammates.length > 0 && (
+          <>
+            <Box px="20" pt="16" pb="8">
+              <Text fontSize="sm" fontWeight="500" color="fg.tertiary" style={{ letterSpacing: "0.05em", textTransform: "uppercase" }}>Teammates</Text>
             </Box>
-          </Box>
-        ))}
-        {filtered.length === 0 && chips.length > 0 && !query && (
+            {teammates.map(renderContact)}
+          </>
+        )}
+        {virtualTeammates.length === 0 && teammates.length === 0 && chips.length > 0 && !query && (
           <Box px="20" py="16" display="flex" justifyContent="center">
             <Button appearance="primary" size="md" onClick={() => openConversation()}>
               Open conversation
             </Button>
           </Box>
         )}
-        {filtered.length === 0 && query && (
+        {virtualTeammates.length === 0 && teammates.length === 0 && query && (
           <Box px="20" py="24">
-            <Text fontSize="sm" color="fg.tertiary">No contacts found for "{query}"</Text>
+            <Text fontSize="sm" color="fg.tertiary">No contacts found for &ldquo;{query}&rdquo;</Text>
           </Box>
         )}
       </Box>
@@ -6147,6 +6270,114 @@ function NewMessagePane({ onStartConversation, onClose }: {
           </Box>
         </Box>
       )}
+    </Box>
+  );
+}
+
+// ── Collapsed header controls (expand + search + new message) ─────────────────
+
+function CollapsedHeaderControls({ collapsed, onToggle }: {
+  collapsed?: boolean;
+  onToggle?: () => void;
+}) {
+  return (
+    <Tooltip content={collapsed ? "Expand sidebar" : "Collapse sidebar"} delayDuration={300}>
+      <Button appearance="subtle" size="sm" icon={collapsed ? <IconChevronRight style={{ width: 16, height: 16 }} /> : <IconChevronLeft style={{ width: 16, height: 16 }} />} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} onClick={onToggle} style={{ width: 32, height: 32, padding: 0, flexShrink: 0 }} />
+    </Tooltip>
+  );
+}
+
+// ── Welcome Empty State (landing) ─────────────────────────────────────────────
+
+function WelcomeEmptyState({ userName, onSendMessage, onBrowseChannels, headerControls }: {
+  userName: string;
+  onSendMessage: () => void;
+  onBrowseChannels: () => void;
+  headerControls?: React.ReactNode;
+}) {
+  const cards = [
+    { key: "send", icon: <IconSend style={{ width: 24, height: 24, color: "var(--ax-colors-fg-secondary)" }} />, tint: "var(--ax-colors-bg-success-subtle)", title: "Send a Message", desc: "Say hello! Your team is waiting to hear from you", onClick: onSendMessage },
+    { key: "channels", icon: <IconHashtag style={{ width: 24, height: 24, color: "var(--ax-colors-fg-secondary)" }} />, tint: "var(--ax-colors-bg-information-subtle)", title: "Browse Channels", desc: "Find topics and teams you care about", onClick: onBrowseChannels },
+  ];
+  return (
+    <Box display="flex" flexDirection="column" alignItems="center"
+      style={{ flex: 1, height: "100%", background: "var(--ax-colors-bg-default)", minWidth: 0, overflowY: "auto", position: "relative" }}>
+      {headerControls && <Box style={{ position: "absolute", top: 10, left: 12, zIndex: 10 }}>{headerControls}</Box>}
+      <Box display="flex" flexDirection="column" alignItems="center" gap="32"
+        style={{ maxWidth: 748, width: "100%", paddingTop: 148, paddingLeft: 24, paddingRight: 24, textAlign: "center" }}>
+        <Box display="flex" flexDirection="column" alignItems="center" gap="16">
+          <Heading level="2">Welcome to Team Messages, {userName}</Heading>
+          <Text fontSize="lg" color="fg.default" style={{ maxWidth: 650 }}>Great teams stay in sync. This is where that happens.</Text>
+        </Box>
+        <Box display="flex" alignItems="stretch" justifyContent="center" gap="48" style={{ flexWrap: "wrap" }}>
+          {cards.map(c => (
+            <Box key={c.key} display="flex" flexDirection="column" alignItems="center" gap="16" px="20" py="40" rounded="xl"
+              onClick={c.onClick}
+              style={{ border: "1px solid var(--ax-colors-border-secondary)", width: 208, cursor: "pointer", background: "var(--ax-colors-bg-default)" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "var(--ax-colors-bg-default)")}
+            >
+              <Box display="flex" alignItems="center" justifyContent="center" rounded="md" style={{ width: 40, height: 40, background: c.tint, flexShrink: 0 }}>
+                {c.icon}
+              </Box>
+              <Box display="flex" flexDirection="column" alignItems="center" gap="4">
+                <Text fontSize="md" fontWeight="500" color="fg.default">{c.title}</Text>
+                <Text fontSize="md" color="fg.secondary" style={{ maxWidth: 167 }}>{c.desc}</Text>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+// ── Browse Channels Pane ──────────────────────────────────────────────────────
+
+function BrowseChannelsPane({ channels, channelPrivacyOverrides, onSelect, onClose, headerControls }: {
+  channels: ChannelItem[];
+  channelPrivacyOverrides?: Record<string, boolean>;
+  onSelect: (id: string) => void;
+  onClose: () => void;
+  headerControls?: React.ReactNode;
+}) {
+  return (
+    <Box display="flex" flexDirection="column" style={{ flex: 1, height: "100%", background: "var(--ax-colors-bg-default)", minWidth: 0 }}>
+      <Box display="flex" alignItems="center" gap="8" px="20" style={{ height: 52, borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}>
+        {headerControls}
+        <Text fontWeight="600" fontSize="lg" color="fg.default">Browse channels</Text>
+        <Box style={{ flex: 1 }} />
+        <Button appearance="subtle" size="sm" icon={<IconXmark style={{ width: 14, height: 14 }} />} aria-label="Close" onClick={onClose} style={{ width: 28, height: 28, padding: 0 }} />
+      </Box>
+      <Box display="flex" flexDirection="column" style={{ flex: 1, overflowY: "auto" }} py="8">
+        {channels.length === 0 ? (
+          <Box px="20" py="24"><Text fontSize="sm" color="fg.tertiary">No channels yet</Text></Box>
+        ) : channels.map(ch => {
+          const isPrivate = channelPrivacyOverrides?.[ch.id] ?? ch.isPrivate ?? false;
+          const memberCount = ch.memberList?.length ?? 0;
+          return (
+            <Box key={ch.id} display="flex" alignItems="center" gap="12" px="20" py="10"
+              onClick={() => onSelect(ch.id)}
+              style={{ cursor: "pointer" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+            >
+              <Box display="flex" alignItems="center" justifyContent="center" rounded="md" style={{ width: 36, height: 36, background: "var(--ax-colors-bg-secondary)", flexShrink: 0 }}>
+                {isPrivate
+                  ? <IconLock size={16} style={{ color: "var(--ax-colors-fg-secondary)" }} />
+                  : <IconHashtag size={16} style={{ color: "var(--ax-colors-fg-secondary)" }} />}
+              </Box>
+              <Box style={{ flex: 1, minWidth: 0 }}>
+                <Box display="flex" alignItems="center" gap="8">
+                  <Text fontSize="md" fontWeight="500" color="fg.default">{ch.name}</Text>
+                  {memberCount > 0 && <Text fontSize="sm" color="fg.tertiary">{memberCount} members</Text>}
+                </Box>
+                {ch.preview && <Text fontSize="sm" color="fg.tertiary" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ch.preview}</Text>}
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
     </Box>
   );
 }
@@ -6883,7 +7114,7 @@ function getThreadPreview(
 export default function MessagesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selected, setSelected] = useState(() => searchParams.get("conversation") ?? "bubs");
+  const [selected, setSelected] = useState(() => searchParams.get("conversation") ?? "");
   const [vtWelcome, setVtWelcome] = useState<{ name: string; avatar: string } | null>(null);
 
   useEffect(() => {
@@ -6893,6 +7124,7 @@ export default function MessagesPage() {
         const data = JSON.parse(raw) as { name: string; avatar: string };
         sessionStorage.removeItem("im-vau-welcome");
         setVtWelcome(data);
+        setSelected("bubs");
       }
     } catch {}
   }, []);
@@ -6924,6 +7156,7 @@ export default function MessagesPage() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [newConvoMode, setNewConvoMode] = useState(false);
+  const [browseChannels, setBrowseChannels] = useState(false);
   const [quickView, setQuickView] = useState<string | null>(null);
   const [pendingHighlightMsgId, setPendingHighlightMsgId] = useState<string | null>(null);
 
@@ -6950,6 +7183,17 @@ export default function MessagesPage() {
     return next;
   });
 
+  // Scheduled messages (seeded) — shared by the sidebar quick view and the conversation tab
+  const [scheduledByConvo, setScheduledByConvo] = useState<Record<string, ScheduledMsg[]>>(SCHEDULED_SEED);
+  const cancelScheduled = (convId: string, id: string) =>
+    setScheduledByConvo(prev => ({ ...prev, [convId]: (prev[convId] ?? []).filter(m => m.id !== id) }));
+  const editScheduled = (convId: string, id: string, text: string, sendAt: string) =>
+    setScheduledByConvo(prev => ({ ...prev, [convId]: (prev[convId] ?? []).map(m => m.id === id ? { ...m, text, sendAt } : m) }));
+  const sendNowScheduled = (convId: string, id: string, text: string) => {
+    setScheduledByConvo(prev => ({ ...prev, [convId]: (prev[convId] ?? []).filter(m => m.id !== id) }));
+    setThreads(prev => ({ ...prev, [convId]: [...(prev[convId] ?? []), { id: `sent-${id}`, from: "user", text, senderAvatar: "https://i.pravatar.cc/150?img=24" }] }));
+  };
+
   const [nameOverrides, setNameOverrides] = useState<Record<string, string>>({});
   const [channelPrivacyOverrides, setChannelPrivacyOverrides] = useState<Record<string, boolean>>({});
   const [leftConvos, setLeftConvos] = useState<Set<string>>(new Set());
@@ -6969,7 +7213,8 @@ export default function MessagesPage() {
     });
   const handleLeave = (id: string) => {
     setLeftConvos(prev => new Set([...prev, id]));
-    setSelected("bubs");
+    setSelected("");
+    setBrowseChannels(false);
   };
   const handleMoveToSection = (id: string, sectionId: string) => {
     setSections(prev => prev.map(s => s.id === sectionId ? { ...s, items: [...(s.items ?? []), id] } : s));
@@ -6979,6 +7224,7 @@ export default function MessagesPage() {
   const openReviewPanel = () => { setPanelOpen(true); setSidebarCollapsed(true); };
   const closeReviewPanel = () => { setPanelOpen(false); };
   const toggleSidebar = () => setSidebarCollapsed(c => !c);
+  const collapsedControls = <CollapsedHeaderControls collapsed={sidebarCollapsed} onToggle={toggleSidebar} />;
 
   const handleStartConversation = (chips: typeof RECENT_CONTACTS, firstMessage: string) => {
     let id: string;
@@ -7013,10 +7259,14 @@ export default function MessagesPage() {
 
   return (
     <Box display="flex" style={{ height: "100%", overflow: "hidden" }}>
-      <IMSidebar selected={selected} onSelect={id => { setSelected(id); setNewConvoMode(false); setQuickView(null); }} onHighlightSelect={(convId, msgId) => { setSelected(convId); setPendingHighlightMsgId(msgId); setNewConvoMode(false); setQuickView(null); }} collapsed={sidebarCollapsed} onToggle={toggleSidebar} onNewConversation={() => setNewConvoMode(true)} onNewGroup={() => setNewConvoMode(true)} quickView={quickView} onQuickViewChange={v => { setQuickView(v); setSelected(""); setNewConvoMode(false); }} extraGroups={extraGroups} extraChannels={extraChannels} onChannelCreated={ch => setExtraChannels(prev => [...prev, ch])} manualUnreadConvos={manualUnreadConvos} mutedConvos={mutedConvos} dismissedDeliverableIds={dismissedDeliverableIds} threads={threads} nameOverrides={nameOverrides} channelPrivacyOverrides={channelPrivacyOverrides} leftConvos={leftConvos} sections={sections} setSections={setSections} movedItems={movedItems} setMovedItems={setMovedItems} />
+      <IMSidebar selected={selected} onSelect={id => { setSelected(id); setNewConvoMode(false); setBrowseChannels(false); setQuickView(null); }} onHighlightSelect={(convId, msgId) => { setSelected(convId); setPendingHighlightMsgId(msgId); setNewConvoMode(false); setBrowseChannels(false); setQuickView(null); }} collapsed={sidebarCollapsed} onToggle={toggleSidebar} onNewConversation={() => { setNewConvoMode(true); setBrowseChannels(false); }} onNewGroup={() => { setNewConvoMode(true); setBrowseChannels(false); }} quickView={quickView} onQuickViewChange={v => { setQuickView(v); setSelected(""); setNewConvoMode(false); setBrowseChannels(false); }} extraGroups={extraGroups} extraChannels={extraChannels} onChannelCreated={ch => setExtraChannels(prev => [...prev, ch])} manualUnreadConvos={manualUnreadConvos} mutedConvos={mutedConvos} dismissedDeliverableIds={dismissedDeliverableIds} threads={threads} nameOverrides={nameOverrides} channelPrivacyOverrides={channelPrivacyOverrides} leftConvos={leftConvos} sections={sections} setSections={setSections} movedItems={movedItems} setMovedItems={setMovedItems} scheduledByConvo={scheduledByConvo} />
       {newConvoMode
-        ? <NewMessagePane onStartConversation={handleStartConversation} onClose={() => setNewConvoMode(false)} />
-        : <IMMain selected={selected} threads={threads} setThreads={setThreads} onOpenReview={openReviewPanel} quickView={quickView} onQuickViewDismiss={() => setQuickView(null)} onSelectConversation={id => { setSelected(id); setQuickView(null); }} extraGroups={extraGroups} extraChannels={extraChannels} manualUnreadConvos={manualUnreadConvos} setManualUnreadConvos={setManualUnreadConvos} mutedConvos={mutedConvos} toggleMute={toggleMute} dismissedDeliverableIds={dismissedDeliverableIds} onDismissDeliverable={dismissDeliverable} nameOverrides={nameOverrides} onRename={handleRename} channelPrivacyOverrides={channelPrivacyOverrides} onTogglePrivacy={handleTogglePrivacy} leftConvos={leftConvos} onLeave={handleLeave} sections={sections} onMoveToSection={handleMoveToSection} highlightMsgId={pendingHighlightMsgId} onHighlightClear={() => setPendingHighlightMsgId(null)} />
+        ? <NewMessagePane onStartConversation={handleStartConversation} onClose={() => setNewConvoMode(false)} headerControls={collapsedControls} />
+        : browseChannels
+        ? <BrowseChannelsPane channels={[...CHANNELS, ...(extraChannels ?? [])]} channelPrivacyOverrides={channelPrivacyOverrides} onSelect={id => { setSelected(id); setBrowseChannels(false); setQuickView(null); }} onClose={() => setBrowseChannels(false)} headerControls={collapsedControls} />
+        : (!selected && !quickView)
+        ? <WelcomeEmptyState userName="Jamie" onSendMessage={() => { setBrowseChannels(false); setNewConvoMode(true); }} onBrowseChannels={() => { setNewConvoMode(false); setBrowseChannels(true); }} headerControls={collapsedControls} />
+        : <IMMain selected={selected} threads={threads} setThreads={setThreads} onOpenReview={openReviewPanel} quickView={quickView} onQuickViewDismiss={() => setQuickView(null)} onSelectConversation={id => { setSelected(id); setQuickView(null); }} extraGroups={extraGroups} extraChannels={extraChannels} manualUnreadConvos={manualUnreadConvos} setManualUnreadConvos={setManualUnreadConvos} mutedConvos={mutedConvos} toggleMute={toggleMute} dismissedDeliverableIds={dismissedDeliverableIds} onDismissDeliverable={dismissDeliverable} nameOverrides={nameOverrides} onRename={handleRename} channelPrivacyOverrides={channelPrivacyOverrides} onTogglePrivacy={handleTogglePrivacy} leftConvos={leftConvos} onLeave={handleLeave} sections={sections} onMoveToSection={handleMoveToSection} highlightMsgId={pendingHighlightMsgId} onHighlightClear={() => setPendingHighlightMsgId(null)} scheduledByConvo={scheduledByConvo} onCancelScheduled={cancelScheduled} onEditScheduled={editScheduled} onSendNowScheduled={sendNowScheduled} headerControls={collapsedControls} />
       }
       <BlogReviewPanel
         open={panelOpen}
