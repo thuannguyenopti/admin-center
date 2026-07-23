@@ -16,6 +16,24 @@ yarn lint         # ESLint via Next.js
 
 Package manager is **Yarn 4** (Corepack). Use `yarn` not `npm`. Run `corepack enable` (requires sudo) if `yarn dev` fails. To install with auth-gated registry: `yarn install:auth` (uses `.env`). Fallback without Corepack: `node_modules/.bin/next dev`.
 
+## ⚠️ Critical: Browser Verification Is Mandatory For UI/Frontend Work
+
+**`yarn tsc --noEmit` and `yarn build` passing does NOT mean a UI change works.** They catch type errors and bundling errors, not runtime bugs: infinite render loops, duplicate React keys, broken click handlers, crashes on a specific route or interaction path. Every one of those is invisible to typecheck/build and only shows up when the page is actually loaded and clicked through in a browser.
+
+**Never tell the user a frontend change is "verified" or "done" based on typecheck/build alone.** If you have not actually loaded the affected page(s) in a browser and exercised the interaction paths you changed (not just the happy path — click into every new section/tab/dialog you touched), say so explicitly instead of implying it's confirmed working.
+
+**If `mcp__Claude_Browser__preview_start` or the `claude-in-chrome`/`Control_Chrome` MCP tools fail** (this environment has a recurring `EPERM: operation not permitted, open '.../node_modules/next/dist/bin/next'` error with the sandboxed preview tool, and `Control_Chrome` may report "Chrome is not running") — do not silently give up on verification and fall back to "typecheck + build + manual code trace." Instead, drive a real headless browser directly:
+
+```bash
+# One-time setup in a scratch dir (chromium binary is usually already cached under ~/Library/Caches/ms-playwright)
+mkdir -p /tmp/pw-verify && cd /tmp/pw-verify && npm init -y && npm install playwright --no-save
+npx playwright install chromium   # only if the cache check below comes up empty
+```
+
+Then write a small Node script that launches Chromium, `page.goto()`s the dev server (`http://localhost:3000/...` — check `lsof -i :3000` first; a dev server may already be running), listens for `pageerror` and `console` (`type() === 'error'`) events, and actually clicks through every new/changed UI path (tabs, nested sections, dialogs) — not just the initial page load. Assert zero errors. Take a screenshot and read it back with the `Read` tool to confirm the visual result, not just the absence of console errors.
+
+**This is not optional busywork — it is the only way to catch an entire class of bugs** (render loops from unstable callback identities in effect dependency arrays, duplicate keys from data with more variety than the code assumed, broken navigation) that a code review and a clean build will never surface. A past round of work in this repo shipped exactly such a crash (infinite "Maximum update depth exceeded" loop on a Design System tab, only caught when the user manually clicked into it) because verification stopped at "build is clean."
+
 ## ⚠️ Critical: Build Script & Webpack Rules
 
 **NEVER add `--webpack` or `--turbopack` to the `next build` command.** Forcing either bundler mode breaks Next.js's internal CSS extraction pipeline for `transpilePackages: ["@optiaxiom/react"]`, causing all Axiom component styles (borders, fills, backgrounds) to be silently stripped from the Vercel production build. The correct build command is simply `next build` with no bundler flags.
