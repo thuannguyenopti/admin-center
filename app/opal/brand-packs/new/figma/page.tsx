@@ -98,7 +98,7 @@ export default function BrandPackFigmaPage() {
 				if (prev >= IMPORT_STEPS.length - 1) {
 					clearInterval(interval);
 					setTimeout(() => {
-						router.push("/opal/brand-packs/aurora-digital");
+						router.push("/opal/brand-packs/sprite");
 					}, 600);
 					return prev;
 				}

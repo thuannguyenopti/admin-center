@@ -180,7 +180,7 @@ const SOURCE_RESULTS: Record<Exclude<TypefaceSource, "upload">, TypefaceResult[]
 	library: [
 		{
 			designer: "Brand team",
-			family: "Optimizely Sans",
+			family: "Custom Sans",
 			foundry: "Team library",
 			license: "Approved enterprise license",
 			meta: "Approved · Product UI",

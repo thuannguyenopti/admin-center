@@ -283,7 +283,7 @@ export function ManageTypeSystemDialog({ fonts, onOpenChange, onSave, open }: Ma
 										<Text color="fg.secondary" fontSize="xs" fontWeight="700">MONO · {monoFont?.family.toUpperCase()}</Text>
 										<Box bg="bg.secondary" rounded="md" style={{ padding: "6px 10px", width: "fit-content" }}>
 											<Text style={{ fontFamily: fontStack(monoFont), fontSize: 13 }}>
-												const brand = 'Stride';
+												const primaryColor = '#1A73E8';
 											</Text>
 										</Box>
 									</Box>

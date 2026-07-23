@@ -38,7 +38,7 @@ const QUESTIONS: Question[] = [
 		opalMessage:
 			"I've presented a few questions to help me tailor the brand to your needs. Please share your selections and any additional details so I can get started!",
 		options: [
-			{ id: "optimizely", label: "Optimizely" },
+			{ id: "manual-entry", label: "Enter a new brand name" },
 			{ id: "org-name", label: "Use my organization's name" },
 		],
 	},
@@ -894,7 +894,7 @@ export default function BrandPackOpalSetupPage() {
 			setAnalyzingStep((prev) => {
 				if (prev >= ANALYZING_STEPS.length - 1) {
 					clearInterval(interval);
-					setTimeout(() => router.push("/opal/brand-packs/stride-core"), 700);
+					setTimeout(() => router.push("/opal/brand-packs/coca-cola"), 700);
 					return prev;
 				}
 				return prev + 1;

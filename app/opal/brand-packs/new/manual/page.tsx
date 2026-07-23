@@ -275,7 +275,7 @@ export default function BrandPackManualPage() {
 
 	function goNext() {
 		if (!isLast) setStep(STEPS[stepIdx + 1].id);
-		else router.push("/opal/brand-packs/stride-core");
+		else router.push("/opal/brand-packs/minute-maid");
 	}
 
 	function goPrev() {

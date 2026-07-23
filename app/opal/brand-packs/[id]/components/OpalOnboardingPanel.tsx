@@ -122,7 +122,7 @@ export function OpalOnboardingPanel({open, onClose, onComplete}: OpalOnboardingP
 
 				<Box mb="16">
 					<FieldLabel>Website URL</FieldLabel>
-					<Textarea defaultValue="https://www.striderunning.com" rows={2} />
+					<Textarea defaultValue="https://www.yourbrand.com" rows={2} />
 					<FieldHelp>
 						The brand&apos;s primary website address. Used to research the brand and verify
 						or supplement PDF style guide content.
@@ -148,7 +148,7 @@ export function OpalOnboardingPanel({open, onClose, onComplete}: OpalOnboardingP
 						p="8"
 						rounded="sm"
 					>
-						<Text fontSize="sm">stride-brand-guidelines.pdf</Text>
+						<Text fontSize="sm">brand-guidelines.pdf</Text>
 						<IconXmark
 							size={12}
 							style={{color: "var(--ax-colors-fg-tertiary)", marginLeft: "auto"}}
@@ -175,7 +175,7 @@ export function OpalOnboardingPanel({open, onClose, onComplete}: OpalOnboardingP
 				<Box mb="16">
 					<FieldLabel>Figma File URL</FieldLabel>
 					<Textarea
-						defaultValue="https://www.figma.com/design/stride-brand-library?node-id=0-1"
+						defaultValue="https://www.figma.com/design/your-brand-library?node-id=0-1"
 						rows={2}
 					/>
 					<FieldHelp>
