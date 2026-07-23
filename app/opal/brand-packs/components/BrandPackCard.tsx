@@ -62,7 +62,7 @@ export function BrandPackCard({isDefault = false, onSetDefault, pack}: BrandPack
 							width: "100%",
 							height: "100%",
 							objectFit: "cover",
-							objectPosition: "center top",
+							objectPosition: "center",
 						}}
 					/>
 					{isDefault && (
