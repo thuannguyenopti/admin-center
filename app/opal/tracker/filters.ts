@@ -6,10 +6,10 @@ import type { Task } from "./types";
 export type TypeKey = "todo" | "note";
 export const ALL_CREATORS = "all";
 
-export type TrackerFilters = { types: TypeKey[]; createdBy: string };
+export type TrackerFilters = { types: TypeKey[]; createdBy: string; pinnedOnly: boolean };
 
 // Types start unchecked — no selection means "no type constraint" (show all).
-export const DEFAULT_FILTERS: TrackerFilters = { types: [], createdBy: ALL_CREATORS };
+export const DEFAULT_FILTERS: TrackerFilters = { types: [], createdBy: ALL_CREATORS, pinnedOnly: false };
 
 export function taskTypeKey(task: Task): TypeKey {
   return task.itemType === "note" ? "note" : "todo";
@@ -42,17 +42,20 @@ export function collectAddedBy(tasks: Task[]): string[] {
   return [...head, ...[...vaus].sort((a, b) => a.localeCompare(b))];
 }
 
-export function passesFilter(task: Task, filters: TrackerFilters | undefined, query: string): boolean {
+export function passesFilter(task: Task, filters: TrackerFilters | undefined, query: string, pinnedIds?: Set<string>): boolean {
   const q = query.trim().toLowerCase();
   if (q && !task.title.toLowerCase().includes(q)) return false;
   if (!filters) return true;
   // No type checked → no type constraint; otherwise keep only checked types.
   if (filters.types.length > 0 && !filters.types.includes(taskTypeKey(task))) return false;
   if (filters.createdBy !== ALL_CREATORS && taskCreator(task) !== filters.createdBy) return false;
+  // Pinned-only — only enforced when the caller supplies the pinned-id set
+  // (pin state is session-scoped, so lists that don't track it opt out).
+  if (filters.pinnedOnly && pinnedIds && !pinnedIds.has(task.id)) return false;
   return true;
 }
 
 // Whether any filter is applied (drives the button's active state).
 export function filtersActive(f: TrackerFilters): boolean {
-  return f.types.length > 0 || f.createdBy !== ALL_CREATORS;
+  return f.types.length > 0 || f.createdBy !== ALL_CREATORS || f.pinnedOnly;
 }

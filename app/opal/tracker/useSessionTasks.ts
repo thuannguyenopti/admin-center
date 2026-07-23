@@ -81,7 +81,24 @@ export function useSessionTasks(): [Task[], (task: Task) => void] {
 // the right value immediately.
 // Per-item pin state, persisted for the session and synced live across every
 // mounted instance (row + detail screen) via a window event.
-const PIN_EVENT = "tracker-pin-change";
+export const PIN_EVENT = "tracker-pin-change";
+const PIN_PREFIX = "tracker-pin-";
+
+// All currently-pinned item ids (session-scoped) — used to drive the
+// "Pinned" filter. Re-read on PIN_EVENT to stay live.
+export function readPinnedIds(): Set<string> {
+  const ids = new Set<string>();
+  if (typeof window === "undefined") return ids;
+  try {
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k && k.startsWith(PIN_PREFIX) && sessionStorage.getItem(k) === "1") ids.add(k.slice(PIN_PREFIX.length));
+    }
+  } catch {
+    /* ignore */
+  }
+  return ids;
+}
 
 export function useSessionPin(id: string): [boolean, () => void] {
   const key = `tracker-pin-${id}`;

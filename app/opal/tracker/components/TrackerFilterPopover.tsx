@@ -1,7 +1,7 @@
 "use client";
 
-import { Box, Text, Button, Checkbox, Menu, MenuTrigger, MenuContent, type MenuOption } from "@optiaxiom/react";
-import { IconAngleDown } from "@optiaxiom/icons";
+import { Box, Text, Button, Checkbox, Switch, Menu, MenuTrigger, MenuContent, type MenuOption } from "@optiaxiom/react";
+import { IconAngleDown, IconThumbtack } from "@optiaxiom/icons";
 import { ALL_CREATORS, DEFAULT_FILTERS, filtersActive, type TrackerFilters, type TypeKey } from "../filters";
 
 const TYPE_ROWS: { key: TypeKey; label: string; color: string }[] = [
@@ -46,7 +46,7 @@ export function TrackerFilterPopover({
         border: "1px solid var(--ax-colors-border-secondary)",
         display: "flex",
         flexDirection: "column",
-        gap: 12,
+        gap: 24,
       }}
     >
       <Box display="flex" alignItems="center" justifyContent="space-between" style={{ minHeight: 24 }}>
@@ -54,6 +54,17 @@ export function TrackerFilterPopover({
         {filtersActive(filters) && (
           <Button appearance="subtle" size="sm" onClick={() => onChange({ ...DEFAULT_FILTERS })}>Clear all</Button>
         )}
+      </Box>
+
+      {/* Pinned-only toggle — the whole row toggles the switch. */}
+      <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" onClick={() => onChange({ ...filters, pinnedOnly: !filters.pinnedOnly })} style={{ cursor: "pointer" }}>
+        <Box display="flex" alignItems="center" gap="8">
+          <Box display="inline-flex" color="fg.secondary"><IconThumbtack size="16" /></Box>
+          <Text fontSize="md" color="fg.default">Pinned only</Text>
+        </Box>
+        <Box style={{ pointerEvents: "none" }}>
+          <Switch checked={filters.pinnedOnly} onCheckedChange={() => {}} aria-label="Pinned only" />
+        </Box>
       </Box>
 
       {/* Type — no box checked means "all types". The whole row is the click

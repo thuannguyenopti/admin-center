@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { Box, Text, Button, SearchInput, Menu, MenuTrigger, MenuContent, Tooltip, Indicator } from "@optiaxiom/react";
 import { DetailsPanel, DetailsPanelHeader, DetailsPanelBody } from "@optiaxiom/react/unstable";
-import { IconXmark, IconSquareCheck, IconPenToSquare, IconListCheck, IconFileLines, IconMagnifyingGlass, IconSliders } from "@optiaxiom/icons";
+import { IconXmark, IconSquareCheck, IconPenToSquare, IconListCheck, IconFileLines, IconMagnifyingGlass, IconSliders, IconThumbtack, IconThumbtackSolid } from "@optiaxiom/icons";
 import type { Task } from "./types";
 import { RICH_GROUPS } from "./data";
 import { QuickAddInline } from "./components/QuickAddInline";
@@ -14,7 +14,7 @@ import { FunEditorialBoard } from "./components/FunEditorialBoard";
 import { TrackerFilterPopover } from "./components/TrackerFilterPopover";
 import { DetailPanel } from "./components/DetailPanel";
 import { NoteEditor } from "./components/NoteEditor";
-import { useSessionTasks } from "./useSessionTasks";
+import { useSessionTasks, readPinnedIds, PIN_EVENT } from "./useSessionTasks";
 import { usePlannerLabel } from "./usePlannerLabel";
 import { useTrayDesign } from "./useTrayDesign";
 import { DEFAULT_FILTERS, filtersActive, collectAddedBy, type TrackerFilters } from "./filters";
@@ -44,6 +44,15 @@ export function TrackerPanel({ onClose }: { onClose: () => void }) {
   const [filters, setFilters] = useState<TrackerFilters>(DEFAULT_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
+  // Count of pinned cards — drives the header "Pinned" quick-toggle, kept live
+  // as cards are pinned / unpinned.
+  const [pinnedCount, setPinnedCount] = useState(0);
+  useEffect(() => {
+    const sync = () => setPinnedCount(readPinnedIds().size);
+    sync();
+    window.addEventListener(PIN_EVENT, sync);
+    return () => window.removeEventListener(PIN_EVENT, sync);
+  }, []);
   // "Added by" options — me + the virtual teammates who added a card to the
   // planner sections (+ items added this session), not a global roster.
   const creators = useMemo(
@@ -194,6 +203,22 @@ export function TrackerPanel({ onClose }: { onClose: () => void }) {
                 <IconSquareCheck size="20" />
               </Box>
               <Text fontWeight="500" fontSize="lg">{plannerLabel}</Text>
+              {/* Pinned quick-toggle — only when something is pinned; toggles the
+                  pinned-only filter (accent when active). */}
+              {pinnedCount > 0 && (
+                <Tooltip content={filters.pinnedOnly ? "Show all" : "Show pinned only"} delayDuration={200}>
+                  <Button
+                    appearance="subtle"
+                    size="sm"
+                    aria-label={filters.pinnedOnly ? "Show all" : "Show pinned only"}
+                    icon={filters.pinnedOnly ? <IconThumbtackSolid /> : <IconThumbtack />}
+                    onClick={() => setFilters((f) => ({ ...f, pinnedOnly: !f.pinnedOnly }))}
+                    style={filters.pinnedOnly ? { color: "var(--ax-colors-fg-accent-strong)" } : undefined}
+                  >
+                    {pinnedCount}
+                  </Button>
+                </Tooltip>
+              )}
             </Box>
           </DetailsPanelHeader>
 
@@ -206,7 +231,7 @@ export function TrackerPanel({ onClose }: { onClose: () => void }) {
                 <Box ref={filterRef} style={{ position: "relative", flexShrink: 0 }}>
                   {/* Axiom Indicator floats an active-filter dot on the button
                       (no content = a plain dot; sized by the component). */}
-                  <Indicator disabled={!filtersActive(filters)} intent="primary" variant="strong">
+                  <Indicator disabled={!filtersActive(filters)} intent="information" variant="strong">
                     <Tooltip content="Filter" delayDuration={200}>
                       <Button
                         appearance="default"

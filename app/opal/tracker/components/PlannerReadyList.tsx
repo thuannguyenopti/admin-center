@@ -2,10 +2,30 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Box, Text, Input, Badge, Button, Tooltip, Indicator } from "@optiaxiom/react";
-import { IconPlus, IconTrashCan, IconArrowUp } from "@optiaxiom/icons";
+import { IconPlus, IconTrashCan, IconArrowUp, IconSparkles } from "@optiaxiom/icons";
 import type { Task } from "../types";
 import { RICH_GROUPS } from "../data";
-import { readDoneIds, markDone, markUndone, pushTrash, readTrash, removeTrash } from "../useSessionTasks";
+
+// Opal + virtual-teammate suggestions surfaced at the top of the tray.
+const RECOMMENDED_ID = "ready-recommended";
+const RECOMMENDED_TASKS: Task[] = [
+  {
+    id: "rec1", title: "Review the Opticon keynote outline", type: "normal", createdIn: "Chat", createdBy: "Opal",
+    badgeLabel: "Suggested", badgeIntent: "neutral",
+    description: "Based on your calendar, Opal drafted talking points for next week's keynote.",
+  },
+  {
+    id: "rec2", title: "Approve the Q3 social calendar", type: "normal", createdIn: "IM", createdBy: "Social Strategist",
+    avatarName: "Social Strategist", avatarSrc: "/avatars/vau-poppy.png", badgeLabel: "From your workflow", badgeIntent: "neutral", commentCount: 2,
+    description: "Poppy finished the draft cadence across LinkedIn, X, and the blog — ready for your sign-off.",
+  },
+  {
+    id: "rec3", title: "Draft the newsletter A/B test", type: "normal", createdIn: "IM", createdBy: "Content Strategist",
+    avatarName: "Content Strategist", avatarSrc: "/avatars/vau-mayling.png", badgeLabel: "From your workflow", badgeIntent: "neutral",
+    description: "Mayling proposed two subject-line variants to test on this week's send.",
+  },
+];
+import { readDoneIds, markDone, markUndone, pushTrash, readTrash, removeTrash, readPinnedIds, PIN_EVENT } from "../useSessionTasks";
 import { passesFilter, filtersActive, type TrackerFilters } from "../filters";
 import { RichPlannerCard, ChecklistPlannerCard, NotePlannerCard } from "./plannerCards";
 
@@ -37,11 +57,21 @@ export function PlannerReadyList({
   query?: string;
   filter?: TrackerFilters;
 }) {
-  const [sections, setSections] = useState<Section[]>(
-    RICH_GROUPS.map((g, i) => ({ id: `ready-${i}-${g.name}`, name: g.name, tasks: g.tasks })),
-  );
+  const [sections, setSections] = useState<Section[]>([
+    { id: RECOMMENDED_ID, name: "Recommended", tasks: RECOMMENDED_TASKS },
+    ...RICH_GROUPS.map((g, i) => ({ id: `ready-${i}-${g.name}`, name: g.name, tasks: g.tasks })),
+  ]);
   const [hiddenDone, setHiddenDone] = useState(() => readDoneIds());
+  const [pinnedIds, setPinnedIds] = useState(() => readPinnedIds());
   const [gone, setGone] = useState<Set<string>>(new Set());
+
+  // Keep the pinned-id set live so the "Pinned" filter updates as cards are
+  // pinned / unpinned.
+  useEffect(() => {
+    const handler = () => setPinnedIds(readPinnedIds());
+    window.addEventListener(PIN_EVENT, handler);
+    return () => window.removeEventListener(PIN_EVENT, handler);
+  }, []);
   const [addingSection, setAddingSection] = useState(false);
   const [newSectionName, setNewSectionName] = useState("");
 
@@ -66,7 +96,9 @@ export function PlannerReadyList({
       setSortingMsg(`Sorting ${newOnes.length} new card${newOnes.length === 1 ? "" : "s"}…`);
       if (sortTimer.current) clearTimeout(sortTimer.current);
       sortTimer.current = setTimeout(() => setSortingMsg(null), 2200);
-      return prev.map((s, i) => (i === 0 ? { ...s, tasks: [...newOnes, ...s.tasks] } : s));
+      // Drop new cards into the first real section — never the Recommended group.
+      const targetIdx = Math.max(0, prev.findIndex((s) => s.id !== RECOMMENDED_ID));
+      return prev.map((s, i) => (i === targetIdx ? { ...s, tasks: [...newOnes, ...s.tasks] } : s));
     });
   }, [extraTasks]);
 
@@ -174,15 +206,20 @@ export function PlannerReadyList({
       <Box flex="1" overflow="auto" px={px} pt="4" pb="24" style={{ minHeight: 0 }}>
         {sections.map((section) => {
           const visible = section.tasks.filter(
-            (t) => !deletedIds.has(t.id) && !hiddenDone.has(t.id) && !gone.has(t.id) && passesFilter(t, filter, query),
+            (t) => !deletedIds.has(t.id) && !hiddenDone.has(t.id) && !gone.has(t.id) && passesFilter(t, filter, query, pinnedIds),
           );
           if (anyFilter && visible.length === 0) return null;
           return (
             <Box key={section.id} mb="8">
               <Box display="flex" alignItems="center" justifyContent="space-between" px="8" pt="16" pb="4">
-                <Text fontFamily="mono" fontSize="sm" fontWeight="400" color="fg.tertiary" textTransform="uppercase">
-                  {section.name}
-                </Text>
+                <Box display="flex" alignItems="center" gap="6">
+                  {section.id === RECOMMENDED_ID && (
+                    <Box display="inline-flex" style={{ color: "var(--ax-colors-fg-accent-strong)" }}><IconSparkles size="14" /></Box>
+                  )}
+                  <Text fontFamily="mono" fontSize="sm" fontWeight="400" color="fg.tertiary" textTransform="uppercase">
+                    {section.name}
+                  </Text>
+                </Box>
                 <Badge intent="information" variant="strong">{visible.length}</Badge>
               </Box>
 

@@ -21,7 +21,7 @@ export function LeadingSlot({ children, onClick }: { children: React.ReactNode; 
 // Positioned absolutely at the card's top-right, just below the due-date row,
 // so revealing it never shifts the title-row layout (the date stays put) and
 // the pin reads as sitting under the date. Parent card must be position: relative.
-export function RowPin({ id, top = 28, center = false, inline = false }: { id: string; top?: number; center?: boolean; inline?: boolean }) {
+export function RowPin({ id, top = 28, center = false, inline = false, size = "lg", centerNudge = 0 }: { id: string; top?: number; center?: boolean; inline?: boolean; size?: "md" | "lg"; centerNudge?: number }) {
   const [pinned, toggle] = useSessionPin(id);
   return (
     <Box
@@ -37,14 +37,16 @@ export function RowPin({ id, top = 28, center = false, inline = false }: { id: s
               background: "var(--ax-colors-bg-default)",
               borderRadius: 8,
               boxShadow: "var(--ax-shadows-sm)",
-              ...(center ? { top: "50%", transform: "translateY(-50%)" } : { top }),
+              // centerNudge shifts the centered chip up by N px (e.g. to sit
+              // above a bottom-anchored action).
+              ...(center ? { top: "50%", transform: `translateY(calc(-50% - ${centerNudge}px))` } : { top }),
             }
       }
     >
       <Tooltip content={pinned ? "Unpin" : "Pin"} delayDuration={300}>
         <Button
           appearance="subtle"
-          size="lg"
+          size={size}
           aria-label={pinned ? "Unpin" : "Pin"}
           onClick={(e) => { e.stopPropagation(); toggle(); }}
           icon={pinned ? <IconThumbtackSolid style={{ color: "var(--ax-colors-fg-accent-strong)" }} /> : <IconThumbtack />}

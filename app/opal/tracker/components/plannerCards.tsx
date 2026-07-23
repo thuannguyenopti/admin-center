@@ -126,16 +126,17 @@ function CardShell({ task, onSelect, interaction = "flip", onToss, children }: {
       overflow="hidden"
       onClick={tossing ? undefined : onSelect}
       onAnimationEnd={() => { if (tossing) onToss?.(task); }}
-      // Cards WITH a body reserve enough height that the bottom-right Toss button
-      // never collides with the pin at the first description line. Empty cards
-      // size to their single title row.
-      style={{ cursor: "pointer", position: "relative", paddingLeft: 20, paddingRight: 12, ...(isToss && hasBody ? { minHeight: 140 } : {}) }}
+      // Toss cards hug their content (like flip rows); the pin + Toss cluster is
+      // absolute so it never adds height. Flip cards get the top/center pin.
+      style={{ cursor: "pointer", position: "relative", paddingLeft: 20, paddingRight: 12 }}
     >
       <AccentBar task={task} />
-      {/* Hover pin — aligned to the first description line for cards with a body,
-          centered for empty flip cards. Empty toss cards render the pin inside
-          the compact action group below instead. */}
-      {hasBody ? <RowPin id={task.id} top={44} /> : compact ? null : <RowPin id={task.id} center />}
+      {/* Hover pin — a standalone chip centered on the right (flip cards with a
+          body anchor it to the first description line instead). Empty toss cards
+          have no room for a separate pin, so they render it inside the cluster. */}
+      {!isToss
+        ? (hasBody ? <RowPin id={task.id} top={44} /> : <RowPin id={task.id} center />)
+        : (compact ? null : <RowPin id={task.id} center size="md" centerNudge={6} />)}
       {isToss && (
         compact ? (
           // Empty toss card — pin + Toss together, vertically centered on the right.
@@ -144,8 +145,7 @@ function CardShell({ task, onSelect, interaction = "flip", onToss, children }: {
             <Button className="fun-done-btn" appearance="danger-outline" size="sm" icon={<IconTrashCan />} onClick={doToss}>Toss</Button>
           </Box>
         ) : (
-          // "Good to go" — hover reveals a Toss button (bottom-right) that crumples
-          // the card into the footer bin, in place of the checkbox flip.
+          // "Good to go" — Toss at the bottom-right; the pin chip sits mid-right above it.
           <Box className="fun-doc-actions" style={{ position: "absolute", bottom: 12, right: 12, zIndex: 2 }}>
             <Button className="fun-done-btn" appearance="danger-outline" size="sm" icon={<IconTrashCan />} onClick={doToss}>Toss</Button>
           </Box>
@@ -329,8 +329,8 @@ export function ChecklistPlannerCard({ task, onSelect, interaction = "flip", onT
           {!done && (
           <Box display="flex" flexDirection="column" gap="4">
             {preview.map((item) => (
-              <Box key={item.id} display="flex" gap="8" alignItems="start">
-                <Box onClick={(e) => e.stopPropagation()} pt="2">
+              <Box key={item.id} display="flex" gap="8" alignItems="center">
+                <Box onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={checked[item.id]}
                     onCheckedChange={(v) => setChecked((prev) => ({ ...prev, [item.id]: v === true }))}
