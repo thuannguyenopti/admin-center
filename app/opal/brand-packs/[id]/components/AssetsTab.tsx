@@ -375,20 +375,13 @@ function AssetInspectorDialog({
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent
-				size="md"
 				style={{
-					background: "var(--ax-colors-bg-default)",
-					border: "1px solid var(--ax-colors-border-tertiary)",
-					borderRadius: "16px 0 0 16px",
-					bottom: 0,
-					boxShadow: "var(--ax-shadows-lg)",
-					height: "100vh",
-					maxHeight: "100vh",
-					maxWidth: 520,
-					position: "fixed",
-					right: 0,
-					top: 0,
-					width: "min(92vw, 520px)",
+					bottom: "auto",
+					maxHeight: "calc(100vh - 48px)",
+					maxWidth: 720,
+					top: "50%",
+					translate: "-50% -50%",
+					width: "min(92vw, 720px)",
 				}}
 			>
 				<DialogHeader description="Classify this file and tell Opal how it should be used during generation.">
@@ -454,7 +447,7 @@ function AssetInspectorDialog({
 								<Box
 									display="grid"
 									gap="8"
-									style={{gridTemplateColumns: "1fr 1fr"}}
+									style={{gridTemplateColumns: "repeat(3, 1fr)"}}
 								>
 									{classificationOptions.map((option) => {
 										const selected = classification === option.value;
