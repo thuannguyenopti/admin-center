@@ -5,6 +5,7 @@ import { Box, Button, Text } from "@optiaxiom/react";
 import { IconAngleDown, IconAngleRight, IconArrowLeft } from "@optiaxiom/icons";
 import { useLayout } from "@/app/context/LayoutContext";
 import type { BrandColor, BrandPack } from "../../types";
+import { ComponentsPanel } from "./DSComponentsPanel";
 import { EditablePanel } from "./EditablePanel";
 import styles from "../BrandPackDetailPage.module.css";
 
@@ -16,6 +17,7 @@ type DSSection =
 	| "tokens-spacing"
 	| "tokens-radius"
 	| "tokens-shadows"
+	| "components"
 	| "blueprints"
 	| "instructions";
 
@@ -44,13 +46,36 @@ function getBrandTokenColors(pack: BrandPack) {
 	});
 }
 
-function getReadableTextColor(hex: string): string {
+export const READABLE_DARK = "#202320";
+export const READABLE_LIGHT = "#F9FCF8";
+
+function relativeLuminance(hex: string): number {
 	const clean = hex.replace("#", "");
-	const r = parseInt(clean.substring(0, 2), 16) / 255;
-	const g = parseInt(clean.substring(2, 4), 16) / 255;
-	const b = parseInt(clean.substring(4, 6), 16) / 255;
-	const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-	return luminance > 0.58 ? "#202320" : "#F9FCF8";
+	const channel = (start: number) => {
+		const v = parseInt(clean.substring(start, start + 2), 16) / 255;
+		return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+	};
+	return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
+}
+
+export function contrastRatio(hexA: string, hexB: string): number {
+	const lA = relativeLuminance(hexA);
+	const lB = relativeLuminance(hexB);
+	const lighter = Math.max(lA, lB);
+	const darker = Math.min(lA, lB);
+	return (lighter + 0.05) / (darker + 0.05);
+}
+
+// Picks whichever of dark/light text actually has higher contrast against the
+// given background — a fixed luminance threshold (e.g. "> 0.58 -> dark")
+// looks right for very light/dark backgrounds but silently picks the wrong
+// side for mid-tone colors (oranges, golds, mid-greens), which is exactly the
+// class of bug that made the Logo badge illegible in the first place.
+export function getReadableTextColor(hex: string): string {
+	if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return READABLE_DARK;
+	return contrastRatio(hex, READABLE_DARK) >= contrastRatio(hex, READABLE_LIGHT)
+		? READABLE_DARK
+		: READABLE_LIGHT;
 }
 
 const DS_TOKEN_SPACING = [4, 8, 12, 16, 24, 32, 48, 64, 96];
@@ -227,10 +252,8 @@ function DSNav({
 
 				<DSNavItem
 					label="Components"
-					selected={false}
-					expandable
-					expanded={false}
-					onClick={() => {}}
+					selected={activeSection === "components"}
+					onClick={() => onSelect("components")}
 				/>
 
 				<DSNavItem
@@ -642,8 +665,8 @@ function OverviewPanel({
 				/>
 				<OverviewCard
 					title="Components"
-					description="Reusable UI building blocks with variants and Opal instructions"
-					stats="30 components · 7 groups"
+					description="Reusable UI building blocks styled with the brand's real colours and type"
+					stats="13 components · 3 groups"
 					visual={<ComponentsVisual primaryColor={primaryHex} />}
 					onClick={onGoToComponents}
 				/>
@@ -716,7 +739,7 @@ export function DSDetailView({ onBack, pack }: Props) {
 						setBlueprintsOpen(true);
 						setSection("blueprints");
 					}}
-					onGoToComponents={() => {}}
+					onGoToComponents={() => setSection("components")}
 					onGoToInstructions={() => setSection("instructions")}
 					onGoToTokens={() => {
 						setTokensOpen(true);
@@ -728,6 +751,7 @@ export function DSDetailView({ onBack, pack }: Props) {
 			{section === "tokens-spacing" && <SpacingPanel />}
 			{section === "tokens-radius" && <RadiusPanel />}
 			{section === "tokens-shadows" && <ShadowsPanel />}
+			{section === "components" && <ComponentsPanel pack={pack} />}
 			{section === "blueprints" && (
 				<Box style={{ flex: 1, overflowY: "auto", padding: "28px 40px", scrollbarWidth: "none" }}>
 					<SectionTitle title="Blueprints" subtitle="Approved layout patterns for common page types." />
