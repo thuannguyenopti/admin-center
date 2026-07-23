@@ -882,81 +882,77 @@ export default function VAUDetailPage() {
 
 	// ─── Avatar picker ────────────────────────────────────────────────────────────
 	if (showOnboarding && showAvatarPicker) {
-		const currentSelection = pickerSelected?.src ?? customAvatar?.src ?? vau.avatar;
+		const currentAvatarSrc = customAvatar?.src ?? vau.cardImage ?? vau.avatar;
+		const currentAvatarBg = customAvatar?.bg ?? vau.cardBg ?? vau.avatarBg;
 		return (
-			<Box style={{ background: "#F9FCF8", height: "100%", display: "flex", flexDirection: "column", padding: "32px 48px 40px", boxSizing: "border-box" }}>
-				{/* Breadcrumb */}
-				<Box display="flex" alignItems="center" gap="4" style={{ marginBottom: 32 }}>
-					<Button appearance="subtle" size="sm" style={{ padding: 0, height: "auto" }} onClick={() => setShowOnboarding(false)}>
-						<Text fontSize="sm" color="fg.tertiary">First day on the job</Text>
-					</Button>
-					<Text fontSize="sm" color="fg.tertiary">/</Text>
-					<Text fontSize="sm" color="fg.default" style={{ fontWeight: 500 }}>Avatar</Text>
-				</Box>
+			<Box style={{ background: "#F9FCF8", height: "100%", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
+				<Box style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "32px 48px 0" }}>
+					<Box style={{ maxWidth: 600, margin: "0 auto" }}>
+						{/* Tabs */}
+						<Box display="flex" gap="24" style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)", marginBottom: 40 }}>
+							<Box
+								onClick={() => { setShowAvatarPicker(false); setShowPersonalityPicker(true); }}
+								style={{ paddingBottom: 12, borderBottom: "2px solid transparent", color: "var(--ax-colors-fg-tertiary)", fontSize: 15, fontWeight: 500, cursor: "pointer" }}
+							>
+								Personality
+							</Box>
+							<Box style={{ paddingBottom: 12, borderBottom: "2px solid var(--ax-colors-fg-default)", color: "var(--ax-colors-fg-default)", fontSize: 15, fontWeight: 500, cursor: "default" }}>
+								Avatar
+							</Box>
+						</Box>
 
-				{/* Title */}
-				<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 36, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.5px", color: "#202320", WebkitTextStroke: "1px #202320", marginBottom: 8, display: "block" }}>
-					Every teammate needs a look.
-				</Text>
-				<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", display: "block", marginBottom: 32 }}>
-					Pick an avatar for your new co-worker.
-				</Text>
+						{/* Title */}
+						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 36, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.5px", color: "#202320", WebkitTextStroke: "1px #202320", marginBottom: 8, display: "block" }}>
+							Every teammate needs a look.
+						</Text>
+						<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", display: "block", marginBottom: 32 }}>
+							Upload an avatar to customize what your teammate looks like.
+						</Text>
 
-				{/* Grid */}
-				<Box style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, flex: 1, alignContent: "start" }}>
-					{PICKER_AVATARS.map((avatar) => (
-						<AvatarPickerCard
-							key={avatar.src}
-							avatar={avatar}
-							isSelected={currentSelection === avatar.src}
-							onClick={() => setPickerSelected(avatar)}
-						/>
-					))}
-				</Box>
+						{/* Circle avatar centered + upload button */}
+						<Box display="flex" flexDirection="column" style={{ alignItems: "center", gap: 20 }}>
+							<Box style={{ width: 305, height: 305, borderRadius: "50%", overflow: "hidden", backgroundColor: currentAvatarBg, flexShrink: 0 }}>
+								<Image src={currentAvatarSrc} alt="" width={305} height={305} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+							</Box>
+							<input
+								ref={fileInputRef}
+								type="file"
+								accept="image/*"
+								style={{ display: "none" }}
+								onChange={(e) => {
+									const file = e.target.files?.[0];
+									if (file) {
+										const url = URL.createObjectURL(file);
+										setCustomAvatar({ src: url, bg: "#F9FCF8" });
+										setPickerSelected(null);
+									}
+								}}
+							/>
+							<Button
+								size="md"
+								addonBefore={<IconUpload size={16} />}
+								onClick={() => fileInputRef.current?.click()}
+							>
+								Upload avatar
+							</Button>
+						</Box>
 
-				{/* Hidden file input */}
-				<input
-					ref={fileInputRef}
-					type="file"
-					accept="image/*"
-					style={{ display: "none" }}
-					onChange={(e) => {
-						const file = e.target.files?.[0];
-						if (file) {
-							const url = URL.createObjectURL(file);
-							setCustomAvatar({ src: url, bg: "#F9FCF8" });
-							setPickerSelected(null);
-							setShowAvatarPicker(false);
-							const hasPersonalities = (vau.personalities ?? []).length > 0;
-							if (hasPersonalities) setShowPersonalityPicker(true);
-						}
-					}}
-				/>
-
-				{/* Actions */}
-				<Box display="flex" justifyContent="flex-end" gap="8" style={{ marginTop: 32 }}>
-					<Button
-						size="lg"
-						icon={<IconUpload size={16} />}
-						onClick={() => fileInputRef.current?.click()}
-					>
-						Upload your own
-					</Button>
-					<Button
-						appearance="primary"
-						size="lg"
-						addonAfter={<IconArrowRight size={16} />}
-						disabled={!pickerSelected && !customAvatar}
-						onClick={() => {
-							if (pickerSelected) setCustomAvatar(pickerSelected);
-							setPickerSelected(null);
-							setShowAvatarPicker(false);
-							const hasPersonalities = (vau.personalities ?? []).length > 0;
-							if (hasPersonalities) setShowPersonalityPicker(true);
-						}}
-					>
-						Next
-					</Button>
+						{/* Divider + buttons */}
+						<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "24px 0" }} />
+						<Box display="flex" justifyContent="flex-end" gap="8" style={{ paddingBottom: 48 }}>
+							<Button appearance="subtle" size="lg" onClick={() => setShowAvatarPicker(false)}>
+								Back
+							</Button>
+							<Button
+								appearance="primary"
+								size="lg"
+								addonBefore={<IconCheckCircleSolid size={16} />}
+								onClick={() => setShowAvatarPicker(false)}
+							>
+								Save
+							</Button>
+						</Box>
+					</Box>
 				</Box>
 			</Box>
 		);
@@ -968,52 +964,45 @@ export default function VAUDetailPage() {
 		const displayAvatarSrc = customAvatar?.src ?? vau.cardImage ?? vau.avatar;
 		const displayAvatarBg = customAvatar?.bg ?? vau.cardBg ?? vau.avatarBg;
 
-		const PERSONALITY_ICONS: Record<string, React.ReactNode> = {
-			gear:    <IconGear size={22} />,
-			sparkle: <IconSparkles size={22} />,
-			people:  <IconUserGroup size={22} />,
-			search:  <IconMagnifyingGlass size={22} />,
+		const PERSONALITY_IMAGES: Record<string, string> = {
+			"The Pragmatist":   "/vau-icons/P.png",
+			"The Tastemaker":   "/vau-icons/T.png",
+			"The Hype Machine": "/vau-icons/HM.png",
+			"The Stress Tester": "/vau-icons/ST.png",
 		};
 
-		const FLOATING_BADGES = [
-			{ label: "Tastemaker", emoji: "🎨", top: "12%",  left: "8%"  },
-			{ label: "Supportive", emoji: "🤝", top: "42%",  right: "8%" },
-			{ label: "Hypemate",   emoji: "🔥", bottom: "14%", left: "4%" },
-		];
-
 		return (
-			<Box style={{ height: "100%", display: "flex", minHeight: 0 }}>
-				{/* ── Left panel ── */}
-				<Box style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, minWidth: 0, background: "#F9FCF8" }}>
-					{/* Scrollable content */}
-					<Box style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "32px 40px 48px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-					<Box style={{ width: "100%", maxWidth: 544 }}>
-						{/* Breadcrumb */}
-						<Box display="flex" alignItems="center" gap="4" style={{ marginBottom: 24 }}>
-							<Button appearance="subtle" size="sm" style={{ padding: 0, height: "auto" }} onClick={() => { setShowPersonalityPicker(false); setShowOnboarding(false); }}>
-								<Text fontSize="sm" color="fg.tertiary">First day on the job</Text>
-							</Button>
-							<Text fontSize="sm" color="fg.tertiary">/</Text>
-							<Button appearance="subtle" size="sm" style={{ padding: 0, height: "auto" }} onClick={() => { setShowPersonalityPicker(false); setShowAvatarPicker(true); }}>
-								<Text fontSize="sm" color="fg.tertiary">Avatar</Text>
-							</Button>
-							<Text fontSize="sm" color="fg.tertiary">/</Text>
-							<Text fontSize="sm" color="fg.default" style={{ fontWeight: 500 }}>Personality</Text>
+			<Box style={{ height: "100%", display: "flex", flexDirection: "column", background: "#F9FCF8", boxSizing: "border-box" }}>
+				{/* Scrollable content */}
+				<Box style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "32px 48px 0" }}>
+					<Box style={{ maxWidth: 600, margin: "0 auto" }}>
+						{/* Tabs */}
+						<Box display="flex" gap="24" style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)", marginBottom: 40 }}>
+							<Box style={{ paddingBottom: 12, borderBottom: "2px solid var(--ax-colors-fg-default)", color: "var(--ax-colors-fg-default)", fontSize: 15, fontWeight: 500, cursor: "default" }}>
+								Personality
+							</Box>
+							<Box
+								onClick={() => { setShowPersonalityPicker(false); setShowAvatarPicker(true); }}
+								style={{ paddingBottom: 12, borderBottom: "2px solid transparent", color: "var(--ax-colors-fg-tertiary)", fontSize: 15, fontWeight: 500, cursor: "pointer" }}
+							>
+								Avatar
+							</Box>
 						</Box>
 
 						{/* Title */}
 						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 36, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.5px", color: "#202320", WebkitTextStroke: "1px #202320", marginBottom: 8, display: "block" }}>
 							{"What's their personality?"}
 						</Text>
-						<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", display: "block", marginBottom: 20 }}>
+						<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", display: "block", marginBottom: 24 }}>
 							Are they a hype machine or a voice of reason? Your call.
 						</Text>
 
 						{/* Personality cards */}
-						<Box display="flex" flexDirection="column" gap="16">
+						<Box display="flex" flexDirection="column" gap="12">
 							{personalities.map((p, i) => {
 								const isSelected = selectedPersonality === i;
 								const isExpanded = expandedPersonality === i;
+								const imgSrc = PERSONALITY_IMAGES[p.label];
 								return (
 									<Box
 										key={p.label}
@@ -1032,9 +1021,11 @@ export default function VAUDetailPage() {
 									>
 										{/* Card header */}
 										<Box display="flex" alignItems="stretch" gap="16">
-											{/* Icon */}
-											<Box style={{ width: 56, minHeight: 56, borderRadius: 10, background: "#E3F3F8", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ax-colors-fg-default)", flexShrink: 0, alignSelf: "stretch" }}>
-												{PERSONALITY_ICONS[p.icon ?? "gear"]}
+											{/* Personality image */}
+											<Box style={{ width: 64, height: 64, borderRadius: 10, background: "#E3F3F8", overflow: "hidden", flexShrink: 0, alignSelf: "center" }}>
+												{imgSrc
+													? <Image src={imgSrc} alt={p.label} width={64} height={64} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+													: null}
 											</Box>
 											{/* Text */}
 											<Box style={{ flex: 1, minWidth: 0 }}>
@@ -1054,7 +1045,6 @@ export default function VAUDetailPage() {
 										{/* Expanded content */}
 										{isExpanded && (
 											<Box style={{ marginTop: 16 }}>
-												{/* Trait pills — Axiom default subtle badges */}
 												{p.traits && p.traits.length > 0 && (
 													<Box display="flex" gap="6" style={{ flexWrap: "wrap", marginBottom: 16 }}>
 														{p.traits.map((trait) => (
@@ -1062,7 +1052,6 @@ export default function VAUDetailPage() {
 														))}
 													</Box>
 												)}
-												{/* Sounds like */}
 												{p.sampleChat && (
 													<Box display="flex" flexDirection="column" gap="8">
 														<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)" }}>Sounds like</span>
@@ -1082,56 +1071,23 @@ export default function VAUDetailPage() {
 								);
 							})}
 						</Box>
-					</Box>
 
-					{/* Action buttons */}
-					<Box display="flex" justifyContent="flex-end" alignItems="center" gap="8" style={{ marginTop: 32, width: "100%", maxWidth: 544 }}>
-						<Button
-							appearance="subtle"
-							size="lg"
-							onClick={() => { setShowPersonalityPicker(false); setSelectedPersonality(null); }}
-						>
-							Skip
-						</Button>
-						<Button
-							appearance="primary"
-							size="lg"
-							addonBefore={<IconCheckCircleSolid size={16} />}
-							disabled={selectedPersonality === null}
-							onClick={() => { setShowPersonalityPicker(false); }}
-						>
-							Save
-						</Button>
-					</Box>
-					</Box>
-				</Box>
-
-				{/* ── Right panel — nature background + floating badges ── */}
-				<Box style={{ width: 440, flexShrink: 0, position: "relative", overflow: "hidden" }}>
-					<Image src="/nature-bg.png" alt="" fill unoptimized style={{ objectFit: "cover" }} />
-					{FLOATING_BADGES.map((badge) => (
-						<Box
-							key={badge.label}
-							style={{
-								position: "absolute",
-								...(badge.top    ? { top:    badge.top    } : {}),
-								...(badge.bottom ? { bottom: badge.bottom } : {}),
-								...(badge.left   ? { left:   badge.left   } : {}),
-								...(badge.right  ? { right:  badge.right  } : {}),
-								background: "white",
-								border: "2px solid #1a1a1a",
-								borderRadius: 18,
-								padding: "16px 28px",
-								display: "flex",
-								alignItems: "center",
-								gap: 14,
-								boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
-							}}
-						>
-							<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 28, fontWeight: 800, color: "#1a1a1a" }}>{badge.label}</Text>
-							<span style={{ fontSize: 34 }}>{badge.emoji}</span>
+						{/* Buttons — hug right edge of cards, 40px below */}
+						<Box display="flex" justifyContent="flex-end" gap="8" style={{ marginTop: 40, paddingBottom: 48 }}>
+							<Button appearance="subtle" size="lg" onClick={() => setShowPersonalityPicker(false)}>
+								Back
+							</Button>
+							<Button
+								appearance="primary"
+								size="lg"
+								addonBefore={<IconCheckCircleSolid size={16} />}
+								disabled={selectedPersonality === null}
+								onClick={() => setShowPersonalityPicker(false)}
+							>
+								Save
+							</Button>
 						</Box>
-					))}
+					</Box>
 				</Box>
 			</Box>
 		);
@@ -1186,7 +1142,7 @@ export default function VAUDetailPage() {
 									/>
 								</Box>
 								<Box
-									onClick={() => setShowAvatarPicker(true)}
+									onClick={() => setShowPersonalityPicker(true)}
 									style={{
 										position: "absolute", top: -8, right: -16,
 										width: 40, height: 40, borderRadius: "50%",
