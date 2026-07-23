@@ -63,7 +63,7 @@ export function BrandPackHero({ pack }: BrandPackHeroProps) {
 				<Box style={{ width: "fit-content" }}>
 					<Box bg="bg.success.subtle" rounded="full" style={{ padding: "3px 10px" }}>
 						<Text
-							color="fg.success"
+							color="fg.success.strong"
 							style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0 }}
 						>
 							ACTIVE PACK

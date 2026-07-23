@@ -1768,7 +1768,7 @@ function CreateEntryPanel({
 						<Box
 							alignItems="center"
 							bg="bg.information.subtle"
-							color="fg.information"
+							color="fg.information.strong"
 							display="flex"
 							justifyContent="center"
 							rounded="full"
@@ -1799,7 +1799,7 @@ function CreateEntryPanel({
 						<Box
 							alignItems="center"
 							bg="bg.information.subtle"
-							color="fg.information"
+							color="fg.information.strong"
 							display="flex"
 							justifyContent="center"
 							rounded="full"
@@ -2172,7 +2172,7 @@ function CreateAdvancedWorkspace({
 							<Box
 								alignItems="center"
 								bg="bg.information.subtle"
-								color="fg.information"
+								color="fg.information.strong"
 								display="flex"
 								justifyContent="center"
 								rounded="full"
@@ -2199,7 +2199,7 @@ function CreateAdvancedWorkspace({
 							<Box
 								alignItems="center"
 								bg="bg.information.subtle"
-								color="fg.information"
+								color="fg.information.strong"
 								display="flex"
 								justifyContent="center"
 								rounded="full"

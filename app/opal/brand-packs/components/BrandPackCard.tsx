@@ -175,7 +175,7 @@ export function NewBrandPackCard({ onClick }: { onClick: () => void }) {
 				<IconPaintRoller
 					style={{
 						color: hovered
-							? "var(--ax-colors-fg-accent)"
+							? "var(--ax-colors-fg-accent-strong)"
 							: "var(--ax-colors-fg-secondary)",
 					}}
 				/>

@@ -70,7 +70,7 @@ export function ChangeSummaryPanel({
 
 					{submission.discrepancy && (
 						<Box display="flex" gap="10" p="16" rounded="md" style={{ background: "var(--ax-colors-bg-warning-subtle)" }}>
-							<IconTriangleExclamation size={16} style={{ color: "var(--ax-colors-fg-warning)", flexShrink: 0, marginTop: 2 }} />
+							<IconTriangleExclamation size={16} style={{ color: "var(--ax-colors-fg-warning-strong)", flexShrink: 0, marginTop: 2 }} />
 							<Text color="fg.default" fontSize="md" style={{ lineHeight: 1.6 }}>{submission.discrepancy}</Text>
 						</Box>
 					)}

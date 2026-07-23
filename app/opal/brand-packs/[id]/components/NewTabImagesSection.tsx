@@ -79,7 +79,7 @@ export function ImagesSection({ pack, onSave }: Props) {
 				>
 					<Text color="fg.secondary" fontSize="xs" style={{ lineHeight: 1.6 }}>
 						Classify every asset where it appears. Use{" "}
-						<span style={{ color: "var(--ax-colors-fg-accent)", fontWeight: 600 }}>Style reference</span>{" "}
+						<span style={{ color: "var(--ax-colors-fg-accent-strong)", fontWeight: 600 }}>Style reference</span>{" "}
 						for mood/composition and <span style={{ fontWeight: 600 }}>Element</span> only for marks Opal may place.
 						Add constraints when an image should be referenced, not recreated.
 					</Text>
@@ -265,7 +265,7 @@ function TypePill({ active, label, onClick }: { active: boolean; label: string; 
 				background: active ? "var(--ax-colors-bg-accent-subtle)" : "transparent",
 				border: `1px solid ${active ? "var(--ax-colors-border-accent)" : "var(--ax-colors-border-default)"}`,
 				borderRadius: 4,
-				color: active ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-tertiary)",
+				color: active ? "var(--ax-colors-fg-accent-strong)" : "var(--ax-colors-fg-tertiary)",
 				cursor: "pointer",
 				fontSize: 10,
 				fontWeight: active ? 700 : 400,

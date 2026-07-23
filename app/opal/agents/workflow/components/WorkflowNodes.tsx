@@ -300,7 +300,7 @@ export function ConditionNode({id, data, selected}: NodeProps) {
 
 			<NodeHeader
 				icon={
-					<Box p="4" bg="bg.accent.subtle" rounded="full" color="fg.accent">
+					<Box p="4" bg="bg.accent.subtle" rounded="full" color="fg.accent.strong">
 						<IconSplit size={16} />
 					</Box>
 				}
@@ -328,7 +328,7 @@ export function ConditionNode({id, data, selected}: NodeProps) {
 								border="1"
 								borderColor="border.accent"
 							>
-								<Text fontSize="xs" fontWeight="700" color="fg.accent" truncate>
+								<Text fontSize="xs" fontWeight="700" color="fg.accent.strong" truncate>
 									{condition.matchType}: {condition.value}
 								</Text>
 								<Handle
@@ -379,7 +379,7 @@ export function ApprovalNode({id, data, selected}: NodeProps) {
 
 			<NodeHeader
 				icon={
-					<Box p="4" bg="bg.accent.subtle" rounded="full" color="fg.accent">
+					<Box p="4" bg="bg.accent.subtle" rounded="full" color="fg.accent.strong">
 						<IconUser size={16} />
 					</Box>
 				}
@@ -461,7 +461,7 @@ export function AddTriggerNode({data}: NodeProps) {
 		>
 			<Handle type="source" position={Position.Bottom} />{" "}
 			{/* Added handle for connecting downwards */}
-			<Box p="8" rounded="full" bg="bg.success.subtle" color="fg.success">
+			<Box p="8" rounded="full" bg="bg.success.subtle" color="fg.success.strong">
 				<IconPlus size={20} />
 			</Box>
 			<Box textAlign="center">

@@ -177,7 +177,7 @@ export function PublishConfirmDialog({ applications, channels, contentInstances,
 								<>
 									{(hasInstances || hasChannelsWithContent) && <Separator />}
 									<Box alignItems="start" display="flex" gap="8" p="12" rounded="sm" style={{ backgroundColor: "var(--ax-colors-bg-warning-subtle)" }}>
-										<IconTriangleExclamation color="var(--ax-colors-fg-warning)" size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+										<IconTriangleExclamation color="var(--ax-colors-fg-warning-strong)" size={16} style={{ flexShrink: 0, marginTop: 2 }} />
 										<Box display="flex" flexDirection="column" gap="4">
 											<Text color="fg.default" style={{ fontSize: 13, fontWeight: 500, lineHeight: "18px", maxWidth: "none" }}>
 												{unpublishedPages.length === 1 ? "1 CMS page" : `${unpublishedPages.length} CMS pages`} not assigned to a publishing channel

@@ -268,7 +268,7 @@ export default function BrandPackFigmaPage() {
 									rounded="full"
 									style={{ height: 56, width: 56 }}
 								>
-									<IconCheck size={24} style={{ color: "var(--ax-colors-fg-accent)" }} />
+									<IconCheck size={24} style={{ color: "var(--ax-colors-fg-accent-strong)" }} />
 								</Box>
 								<Box display="flex" flexDirection="column" gap="4">
 									<Text fontWeight="700" style={{ fontSize: 22 }}>

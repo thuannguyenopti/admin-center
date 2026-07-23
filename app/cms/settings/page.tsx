@@ -21,7 +21,7 @@ export default function SettingsPage() {
 				alignItems="center"
 				justifyContent="center"
 				bg="bg.information.subtle"
-				color="fg.information"
+				color="fg.information.strong"
 				style={{
 					width: "80px",
 					height: "80px",

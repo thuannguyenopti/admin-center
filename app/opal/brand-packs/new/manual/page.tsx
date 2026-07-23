@@ -472,11 +472,11 @@ export default function BrandPackManualPage() {
 													rounded="full"
 													style={{ padding: "4px 10px 4px 12px" }}
 												>
-													<Text color="fg.accent" fontWeight="500" style={{ fontSize: 12 }}>{kw}</Text>
+													<Text color="fg.accent.strong" fontWeight="500" style={{ fontSize: 12 }}>{kw}</Text>
 													<button
 														type="button"
 														onClick={() => toggleTone(kw)}
-														style={{ alignItems: "center", background: "transparent", border: 0, color: "var(--ax-colors-fg-accent)", cursor: "pointer", display: "flex", padding: 0 }}
+														style={{ alignItems: "center", background: "transparent", border: 0, color: "var(--ax-colors-fg-accent-strong)", cursor: "pointer", display: "flex", padding: 0 }}
 													>
 														<IconXmark size={10} />
 													</button>

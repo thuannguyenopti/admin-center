@@ -2291,7 +2291,7 @@ function IMSidebar({
             const highlight = (text: string) => {
               const idx = text.toLowerCase().indexOf(query);
               if (idx < 0) return <span>{text}</span>;
-              return <span>{text.slice(0, idx)}<span style={{ background: "var(--ax-colors-bg-success-subtle)", color: "var(--ax-colors-fg-success)", fontWeight: 600 }}>{text.slice(idx, idx + query.length)}</span>{text.slice(idx + query.length)}</span>;
+              return <span>{text.slice(0, idx)}<span style={{ background: "var(--ax-colors-bg-success-subtle)", color: "var(--ax-colors-fg-success-strong)", fontWeight: 600 }}>{text.slice(idx, idx + query.length)}</span>{text.slice(idx + query.length)}</span>;
             };
             return (
               <Box display="flex" flexDirection="column" gap="4">
@@ -4305,7 +4305,7 @@ function IMMain({
                                   <Text fontSize="xs" color="fg.tertiary">{"time" in msg ? String(msg.time) : ""}</Text>
                                 </Box>
                                 <Text fontSize="sm" color="fg.tertiary" style={{ lineHeight: 1.5 }}>
-                                  {before}<mark style={{ background: "var(--ax-colors-bg-success-subtle)", color: "var(--ax-colors-fg-success)", fontWeight: 600, padding: "0 2px", borderRadius: 2, fontStyle: "normal" }}>{matchText}</mark>{afterText}
+                                  {before}<mark style={{ background: "var(--ax-colors-bg-success-subtle)", color: "var(--ax-colors-fg-success-strong)", fontWeight: 600, padding: "0 2px", borderRadius: 2, fontStyle: "normal" }}>{matchText}</mark>{afterText}
                                 </Text>
                               </Box>
                             </Box>

@@ -120,9 +120,9 @@ export default function NotificationDefaultsPage() {
             >
                 <IconShieldCheck
                     size={20}
-                    color="var(--ax-colors-fg-information)"
+                    color="var(--ax-colors-fg-information-strong)"
                 />
-                <Text fontSize="sm" color="fg.information">
+                <Text fontSize="sm" color="fg.information.strong">
                     Changes here affect the default notification configuration
                     for new users. Existing users&apos; preferences will not be
                     modified.

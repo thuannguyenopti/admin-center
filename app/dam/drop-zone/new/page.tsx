@@ -72,7 +72,7 @@ export default function NewDropZonePage() {
 				<DamBreadcrumb segments={BREADCRUMB} />
 				<Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" gap="16" style={{ flex: 1, textAlign: "center" }}>
 					<Box alignItems="center" bg="bg.success.subtle" display="flex" justifyContent="center" rounded="full" style={{ width: 56, height: 56 }}>
-						<IconCheck size={26} style={{ color: "var(--ax-colors-fg-success)" }} />
+						<IconCheck size={26} style={{ color: "var(--ax-colors-fg-success-strong)" }} />
 					</Box>
 					<Box display="flex" flexDirection="column" gap="4">
 						<Text color="fg.default" fontWeight="600" fontSize="lg">Drop Zone link created</Text>
@@ -153,7 +153,7 @@ export default function NewDropZonePage() {
 					{phase === "review" && suggestion && (
 						<>
 							<Box bg="bg.accent.subtle" display="flex" alignItems="start" gap="8" px="16" py="12" rounded="md">
-								<IconSparkles size={14} style={{ color: "var(--ax-colors-fg-accent)", flexShrink: 0, marginTop: 2 }} />
+								<IconSparkles size={14} style={{ color: "var(--ax-colors-fg-accent-strong)", flexShrink: 0, marginTop: 2 }} />
 								<Text color="fg.default" fontSize="sm">
 									OPAL suggested the configuration below from your brief. Review and adjust before creating the link.
 								</Text>

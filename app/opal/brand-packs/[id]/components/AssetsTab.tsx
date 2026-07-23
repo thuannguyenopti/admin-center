@@ -69,7 +69,7 @@ const assetTypeColor: Record<BrandAsset["type"], {bg: string; text: string}> = {
 	background: {bg: "#E0F2F1", text: "#004D40"},
 	icon: {bg: "#EDE7F6", text: "#4527A0"},
 	illustration: {bg: "#FFF3E0", text: "#E65100"},
-	logo: {bg: "var(--ax-colors-bg-accent-subtle)", text: "var(--ax-colors-fg-accent)"},
+	logo: {bg: "var(--ax-colors-bg-accent-subtle)", text: "var(--ax-colors-fg-accent-strong)"},
 	photo: {bg: "#E3F2FD", text: "#0D47A1"},
 };
 

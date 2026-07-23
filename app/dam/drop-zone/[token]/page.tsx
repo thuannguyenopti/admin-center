@@ -86,7 +86,7 @@ export default function DropZoneLandingPage() {
 			<ExternalShell>
 				<Box display="flex" flexDirection="column" alignItems="center" gap="16" style={{ textAlign: "center", maxWidth: 440 }}>
 					<Box alignItems="center" bg="bg.success.subtle" display="flex" justifyContent="center" rounded="full" style={{ width: 72, height: 72 }}>
-						<IconCheck size={32} style={{ color: "var(--ax-colors-fg-success)" }} />
+						<IconCheck size={32} style={{ color: "var(--ax-colors-fg-success-strong)" }} />
 					</Box>
 					<Box display="flex" flexDirection="column" gap="8">
 						<h1 className="text-stride-dark font-stride-bold" style={{ fontSize: 26, margin: 0 }}>Thanks — your files are in</h1>
@@ -221,7 +221,7 @@ export default function DropZoneLandingPage() {
 						rounded="full"
 						style={{ width: 56, height: 56, transition: "background 0.15s" }}
 					>
-						<IconUpload size={22} style={{ color: upload.isDragging ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-tertiary)" }} />
+						<IconUpload size={22} style={{ color: upload.isDragging ? "var(--ax-colors-fg-accent-strong)" : "var(--ax-colors-fg-tertiary)" }} />
 					</Box>
 					<Box display="flex" flexDirection="column" gap="2" style={{ textAlign: "center" }}>
 						<Text color="fg.default" fontWeight="600" fontSize="md">Drop files here or click to browse</Text>

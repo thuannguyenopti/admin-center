@@ -78,7 +78,7 @@ export default function DropZoneListPage() {
 							rounded="full"
 							style={{ width: 64, height: 64 }}
 						>
-							<IconLink size={28} style={{ color: "var(--ax-colors-fg-accent)" }} />
+							<IconLink size={28} style={{ color: "var(--ax-colors-fg-accent-strong)" }} />
 						</Box>
 						<Text color="fg.secondary" fontSize="md">No Drop Zone links yet.</Text>
 					</Box>

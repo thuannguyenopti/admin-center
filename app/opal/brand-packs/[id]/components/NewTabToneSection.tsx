@@ -51,7 +51,7 @@ Visual tone should mirror verbal tone: clean, purposeful, and assured. Avoid dec
 					style={{
 						background: "var(--ax-colors-bg-accent-subtle)",
 						borderRadius: 4,
-						color: "var(--ax-colors-fg-accent)",
+						color: "var(--ax-colors-fg-accent-strong)",
 						display: "inline-block",
 						fontSize: 11,
 						fontWeight: 700,

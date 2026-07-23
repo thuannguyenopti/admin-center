@@ -306,7 +306,7 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 							rounded="full"
 							style={{ flexShrink: 0, height: 32, width: 32 }}
 						>
-							<IconCheck size={14} style={{ color: "var(--ax-colors-fg-success)" }} />
+							<IconCheck size={14} style={{ color: "var(--ax-colors-fg-success-strong)" }} />
 						</Box>
 						<Box display="flex" flexDirection="column" gap="2">
 							<Text fontWeight="600" style={{ color: "var(--ax-colors-fg-success)", fontSize: 14 }}>

@@ -93,7 +93,7 @@ export function ColoursSection({ pack, onSave }: Props) {
 						style={{
 							background: "var(--ax-colors-bg-accent-subtle)",
 							borderRadius: 4,
-							color: "var(--ax-colors-fg-accent)",
+							color: "var(--ax-colors-fg-accent-strong)",
 							fontSize: 11,
 							fontWeight: 700,
 							letterSpacing: "0.08em",

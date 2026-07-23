@@ -244,7 +244,7 @@ export function OpalAssessmentPanel({
 									rounded="md"
 									style={{ background: "var(--ax-colors-bg-success-subtle)" }}
 								>
-									<IconCircleCheckSolid size={15} style={{ color: "var(--ax-colors-fg-success)", flexShrink: 0 }} />
+									<IconCircleCheckSolid size={15} style={{ color: "var(--ax-colors-fg-success-strong)", flexShrink: 0 }} />
 									<Text color="fg.default" fontSize="md" fontWeight="500">{c}</Text>
 								</Box>
 							))}

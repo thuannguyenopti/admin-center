@@ -785,7 +785,7 @@ function GuardrailView({notification}: {notification: Notification}) {
 					overflow="hidden"
 				>
 					<Box p="12" bg="bg.success.subtle" borderB="1" borderColor="border.success">
-						<Text fontWeight="600" fontSize="sm" color="fg.success">
+						<Text fontWeight="600" fontSize="sm" color="fg.success.strong">
 							Corrected Output
 						</Text>
 					</Box>
@@ -900,8 +900,8 @@ function GuardrailView({notification}: {notification: Notification}) {
 							border="1"
 							borderColor="border.success"
 						>
-							<IconCheck size={16} color="var(--ax-colors-fg-success)" />
-							<Text color="fg.success" fontWeight="500">
+							<IconCheck size={16} color="var(--ax-colors-fg-success-strong)" />
+							<Text color="fg.success.strong" fontWeight="500">
 								Exemption request submitted. An admin will review your request.
 							</Text>
 						</Box>
@@ -1045,13 +1045,13 @@ function InstallRequestView({notification}: {notification: Notification}) {
 					gap="8"
 				>
 					{decision === "approved" ? (
-						<IconCheck size={20} color="var(--ax-colors-fg-success)" />
+						<IconCheck size={20} color="var(--ax-colors-fg-success-strong)" />
 					) : (
 						<IconX size={20} color="var(--ax-colors-fg-error)" />
 					)}
 					<Text
 						fontWeight="600"
-						color={decision === "approved" ? "fg.success" : "fg.error"}
+						color={decision === "approved" ? "fg.success.strong" : "fg.error"}
 					>
 						Request {decision === "approved" ? "approved" : "denied"}. Notification sent
 						to requestor.
@@ -1761,10 +1761,10 @@ export default function NotificationDetailsPage({params}: {params: Promise<{id: 
 										notification.guardrailStatus === "terminated"
 											? "fg.error"
 											: notification.guardrailStatus === "warning"
-												? "fg.warning"
+												? "fg.warning.strong"
 												: notification.guardrailStatus === "triggered"
 													? "fg.tertiary"
-													: "fg.success"
+													: "fg.success.strong"
 									}
 									fontSize="xs"
 									fontWeight="600"

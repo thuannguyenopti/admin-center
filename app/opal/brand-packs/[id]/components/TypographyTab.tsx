@@ -243,7 +243,7 @@ export function TypographyTab({ pack }: TypographyTabProps) {
 				<Box display="flex" flexDirection="column" gap="8">
 					{["All typefaces", "Primary", "Secondary", "Mono", "Display", "System"].map((label) => (
 						<Box key={label} alignItems="center" bg={label === "All typefaces" ? "bg.success.subtle" : undefined} display="flex" justifyContent="space-between" p="12" rounded="lg">
-							<Text color={label === "All typefaces" ? "fg.success" : "fg.secondary"} fontSize="sm" fontWeight={label === "All typefaces" ? "600" : "400"}>{label}</Text>
+							<Text color={label === "All typefaces" ? "fg.success.strong" : "fg.secondary"} fontSize="sm" fontWeight={label === "All typefaces" ? "600" : "400"}>{label}</Text>
 							<Text color="fg.tertiary" fontSize="xs">{label === "All typefaces" ? fontLibrary.length : fontLibrary.filter((font) => font.category === label).length}</Text>
 						</Box>
 					))}
