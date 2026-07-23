@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Box, Button, Text } from "@optiaxiom/react";
 import { IconAngleDown, IconAngleRight, IconArrowLeft } from "@optiaxiom/icons";
 import { useLayout } from "@/app/context/LayoutContext";
+import type { BrandColor, BrandPack } from "../../types";
 import { EditablePanel } from "./EditablePanel";
 import styles from "../BrandPackDetailPage.module.css";
 
@@ -20,18 +21,31 @@ type DSSection =
 
 // ── Token data ────────────────────────────────────────────────────────────────
 
-const DS_TOKEN_COLORS = [
-	{ name: "--color-primary", value: "#C1F15A", label: "Primary (Lime)" },
-	{ name: "--color-primary-dk", value: "#0F1810", label: "Primary Dark" },
-	{ name: "--color-bg", value: "#F4F5F0", label: "Background" },
-	{ name: "--color-surface", value: "#FFFFFF", label: "Surface" },
-	{ name: "--color-text-1", value: "#1A1A1A", label: "Text Primary" },
-	{ name: "--color-text-2", value: "#6B7280", label: "Text Secondary" },
-	{ name: "--color-border", value: "#E5E7EB", label: "Border" },
-	{ name: "--color-success", value: "#16A34A", label: "Success" },
-	{ name: "--color-warning", value: "#D97706", label: "Warning" },
-	{ name: "--color-danger", value: "#DC2626", label: "Danger" },
-];
+const ROLE_LABELS: Record<BrandColor["role"], string> = {
+	primary: "Primary",
+	secondary: "Secondary",
+	accent: "Accent",
+	neutral: "Neutral",
+	background: "Background",
+	text: "Text",
+};
+
+function getBrandTokenColors(pack: BrandPack) {
+	return pack.colors.map((c) => ({
+		name: `--color-${c.role}`,
+		value: c.hex,
+		label: `${c.name} (${ROLE_LABELS[c.role]})`,
+	}));
+}
+
+function getReadableTextColor(hex: string): string {
+	const clean = hex.replace("#", "");
+	const r = parseInt(clean.substring(0, 2), 16) / 255;
+	const g = parseInt(clean.substring(2, 4), 16) / 255;
+	const b = parseInt(clean.substring(4, 6), 16) / 255;
+	const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+	return luminance > 0.58 ? "#202320" : "#F9FCF8";
+}
 
 const DS_TOKEN_SPACING = [4, 8, 12, 16, 24, 32, 48, 64, 96];
 
@@ -260,12 +274,12 @@ function SectionTitle({ subtitle, title }: { subtitle: string; title: string }) 
 	);
 }
 
-function ColourTokensPanel() {
+function ColourTokensPanel({ tokenColors }: { tokenColors: ReturnType<typeof getBrandTokenColors> }) {
 	return (
 		<Box style={{ flex: 1, overflowY: "auto", padding: "28px 40px", scrollbarWidth: "none" }}>
 			<SectionTitle title="Colour Tokens" subtitle="Brand palette and semantic colour assignments." />
 			<Box display="grid" gap="12" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))" }}>
-				{DS_TOKEN_COLORS.map((c) => (
+				{tokenColors.map((c) => (
 					<Box key={c.name} rounded="xl" style={{ border: "1px solid var(--ax-colors-border-secondary)", overflow: "hidden" }}>
 						<Box style={{ background: c.value, height: 68 }} />
 						<Box style={{ padding: "10px 14px" }}>
@@ -410,16 +424,12 @@ function InstructionsPanel() {
 
 // ── Overview 2×2 card grid ────────────────────────────────────────────────────
 
-function TokensVisual() {
-	const swatches = [
-		["#1e3a8a", "#1d4ed8", "#3b82f6", "#93c5fd", "#dbeafe"],
-		["#5b21b6", "#7c3aed", "#a78bfa", "#c4b5fd", "#ede9fe"],
-		["#064e3b", "#065f46", "#10b981", "#6ee7b7", "#d1fae5"],
-		["#78350f", "#92400e", "#f59e0b", "#fcd34d", "#fef3c7"],
-	];
+function TokensVisual({ colors }: { colors: string[] }) {
+	const rows: string[][] = [];
+	for (let i = 0; i < colors.length; i += 5) rows.push(colors.slice(i, i + 5));
 	return (
 		<Box alignItems="center" display="flex" flexDirection="column" gap="6">
-			{swatches.map((row, ri) => (
+			{rows.map((row, ri) => (
 				<Box key={ri} display="flex" gap="4">
 					{row.map((color, ci) => (
 						<Box key={ci} style={{ background: color, borderRadius: 5, flexShrink: 0, height: 22, width: 22 }} />
@@ -430,11 +440,11 @@ function TokensVisual() {
 	);
 }
 
-function ComponentsVisual() {
+function ComponentsVisual({ primaryColor }: { primaryColor: string }) {
 	return (
 		<Box alignItems="center" display="flex" flexDirection="column" gap="12">
 			<Box alignItems="center" display="flex" gap="8">
-				<Box style={{ alignItems: "center", background: "var(--ax-colors-bg-primary)", borderRadius: 7, color: "var(--ax-colors-fg-accent, #fff)", display: "flex", fontSize: 12, fontWeight: 600, height: 30, justifyContent: "center", padding: "0 14px" }}>
+				<Box style={{ alignItems: "center", background: primaryColor, borderRadius: 7, color: getReadableTextColor(primaryColor), display: "flex", fontSize: 12, fontWeight: 600, height: 30, justifyContent: "center", padding: "0 14px" }}>
 					Primary
 				</Box>
 				<Box style={{ alignItems: "center", background: "transparent", border: "1px solid var(--ax-colors-border-secondary)", borderRadius: 7, color: "var(--ax-colors-fg-default)", display: "flex", fontSize: 12, height: 30, justifyContent: "center", padding: "0 14px" }}>
@@ -585,12 +595,16 @@ function OverviewCard({
 
 function OverviewPanel({
 	packName,
+	paletteHexes,
+	primaryHex,
 	onGoToBlueprints,
 	onGoToComponents,
 	onGoToInstructions,
 	onGoToTokens,
 }: {
 	packName: string;
+	paletteHexes: string[];
+	primaryHex: string;
 	onGoToBlueprints: () => void;
 	onGoToComponents: () => void;
 	onGoToInstructions: () => void;
@@ -617,14 +631,14 @@ function OverviewPanel({
 					title="Design Tokens"
 					description="Brand palette, spacing scale, border radius, and box shadows"
 					stats="4 categories"
-					visual={<TokensVisual />}
+					visual={<TokensVisual colors={paletteHexes} />}
 					onClick={onGoToTokens}
 				/>
 				<OverviewCard
 					title="Components"
 					description="Reusable UI building blocks with variants and Opal instructions"
 					stats="30 components · 7 groups"
-					visual={<ComponentsVisual />}
+					visual={<ComponentsVisual primaryColor={primaryHex} />}
 					onClick={onGoToComponents}
 				/>
 				<OverviewCard
@@ -650,10 +664,14 @@ function OverviewPanel({
 
 type Props = {
 	onBack: () => void;
-	packName: string;
+	pack: BrandPack;
 };
 
-export function DSDetailView({ onBack, packName }: Props) {
+export function DSDetailView({ onBack, pack }: Props) {
+	const packName = pack.name;
+	const tokenColors = getBrandTokenColors(pack);
+	const paletteHexes = pack.colors.map((c) => c.hex);
+	const primaryHex = pack.colors.find((c) => c.role === "primary")?.hex ?? paletteHexes[0] ?? "#000000";
 	const { setSubNavContent } = useLayout();
 	const [section, setSection] = useState<DSSection>("overview");
 	const [tokensOpen, setTokensOpen] = useState(false);
@@ -686,6 +704,8 @@ export function DSDetailView({ onBack, packName }: Props) {
 			{section === "overview" && (
 				<OverviewPanel
 					packName={packName}
+					paletteHexes={paletteHexes}
+					primaryHex={primaryHex}
 					onGoToBlueprints={() => {
 						setBlueprintsOpen(true);
 						setSection("blueprints");
@@ -698,7 +718,7 @@ export function DSDetailView({ onBack, packName }: Props) {
 					}}
 				/>
 			)}
-			{section === "tokens-colours" && <ColourTokensPanel />}
+			{section === "tokens-colours" && <ColourTokensPanel tokenColors={tokenColors} />}
 			{section === "tokens-spacing" && <SpacingPanel />}
 			{section === "tokens-radius" && <RadiusPanel />}
 			{section === "tokens-shadows" && <ShadowsPanel />}

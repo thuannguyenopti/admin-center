@@ -127,7 +127,7 @@ export default function BrandPackDetailPage({ params }: PageProps) {
 				{activeSection === "design-system" && (
 					<DSDetailView
 						onBack={() => setActiveSection("overview")}
-						packName={packName}
+						pack={pack}
 					/>
 				)}
 			</Box>
