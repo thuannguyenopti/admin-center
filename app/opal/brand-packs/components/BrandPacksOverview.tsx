@@ -12,9 +12,9 @@ import {
 	Text,
 } from "@optiaxiom/react";
 import { IconAngleDown } from "@optiaxiom/icons";
-import { NewBrandPackCard } from "./BrandPackCard";
+import { BrandPackCard, NewBrandPackCard } from "./BrandPackCard";
 import { BrandPackHero } from "./BrandPackHero";
-import { activePack } from "../data";
+import { activePack, brandPacks } from "../data";
 
 type BrandPacksOverviewProps = {
 	embedded?: boolean;
@@ -101,6 +101,11 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 						gap="16"
 						style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}
 					>
+						{brandPacks
+							.filter((pack) => pack.id !== activePack?.id)
+							.map((pack) => (
+								<BrandPackCard key={pack.id} pack={pack} />
+							))}
 						<NewBrandPackCard onClick={() => router.push("/opal/brand-packs/new/opal")} />
 					</Box>
 				</Box>
