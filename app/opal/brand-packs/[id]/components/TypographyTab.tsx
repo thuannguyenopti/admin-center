@@ -1,6 +1,6 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Badge, Box, Button, SearchInput, Select, Text} from "@optiaxiom/react";
 import {IconCheck, IconPlus, IconSparkles} from "@optiaxiom/icons";
 import type {BrandPack, BrandTypographyRule} from "../../types";
@@ -48,7 +48,108 @@ const CATEGORY_OPTIONS = [
 	{label: "Display", value: "Display"},
 ];
 
-const FONT_LIBRARY: Typeface[] = [
+const FONT_LIBRARY_BY_BRAND: Record<string, Typeface[]> = {
+	"coca-cola": [
+		{
+			family: "Trade Gothic Bold Condensed No. 20",
+			category: "Primary",
+			role: "Headlines & Campaign",
+			meta: "Condensed grotesque sans-serif",
+			styles: 6,
+			weight: 700,
+			source: "library",
+			inUse: true,
+		},
+		{
+			family: "Gotham",
+			category: "Secondary",
+			role: "Body & Documents",
+			meta: "Geometric sans-serif",
+			styles: 12,
+			weight: 400,
+			source: "library",
+			inUse: true,
+		},
+		{
+			family: "Spencerian Script (Coca-Cola Script)",
+			category: "Display",
+			role: "Logotype only",
+			meta: "Custom script typeface",
+			styles: 1,
+			weight: 400,
+			source: "custom",
+			inUse: true,
+		},
+	],
+	fanta: [
+		{
+			family: "Fanta Bespoke Sans",
+			category: "Primary",
+			role: "Wordmark & Headlines",
+			meta: "Custom extruded sans (Colophon Foundry)",
+			styles: 1,
+			weight: 700,
+			source: "custom",
+			inUse: true,
+		},
+		{
+			family: "Poppins",
+			category: "Secondary",
+			role: "Body & Packaging Copy",
+			meta: "Geometric sans-serif",
+			styles: 9,
+			weight: 400,
+			source: "library",
+			inUse: true,
+		},
+	],
+	sprite: [
+		{
+			family: "Refraktiv",
+			category: "Primary",
+			role: "Wordmark & Headlines",
+			meta: "Custom display face (Turner Duckworth)",
+			styles: 3,
+			weight: 700,
+			source: "custom",
+			inUse: true,
+		},
+		{
+			family: "Aktiv Grotesk",
+			category: "Secondary",
+			role: "Body & UI",
+			meta: "Neutral grotesque sans-serif",
+			styles: 10,
+			weight: 400,
+			source: "library",
+			inUse: true,
+		},
+	],
+	"minute-maid": [
+		{
+			family: "Minute Maid Hand",
+			category: "Primary",
+			role: "Wordmark & Headlines",
+			meta: "Custom hand-drawn type (JKR + Erik Marinovich)",
+			styles: 1,
+			weight: 400,
+			source: "custom",
+			inUse: true,
+		},
+		{
+			family: "Museo Sans",
+			category: "Secondary",
+			role: "Body & Packaging Copy",
+			meta: "Warm humanist sans-serif",
+			styles: 9,
+			weight: 400,
+			source: "library",
+			inUse: true,
+		},
+	],
+};
+
+const DEFAULT_FONT_LIBRARY: Typeface[] = [
 	{
 		family: "Inter",
 		category: "Primary",
@@ -59,53 +160,11 @@ const FONT_LIBRARY: Typeface[] = [
 		source: "library",
 		inUse: true,
 	},
-	{
-		family: "Inter Tight",
-		category: "Secondary",
-		role: "Marketing",
-		meta: "Tight spacing variant",
-		styles: 12,
-		weight: 500,
-		source: "library",
-	},
-	{
-		family: "JetBrains Mono",
-		category: "Mono",
-		role: "Code and tokens",
-		meta: "Monospace",
-		styles: 10,
-		weight: 700,
-		source: "library",
-		inUse: true,
-	},
-	{
-		family: "Overpass",
-		category: "Display",
-		role: "Campaign display",
-		meta: "Condensed sans-serif",
-		styles: 1,
-		weight: 800,
-		source: "web",
-	},
-	{
-		family: "Manrope",
-		category: "Secondary",
-		role: "Accent",
-		meta: "Geometric sans-serif",
-		styles: 7,
-		weight: 700,
-		source: "web",
-	},
-	{
-		family: "Source Serif 4",
-		category: "Secondary",
-		role: "Long-form editorial",
-		meta: "Serif",
-		styles: 7,
-		weight: 400,
-		source: "upload",
-	},
 ];
+
+function getFontLibraryForPack(pack: BrandPack): Typeface[] {
+	return FONT_LIBRARY_BY_BRAND[pack.id] ?? DEFAULT_FONT_LIBRARY;
+}
 
 function fontStack(typeface: Typeface) {
 	if (typeface.category === "Mono") return `"${typeface.family}", monospace`;
@@ -516,7 +575,10 @@ export function TypographyTab({pack}: TypographyTabProps) {
 	const [category, setCategory] = useState("all");
 	const [manageTypeSystemOpen, setManageTypeSystemOpen] = useState(false);
 	const [saved, setSaved] = useState(false);
-	const [typefaces, setTypefaces] = useState(FONT_LIBRARY);
+	const [typefaces, setTypefaces] = useState(() => getFontLibraryForPack(pack));
+	useEffect(() => {
+		setTypefaces(getFontLibraryForPack(pack));
+	}, [pack.id]);
 	const typographySummary = getBrandTypographySummary(pack);
 	const typographyRules = getBrandTypographyRules(pack);
 	const primaryTypeface =

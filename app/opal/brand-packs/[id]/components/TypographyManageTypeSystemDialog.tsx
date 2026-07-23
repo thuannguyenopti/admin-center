@@ -43,14 +43,22 @@ const TYPE_ROLES: TypeRole[] = [
 	{ description: "Short labels and highlights", key: "accent", label: "Accent", optional: true },
 ];
 
-const DEFAULT_ASSIGNMENTS: Record<string, string> = {
-	accent: "Manrope",
-	body: "Inter",
-	display: "Overpass",
-	heading: "Inter",
-	mono: "JetBrains Mono",
-	ui: "Inter",
-};
+function getDefaultAssignments(fonts: Typeface[]): Record<string, string> {
+	const byCategory = (category: Typeface["category"]) =>
+		fonts.find((font) => font.category === category)?.family;
+	const primary = byCategory("Primary") ?? fonts[0]?.family ?? "";
+	const secondary = byCategory("Secondary") ?? primary;
+	const display = byCategory("Display") ?? primary;
+	const mono = byCategory("Mono") ?? primary;
+	return {
+		accent: secondary,
+		body: secondary,
+		display,
+		heading: primary,
+		mono,
+		ui: secondary,
+	};
+}
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
 	return (
@@ -74,7 +82,7 @@ function fontMeta(typeface?: Typeface) {
 
 export function ManageTypeSystemDialog({ fonts, onOpenChange, onSave, open }: ManageTypeSystemDialogProps) {
 	const [activeRole, setActiveRole] = useState(TYPE_ROLES[0].key);
-	const [assignments, setAssignments] = useState(DEFAULT_ASSIGNMENTS);
+	const [assignments, setAssignments] = useState(() => getDefaultAssignments(fonts));
 	const [customRoles, setCustomRoles] = useState<TypeRole[]>([]);
 	const roles = [...TYPE_ROLES, ...customRoles];
 
@@ -98,7 +106,7 @@ export function ManageTypeSystemDialog({ fonts, onOpenChange, onSave, open }: Ma
 	const monoFont = selectedFonts.mono;
 
 	const resetAssignments = () => {
-		setAssignments(DEFAULT_ASSIGNMENTS);
+		setAssignments(getDefaultAssignments(fonts));
 		setCustomRoles([]);
 		setActiveRole(TYPE_ROLES[0].key);
 	};
@@ -113,7 +121,7 @@ export function ManageTypeSystemDialog({ fonts, onOpenChange, onSave, open }: Ma
 		};
 
 		setCustomRoles((current) => [...current, nextRole]);
-		setAssignments((current) => ({ ...current, [key]: "Inter" }));
+		setAssignments((current) => ({ ...current, [key]: fonts[0]?.family ?? "" }));
 		setActiveRole(key);
 	};
 
