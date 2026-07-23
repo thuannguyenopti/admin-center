@@ -31,11 +31,17 @@ const ROLE_LABELS: Record<BrandColor["role"], string> = {
 };
 
 function getBrandTokenColors(pack: BrandPack) {
-	return pack.colors.map((c) => ({
-		name: `--color-${c.role}`,
-		value: c.hex,
-		label: `${c.name} (${ROLE_LABELS[c.role]})`,
-	}));
+	const roleCounts = new Map<string, number>();
+	return pack.colors.map((c) => {
+		const seen = (roleCounts.get(c.role) ?? 0) + 1;
+		roleCounts.set(c.role, seen);
+		const suffix = seen > 1 ? `-${seen}` : "";
+		return {
+			name: `--color-${c.role}${suffix}`,
+			value: c.hex,
+			label: `${c.name} (${ROLE_LABELS[c.role]})`,
+		};
+	});
 }
 
 function getReadableTextColor(hex: string): string {

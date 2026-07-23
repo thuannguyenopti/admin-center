@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Button, Text } from "@optiaxiom/react";
 import { useLayout } from "@/app/context/LayoutContext";
@@ -30,6 +30,7 @@ export default function BrandPackDetailPage({ params }: PageProps) {
 	const [activeSection, setActiveSection] = useState<SectionId>("overview");
 	const pack = getBrandPackById(id);
 	const packName = pack?.name ?? "";
+	const goToOverview = useCallback(() => setActiveSection("overview"), []);
 
 	useEffect(() => {
 		setSubNavWidth(250);
@@ -126,7 +127,7 @@ export default function BrandPackDetailPage({ params }: PageProps) {
 				{activeSection === "instructions-system" && <BrandBriefTab pack={pack} />}
 				{activeSection === "design-system" && (
 					<DSDetailView
-						onBack={() => setActiveSection("overview")}
+						onBack={goToOverview}
 						pack={pack}
 					/>
 				)}
