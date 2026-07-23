@@ -565,9 +565,9 @@ export default function ResponsibilitiesPage() {
 
 	return (
 		<Box style={{ padding: "32px 40px" }}>
-			<Heading level="1" mb="4">Responsibilities</Heading>
+			<Heading level="1" mb="4">Permissions</Heading>
 			<Text color="fg.secondary" fontSize="lg" mb="24">
-				How {name} works and when they kick into action
+				Defines what Randy does, who they work with, and how far they can go
 			</Text>
 
 			{/* Scroll-nav */}
@@ -601,7 +601,7 @@ export default function ResponsibilitiesPage() {
 				{/* User roles */}
 				<Heading level="3" mb="4">User roles</Heading>
 				<Text fontSize="md" color="fg.secondary" style={{ display: "block", marginBottom: 20 }}>
-					Anyone with visibility into, responsibility for, or collaboration with {name}.
+					Anyone with visibility into, responsibility for, or collaboration with {name}
 				</Text>
 
 				{/* Your role */}
@@ -661,7 +661,7 @@ export default function ResponsibilitiesPage() {
 						</Tooltip>
 					</Box>
 					<Text fontSize="md" color="fg.secondary" style={{ display: "block", marginBottom: 20 }}>
-						What {name} shares, and what stays private.
+						What {name} shares, and what stays private
 					</Text>
 					<GuardrailsSection name={name} reportsTo={reportsTo} worksWith={worksWith} />
 				</Box>

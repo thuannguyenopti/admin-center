@@ -217,7 +217,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 					}
 				/>
 				<NavItem
-					label="Responsibilities"
+					label="Permissions"
 					active={isResponsibilities}
 					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/responsibilities`)}
 				/>
