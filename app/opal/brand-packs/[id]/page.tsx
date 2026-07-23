@@ -1,51 +1,39 @@
 "use client";
 
-import {use, useEffect, useState} from "react";
-import {useRouter} from "next/navigation";
-import {Badge, Box, Button, Input, Switch, Text} from "@optiaxiom/react";
-import {IconCheck, IconPenToSquare as IconEdit} from "@optiaxiom/icons";
-import {useLayout} from "@/app/context/LayoutContext";
-import {BrandPackPageHeader} from "../components/BrandPackPageHeader";
-import {StatusBadge} from "../components/StatusBadge";
-import {ColoursTab} from "./components/ColoursTab";
-import {TypographyTab} from "./components/TypographyTab";
-import {LogosTab} from "./components/LogosTab";
-import {PhotographyTab} from "./components/PhotographyTab";
-import {ToneOfVoiceTab} from "./components/ToneOfVoiceTab";
-import {BrandBriefTab} from "./components/BrandBriefTab";
-import {AssetsTab} from "./components/AssetsTab";
-import {OverviewTab} from "./components/OverviewTab";
-import {
-	BrandContextTab,
-	BrandSetupTab,
-	DesignSystemsEditorTab,
-} from "./components/SchemaSectionTabs";
-import {BrandPackSectionNav, type SectionId} from "./components/BrandPackSectionNav";
-import {getBrandPackById} from "../data";
-import {getBrandTemplates, getBrandTypographySummary} from "../adapters";
+import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Box, Button, Text } from "@optiaxiom/react";
+import { useLayout } from "@/app/context/LayoutContext";
+import { OverviewTab } from "./components/OverviewTab";
+import { AssetsTab } from "./components/AssetsTab";
+import { ColoursTab } from "./components/ColoursTab";
+import { TypographyTab } from "./components/TypographyTab";
+import { ToneOfVoiceTab } from "./components/ToneOfVoiceTab";
+import { BrandBriefTab } from "./components/BrandBriefTab";
+import { LogosTab } from "./components/LogosTab";
+import { ImagesTab } from "./components/ImagesTab";
+import { DSDetailView } from "./components/DSDetailView";
+import { BrandPackSectionNav, type SectionId } from "./components/BrandPackSectionNav";
+import { getBrandPackById } from "../data";
 import styles from "./BrandPackDetailPage.module.css";
 
 const BRAND_PACKS_HOME = "/opal/context?tab=brand";
 
 type PageProps = {
-	params: Promise<{id: string}>;
+	params: Promise<{ id: string }>;
 };
 
-export default function BrandPackDetailPage({params}: PageProps) {
-	const {id} = use(params);
+export default function BrandPackDetailPage({ params }: PageProps) {
+	const { id } = use(params);
 	const router = useRouter();
-	const {setSubNavContent, setSubNavWidth, setHidePageHeader} = useLayout();
+	const { setSubNavContent, setSubNavWidth, setHidePageHeader } = useLayout();
 	const [activeSection, setActiveSection] = useState<SectionId>("overview");
-	const [isEditingName, setIsEditingName] = useState(false);
-	const [packName, setPackName] = useState(() => getBrandPackById(id)?.name ?? "");
-	const [active, setActive] = useState(() => getBrandPackById(id)?.status === "active");
-
 	const pack = getBrandPackById(id);
+	const packName = pack?.name ?? "";
 
 	useEffect(() => {
-		setSubNavWidth(288);
+		setSubNavWidth(250);
 		setHidePageHeader(true);
-
 		return () => {
 			setSubNavWidth(272);
 			setHidePageHeader(false);
@@ -53,11 +41,11 @@ export default function BrandPackDetailPage({params}: PageProps) {
 	}, [setSubNavWidth, setHidePageHeader]);
 
 	useEffect(() => {
-		if (!pack) {
-			setSubNavContent(null);
+		// When design-system is active, DSDetailView injects its own nav via setSubNavContent
+		if (!pack || activeSection === "design-system") {
+			if (!pack) setSubNavContent(null);
 			return;
 		}
-
 		setSubNavContent(
 			<BrandPackSectionNav
 				activeSection={activeSection}
@@ -67,11 +55,8 @@ export default function BrandPackDetailPage({params}: PageProps) {
 				packName={packName}
 			/>
 		);
-
-		return () => {
-			setSubNavContent(null);
-		};
-	}, [activeSection, pack, packName, setSubNavContent]);
+		return () => { setSubNavContent(null); };
+	}, [activeSection, pack, packName, router, setSubNavContent]);
 
 	if (!pack) {
 		return (
@@ -81,25 +66,16 @@ export default function BrandPackDetailPage({params}: PageProps) {
 				flexDirection="column"
 				gap="16"
 				justifyContent="center"
-				style={{padding: "80px 32px"}}
+				style={{ padding: "80px 32px" }}
 			>
-				<Text fontWeight="700" style={{fontSize: 24}}>
-					Brand not found
-				</Text>
-				<Text color="fg.secondary">The brand you're looking for doesn't exist.</Text>
+				<Text fontWeight="700" style={{ fontSize: 24 }}>Pack not found</Text>
+				<Text color="fg.secondary">The brand pack you're looking for doesn't exist.</Text>
 				<Button appearance="default" onClick={() => router.push(BRAND_PACKS_HOME)}>
-					Back to Brand
+					Back to Brands
 				</Button>
 			</Box>
 		);
 	}
-
-	const isActive = active;
-	const typographySummary = getBrandTypographySummary(pack);
-	const templateCount =
-		pack.template_metadata?.template_count ??
-		pack.templateCount ??
-		getBrandTemplates(pack).length;
 
 	return (
 		<Box
@@ -108,101 +84,52 @@ export default function BrandPackDetailPage({params}: PageProps) {
 			flexDirection="column"
 			h="full"
 			overflow="auto"
-			pb="64"
 		>
-			<Box
-				className={styles.detailInner}
-				display="flex"
-				flexDirection="column"
-				gap="24"
-			>
-				<BrandPackPageHeader
-					title={
-						<>
-							{isEditingName ? (
-								<Box alignItems="center" display="flex" gap="8">
-									<Input
-										value={packName}
-										onChange={(event) => setPackName(event.target.value)}
-										style={{width: 240}}
-									/>
-									<Button
-										appearance="primary"
-										size="md"
-										onClick={() => setIsEditingName(false)}
-									>
-										Save
-									</Button>
-								</Box>
-							) : (
-								<Box alignItems="center" display="flex" gap="8">
-									<Text fontWeight="700" style={{fontSize: 22, lineHeight: 1.15}}>
-										{packName}
-									</Text>
-									<Button
-										appearance="subtle"
-										aria-label="Edit brand name"
-										icon={<IconEdit />}
-										onClick={() => setIsEditingName(true)}
-										size="sm"
-									/>
-								</Box>
-							)}
-							{isActive ? (
-								<Badge intent="success" variant="subtle" style={{fontSize: 12}}>
-									<IconCheck
-										size={12}
-										style={{color: "var(--ax-colors-fg-success)"}}
-									/>
-									Active
-								</Badge>
-							) : (
-								<StatusBadge
-									status={pack.status === "active" ? "published" : pack.status}
-								/>
-							)}
-						</>
-					}
-					subtitle={`${typographySummary.heading} · ${templateCount} templates · ${pack.channels.join(", ")}`}
-					actions={
-						<Box
-							alignItems="center"
-							display="flex"
-							gap="8"
-							className={styles.brandToggle}
-						>
-							<Text color="fg.secondary" style={{fontSize: 12, lineHeight: 1.35}}>
-								Active
-							</Text>
-							<Switch checked={active} onCheckedChange={setActive} />
-						</Box>
-					}
-				/>
-
-				<Box className={styles.sectionContent}>
-					{activeSection === "overview" && (
-						<OverviewTab
-							pack={pack}
-							onSelectTab={(section) => setActiveSection(section)}
-						/>
-					)}
-					{activeSection === "setup" && <BrandSetupTab pack={pack} />}
-					{activeSection === "brief" && <BrandBriefTab pack={pack} />}
-					{activeSection === "colours" && <ColoursTab pack={pack} />}
-					{activeSection === "typography" && <TypographyTab pack={pack} />}
-					{activeSection === "photography" && <PhotographyTab pack={pack} />}
-					{activeSection === "logos-devices" && (
-						<LogosTab pack={pack} onManageAssets={() => setActiveSection("assets")} />
-					)}
-					{activeSection === "design-systems" && <DesignSystemsEditorTab pack={pack} />}
-					{activeSection === "voice-audience" && (
-						<Box display="flex" flexDirection="column" gap="24">
-							<ToneOfVoiceTab pack={pack} />
-							<BrandContextTab pack={pack} />
-						</Box>
-					)}
-					{activeSection === "assets" && <AssetsTab pack={pack} />}
-				</Box>
+			<Box className={styles.sectionContent} style={{ overflowY: "auto" }}>
+				{activeSection === "overview" && (
+					<OverviewTab
+						pack={pack}
+						onSelectTab={(tab) => {
+							const map: Record<string, SectionId> = {
+								colours: "assets-colors",
+								typography: "assets-typography",
+								logos: "assets-library",
+								images: "instructions-photography",
+								descriptors: "design-system",
+								tone: "instructions-voice",
+								templates: "assets-library",
+								brief: "instructions-system",
+								publish: "overview",
+							};
+							setActiveSection(map[tab] ?? "overview");
+						}}
+					/>
+				)}
+				{activeSection === "assets-library" && <AssetsTab pack={pack} />}
+				{activeSection === "assets-colors" && <ColoursTab pack={pack} />}
+				{activeSection === "assets-typography" && <TypographyTab pack={pack} />}
+				{activeSection === "instructions-logo" && (
+					<Box style={{ padding: "28px 40px" }}>
+						<LogosTab pack={pack} onManageAssets={() => setActiveSection("assets-library")} />
+					</Box>
+				)}
+				{activeSection === "instructions-photography" && (
+					<Box style={{ padding: "28px 40px" }}>
+						<ImagesTab pack={pack} />
+					</Box>
+				)}
+				{activeSection === "instructions-voice" && (
+					<Box style={{ padding: "28px 40px" }}>
+						<ToneOfVoiceTab pack={pack} />
+					</Box>
+				)}
+				{activeSection === "instructions-system" && <BrandBriefTab pack={pack} />}
+				{activeSection === "design-system" && (
+					<DSDetailView
+						onBack={() => setActiveSection("overview")}
+						packName={packName}
+					/>
+				)}
 			</Box>
 		</Box>
 	);

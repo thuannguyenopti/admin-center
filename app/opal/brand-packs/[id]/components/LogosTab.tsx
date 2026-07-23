@@ -31,7 +31,6 @@ function InlineChipList({
 	onAdd,
 	onRemove,
 	placeholder,
-	prepend = false,
 }: {
 	items: string[];
 	onAdd: (value: string) => void;

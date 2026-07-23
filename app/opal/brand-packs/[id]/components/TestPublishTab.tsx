@@ -2,17 +2,8 @@
 
 import { useState } from "react";
 import { Box, Button, Text, Textarea } from "@optiaxiom/react";
-import { IconCheck, IconSparkles, IconTriangleExclamation as IconWarning } from "@optiaxiom/icons";
+import { IconCheck, IconSparkles } from "@optimizely/axiom-icons";
 import type { BrandPack } from "../../types";
-import {
-	getBrandColors,
-	getBrandInstructionText,
-	getBrandTypographyRules,
-	getBrandTypographySummary,
-	getLogoAssets,
-	getPackConfidence,
-	getToneOfVoice,
-} from "../../adapters";
 
 type TestPublishTabProps = {
 	pack: BrandPack;
@@ -26,84 +17,118 @@ type CheckItem = {
 	blocking: boolean;
 };
 
-function CheckRow({ item }: { item: CheckItem }) {
+function segmentColor(item: CheckItem): string {
+	if (item.passed) return "var(--ax-colors-fg-success)";
+	if (item.blocking) return "#DC2626";
+	return "var(--ax-colors-border-default)";
+}
+
+function statusLabel(item: CheckItem): string {
+	if (item.passed) return "Ready";
+	if (item.blocking) return "Required";
+	return "Optional";
+}
+
+function statusColor(item: CheckItem): string {
+	if (item.passed) return "var(--ax-colors-fg-success)";
+	if (item.blocking) return "#DC2626";
+	return "var(--ax-colors-fg-tertiary)";
+}
+
+function ReadinessBar({ checks }: { checks: CheckItem[] }) {
+	const passed = checks.filter((c) => c.passed).length;
+	const total = checks.length;
+
 	return (
-		<Box
-			alignItems="start"
-			display="flex"
-			gap="12"
-			py="8"
-			style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}
-		>
-			{/* Status icon */}
-			<Box
-				alignItems="center"
-				display="flex"
-				justifyContent="center"
-				rounded="full"
-				style={{
-					background: item.passed
-						? "var(--ax-colors-bg-success-subtle)"
-						: item.blocking
-						? "rgba(220, 38, 38, 0.08)"
-						: "var(--ax-colors-bg-secondary)",
-					flexShrink: 0,
-					height: 28,
-					width: 28,
-				}}
-			>
-				{item.passed ? (
-					<IconCheck size={13} style={{ color: "var(--ax-colors-fg-success)" }} />
-				) : item.blocking ? (
-					<IconWarning size={13} style={{ color: "#DC2626" }} />
-				) : (
-					<span
-						style={{
-							color: "var(--ax-colors-fg-tertiary)",
-							fontSize: 13,
-							fontWeight: 500,
-						}}
-					>
-						–
-					</span>
-				)}
+		<Box display="flex" flexDirection="column" gap="12">
+			{/* Score */}
+			<Box alignItems="center" display="flex" justifyContent="space-between">
+				<Text fontWeight="600" style={{ fontSize: 14 }}>Readiness check</Text>
+				<Text color="fg.tertiary" fontSize="sm">
+					{passed} of {total} ready
+				</Text>
 			</Box>
 
-			{/* Text */}
-			<Box display="flex" flexDirection="column" gap="2" style={{ flex: 1 }}>
-				<Text
-					fontWeight="500"
+			{/* Segmented bar */}
+			<Box display="flex" gap="4">
+				{checks.map((check) => (
+					<Box
+						key={check.id}
+						rounded="sm"
+						style={{
+							background: segmentColor(check),
+							flex: 1,
+							height: 12,
+							transition: "background 0.3s",
+						}}
+					/>
+				))}
+			</Box>
+
+			{/* Labels under each segment */}
+			<Box display="flex" gap="4">
+				{checks.map((check) => (
+					<Box
+						key={check.id}
+						display="flex"
+						flexDirection="column"
+						gap="2"
+						style={{ flex: 1, textAlign: "center" }}
+					>
+						<Text
+							style={{
+								fontSize: 11,
+								fontWeight: 500,
+								lineHeight: 1.3,
+								overflow: "hidden",
+								textOverflow: "ellipsis",
+								whiteSpace: "nowrap",
+							}}
+						>
+							{check.label}
+						</Text>
+						<Text style={{ color: statusColor(check), fontSize: 10, fontWeight: 600 }}>
+							{statusLabel(check)}
+						</Text>
+					</Box>
+				))}
+			</Box>
+
+			{/* Description row for failed items */}
+			{checks.some((c) => !c.passed) && (
+				<Box
+					display="flex"
+					flexDirection="column"
+					gap="6"
+					rounded="lg"
 					style={{
-						color: item.passed
-							? "var(--ax-colors-fg-default)"
-							: item.blocking
-							? "#DC2626"
-							: "var(--ax-colors-fg-secondary)",
-						fontSize: 14,
+						background: "var(--ax-colors-bg-secondary)",
+						marginTop: 4,
+						padding: "10px 14px",
 					}}
 				>
-					{item.label}
-				</Text>
-				<Text color="fg.tertiary" fontSize="xs">
-					{item.description}
-				</Text>
-			</Box>
-
-			{/* Status text */}
-			<Text
-				fontSize="xs"
-				fontWeight="500"
-				style={{
-					color: item.passed
-						? "var(--ax-colors-fg-success)"
-						: item.blocking
-						? "#DC2626"
-						: "var(--ax-colors-fg-tertiary)",
-					flexShrink: 0,
-				}}
-			>
-				{item.passed ? "Ready" : item.blocking ? "Required" : "Optional"}
-			</Text>
+					{checks.filter((c) => !c.passed).map((check) => (
+						<Box key={check.id} alignItems="start" display="flex" gap="8">
+							<Box
+								rounded="full"
+								style={{
+									background: check.blocking ? "#DC2626" : "var(--ax-colors-border-default)",
+									flexShrink: 0,
+									height: 6,
+									marginTop: 5,
+									width: 6,
+								}}
+							/>
+							<Box>
+								<Text style={{ color: check.blocking ? "#DC2626" : "var(--ax-colors-fg-secondary)", fontSize: 12, fontWeight: 500 }}>
+									{check.label}
+								</Text>
+								<Text color="fg.tertiary" style={{ fontSize: 11 }}>{check.description}</Text>
+							</Box>
+						</Box>
+					))}
+				</Box>
+			)}
 		</Box>
 	);
 }
@@ -111,113 +136,74 @@ function CheckRow({ item }: { item: CheckItem }) {
 export function TestPublishTab({ pack }: TestPublishTabProps) {
 	const [published, setPublished] = useState(false);
 	const [testing, setTesting] = useState(false);
-	const [testPrompt, setTestPrompt] = useState("");
+	const [testResult, setTestResult] = useState<string | null>(null);
+	const [prompt, setPrompt] = useState("");
 
-	const colors = getBrandColors(pack);
-	const typography = getBrandTypographySummary(pack);
-	const typographyRules = getBrandTypographyRules(pack);
-	const logoAssets = getLogoAssets(pack);
-	const tone = getToneOfVoice(pack);
-	const brandInstruction = getBrandInstructionText(pack);
-	const hasColors = colors.length > 0;
-	const hasTypography = !!typography.heading && typographyRules.length > 0;
-	const hasLogo = logoAssets.length > 0;
-	const hasToneKeywords = tone.key_traits.length > 0;
-	const hasBrandBrief = brandInstruction.length > 20;
-	const hasAccessibleColors = colors.some((color) => color.web_accessible_hex);
-	const hasTargetAudience =
-		!!pack.brand_values?.target_audience || pack.identity?.brand_type !== "master_brand";
-	const isExpiredCampaign = !!pack.identity?.expiry_date && new Date(pack.identity.expiry_date) < new Date();
-	const confidence = getPackConfidence(pack);
+	const hasColors = pack.colors.length > 0;
+	const hasTypography = !!pack.typography.heading;
+	const hasLogo = pack.assets.some((a) => a.type === "logo");
+	const hasToneKeywords = pack.toneKeywords.length > 0;
+	const hasBrandBrief = pack.brandBrief.length > 20;
 
 	const checks: CheckItem[] = [
 		{
 			id: "colours",
-			label: "Color palette defined",
-			description: `${colors.length} color${colors.length !== 1 ? "s" : ""} configured`,
+			label: "Colours",
+			description: `${pack.colors.length} colour${pack.colors.length !== 1 ? "s" : ""} configured`,
 			passed: hasColors,
 			blocking: true,
 		},
 		{
-			id: "accessible-colours",
-			label: "Accessible color values",
-			description: hasAccessibleColors
-				? "Accessible or text-safe values are present"
-				: "Add accessible alternatives before publishing",
-			passed: hasAccessibleColors,
-			blocking: true,
-		},
-		{
 			id: "typography",
-			label: "Typography configured",
+			label: "Typography",
 			description: hasTypography
-				? `Heading: ${typography.heading}, Body: ${typography.body}; ${typographyRules.length} role${typographyRules.length !== 1 ? "s" : ""}`
+				? `${pack.typography.heading} · ${pack.typography.body}`
 				: "Add at least one typeface",
 			passed: hasTypography,
 			blocking: true,
 		},
 		{
 			id: "tone",
-			label: "Tone of voice keywords",
+			label: "Tone of Voice",
 			description: hasToneKeywords
-				? tone.key_traits.join(", ")
+				? pack.toneKeywords.join(", ")
 				: "Add keywords to guide Opal's language",
 			passed: hasToneKeywords,
 			blocking: true,
 		},
 		{
 			id: "logo",
-			label: "Logo asset uploaded",
+			label: "Logo",
 			description: hasLogo
-				? `${logoAssets.length} logo file${logoAssets.length !== 1 ? "s" : ""}`
-				: "A logo improves branded output quality",
+				? `${pack.assets.filter((a) => a.type === "logo").length} logo file${pack.assets.filter((a) => a.type === "logo").length !== 1 ? "s" : ""}`
+				: "A logo improves output quality",
 			passed: hasLogo,
 			blocking: false,
 		},
 		{
 			id: "brief",
-			label: "Brand brief written",
+			label: "Brand Brief",
 			description: hasBrandBrief
-				? "Brand narrative is present"
-				: "Write a brief to improve content accuracy",
+				? "Brand narrative present"
+				: "Write a brief to improve accuracy",
 			passed: hasBrandBrief,
-			blocking: false,
-		},
-		{
-			id: "audience",
-			label: "Target audience",
-			description:
-				pack.brand_values?.target_audience ??
-				"Published master brands should define the audience",
-			passed: hasTargetAudience,
-			blocking: pack.identity?.brand_type === "master_brand",
-		},
-		{
-			id: "campaign-expiry",
-			label: "Campaign expiry",
-			description: pack.identity?.expiry_date
-				? `Expires ${pack.identity.expiry_date}`
-				: "No campaign expiry set",
-			passed: !isExpiredCampaign,
-			blocking: true,
-		},
-		{
-			id: "confidence",
-			label: "Extraction confidence",
-			description: `${confidence} confidence${pack.metadata?.confidence_notes ? `: ${pack.metadata.confidence_notes}` : ""}`,
-			passed: confidence !== "low",
 			blocking: false,
 		},
 	];
 
 	const blocking = checks.filter((c) => c.blocking && !c.passed);
 	const canPublish = blocking.length === 0;
-	const passed = checks.filter((c) => c.passed).length;
-	const total = checks.length;
 
 	const handleTest = () => {
+		if (!prompt.trim()) return;
 		setTesting(true);
-		setTimeout(() => setTesting(false), 2200);
+		setTestResult(null);
+		setTimeout(() => {
+			setTesting(false);
+			setTestResult(
+				`Acme Corporation is proud to introduce our latest innovation — built on years of precision engineering and deep customer insight. Designed for those who expect more, it delivers exactly that.\n\nClean lines. Purposeful design. Real results.\n\nLearn more at acme.com`
+			);
+		}, 2200);
 	};
 
 	return (
@@ -227,59 +213,11 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 				bg="bg.default"
 				border="1"
 				borderColor="border.tertiary"
-				display="flex"
-				flexDirection="column"
-				gap="0"
-				overflow="hidden"
+				p="20"
 				rounded="xl"
 				shadow="sm"
 			>
-				{/* Header */}
-				<Box
-					alignItems="center"
-					display="flex"
-					gap="16"
-					justifyContent="space-between"
-					p="16"
-					style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}
-				>
-					<Box display="flex" flexDirection="column" gap="4">
-						<Text fontWeight="600" style={{ fontSize: 14 }}>
-							Readiness check
-						</Text>
-						<Text color="fg.tertiary" fontSize="xs">
-							{passed} of {total} items ready
-						</Text>
-					</Box>
-
-					{/* Progress bar */}
-					<Box
-						bg="bg.secondary"
-						rounded="full"
-						style={{ height: 6, overflow: "hidden", width: 120 }}
-					>
-						<Box
-							rounded="full"
-							style={{
-								background: canPublish
-									? "var(--ax-colors-fg-success)"
-									: "var(--ax-colors-bg-accent)",
-								height: "100%",
-								transition: "width 0.4s ease",
-								width: `${(passed / total) * 100}%`,
-							}}
-						/>
-					</Box>
-				</Box>
-
-				{/* Check list */}
-				<Box p="16" style={{ paddingTop: 4 }}>
-					{checks.map((item) => (
-						<CheckRow key={item.id} item={item} />
-					))}
-					{/* Remove bottom border from last item */}
-					<Box style={{ marginBottom: -1 }} />
-				</Box>
+				<ReadinessBar checks={checks} />
 			</Box>
 
 			{/* Test with Opal */}
@@ -297,35 +235,56 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 				<Box display="flex" flexDirection="column" gap="4">
 					<Text fontWeight="600" style={{ fontSize: 14 }}>Test with Opal</Text>
 					<Text color="fg.secondary" fontSize="sm">
-						Write a prompt and generate sample content using this brand
+						Write a prompt and generate sample content using this brand pack
 					</Text>
 				</Box>
+
 				<Textarea
-					placeholder="e.g. Write a short LinkedIn post announcing our new product launch, focusing on performance and design..."
-					resize="none"
-					rows={3}
-					value={testPrompt}
-					onChange={(e) => setTestPrompt(e.target.value)}
+					value={prompt}
+					onChange={(e) => setPrompt(e.target.value)}
+					placeholder="e.g. Write a short LinkedIn post announcing our new product launch, focusing on performance and design…"
+					rows={4}
+					style={{ lineHeight: 1.6 }}
 				/>
+
 				<Box alignItems="center" display="flex" gap="12">
 					<Button
-						appearance="subtle"
+						appearance="primary"
 						size="sm"
 						icon={<IconSparkles />}
 						onClick={handleTest}
-						style={{ color: testing ? "var(--ax-colors-fg-accent)" : undefined }}
+						style={{ opacity: prompt.trim() ? 1 : 0.5, cursor: prompt.trim() ? "pointer" : "default" }}
 					>
-						{testing ? "Generating sample…" : "Run test generation"}
+						{testing ? "Generating…" : "Run test generation"}
 					</Button>
 					{testing && (
-						<Text color="fg.tertiary" fontSize="xs">
-							This will take a moment…
-						</Text>
+						<Text color="fg.tertiary" fontSize="xs">This will take a moment…</Text>
 					)}
 				</Box>
+
+				{testResult && (
+					<Box
+						display="flex"
+						flexDirection="column"
+						gap="8"
+						rounded="lg"
+						style={{
+							background: "var(--ax-colors-bg-secondary)",
+							border: "1px solid var(--ax-colors-border-tertiary)",
+							padding: "14px 16px",
+						}}
+					>
+						<Text color="fg.tertiary" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+							Generated output
+						</Text>
+						<Text color="fg.secondary" fontSize="sm" style={{ lineHeight: 1.75, whiteSpace: "pre-wrap" }}>
+							{testResult}
+						</Text>
+					</Box>
+				)}
 			</Box>
 
-			{/* Publish / status */}
+			{/* Publish */}
 			<Box
 				bg={canPublish ? "bg.default" : "bg.secondary"}
 				border="1"
@@ -354,7 +313,7 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 								Published
 							</Text>
 							<Text color="fg.tertiary" fontSize="xs">
-								This brand is active and available to Opal
+								This brand pack is active and available to Opal
 							</Text>
 						</Box>
 					</Box>
@@ -366,7 +325,7 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 							</Text>
 							<Text color="fg.secondary" fontSize="sm">
 								{canPublish
-									? "Once published, Opal will use this brand for all matching content generation."
+									? "Once published, Opal will use this brand pack for all matching content generation."
 									: `${blocking.length} required item${blocking.length !== 1 ? "s" : ""} must be completed before publishing.`}
 							</Text>
 						</Box>
@@ -375,9 +334,9 @@ export function TestPublishTab({ pack }: TestPublishTabProps) {
 								appearance={canPublish ? "primary" : "default"}
 								size="md"
 								onClick={() => canPublish && setPublished(true)}
-								style={{ opacity: canPublish ? 1 : 0.5, cursor: canPublish ? "pointer" : "default" }}
+								style={{ cursor: canPublish ? "pointer" : "default", opacity: canPublish ? 1 : 0.5 }}
 							>
-								Publish brand
+								Publish brand pack
 							</Button>
 						</Box>
 					</>

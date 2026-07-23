@@ -1,26 +1,20 @@
 "use client";
 
-import {useState} from "react";
-import {useRouter} from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Box, Button, Text } from "@optiaxiom/react";
 import {
-	Box,
-	Button,
-	Menu,
-	MenuContent,
-	MenuTrigger,
-	Text,
-} from "@optiaxiom/react";
-import {IconEllipsisStroke as IconEllipsis, IconPaintRoller, IconStar} from "@optiaxiom/icons";
-import {StatusBadge} from "./StatusBadge";
-import type {BrandPack} from "../types";
+	IconEllipsisStroke as IconEllipsis,
+	IconPaintRoller,
+} from "@optimizely/axiom-icons";
+import { StatusBadge } from "./StatusBadge";
+import type { BrandPack } from "../types";
 
 type BrandPackCardProps = {
-	isDefault?: boolean;
-	onSetDefault?: () => void;
 	pack: BrandPack;
 };
 
-export function BrandPackCard({isDefault = false, onSetDefault, pack}: BrandPackCardProps) {
+export function BrandPackCard({ pack }: BrandPackCardProps) {
 	const router = useRouter();
 	const [hovered, setHovered] = useState(false);
 
@@ -35,7 +29,7 @@ export function BrandPackCard({isDefault = false, onSetDefault, pack}: BrandPack
 		<Box
 			bg="bg.default"
 			border="1"
-			borderColor={isDefault ? "border.accent" : "border.tertiary"}
+			borderColor="border.tertiary"
 			display="flex"
 			flexDirection="column"
 			overflow="hidden"
@@ -53,7 +47,10 @@ export function BrandPackCard({isDefault = false, onSetDefault, pack}: BrandPack
 		>
 			{/* Image — single, clean, fixed height */}
 			{heroThumb ? (
-				<Box overflow="hidden" style={{height: 160, flexShrink: 0, position: "relative"}}>
+				<Box
+					overflow="hidden"
+					style={{ height: 160, flexShrink: 0 }}
+				>
 					<img
 						alt={heroThumb.name}
 						src={heroThumb.thumb}
@@ -65,28 +62,6 @@ export function BrandPackCard({isDefault = false, onSetDefault, pack}: BrandPack
 							objectPosition: "center",
 						}}
 					/>
-					{isDefault && (
-						<Box
-							alignItems="center"
-							display="flex"
-							gap="4"
-							style={{
-								position: "absolute",
-								top: 8,
-								left: 8,
-								background: "var(--ax-colors-fg-default)",
-								color: "var(--ax-colors-bg-default)",
-								borderRadius: 999,
-								padding: "3px 8px",
-								fontSize: 12,
-								fontWeight: 600,
-								letterSpacing: 0,
-							}}
-						>
-							<IconStar size={10} />
-							Default
-						</Box>
-					)}
 				</Box>
 			) : (
 				<Box
@@ -94,31 +69,9 @@ export function BrandPackCard({isDefault = false, onSetDefault, pack}: BrandPack
 					bg="bg.secondary"
 					display="flex"
 					justifyContent="center"
-					style={{height: 160, flexShrink: 0, position: "relative"}}
+					style={{ height: 160, flexShrink: 0 }}
 				>
-					<IconPaintRoller style={{color: "var(--ax-colors-fg-tertiary)"}} />
-					{isDefault && (
-						<Box
-							alignItems="center"
-							display="flex"
-							gap="4"
-							style={{
-								position: "absolute",
-								top: 8,
-								left: 8,
-								background: "var(--ax-colors-fg-default)",
-								color: "var(--ax-colors-bg-default)",
-								borderRadius: 999,
-								padding: "3px 8px",
-								fontSize: 12,
-								fontWeight: 600,
-								letterSpacing: 0,
-							}}
-						>
-							<IconStar size={10} />
-							Default
-						</Box>
-					)}
+					<IconPaintRoller style={{ color: "var(--ax-colors-fg-tertiary)" }} />
 				</Box>
 			)}
 
@@ -140,55 +93,37 @@ export function BrandPackCard({isDefault = false, onSetDefault, pack}: BrandPack
 						{pack.name}
 					</Text>
 					<StatusBadge status={pack.status} />
-					<Menu
-						options={[
-							{
-								label: isDefault ? "Remove as default" : "Set as default",
-								execute: () => onSetDefault?.(),
-							},
-							{
-								label: "Duplicate",
-								group: { label: "", hidden: true, separator: true },
-							},
-							{
-								label: isArchived ? "Restore" : "Archive",
-							},
-						]}
-					>
-						<MenuTrigger asChild>
-							<Button
-								appearance="subtle"
-								aria-label={`More actions for ${pack.name}`}
-								icon={<IconEllipsis />}
-								onClick={(e) => e.stopPropagation()}
-								size="sm"
-								style={{flexShrink: 0}}
-							/>
-						</MenuTrigger>
-						<MenuContent align="end" onClick={(e) => e.stopPropagation()} />
-					</Menu>
+					<Button
+						appearance="subtle"
+						aria-label={`More actions for ${pack.name}`}
+						icon={<IconEllipsis />}
+						onClick={(e) => e.stopPropagation()}
+						size="sm"
+						style={{ flexShrink: 0 }}
+						title={`More actions for ${pack.name}`}
+					/>
 				</Box>
 
 				{/* Template count + date — light, not bold */}
 				<Box display="flex" flexDirection="column" gap="4">
-					<Text color="fg.tertiary" style={{fontSize: 12}}>
+					<Text color="fg.tertiary" style={{ fontSize: 12 }}>
 						{pack.templateCount} templates
 					</Text>
-					<Text color="fg.tertiary" style={{fontSize: 12}}>
+					<Text color="fg.tertiary" style={{ fontSize: 12 }}>
 						Updated {updatedLabel}
 					</Text>
 				</Box>
 
 				{/* Channel tags */}
-				<Box display="flex" gap="4" style={{flexWrap: "wrap"}}>
+				<Box display="flex" gap="4" style={{ flexWrap: "wrap" }}>
 					{pack.channels.map((ch) => (
 						<Box
 							key={ch}
 							bg="bg.secondary"
 							rounded="full"
-							style={{padding: "3px 10px"}}
+							style={{ padding: "3px 10px" }}
 						>
-							<Text color="fg.secondary" style={{fontSize: 12}}>
+							<Text color="fg.secondary" style={{ fontSize: 12 }}>
 								{ch}
 							</Text>
 						</Box>
@@ -199,7 +134,7 @@ export function BrandPackCard({isDefault = false, onSetDefault, pack}: BrandPack
 	);
 }
 
-export function NewBrandPackCard({onClick}: {onClick: () => void}) {
+export function NewBrandPackCard({ onClick }: { onClick: () => void }) {
 	const [hovered, setHovered] = useState(false);
 
 	return (
@@ -245,8 +180,8 @@ export function NewBrandPackCard({onClick}: {onClick: () => void}) {
 					}}
 				/>
 			</Box>
-			<Box display="flex" flexDirection="column" gap="4" style={{textAlign: "center"}}>
-				<Text fontWeight="600" style={{fontSize: 14}}>
+			<Box display="flex" flexDirection="column" gap="4" style={{ textAlign: "center" }}>
+				<Text fontWeight="600" style={{ fontSize: 14 }}>
 					New Brand
 				</Text>
 				<Text color="fg.secondary" fontSize="xs">

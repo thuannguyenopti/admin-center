@@ -16,7 +16,7 @@
 }
 
 .familyName {
-	font-size: 64px;
+	font-size: 72px;
 }
 
 .pangram {
@@ -25,7 +25,7 @@
 }
 
 .specimenLetters {
-	font-size: 128px;
+	font-size: 156px;
 }
 
 .alphabetSample {
@@ -37,51 +37,7 @@
 }
 
 .typefaceRow {
-	grid-template-columns: minmax(190px, 260px) minmax(280px, 1fr) 112px;
-	min-height: 124px;
-	transition: background var(--ax-duration-sm);
-}
-
-.hierarchyRow {
-	grid-template-columns: 112px minmax(360px, 1fr) minmax(232px, 280px) 104px;
-	min-height: 132px;
-	transition: background var(--ax-duration-sm);
-}
-
-.typefaceRow:hover,
-.hierarchyRow:hover {
-	background: var(--ax-colors-bg-secondary);
-}
-
-.libraryAg {
-	font-size: 48px;
-	letter-spacing: 0;
-	line-height: 0.9;
-}
-
-.attributeGrid {
-	display: grid;
-	gap: 8px;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.attributeGridHero {
-	max-width: 448px;
-}
-
-.attributeCard {
-	background: var(--ax-colors-bg-secondary);
-	border: 1px solid var(--ax-colors-border-tertiary);
-	border-radius: var(--ax-borderRadius-md);
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	min-height: 0;
-	padding: 9px 10px;
-}
-
-.attributeCard > :first-child {
-	text-transform: uppercase;
+	grid-template-columns: 112px minmax(160px, 220px) minmax(260px, 1fr) 112px;
 }
 
 .typefacePreview {
@@ -114,10 +70,7 @@
 	cursor: pointer;
 	min-height: 136px;
 	padding: 16px 10px;
-	transition:
-		border-color var(--ax-duration-sm),
-		box-shadow var(--ax-duration-sm),
-		background var(--ax-duration-sm);
+	transition: border-color var(--ax-duration-sm), box-shadow var(--ax-duration-sm), background var(--ax-duration-sm);
 	width: 100%;
 }
 
@@ -155,9 +108,7 @@
 	cursor: pointer;
 	min-height: 64px;
 	text-align: left;
-	transition:
-		background var(--ax-duration-sm),
-		box-shadow var(--ax-duration-sm);
+	transition: background var(--ax-duration-sm), box-shadow var(--ax-duration-sm);
 	width: 100%;
 }
 
@@ -268,10 +219,7 @@
 	min-height: 90px;
 	padding: var(--type-role-row-padding);
 	position: relative;
-	transition:
-		border-color var(--ax-duration-sm),
-		box-shadow var(--ax-duration-sm),
-		background var(--ax-duration-sm);
+	transition: border-color var(--ax-duration-sm), box-shadow var(--ax-duration-sm), background var(--ax-duration-sm);
 }
 
 .typeRoleRow:hover {
@@ -378,7 +326,7 @@
 	}
 
 	.specimenLetters {
-		font-size: 112px;
+		font-size: 118px;
 	}
 
 	.alphabetSample {
@@ -387,15 +335,6 @@
 
 	.libraryLayout {
 		grid-template-columns: 1fr;
-	}
-
-	.hierarchyRow {
-		grid-template-columns: 96px minmax(0, 1fr);
-	}
-
-	.hierarchyRow .attributeGrid,
-	.hierarchyRow .typefaceAction {
-		grid-column: 2;
 	}
 
 	.addTypefaceBody > div {
@@ -419,6 +358,7 @@
 		--manage-type-rail-padding-left: 0;
 		--manage-type-rail-padding-top: 24px;
 	}
+
 }
 
 @container (max-width: 620px) {
@@ -432,21 +372,11 @@
 	}
 
 	.typefaceRow {
-		grid-template-columns: minmax(0, 1fr);
-	}
-
-	.hierarchyRow {
-		grid-template-columns: 96px minmax(0, 1fr);
+		grid-template-columns: 88px minmax(0, 1fr);
 	}
 
 	.typefacePreview,
 	.typefaceAction {
-		grid-column: 1 / -1;
-	}
-
-	.hierarchyRow .typefacePreview,
-	.hierarchyRow .attributeGrid,
-	.hierarchyRow .typefaceAction {
 		grid-column: 1 / -1;
 	}
 
@@ -482,6 +412,7 @@
 		align-items: stretch;
 		flex-direction: column;
 	}
+
 }
 
 @container (max-width: 430px) {

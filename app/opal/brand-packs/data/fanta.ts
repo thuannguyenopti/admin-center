@@ -6,178 +6,15 @@ export const fanta: BrandPack = {
 	status: "published",
 	description:
 		"Fanta's global brand identity — playful, bubbly, and fruit-forward. Covers the 2023 Coca-Cola Global Design/JKR visual refresh across packaging and digital.",
-	schema_version: "2.0",
-	brand_pack_type: "web",
-	identity: {
-		name: "Fanta",
-		description: "Fanta's global brand identity — playful, bubbly, and fruit-forward.",
-		brand_type: "sub_brand",
-		parent_brand: "The Coca-Cola Company",
-		expiry_date: null,
-	},
-	source: {
-		website_url: "https://www.fanta.com",
-		pages_crawled: ["https://www.fanta.com"],
-		pdf_files_provided: [],
-		pdf_types_detected: [],
-		guidelines_found: true,
-		guidelines_urls: ["https://www.coca-colacompany.com/media-center"],
-		extraction_notes:
-			"Color and typography derived from public brand references covering the 2023 JKR-led global redesign. Exact internal guideline values are not publicly published.",
-	},
-	brand_instruction: {
-		brand_identity_summary:
-			"Fanta is the playful, fruit-forward soda brand — a 'Pop of Funta' built for consumers who want fun and flavor over seriousness.",
-		visual_identity_summary:
-			"Fanta uses a bold orange field, a bespoke twisted wordmark, fruit-shaped graphics, and joyful illustration.",
-		gradients: "Flat, saturated color fields are preferred. Soft gradients are acceptable only within fruit illustration shading.",
-		photography_style: [
-			"Bright, high-energy lifestyle shots of friends and flavor.",
-			"Bold, saturated color grading — no muted or desaturated looks.",
-			"Playful, slightly surreal fruit-forward compositions.",
-		],
-		photography_categories_present: true,
-		compositing: "Composite the approved Fanta wordmark after generation rather than asking the model to redraw it.",
-		composition_guidelines: [
-			"Leave room for the twisted wordmark and fruit graphics.",
-			"Use bold, centered or diagonal compositions.",
-			"Keep energy high — avoid static, flat layouts.",
-		],
-		tone_and_atmosphere: "Playful, energetic, fun, and a little mischievous.",
-		what_to_avoid: [
-			"Muted or desaturated color grading.",
-			"Serious, corporate tone of voice.",
-			"Sparse, minimalist layouts that read as flat rather than fun.",
-		],
-		full_instruction_text: `# Fanta — Brand Instruction
-
-## Brand Identity
-Fanta is the playful, fruit-forward soda brand. All visual content must feel **fun, bubbly, and a little mischievous** — never serious or corporate.
-
-## Visual Identity
-Lead with bold orange, the twisted bespoke wordmark, and fruit-shaped graphics. Flat saturated color fields; gradients only within fruit illustration shading.
-
-## Color Usage
-- **Fanta Orange (#FC8102)**: Primary field color and packaging
-- **Endless Sky (#0E4485)**: Secondary accent, contrast against orange
-- **Retro Green (#29A24B)**: Flavor variant accent (grape/citrus lines)
-- **Full White (#FFFFFF)**: Logo counter-color and contrast fields
-
-## Typography
-- **Headings**: Fanta Bespoke Sans (custom Colophon Foundry wordmark face) — bold, twisted, playful
-- **Body**: Poppins — friendly geometric sans for supporting copy
-
-## Tone of Voice
-Write with playful energy. Short, punchy, fun. Never take yourself too seriously.
-
-## Image Style
-- Bright, high-energy lifestyle shots
-- Bold saturated color grading
-- Playful fruit-forward compositions
-
-## Logo Rule
-Do not generate or redraw the logo. Composite approved logo files after generation.`,
-		updated_from_schema_at: "2026-06-05",
-	},
+	sourceUrl: "https://www.fanta.com",
 	colors: [
-		{
-			cmyk: "C:0 M:60 Y:100 K:0",
-			confidence: "high",
-			hex: "#FC8102",
-			name: "Fanta Orange",
-			pms: "Pantone 1495 C",
-			role: "primary",
-			usage_notes: "The dominant brand field color — packaging, campaign key art, and the wordmark background.",
-			web_accessible_hex: "#B85C00",
-		},
-		{
-			cmyk: "C:94 M:69 Y:0 K:0",
-			confidence: "medium",
-			hex: "#0E4485",
-			name: "Endless Sky",
-			pms: null,
-			role: "secondary",
-			usage_notes: "High-contrast secondary color for logo variants and supporting graphics.",
-			web_accessible_hex: "#0E4485",
-		},
-		{
-			cmyk: "C:76 M:0 Y:79 K:0",
-			confidence: "medium",
-			hex: "#29A24B",
-			name: "Retro Green",
-			pms: null,
-			role: "accent",
-			usage_notes: "Flavor-variant accent color (e.g. grape, citrus lines) — not used for the core orange SKU.",
-			web_accessible_hex: "#1F7A38",
-		},
-		{
-			cmyk: "C:0 M:0 Y:0 K:0",
-			confidence: "high",
-			hex: "#FFFFFF",
-			name: "Full White",
-			pms: null,
-			role: "neutral",
-			usage_notes: "Logo counter-color and contrast fields against Fanta Orange.",
-			web_accessible_hex: "#FFFFFF",
-		},
-		{
-			cmyk: "C:0 M:0 Y:0 K:100",
-			confidence: "high",
-			hex: "#231F20",
-			name: "Ink Black",
-			pms: null,
-			role: "neutral",
-			usage_notes: "Body copy and fine print on light backgrounds.",
-			web_accessible_hex: "#231F20",
-		},
+		{hex: "#FC8102", name: "Fanta Orange", role: "primary"},
+		{hex: "#0E4485", name: "Endless Sky", role: "secondary"},
+		{hex: "#29A24B", name: "Retro Green", role: "accent"},
+		{hex: "#FFFFFF", name: "Full White", role: "background"},
+		{hex: "#231F20", name: "Ink Black", role: "text"},
 	],
 	typography: {heading: "Fanta Bespoke Sans", body: "Poppins"},
-	typographyRules: [
-		{
-			alignment: "centre",
-			case_rule: "as-written",
-			colour_application: ["Fanta Orange", "Full White"],
-			confidence: "high",
-			font_family: "Fanta Bespoke Sans",
-			notes: "Custom Colophon Foundry-designed wordmark face, extruded and staggered. Reserved for the logotype and top-level campaign headlines.",
-			source: "custom",
-			usage: "display",
-			weight: "Bold",
-		},
-		{
-			alignment: "left",
-			case_rule: "sentence",
-			colour_application: ["Ink Black", "Full White"],
-			confidence: "medium",
-			font_family: "Poppins",
-			notes: "Friendly geometric sans for headlines that aren't the primary logotype treatment.",
-			source: "library",
-			usage: "heading",
-			weight: "Bold",
-		},
-		{
-			alignment: "left",
-			case_rule: "sentence",
-			colour_application: ["Ink Black"],
-			confidence: "medium",
-			font_family: "Poppins",
-			notes: "Readable paragraph copy for packaging fine print and digital body text. Pairing is illustrative, not an officially documented body font.",
-			source: "web",
-			usage: "body",
-			weight: "Regular",
-		},
-		{
-			alignment: "left",
-			case_rule: "all-caps",
-			colour_application: ["Fanta Orange", "Ink Black"],
-			confidence: "medium",
-			font_family: "Poppins",
-			notes: "Short flavor callouts and UI labels.",
-			source: "web",
-			usage: "caption",
-			weight: "Semi-Bold",
-		},
-	],
 	logo_system: {
 		variants: [
 			{
@@ -200,30 +37,7 @@ Do not generate or redraw the logo. Composite approved logo files after generati
 			"Do not stretch, rotate, or add drop shadows beyond the approved retro-shadow effect.",
 			"Do not place on low-contrast fruit-illustration backgrounds.",
 		],
-		sub_brand_logos: ["Fanta Zero", "Fanta Grape", "Fanta Pineapple"],
-	},
-	photography_categories: [
-		{
-			name: "Fruit Pop",
-			description: "Bright, graphic shots of fruit mid-splash or mid-air, paired with the product.",
-			sub_categories: ["Orange", "Grape", "Pineapple"],
-			do_rules: ["Use saturated, punchy color.", "Freeze motion at the peak of the splash."],
-			dont_rules: ["Avoid muted or desaturated fruit photography."],
-		},
-		{
-			name: "Friends & Fun",
-			description: "Groups of friends enjoying Fanta in bright, high-energy social settings.",
-			sub_categories: ["Parties", "Outdoors", "Hangouts"],
-			do_rules: ["Show genuine laughter and movement.", "Keep the can or bottle clearly visible."],
-			dont_rules: ["Avoid posed, static group shots."],
-		},
-	],
-	photography_mood_brief: {
-		summary: "Bubbly, bright, and a little surreal — fun as the headline, not an afterthought.",
-		lighting: "Bright, high-key lighting with punchy color.",
-		colour_treatment: "Fully saturated orange and fruit tones; avoid pastel or muted grading.",
-		subject_matter: "Fruit in motion and friends having fun together.",
-		what_to_avoid: ["Muted color grading.", "Serious or posed compositions."],
+		sub_brand_logos: null,
 	},
 	brand_devices: [
 		{
@@ -233,23 +47,12 @@ Do not generate or redraw the logo. Composite approved logo files after generati
 			usage_restriction: "Wordmark companion only",
 		},
 	],
-	illustration_system: {
-		in_use: true,
-		hierarchy: "primary",
-		style_description:
-			"Joyful, hand-drawn fruit illustrations (in the spirit of the 2023 JKR redesign's illustration work) appear throughout packaging and campaign graphics.",
-		human_proportions: null,
-		skin_tones: null,
-		do_rules: ["Keep illustration bright, rounded, and playful.", "Pair illustrated fruit with the twisted wordmark."],
-		dont_rules: ["Do not use photorealistic fruit renders alongside the illustration style in the same asset."],
-	},
-	icon_system: {
-		in_use: true,
-		style: "Rounded, bubbly iconography matching the wordmark's playful energy.",
-		artboard_px: 24,
-		gutter_px: 2,
-		line_weight_px: 2,
-		colour_rules: "Fanta Orange on white backgrounds; white on Fanta Orange backgrounds.",
+	photography_mood_brief: {
+		summary: "Bubbly, bright, and a little surreal — fun as the headline, not an afterthought.",
+		lighting: "Bright, high-key lighting with punchy color.",
+		colour_treatment: "Fully saturated orange and fruit tones; avoid pastel or muted grading.",
+		subject_matter: "Fruit in motion and friends having fun together.",
+		what_to_avoid: ["Muted color grading.", "Serious or posed compositions."],
 	},
 	tone_of_voice: {
 		summary: "Fanta sounds playful, energetic, and fun — a brand that doesn't take itself too seriously.",
@@ -283,56 +86,6 @@ Do not generate or redraw the logo. Composite approved logo files after generati
 		],
 		approved_descriptors: ["playful", "bubbly", "fruity", "fun", "bold"],
 	},
-	layout_grid: {
-		in_use: true,
-		column_count: 12,
-		gutter_rules: "20 px",
-		margin_rules: "40 px on desktop, 16 px on mobile",
-		layout_rules: "Use bold, centered or diagonal compositions. Leave clear space for fruit graphics and the twisted wordmark.",
-	},
-	data_visualisation: {
-		in_use: false,
-		approved_chart_types: [],
-		prohibited_chart_types: ["pie", "3d chart"],
-		gradient_permitted: false,
-		style_notes: "Fanta communications rarely use data visualization — favor product and fruit imagery instead.",
-	},
-	ai_identity: null,
-	expression_system: {
-		in_use: true,
-		summary: "Fanta content moves across two expression levels depending on context.",
-		states: [
-			{name: "Playful", description: "Everyday packaging and social content — bright, fun, fruit-forward."},
-			{name: "Pop", description: "High-energy campaign and event activations with maximum color and motion."},
-		],
-		rules: ["Never dial back to a muted or serious tone regardless of channel."],
-	},
-	brand_scalability_system: null,
-	brand_codes: {
-		in_use: true,
-		summary: "Fanta's recurring sensory codes are the fruit splash, the twisted wordmark shadow, and bold flat color fields.",
-		key_fields: [
-			{label: "Splash", value: "Fruit captured mid-motion, frozen at the peak of the splash."},
-			{label: "Twist", value: "The staggered, extruded wordmark letterforms."},
-		],
-		rules: ["Use codes as playful, energetic cues — never as static decoration."],
-	},
-	motion_sonic: {
-		in_use: false,
-		summary: "No motion or sonic identity system is part of this pack.",
-		key_fields: [],
-		rules: [],
-	},
-	legal: {
-		in_use: true,
-		summary: "Standard trademark and health-claim restraint applies.",
-		rules: [
-			"Mark the logotype as a registered trademark on first use in formal documents.",
-			"Do not make explicit health or nutrition claims.",
-			"Follow local market regulations for beverage advertising to minors.",
-		],
-	},
-	environmental: null,
 	channels: ["Social", "Paid", "Web"],
 	approvedChannelConnections: {
 		Social: ["cmp-instagram", "cmp-twitter"],
@@ -450,13 +203,4 @@ Write with playful energy. Short, punchy, fun.
 	createdBy: "Brand Team",
 	createdAt: "2026-06-05",
 	updatedAt: "2026-07-08",
-	metadata: {
-		created_date: "2026-06-05",
-		agent_version: "brand_pack_onboarding_v2.1",
-		pdf_source_types: [],
-		overall_confidence: "medium",
-		confidence_notes:
-			"Primary orange and logo identity is well documented publicly. Body-copy typeface pairing is an illustrative choice, not an officially published spec.",
-		status: "published",
-	},
 };

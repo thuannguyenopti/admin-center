@@ -8,11 +8,8 @@
  * via getAdaptiveBlockComponent("template_card").
  */
 
-import {
-	registerAdaptiveBlock,
-	type AdaptiveBlockComponentProps,
-} from "@/app/components/ai/AdaptiveBlockRegistry";
-import {Badge, Box, Text} from "@optiaxiom/react";
+import { registerAdaptiveBlock, type AdaptiveBlockComponentProps } from "@/app/components/ai/AdaptiveBlockRegistry";
+import { Badge, Box, Text } from "@optiaxiom/react";
 
 type TemplateCardMeta = {
 	template: {
@@ -25,8 +22,8 @@ type TemplateCardMeta = {
 	};
 };
 
-function TemplateCardBlock({metadata}: AdaptiveBlockComponentProps) {
-	const {template} = metadata as unknown as TemplateCardMeta;
+function TemplateCardBlock({ metadata }: AdaptiveBlockComponentProps) {
+	const { template } = metadata as unknown as TemplateCardMeta;
 
 	return (
 		<Box
@@ -54,12 +51,12 @@ function TemplateCardBlock({metadata}: AdaptiveBlockComponentProps) {
 				<img
 					src={template.thumb}
 					alt={template.name}
-					style={{width: "100%", height: "100%", objectFit: "cover", display: "block"}}
+					style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
 				/>
 			</Box>
 
 			{/* Info */}
-			<Box display="flex" flexDirection="column" gap="2" style={{minWidth: 0}}>
+			<Box display="flex" flexDirection="column" gap="2" style={{ minWidth: 0 }}>
 				<Text
 					fontWeight="600"
 					style={{
@@ -74,7 +71,7 @@ function TemplateCardBlock({metadata}: AdaptiveBlockComponentProps) {
 				</Text>
 				<Text
 					style={{
-						fontSize: 12,
+						fontSize: 11,
 						color: "var(--ax-colors-fg-tertiary)",
 						overflow: "hidden",
 						textOverflow: "ellipsis",
@@ -83,7 +80,7 @@ function TemplateCardBlock({metadata}: AdaptiveBlockComponentProps) {
 				>
 					{template.format} · {template.ratio} · {template.channel}
 				</Text>
-				<Box style={{marginTop: 2, width: "fit-content"}}>
+				<Box style={{ marginTop: 2, width: "fit-content" }}>
 					<Badge intent="success">TEMPLATE SELECTED</Badge>
 				</Box>
 			</Box>
@@ -94,4 +91,4 @@ function TemplateCardBlock({metadata}: AdaptiveBlockComponentProps) {
 // Register at module load time — runs once when this file is imported
 registerAdaptiveBlock("template_card", TemplateCardBlock);
 
-export {TemplateCardBlock};
+export { TemplateCardBlock };

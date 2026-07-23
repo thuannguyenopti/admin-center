@@ -29,7 +29,6 @@ import {
 import {useLayout} from "@/app/context/LayoutContext";
 import type {BrandAsset, BrandPack, BrandTemplate} from "../../types";
 import {getBrandTemplates} from "../../adapters";
-import {EditorHeader, EditorPage, EditorPanel} from "./EditorPrimitives";
 import "@/app/opal/brand-packs/components/TemplateCardBlock";
 
 type AssetsTabProps = {
@@ -216,7 +215,7 @@ function belongsToTab(asset: BrandAsset, tab: AssetLibraryTab) {
 
 function classificationFromAsset(asset: BrandAsset): AssetClassification {
 	if (asset.bucket === "misc") return "misc";
-	return asset.type;
+	return asset.type as AssetClassification;
 }
 
 function classificationToPatch(
@@ -852,12 +851,12 @@ export function AssetsTab({pack}: AssetsTabProps) {
 	};
 
 	return (
-		<EditorPage>
-			<EditorHeader
-				eyebrow="Assets"
-				title="Brand asset library"
-				description="Manage the files and approved starting points Opal can use: logos, photos, templates, and supporting material."
-			/>
+		<Box
+			display="flex"
+			flexDirection="column"
+			gap="24"
+			style={{overflowY: "auto", padding: "28px 32px 48px"}}
+		>
 			<input
 				ref={fileInputRef}
 				accept="image/svg+xml,image/png,image/jpeg,image/webp"
@@ -867,11 +866,7 @@ export function AssetsTab({pack}: AssetsTabProps) {
 				style={{display: "none"}}
 				type="file"
 			/>
-
-			<EditorPanel
-				title="Asset library"
-				description="Templates now live here beside the source files they reference."
-			>
+			<Box display="flex" flexDirection="column" gap="16">
 				<Box
 					alignItems="center"
 					display="flex"
@@ -994,11 +989,11 @@ export function AssetsTab({pack}: AssetsTabProps) {
 							No {activeTab} yet
 						</Text>
 						<Text color="fg.secondary" style={{fontSize: 14}}>
-							Add files or templates to this brand to get started.
+							Add files or templates to this brand pack to get started.
 						</Text>
 					</Box>
 				)}
-			</EditorPanel>
+			</Box>
 			<AssetInspectorDialog
 				asset={editingAsset}
 				classification={classificationDraft}
@@ -1011,6 +1006,6 @@ export function AssetsTab({pack}: AssetsTabProps) {
 				onSave={saveAssetInspector}
 				open={Boolean(editingAsset)}
 			/>
-		</EditorPage>
+		</Box>
 	);
 }
