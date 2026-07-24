@@ -691,8 +691,8 @@ export default function ResponsibilitiesPage() {
 						<thead>
 							<tr style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
 								<th style={{ ...TH, width: 32, padding: "8px 4px 8px 12px" }}></th>
-								{["Job", "Trigger", "Scheduled", "Approval mode", "Status", ""].map((col, i) => (
-									<th key={i} style={{ ...TH, width: i === 5 ? 48 : undefined }}>{col}</th>
+								{["Job", "Trigger", "Scheduled", "Status", ""].map((col, i) => (
+									<th key={i} style={{ ...TH, width: i === 4 ? 48 : undefined }}>{col}</th>
 								))}
 							</tr>
 						</thead>
@@ -738,16 +738,13 @@ export default function ResponsibilitiesPage() {
 											<Badge intent="information" variant="subtle">Scheduled</Badge>
 										</td>
 										<td style={{ padding: "12px 16px", verticalAlign: "middle" }}>
-											<Box display="flex" gap="6" style={{ alignItems: "flex-start" }}>
-												<IconCalendar style={{ width: 14, height: 14, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0, marginTop: 2 }} />
+											<Box display="flex" gap="6" style={{ alignItems: "center" }}>
+												<IconCalendar style={{ width: 14, height: 14, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }} />
 												<Box>
 													<Text fontSize="md" color="fg.default">{row.scheduledTime}</Text>
 													<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 2 }}>{row.scheduledDays}</Text>
 												</Box>
 											</Box>
-										</td>
-										<td style={{ padding: "12px 16px", verticalAlign: "middle" }}>
-											<ApprovalBadge mode={row.approvalMode} />
 										</td>
 										<td style={{ padding: "12px 16px", verticalAlign: "middle" }}>
 											{row.status === "active"

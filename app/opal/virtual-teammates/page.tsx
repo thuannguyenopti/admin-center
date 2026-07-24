@@ -27,9 +27,8 @@ import { VAUCard } from "./VAUCard";
 const BROWSE_ITEMS = [
   { label: "Virtual Teammates", count: VAUS.filter((v) => !v.isCandidate).length },
   { label: "Agents",            count: 48 },
-  { label: "Plugins",           count: 12 },
-  { label: "Skills",            count: 30 },
   { label: "Connectors",        count: 28 },
+  { label: "Skills",            count: 30 },
 ];
 
 function NavRow({

@@ -3,7 +3,7 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Box, Button, Field, Heading, Input, Text, Tooltip } from "@optiaxiom/react";
-import { IconArrowLeft, IconArrowRight, IconArrowsRotate, IconCheckCircleSolid, IconChevronDown, IconChevronLeft, IconChevronRight, IconChevronUp, IconCircleInfo, IconFolderBookmark, IconGear, IconMagnifyingGlass, IconPen, IconSparkles, IconUpload, IconUserGroup, IconXmark } from "@optiaxiom/icons";
+import { IconArrowLeft, IconArrowRight, IconArrowsRotate, IconCheckCircleSolid, IconChevronDown, IconChevronLeft, IconChevronRight, IconChevronUp, IconCircleInfo, IconFolderBookmark, IconGear, IconMagnifyingGlass, IconPen, IconSparkles, IconUpload, IconUserGroup, IconUsers, IconXmark } from "@optiaxiom/icons";
 import Image from "next/image";
 import { DEFAULT_VAU_EXAMPLES, VAUS, type VAU, type VAUCandidate, type VAUExample } from "@/app/opal/data/vaus";
 import { TOOL_ICONS } from "../tool-icons";
@@ -1407,7 +1407,6 @@ export default function VAUDetailPage() {
 								<Button
 									appearance="primary"
 									size="lg"
-									addonAfter={<IconArrowRight />}
 									style={{ paddingLeft: 62, paddingRight: 62 }}
 									onClick={() => setShowOnboarding(true)}
 								>
@@ -1437,16 +1436,13 @@ export default function VAUDetailPage() {
 									What your {vau.name.toLowerCase()} will bring to the table
 								</Text>
 							</Box>
-							<Box style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+							<Box style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
 								{vau.pitchStats.map((stat) => {
 									const cardContent = (
 										<Box
 											key={stat.label}
 											style={{
-												width: 226,
-												minWidth: 226,
 												height: 108,
-												flexShrink: 0,
 												boxSizing: "border-box",
 												border: "1px solid var(--ax-colors-border-default)",
 												borderRadius: 12,

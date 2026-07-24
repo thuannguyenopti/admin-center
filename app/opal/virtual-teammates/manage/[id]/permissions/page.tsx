@@ -742,19 +742,6 @@ export default function VATPermissionsPage() {
 							<MenuContent />
 						</Menu>
 						<Box style={{ flex: 1 }} />
-						<SplitDialog type="manage_connectors" name={name}>
-							<Button
-								appearance="primary"
-								size="md"
-								addonBefore={
-									<Box style={{ width: 18, height: 18, borderRadius: 4, background: "#202320", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-										<IconGear style={{ color: "#BBFF00", width: 12, height: 12 }} />
-									</Box>
-								}
-							>
-								Manage connectors
-							</Button>
-						</SplitDialog>
 					</Box>
 
 					<Box style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 16 }}>
@@ -824,19 +811,6 @@ export default function VATPermissionsPage() {
 							<MenuContent />
 						</Menu>
 						<Box style={{ flex: 1 }} />
-						<SplitDialog type="manage_tools" name={name}>
-							<Button
-								appearance="primary"
-								size="md"
-								addonBefore={
-									<Box style={{ width: 18, height: 18, borderRadius: 4, background: "#202320", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-										<IconGear style={{ color: "#BBFF00", width: 12, height: 12 }} />
-									</Box>
-								}
-							>
-								Manage tools
-							</Button>
-						</SplitDialog>
 					</Box>
 
 					<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden" }}>

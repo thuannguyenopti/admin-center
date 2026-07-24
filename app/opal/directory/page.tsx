@@ -22,12 +22,11 @@ import { DirectoryCard } from "./DirectoryCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type BrowseType = "virtual-teammates" | "agents" | "plugins" | "skills" | "connectors";
+type BrowseType = "virtual-teammates" | "agents" | "skills" | "connectors";
 
 const BROWSE_ITEMS: Array<{ id: BrowseType; label: string; icon: React.ReactNode; count: number }> = [
 	{ id: "virtual-teammates", label: "Virtual Teammates", icon: <IconSquareUser size={16} />,  count: VAUS.length },
 	{ id: "agents",            label: "Agents",            icon: <IconAgent size={16} />,        count: 48 },
-	{ id: "plugins",           label: "Plugins",           icon: <IconPuzzlePiece size={16} />,  count: 12 },
 	{ id: "skills",            label: "Skills",            icon: <IconBook size={16} />,         count: 30 },
 	{ id: "connectors",        label: "Connectors",        icon: <IconGrid2Plus size={16} />,    count: 28 },
 ];

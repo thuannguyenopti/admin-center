@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Box, Button, Text, Tooltip } from "@optiaxiom/react";
+import { IconUsers } from "@optiaxiom/icons";
 import Image from "next/image";
 import { type VAU } from "@/app/opal/data/vaus";
 import { TOOL_ICONS } from "./tool-icons";
@@ -107,11 +108,6 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             overflow: "hidden",
           }}
         >
-          {/* Optimizely logo top-right */}
-          <div style={{ position: "absolute", top: 16, right: 16 }}>
-            <Image src="/logo-green.svg" alt="Optimizely" width={28} height={28} unoptimized style={{ objectFit: "contain" }} />
-          </div>
-
           {/* Header: RESUME label + title + category badge */}
           <Box display="flex" flexDirection="column" gap="8" style={{ alignItems: "flex-start" }}>
             <span style={{ ...CAPTION }}>Resume</span>
@@ -173,6 +169,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             <Button
               appearance="primary"
               size="lg"
+              addonBefore={<Box style={{ width: 20, height: 20, borderRadius: 4, background: "#202320", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><IconUsers style={{ color: "#BBFF00", width: 13, height: 13 }} /></Box>}
               style={{ width: "100%", justifyContent: "center" }}
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
@@ -181,6 +178,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             >
               Work together
             </Button>
+
           </Box>
         </div>
 
@@ -287,6 +285,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             <Button
               appearance="primary"
               size="md"
+              addonBefore={<Box style={{ width: 20, height: 20, borderRadius: 4, background: "#202320", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><IconUsers style={{ color: "#BBFF00", width: 13, height: 13 }} /></Box>}
               style={{ flex: 1, justifyContent: "center" }}
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
@@ -295,6 +294,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             >
               Work together
             </Button>
+
             <Button
               appearance="default"
               size="md"

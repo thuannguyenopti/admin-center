@@ -209,35 +209,6 @@ export default function VATConnectorsPage() {
 					<MenuContent />
 				</Menu>
 				<Box style={{ flex: 1 }} />
-				{activeTab === "tools" ? (
-					<SplitDialog type="manage_tools" name={name}>
-						<Button
-							appearance="primary"
-							size="md"
-							addonBefore={
-								<Box style={{ width: 18, height: 18, borderRadius: 4, background: "#202320", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-									<IconGear style={{ color: "#BBFF00", width: 12, height: 12 }} />
-								</Box>
-							}
-						>
-							Manage tools
-						</Button>
-					</SplitDialog>
-				) : (
-					<SplitDialog type="manage_connectors" name={name}>
-						<Button
-							appearance="primary"
-							size="md"
-							addonBefore={
-								<Box style={{ width: 18, height: 18, borderRadius: 4, background: "#202320", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-									<IconGear style={{ color: "#BBFF00", width: 12, height: 12 }} />
-								</Box>
-							}
-						>
-							Manage connectors
-						</Button>
-					</SplitDialog>
-				)}
 			</Box>
 
 			{/* ── Tools tab ── */}
