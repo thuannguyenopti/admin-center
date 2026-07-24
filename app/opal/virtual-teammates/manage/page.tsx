@@ -129,7 +129,9 @@ export default function VirtualTeammatesManagePage() {
 						<thead>
 							<tr>
 								<Th style={{ paddingLeft: 16 }}>Teammate</Th>
-								<Th>Principle User</Th>
+								<Th>Managed by</Th>
+								<Th>Email</Th>
+								<Th>Created</Th>
 								<Th>Status</Th>
 								<Th />
 							</tr>
@@ -151,6 +153,14 @@ export default function VirtualTeammatesManagePage() {
 										</Td>
 										<Td>
 											<Text fontSize="md" color="fg.default">Mona Chen</Text>
+										</Td>
+										<Td>
+											<Text fontSize="sm" color="fg.secondary" style={{ fontFamily: "var(--ax-font-family-mono)" }}>
+												{`${(vau.characterName ?? vau.name).toLowerCase().replace(/\s+/g, "")}@vau.opal.optimizely.com`}
+											</Text>
+										</Td>
+										<Td>
+											<Text fontSize="sm" color="fg.secondary">{vau.createdAt ?? "—"}</Text>
 										</Td>
 										<Td>
 											{vau.status === "active" ? (

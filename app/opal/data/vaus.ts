@@ -40,6 +40,7 @@ export type VAU = {
 	personalities?: VAUPersonality[];
 	pitchStats?: Array<{ label: string; value: string; sub: string; showTools?: boolean; showSkills?: boolean }>;
 	briefingFiles?: string[];
+	createdAt?: string;
 };
 
 export const DEFAULT_VAU_EXAMPLES: VAUExample[] = [
@@ -59,6 +60,7 @@ export const VAUS: VAU[] = [
 		templateName: "Product Marketer",
 		traits: ["Data-driven", "Creative", "Persistent"],
 		email: "henry@vau.opal-localdev.inte.opal.optimizely.com",
+		createdAt: "Mar 12, 2026",
 		avatar: "/avatars/vau-henry.png",
 		avatarBg: "#FAF6E8",
 		status: "active",
@@ -174,6 +176,7 @@ export const VAUS: VAU[] = [
 		templateName: "Account Based Marketer",
 		traits: ["Relationship-builder", "Precise", "Tenacious"],
 		email: "kerby@vau.opal-localdev.inte.opal.optimizely.com",
+		createdAt: "Apr 3, 2026",
 		avatar: "/avatars/vau-kerby.png",
 		avatarBg: "#E7FCFC",
 		status: "active",
@@ -227,6 +230,7 @@ export const VAUS: VAU[] = [
 		templateName: "GEO Content Strategist",
 		traits: ["Wry", "Plain-spoken", "Bias to action"],
 		email: "frank@vau.opal-localdev.inte.opal.optimizely.com",
+		createdAt: "May 19, 2026",
 		avatar: "/avatars/chair.png",
 		avatarBg: "#FAF6E8",
 		status: "active",
