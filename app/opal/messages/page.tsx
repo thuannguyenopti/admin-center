@@ -139,7 +139,7 @@ type Message = {
 // ── Mock data ──────────────────────────────────────────────────────────────────
 
 const PRESENCE_COLOR: Record<PresenceStatus, string> = {
-  active: "var(--ax-colors-bg-success)",
+  active: "var(--ax-colors-fg-success)",
   away:   "var(--ax-colors-fg-tertiary)",
   busy:   "var(--ax-colors-fg-tertiary)",
   ooo:    "var(--ax-colors-fg-tertiary)",
@@ -1609,7 +1609,7 @@ function AvatarWithHoverCard({ name, src, size, style }: { name: string; src?: s
                 <div style={{ marginTop: 6, display: "flex", alignItems: "flex-start", gap: 5 }}>
                   <span style={{
                     width: 6, height: 6, borderRadius: "50%", display: "inline-block", flexShrink: 0, marginTop: 2,
-                    background: profile.status === "Available" ? "var(--ax-colors-bg-success)" : profile.status === "Out of Office" ? "var(--ax-colors-bg-error)" : "var(--ax-colors-fg-tertiary)",
+                    background: profile.status === "Available" ? "var(--ax-colors-fg-success)" : profile.status === "Out of Office" ? "var(--ax-colors-bg-error)" : "var(--ax-colors-fg-tertiary)",
                   }} />
                   <span style={{ fontSize: 11, color: "var(--ax-colors-fg-secondary)" }}>{profile.status}</span>
                 </div>
