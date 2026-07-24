@@ -130,7 +130,6 @@ export default function VirtualTeammatesManagePage() {
 							<tr>
 								<Th style={{ paddingLeft: 16 }}>Teammate</Th>
 								<Th>Principle User</Th>
-								<Th>Type</Th>
 								<Th>Status</Th>
 								<Th />
 							</tr>
@@ -152,10 +151,6 @@ export default function VirtualTeammatesManagePage() {
 										</Td>
 										<Td>
 											<Text fontSize="md" color="fg.default">Mona Chen</Text>
-										</Td>
-										<Td>
-											<Text fontSize="md" color="fg.default">Private</Text>
-											<Text fontSize="sm" color="fg.secondary">This teammate can only be used by you</Text>
 										</Td>
 										<Td>
 											{vau.status === "active" ? (

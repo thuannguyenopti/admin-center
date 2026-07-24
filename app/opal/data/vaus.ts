@@ -260,7 +260,6 @@ export const VAUS: VAU[] = [
 			{ label: "Works for you", value: "24/7", sub: "& has never stolen your lunch" },
 			{ label: "Skills", value: "24", sub: "& just getting started", showSkills: true },
 			{ label: "Tools connected", value: "8", sub: "on day one", showTools: true },
-			{ label: "Time back", value: "6+ hrs", sub: "to snuggle your cat" },
 		],
 		briefingFiles: ["Brand Guidelines.doc"],
 		candidates: [
