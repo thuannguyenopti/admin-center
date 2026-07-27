@@ -143,7 +143,7 @@ export function AMADrawer({ vau, onClose }: { vau: VAU; onClose: () => void }) {
 					right: 0,
 					height: "100vh",
 					width: PANEL_WIDTH,
-					background: "white",
+					background: "var(--ax-colors-bg-default)",
 					borderLeft: "1px solid var(--ax-colors-border-default)",
 					zIndex: 50,
 					display: "flex",
@@ -169,7 +169,7 @@ export function AMADrawer({ vau, onClose }: { vau: VAU; onClose: () => void }) {
 						</Box>
 						<Box display="flex" flexDirection="column" gap="4" style={{ flex: 1, minWidth: 0 }}>
 							<Box display="flex" alignItems="center" gap="8">
-								<Text style={{ fontWeight: 700, fontSize: 15, color: "#202320", lineHeight: 1 }}>
+								<Text style={{ fontWeight: 700, fontSize: 15, color: "var(--ax-colors-fg-default)", lineHeight: 1 }}>
 									{characterName}
 								</Text>
 								<span
@@ -256,13 +256,13 @@ export function AMADrawer({ vau, onClose }: { vau: VAU; onClose: () => void }) {
 							{/* White footer */}
 							<Box
 								style={{
-									background: "white",
+									background: "var(--ax-colors-bg-default)",
 									padding: "8px 10px 9px",
 									flexShrink: 0,
 									borderTop: "1px solid var(--ax-colors-border-default)",
 								}}
 							>
-								<Text style={{ fontSize: 12, fontWeight: 600, color: "#202320", lineHeight: "1.25", display: "block" }}>
+								<Text style={{ fontSize: 12, fontWeight: 600, color: "var(--ax-colors-fg-default)", lineHeight: "1.25", display: "block" }}>
 									{card.title}
 								</Text>
 								<span style={{ fontSize: 9, color: "var(--ax-colors-fg-tertiary)", fontFamily: "Roboto Mono, monospace", letterSpacing: "0.4px", textTransform: "uppercase", marginTop: 2, display: "block" }}>
@@ -280,7 +280,7 @@ export function AMADrawer({ vau, onClose }: { vau: VAU; onClose: () => void }) {
 							border: "1px solid var(--ax-colors-border-default)",
 							borderRadius: 12,
 							padding: "12px 14px 10px",
-							background: "white",
+							background: "var(--ax-colors-bg-default)",
 						}}
 					>
 						{/* Text field */}

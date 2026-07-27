@@ -253,7 +253,7 @@ const TABLE: React.CSSProperties = {
 function InitialsAvatar({ name, size = 28 }: { name: string; size?: number }) {
 	const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 	return (
-		<Box style={{ width: size, height: size, borderRadius: "50%", background: "#D8E4CB", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+		<Box style={{ width: size, height: size, borderRadius: "50%", background: "var(--ax-colors-border-default)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
 			<span style={{ ...CAPTION, fontSize: size <= 20 ? 8 : 9, color: "var(--ax-colors-fg-default)", lineHeight: 1 }}>
 				{initials}
 			</span>
@@ -871,7 +871,7 @@ export default function ResponsibilitiesPage() {
 							<Box key={rule} style={{
 								display: "flex", alignItems: "center", justifyContent: "space-between",
 								padding: "10px 14px",
-								background: "#EFF5EB",
+								background: "var(--ax-colors-bg-secondary)",
 								borderRadius: 8,
 							}}>
 								<Text fontSize="md" color="fg.default">{rule}</Text>

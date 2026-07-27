@@ -152,7 +152,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 									width: 10,
 									height: 10,
 									borderRadius: "50%",
-									background: "#ABFF44",
+									background: "var(--ax-colors-bg-accent)",
 									border: "2px solid var(--ax-colors-bg-default)",
 								}}
 							/>
@@ -210,9 +210,9 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/permissions`)}
 					badge={
 						<svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-							<circle cx="7" cy="7" r="7" fill="#8F4764" />
-							<rect x="6.25" y="3.5" width="1.5" height="5" rx="0.75" fill="white" />
-							<circle cx="7" cy="10.5" r="0.75" fill="white" />
+							<circle cx="7" cy="7" r="7" fill="var(--ax-colors-fg-error)" />
+							<rect x="6.25" y="3.5" width="1.5" height="5" rx="0.75" fill="var(--ax-colors-fg-white)" />
+							<circle cx="7" cy="10.5" r="0.75" fill="var(--ax-colors-fg-white)" />
 						</svg>
 					}
 				/>
@@ -225,7 +225,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 			</Box>
 
 			{/* Main content */}
-			<Box style={{ flex: 1, overflowY: "auto", background: "#F9FCF8" }}>
+			<Box style={{ flex: 1, overflowY: "auto", background: "var(--ax-colors-bg-page)" }}>
 				{children}
 			</Box>
 
@@ -246,7 +246,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 								appearance="primary"
 								size="md"
 								addonBefore={<IconUserSlash />}
-								style={{ background: "#7C3B5A", border: "none", color: "white" }}
+								style={{ background: "var(--ax-colors-bg-error-hovered)", border: "none", color: "var(--ax-colors-fg-white)" }}
 								onClick={() => setShowDeactivate(false)}
 							>
 								{"Deactivate " + vau.name}

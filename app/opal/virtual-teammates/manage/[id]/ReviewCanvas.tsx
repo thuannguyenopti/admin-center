@@ -112,7 +112,7 @@ function ReviewCanvasInner({ item, vauName, vauAvatar, vauAvatarBg, onClose, onA
 				position: "fixed",
 				inset: 0,
 				zIndex: 9999,
-				background: "#F9FCF8",
+				background: "var(--ax-colors-bg-page)",
 				display: "flex",
 				flexDirection: "column",
 			}}
@@ -212,7 +212,7 @@ function ReviewCanvasInner({ item, vauName, vauAvatar, vauAvatarBg, onClose, onA
 						flex: "0 0 40%",
 						display: "flex",
 						flexDirection: "column",
-						background: "#F9FCF8",
+						background: "var(--ax-colors-bg-page)",
 						overflow: "hidden",
 					}}
 				>

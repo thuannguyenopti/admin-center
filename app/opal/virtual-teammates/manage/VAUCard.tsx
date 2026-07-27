@@ -179,7 +179,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 							appearance="primary"
 							size="md"
 							addonBefore={<IconUserSlash />}
-							style={{ background: "#7C3B5A", border: "none", color: "white" }}
+							style={{ background: "var(--ax-colors-bg-error-hovered)", border: "none", color: "var(--ax-colors-fg-white)" }}
 							onClick={() => setShowDeactivate(false)}
 						>
 							{"Deactivate " + vau.name}

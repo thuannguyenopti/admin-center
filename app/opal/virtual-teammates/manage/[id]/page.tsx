@@ -115,7 +115,7 @@ function TypeIcon({ type }: { type: WorkItem["type"] }) {
 function Avatar({ initials, src, bg }: { initials?: string; src?: string; bg?: string }) {
 	if (src) {
 		return (
-			<Box style={{ width: 24, height: 24, borderRadius: "50%", background: bg ?? "#FAF6E8", overflow: "hidden", flexShrink: 0 }}>
+			<Box style={{ width: 24, height: 24, borderRadius: "50%", background: bg ?? "var(--ax-colors-bg-page)", overflow: "hidden", flexShrink: 0 }}>
 				<Image src={src} alt="" width={24} height={24} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
 			</Box>
 		);
@@ -427,8 +427,8 @@ export default function VATWorkPage() {
 							appearance="primary"
 							size="md"
 							addonBefore={
-								<Box asChild display="inline-flex" alignItems="center" justifyContent="center" style={{ background: "#202320", borderRadius: 4, width: 18, height: 18 }}>
-									<span><IconPause style={{ width: 10, height: 10, color: "#fff" }} /></span>
+								<Box asChild display="inline-flex" alignItems="center" justifyContent="center" style={{ background: "var(--ax-colors-bg-default-inverse)", borderRadius: 4, width: 18, height: 18 }}>
+									<span><IconPause style={{ width: 10, height: 10, color: "var(--ax-colors-fg-white)" }} /></span>
 								</Box>
 							}
 							onClick={() => setShowBreakDialog(false)}

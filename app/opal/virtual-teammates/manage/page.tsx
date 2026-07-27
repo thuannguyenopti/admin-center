@@ -73,7 +73,7 @@ export default function VirtualTeammatesManagePage() {
 		<Box
 			display="flex"
 			flexDirection="column"
-			style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#F9FCF8" }}
+			style={{ position: "absolute", inset: 0, overflowY: "auto", background: "var(--ax-colors-bg-page)" }}
 		>
 			<Box style={{ padding: "32px 40px" }}>
 				<Heading level="1" mb="4">
