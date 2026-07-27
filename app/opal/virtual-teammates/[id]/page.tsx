@@ -29,7 +29,7 @@ function SectionHeader({ title }: { title: string }) {
 					lineHeight: "1.1",
 					letterSpacing: "0.4px",
 					whiteSpace: "nowrap",
-					color: "#202320",
+					color: "var(--ax-colors-fg-default)",
 				}}
 			>
 				{title}
@@ -232,7 +232,7 @@ function ActionCard({ example, onClick }: { example: VAUExample; onClick?: () =>
 							fontWeight: 600,
 							lineHeight: "1.1",
 							letterSpacing: "0.4px",
-							color: "#202320",
+							color: "var(--ax-colors-fg-default)",
 						}}
 					>
 						{example.title}
@@ -387,7 +387,7 @@ function CapabilityPanel({ vau, title, onClose }: { vau: VAU; title: string; onC
 						</Box>
 					)}
 					<Box>
-						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "#202320" }}>
+						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "var(--ax-colors-fg-default)" }}>
 							{title}
 						</Text>
 						{example?.description && (
@@ -474,7 +474,7 @@ function DailyBriefingPanel({ vau, onClose }: { vau: VAU; onClose: () => void })
 						<img src="/vau-icons/newspaper.png" alt="Daily briefing" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
 					</Box>
 					<Box>
-						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "#202320" }}>
+						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "var(--ax-colors-fg-default)" }}>
 							Daily briefing
 						</Text>
 						<Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5", letterSpacing: "0.32px", display: "block", marginTop: 6 }}>
@@ -746,7 +746,7 @@ export default function VAUDetailPage() {
 								fontWeight: 800,
 								lineHeight: "1.04",
 								letterSpacing: "0.56px",
-								color: "#202320",
+								color: "var(--ax-colors-fg-default)",
 								WebkitTextStroke: "1px #202320",
 							}}
 						>
@@ -902,7 +902,7 @@ export default function VAUDetailPage() {
 						</Box>
 
 						{/* Title */}
-						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 36, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.5px", color: "#202320", WebkitTextStroke: "1px #202320", marginBottom: 8, display: "block" }}>
+						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 36, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.5px", color: "var(--ax-colors-fg-default)", WebkitTextStroke: "1px var(--ax-colors-fg-default)", marginBottom: 8, display: "block" }}>
 							Every teammate needs a look.
 						</Text>
 						<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", display: "block", marginBottom: 32 }}>
@@ -990,7 +990,7 @@ export default function VAUDetailPage() {
 						</Box>
 
 						{/* Title */}
-						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 36, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.5px", color: "#202320", WebkitTextStroke: "1px #202320", marginBottom: 8, display: "block" }}>
+						<Text style={{ fontFamily: "var(--ax-font-family-headings)", fontSize: 36, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.5px", color: "var(--ax-colors-fg-default)", WebkitTextStroke: "1px var(--ax-colors-fg-default)", marginBottom: 8, display: "block" }}>
 							{"What's their personality?"}
 						</Text>
 						<Text color="fg.secondary" style={{ fontSize: 16, lineHeight: "1.5", display: "block", marginBottom: 24 }}>
@@ -1165,7 +1165,7 @@ export default function VAUDetailPage() {
 										fontWeight: 800,
 										lineHeight: "1.04",
 										letterSpacing: "0.56px",
-										color: "#202320",
+										color: "var(--ax-colors-fg-default)",
 									}}
 								>
 									First day on the job
@@ -1301,7 +1301,7 @@ export default function VAUDetailPage() {
 									fontWeight: 800,
 									lineHeight: "1.04",
 									letterSpacing: "0.5px",
-									color: "#202320",
+									color: "var(--ax-colors-fg-default)",
 									WebkitTextStroke: "1px #202320",
 								}}
 							>
@@ -1427,7 +1427,7 @@ export default function VAUDetailPage() {
 										fontWeight: 600,
 										lineHeight: "1.1",
 										letterSpacing: "0.4px",
-										color: "#202320",
+										color: "var(--ax-colors-fg-default)",
 									}}
 								>
 									My pitch
@@ -1544,7 +1544,7 @@ export default function VAUDetailPage() {
 									fontWeight: 600,
 									lineHeight: "1.1",
 									letterSpacing: "0.4px",
-									color: "#202320",
+									color: "var(--ax-colors-fg-default)",
 								}}
 							>
 								What I do

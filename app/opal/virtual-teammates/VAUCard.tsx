@@ -169,7 +169,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             <Button
               appearance="primary"
               size="lg"
-              addonBefore={<Box style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-default-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><IconUsers style={{ color: "var(--ax-colors-bg-accent)", width: 13, height: 13 }} /></Box>}
+              addonBefore={<Box style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-default-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><IconUsers style={{ color: "var(--ax-colors-fg-default-inverse)", width: 13, height: 13 }} /></Box>}
               style={{ width: "100%", justifyContent: "center" }}
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
@@ -285,7 +285,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             <Button
               appearance="primary"
               size="md"
-              addonBefore={<Box style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-default-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><IconUsers style={{ color: "var(--ax-colors-bg-accent)", width: 13, height: 13 }} /></Box>}
+              addonBefore={<Box style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-default-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><IconUsers style={{ color: "var(--ax-colors-fg-default-inverse)", width: 13, height: 13 }} /></Box>}
               style={{ flex: 1, justifyContent: "center" }}
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
