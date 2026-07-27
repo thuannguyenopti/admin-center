@@ -759,7 +759,7 @@ export default function VATPermissionsPage() {
 									{connector.status === "connected" ? (
 										<IconCircleCheckSolid style={{ color: "#226B1E", width: 20, height: 20, flexShrink: 0 }} />
 									) : (
-										<span style={{ ...CAPTION, fontSize: 9, background: "#FAD9E7", color: "#8B1A3A", padding: "2px 8px", borderRadius: 32, whiteSpace: "nowrap" as const }}>
+										<span style={{ ...CAPTION, fontSize: 9, background: "var(--ax-colors-bg-error-subtle)", color: "var(--ax-colors-fg-error)", padding: "2px 8px", borderRadius: 32, whiteSpace: "nowrap" as const }}>
 											Auth expired
 										</span>
 									)}

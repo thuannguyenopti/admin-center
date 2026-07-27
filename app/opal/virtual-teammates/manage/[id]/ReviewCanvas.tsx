@@ -159,7 +159,7 @@ function ReviewCanvasInner({ item, vauName, vauAvatar, vauAvatarBg, onClose, onA
 						display: "flex",
 						flexDirection: "column",
 						overflow: "hidden",
-						background: "#fff",
+						background: "var(--ax-colors-bg-default)",
 					}}
 				>
 					{/* Doc toolbar */}
@@ -262,7 +262,7 @@ function ReviewCanvasInner({ item, vauName, vauAvatar, vauAvatarBg, onClose, onA
 									<Text fontSize="sm" style={{ color: msg.from === "user" ? "#202320" : "var(--ax-colors-fg-default)", lineHeight: "1.5" }}>
 										{msg.text}
 									</Text>
-									<Text fontSize="sm" style={{ color: msg.from === "user" ? "rgba(32,35,32,0.45)" : "var(--ax-colors-fg-tertiary)", fontSize: 10, marginTop: 4 }}>
+									<Text fontSize="sm" style={{ color: "var(--ax-colors-fg-tertiary)", fontSize: 10, marginTop: 4 }}>
 										{msg.time}
 									</Text>
 								</Box>

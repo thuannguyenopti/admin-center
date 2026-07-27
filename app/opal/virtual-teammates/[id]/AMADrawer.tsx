@@ -48,8 +48,8 @@ function ChatBubble({
 			<Box
 				style={{
 					maxWidth: "82%",
-					background: isUser ? "#202320" : "#F3F7EE",
-					color: isUser ? "white" : "#202320",
+					background: isUser ? "#202320" : "var(--ax-colors-bg-secondary)",
+					color: isUser ? "var(--ax-colors-fg-white)" : "#202320",
 					borderRadius: isUser ? "12px 12px 2px 12px" : "2px 12px 12px 12px",
 					padding: "10px 14px",
 					fontSize: 14,
@@ -69,7 +69,7 @@ function TypingIndicator({ avatarSrc, avatarBg }: { avatarSrc: string; avatarBg:
 			<Box style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: avatarBg }}>
 				<Image src={avatarSrc} alt="" width={28} height={28} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
 			</Box>
-			<Box style={{ background: "#F3F7EE", borderRadius: "2px 12px 12px 12px", padding: "12px 16px", display: "flex", gap: 4, alignItems: "center" }}>
+			<Box style={{ background: "var(--ax-colors-bg-secondary)", borderRadius: "2px 12px 12px 12px", padding: "12px 16px", display: "flex", gap: 4, alignItems: "center" }}>
 				{[0, 1, 2].map((i) => (
 					<Box key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--ax-colors-fg-tertiary)", animation: `ama-dot 1.2s ${i * 0.2}s ease-in-out infinite` }} />
 				))}
@@ -133,7 +133,7 @@ export function AMADrawer({ vau, onClose }: { vau: VAU; onClose: () => void }) {
 	return (
 		<>
 			{/* Backdrop */}
-			<Box onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(57,62,50,0.32)", zIndex: 40 }} />
+			<Box onClick={onClose} style={{ position: "fixed", inset: 0, background: "var(--ax-colors-bg-overlay)", zIndex: 40 }} />
 
 			{/* Panel */}
 			<Box
@@ -179,7 +179,7 @@ export function AMADrawer({ vau, onClose }: { vau: VAU; onClose: () => void }) {
 										height: 20,
 										padding: "0 8px",
 										borderRadius: 4,
-										background: "#E2F5F5",
+										background: "var(--ax-colors-bg-information-subtle)",
 										color: "#036988",
 										fontFamily: "Roboto Mono, monospace",
 										fontSize: 10,

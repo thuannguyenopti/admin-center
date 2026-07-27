@@ -164,11 +164,11 @@ export default function VirtualTeammatesManagePage() {
 										</Td>
 										<Td>
 											{vau.status === "active" ? (
-												<Badge style={{ background: "#D4F5D4", color: "#166534", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+												<Badge style={{ background: "var(--ax-colors-bg-success-subtle)", color: "var(--ax-colors-fg-success-strong)", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
 													Active
 												</Badge>
 											) : (
-												<Badge style={{ background: "#FCE7F3", color: "#9D174D", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+												<Badge style={{ background: "var(--ax-colors-bg-error-subtle)", color: "var(--ax-colors-fg-error)", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
 													Paused
 												</Badge>
 											)}

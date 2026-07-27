@@ -38,7 +38,7 @@ type PinnedItem =
 const PINNED_ITEMS: PinnedItem[] = [
 	{ type: "artifact", title: "Opti sunset", image: "/Sunset.jpg", visibility: "Private", age: "5 days ago", tags: ["Image", "Campaign"], initials: "AS" },
 	{ type: "artifact", title: "Mountain image", image: "/nature-bg.png", visibility: "Private", age: "5 days ago", tags: ["Image", "Brand"], initials: "AS" },
-	{ type: "action", priority: "Urgent", priorityBg: "#FAD9E7", priorityColor: "#8B1A3A", title: "Team approval needed", description: "Review the updated Q&A article. Approve to proceed to publishing, or request further changes.", filename: "Discover-the-unknown-qa.md", fileType: "GEO Q&A ARTICLE", age: "5 days ago" },
+	{ type: "action", priority: "Urgent", priorityBg: "var(--ax-colors-bg-error-subtle)", priorityColor: "var(--ax-colors-fg-error)", title: "Team approval needed", description: "Review the updated Q&A article. Approve to proceed to publishing, or request further changes.", filename: "Discover-the-unknown-qa.md", fileType: "GEO Q&A ARTICLE", age: "5 days ago" },
 ];
 
 type WorkItem = {
@@ -65,11 +65,11 @@ const ALL_WORK: WorkItem[] = [
 	{ type: "image",   name: "Mountain image",      source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature-bg.png", tags: ["Brand", "2026"] },
 	{ type: "image",   name: "Valley image",        source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature1.png",   tags: ["Weekly", "Internal"] },
 	{ type: "image",   name: "Sunset image",        source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature2.png",   tags: ["Weekly", "Brand"] },
-	{ type: "article", name: "Q3_Campaign_Brief",  source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "Urgent",   priorityBg: "#FAD9E7", priorityColor: "#8B1A3A", description: "Review the updated Q3 campaign brief. Approve to proceed to publishing, or request further changes.", filename: "Q3-campaign-brief.md", fileType: "Campaign Brief" },
+	{ type: "article", name: "Q3_Campaign_Brief",  source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "Urgent",   priorityBg: "var(--ax-colors-bg-error-subtle)", priorityColor: "var(--ax-colors-fg-error)", description: "Review the updated Q3 campaign brief. Approve to proceed to publishing, or request further changes.", filename: "Q3-campaign-brief.md", fileType: "Campaign Brief" },
 	{ type: "image",   name: "Weekly wrap: 6/1-6/8", source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/Weekly_Wrap_2.png" },
 	{ type: "article", name: "Experiment_Launch",  source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "No Rush", priorityBg: "var(--ax-colors-bg-secondary)", priorityColor: "var(--ax-colors-fg-secondary)", description: "Experiment 123 has been successfully created and launched. No action needed.", filename: "Experiment-123-launch.md", fileType: "Experiment Summary" },
 	{ type: "image",   name: "Mountain view",        source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/MT.png" },
-	{ type: "article", name: "Onboarding_Recap",   source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "Complete", priorityBg: "#D1FAE5", priorityColor: "#065F46", description: "New hire onboarding recap has been drafted and shared with the People team for final sign-off.", filename: "Onboarding-recap-june.md", fileType: "HR Document" },
+	{ type: "article", name: "Onboarding_Recap",   source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "Complete", priorityBg: "var(--ax-colors-bg-success-subtle)", priorityColor: "var(--ax-colors-fg-success-strong)", description: "New hire onboarding recap has been drafted and shared with the People team for final sign-off.", filename: "Onboarding-recap-june.md", fileType: "HR Document" },
 ];
 
 const TYPE_OPTIONS = ["All", "Image", "Article", "Doc"];
@@ -101,8 +101,8 @@ function Avatar({ initials, src, bg }: { initials?: string; src?: string; bg?: s
 		);
 	}
 	return (
-		<Box style={{ width: 24, height: 24, borderRadius: "50%", background: "#C4B5FD", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-			<span style={{ fontFamily: "Roboto Mono, monospace", fontSize: 9, fontWeight: 700, color: "#4C1D95" }}>{initials}</span>
+		<Box style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--ax-colors-bg-avatar-purple)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+			<span style={{ fontFamily: "Roboto Mono, monospace", fontSize: 9, fontWeight: 700, color: "var(--ax-colors-fg-avatar-purple)" }}>{initials}</span>
 		</Box>
 	);
 }

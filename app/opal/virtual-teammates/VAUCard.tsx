@@ -111,7 +111,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
           {/* Header: RESUME label + title + category badge */}
           <Box display="flex" flexDirection="column" gap="8" style={{ alignItems: "flex-start" }}>
             <span style={{ ...CAPTION }}>Resume</span>
-            <Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "#000" }}>
+            <Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "var(--ax-colors-fg-default)" }}>
               {vau.name}
             </Text>
             {vau.cardCategory && (
@@ -217,7 +217,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
               <Image src={vau.cardImage ?? vau.avatar} alt={vau.name} width={52} height={52} unoptimized style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             </Box>
             <Box display="flex" flexDirection="column" gap="6" style={{ alignItems: "flex-start" }}>
-              <Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 22, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.44px", color: "#000" }}>
+              <Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 22, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.44px", color: "var(--ax-colors-fg-default)" }}>
                 {vau.name}
               </Text>
               {vau.cardCategory && <Badge intent="information" variant="subtle">{vau.cardCategory}</Badge>}
