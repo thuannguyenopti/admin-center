@@ -217,6 +217,47 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						<Menu
 							options={[
 								{
+									label: "Light",
+									addon: <IconSunBright size={16} />,
+									...(themePreference === "light" && {selected: true}),
+									execute: () => setThemePreference("light"),
+								},
+								{
+									label: "Dark",
+									addon: <IconMoon size={16} />,
+									...(themePreference === "dark" && {selected: true}),
+									execute: () => setThemePreference("dark"),
+								},
+								{
+									label: "System",
+									addon: <IconDesktop size={16} />,
+									...(themePreference === "system" && {selected: true}),
+									execute: () => setThemePreference("system"),
+								},
+							]}
+						>
+							<MenuTrigger asChild>
+								<Button
+									appearance="subtle"
+									size="md"
+									icon={
+										{
+											system: <IconDesktop />,
+											light: <IconSunBright />,
+											dark: <IconMoon />,
+										}[themePreference]
+									}
+									aria-label="Theme"
+									className="capitalize"
+								>
+									{themePreference}
+								</Button>
+							</MenuTrigger>
+							<MenuContent />
+						</Menu>
+						<Menu
+							options={[
+								{
 									group: settingsGroups.userOrg,
 									label: "Stefan Svebeck (Admin)",
 									addon: <IconUser size={16} />,
@@ -636,7 +677,10 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 											}[themePreference]
 										}
 										aria-label="Theme"
-									/>
+										className="capitalize"
+									>
+										{themePreference}
+									</Button>
 								</MenuTrigger>
 								<MenuContent />
 							</Menu>
