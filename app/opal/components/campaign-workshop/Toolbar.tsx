@@ -13,6 +13,7 @@ import {
 	IconXmark,
 } from "@optiaxiom/icons";
 import { Text } from "@/app/components/Text";
+import { useLayout } from "@/app/context/LayoutContext";
 import type { ContentTab } from "./CanvasStage";
 
 // Canvas header chrome — matches Figma "Image Gen II - 10 Channel Pack Items"
@@ -50,6 +51,15 @@ export function Toolbar({
 	showRationale: boolean;
 	showWorkflow: boolean;
 }) {
+	// The real Opal panel is a fixed, always-on-top overlay (see
+	// app/components/OpalPanel.tsx) — it never reflows to make room for page
+	// content, page content reflows (or insets) to stay clear of it. The
+	// canvas body below already does this via opalPanelWidth; this toolbar
+	// row didn't, so its rightmost icons (Fullscreen/Close, or "More" in
+	// workflow mode) could render underneath Opal and be unreachable. Skipped
+	// in workflow mode because CampaignWorkshopCanvas's outer row already
+	// reserves the same width there (see CanvasStage's own matching skip).
+	const { opalPanelWidth } = useLayout();
 	return (
 		<Box
 			bg="bg.default"
@@ -63,7 +73,11 @@ export function Toolbar({
 			// GlobalBar, which this fullscreen canvas's own toolbar visually
 			// replaces. Any other height leaves a gap or an overlapping seam
 			// where the panel cuts into this toolbar.
-			style={{ gridTemplateColumns: "auto minmax(320px, 1fr) auto", minHeight: 57 }}
+			style={{
+				gridTemplateColumns: "auto minmax(320px, 1fr) auto",
+				minHeight: 57,
+				paddingRight: 24 + (showWorkflow ? 0 : opalPanelWidth),
+			}}
 		>
 			<Box display="flex" alignItems="center" gap="8">
 				<ToggleButton size="sm" appearance="subtle" pressed={false} icon={<IconCode size={17} />} aria-label="Code" />
