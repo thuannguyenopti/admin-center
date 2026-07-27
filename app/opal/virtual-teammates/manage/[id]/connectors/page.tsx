@@ -104,14 +104,14 @@ const SWITCH_TOOLTIP = "In order to edit this feature, you need to switch into R
 function ConnectorLogo({ connector }: { connector: Connector }) {
 	if (connector.logo) {
 		return (
-			<Box style={{ width: 32, height: 32, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: "#fff", border: "1px solid var(--ax-colors-border-secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+			<Box style={{ width: 32, height: 32, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: "var(--ax-colors-bg-default)", border: "1px solid var(--ax-colors-border-secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
 				<Image src={connector.logo} alt={connector.name} width={24} height={24} unoptimized style={{ width: 24, height: 24, objectFit: "contain" }} />
 			</Box>
 		);
 	}
 	return (
 		<Box style={{ width: 32, height: 32, borderRadius: 8, background: connector.logoBg ?? "#333", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-			<span style={{ fontFamily: "Roboto Mono, monospace", fontSize: 10, fontWeight: 700, color: "#fff", letterSpacing: "0.04em" }}>
+			<span style={{ fontFamily: "Roboto Mono, monospace", fontSize: 10, fontWeight: 700, color: "var(--ax-colors-fg-white)", letterSpacing: "0.04em" }}>
 				{connector.logoLabel ?? connector.name.slice(0, 2)}
 			</span>
 		</Box>
@@ -269,9 +269,9 @@ export default function VATConnectorsPage() {
 									<Text fontSize="md" color="fg.default" style={{ fontWeight: 600 }}>{connector.name}</Text>
 								</Box>
 								{connector.status === "connected" ? (
-									<IconCircleCheckSolid style={{ color: "#226B1E", width: 20, height: 20, flexShrink: 0 }} />
+									<IconCircleCheckSolid style={{ color: "var(--ax-colors-fg-success-strong)", width: 20, height: 20, flexShrink: 0 }} />
 								) : (
-									<span style={{ ...CAPTION, fontSize: 9, background: "#FAD9E7", color: "#8B1A3A", padding: "2px 8px", borderRadius: 32, whiteSpace: "nowrap" as const }}>
+									<span style={{ ...CAPTION, fontSize: 9, background: "var(--ax-colors-bg-error-subtle)", color: "var(--ax-colors-fg-error)", padding: "2px 8px", borderRadius: 32, whiteSpace: "nowrap" as const }}>
 										Auth expired
 									</span>
 								)}

@@ -24,7 +24,7 @@ const TOOL_CHIP: React.CSSProperties = {
   width: 24,
   height: 24,
   borderRadius: 8,
-  border: "1px solid #e4f0da",
+  border: "1px solid var(--ax-colors-border-secondary)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -34,7 +34,7 @@ const TOOL_CHIP: React.CSSProperties = {
 };
 
 const DIVIDER = (
-  <Box style={{ height: 1, background: "#e4f0da", width: "100%", flexShrink: 0, margin: "4px 0" }} />
+  <Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", width: "100%", flexShrink: 0, margin: "4px 0" }} />
 );
 
 function ToolChips({ tools }: { tools: string[] }) {
@@ -98,7 +98,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             inset: 0,
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
-            background: "white",
+            background: "var(--ax-colors-bg-default)",
             border: "1px solid #d8e4cb",
             borderRadius: 12,
             padding: 20,
@@ -111,7 +111,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
           {/* Header: RESUME label + title + category badge */}
           <Box display="flex" flexDirection="column" gap="8" style={{ alignItems: "flex-start" }}>
             <span style={{ ...CAPTION }}>Resume</span>
-            <Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "#000" }}>
+            <Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "var(--ax-colors-fg-default)" }}>
               {vau.name}
             </Text>
             {vau.cardCategory && (
@@ -169,7 +169,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             <Button
               appearance="primary"
               size="lg"
-              addonBefore={<Box style={{ width: 20, height: 20, borderRadius: 4, background: "#202320", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><IconUsers style={{ color: "#BBFF00", width: 13, height: 13 }} /></Box>}
+              addonBefore={<Box style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-default-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><IconUsers style={{ color: "var(--ax-colors-bg-accent)", width: 13, height: 13 }} /></Box>}
               style={{ width: "100%", justifyContent: "center" }}
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
@@ -190,7 +190,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
-            background: "white",
+            background: "var(--ax-colors-bg-default)",
             border: "1px solid #d8e4cb",
             borderRadius: 12,
             padding: 20,
@@ -208,7 +208,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
                 height: 52,
                 minWidth: 52,
                 borderRadius: 8,
-                border: "1px solid #e4f0da",
+                border: "1px solid var(--ax-colors-border-secondary)",
                 overflow: "hidden",
                 background: vau.cardBg ?? vau.avatarBg,
                 flexShrink: 0,
@@ -217,7 +217,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
               <Image src={vau.cardImage ?? vau.avatar} alt={vau.name} width={52} height={52} unoptimized style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             </Box>
             <Box display="flex" flexDirection="column" gap="6" style={{ alignItems: "flex-start" }}>
-              <Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 22, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.44px", color: "#000" }}>
+              <Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 22, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.44px", color: "var(--ax-colors-fg-default)" }}>
                 {vau.name}
               </Text>
               {vau.cardCategory && <Badge intent="information" variant="subtle">{vau.cardCategory}</Badge>}
@@ -285,7 +285,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             <Button
               appearance="primary"
               size="md"
-              addonBefore={<Box style={{ width: 20, height: 20, borderRadius: 4, background: "#202320", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><IconUsers style={{ color: "#BBFF00", width: 13, height: 13 }} /></Box>}
+              addonBefore={<Box style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-default-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><IconUsers style={{ color: "var(--ax-colors-bg-accent)", width: 13, height: 13 }} /></Box>}
               style={{ flex: 1, justifyContent: "center" }}
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();

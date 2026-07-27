@@ -116,7 +116,7 @@ function ToneRow({
 			<input
 				type="range" min={0} max={100} step={50}
 				value={value} onChange={(e) => onChange(Number(e.target.value))}
-				style={{ width: "100%", display: "block", cursor: "pointer", accentColor: "#616755" }}
+				style={{ width: "100%", display: "block", cursor: "pointer", accentColor: "var(--ax-colors-fg-tertiary)" }}
 			/>
 			<Box style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", marginTop: 6 }}>
 				<Text fontSize="sm" color="fg.secondary">{leftEmoji} {leftLabel}</Text>
@@ -718,7 +718,7 @@ export function PersonalityTab({
 											{values.map((v) => (
 												<Box key={v} style={{
 													display: "flex", alignItems: "center", justifyContent: "space-between",
-													padding: "10px 14px", background: "#EFF5EB", borderRadius: 8,
+													padding: "10px 14px", background: "var(--ax-colors-bg-secondary)", borderRadius: 8,
 												}}>
 													<Text fontSize="md" color="fg.default">{v}</Text>
 													<button

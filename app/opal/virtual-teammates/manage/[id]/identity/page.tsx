@@ -245,8 +245,8 @@ export default function VATIdentityPage() {
 									<Button
 										appearance="primary"
 										size="md"
-										addonBefore={<IconTrashCan style={{ color: "#fff" }} />}
-										style={{ background: "#A95A77", border: "none", color: "#fff", flexShrink: 0 }}
+										addonBefore={<IconTrashCan style={{ color: "var(--ax-colors-fg-white)" }} />}
+										style={{ background: "var(--ax-colors-bg-error)", border: "none", color: "var(--ax-colors-fg-white)", flexShrink: 0 }}
 										onClick={() => setShowDeactivate(true)}
 									>
 										Deactivate
@@ -369,7 +369,7 @@ export default function VATIdentityPage() {
 							appearance="primary"
 							size="md"
 							addonBefore={<IconUserSlash />}
-							style={{ background: "#7C3B5A", border: "none", color: "white" }}
+							style={{ background: "var(--ax-colors-bg-error-hovered)", border: "none", color: "var(--ax-colors-fg-white)" }}
 							onClick={() => setShowDeactivate(false)}
 						>
 							{"Deactivate " + name}

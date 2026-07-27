@@ -48,7 +48,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 				flexDirection: "column",
 				gap: 12,
 				boxShadow: hovered
-					? "0 0 0 1.5px #A1AC8D, 0 2px 8px rgba(0,0,0,0.06)"
+					? "0 0 0 1.5px var(--ax-colors-border-control), 0 2px 8px rgba(0,0,0,0.06)"
 					: "none",
 				transition: "box-shadow 0.15s ease",
 			}}
@@ -179,7 +179,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 							appearance="primary"
 							size="md"
 							addonBefore={<IconUserSlash />}
-							style={{ background: "#7C3B5A", border: "none", color: "white" }}
+							style={{ background: "var(--ax-colors-bg-error-hovered)", border: "none", color: "var(--ax-colors-fg-white)" }}
 							onClick={() => setShowDeactivate(false)}
 						>
 							{"Deactivate " + vau.name}

@@ -50,7 +50,7 @@ function ToolCircle({ toolKey, index, total }: { toolKey: string; index: number;
 					height: 22,
 					borderRadius: "50%",
 					border: "1.5px solid var(--ax-colors-bg-default)",
-					background: "#f3f7ee",
+					background: "var(--ax-colors-bg-secondary)",
 					display: "flex",
 					alignItems: "center",
 					justifyContent: "center",
@@ -242,7 +242,7 @@ function ActionCard({ example, onClick }: { example: VAUExample; onClick?: () =>
 					</span>
 				</Box>
 			</Box>
-			<Box style={{ background: "#f6faf3", borderRadius: 8, padding: 16 }}>
+			<Box style={{ background: "var(--ax-colors-bg-spinner-inverse)", borderRadius: 8, padding: 16 }}>
 				<Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.43" }}>
 					{description}
 				</Text>
@@ -313,7 +313,7 @@ function PanelConnector({ index }: { toolKey: string; index: number }) {
 	const connector = PANEL_CONNECTORS[index] ?? PANEL_CONNECTORS[PANEL_CONNECTORS.length - 1];
 	return (
 		<Box display="flex" alignItems="center" gap="8">
-			<Box style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "1px solid var(--ax-colors-border-secondary)", display: "flex", alignItems: "center", justifyContent: "center", background: "white" }}>
+			<Box style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "1px solid var(--ax-colors-border-secondary)", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--ax-colors-bg-default)" }}>
 				{/* eslint-disable-next-line @next/next/no-img-element */}
 				<img src={connector.icon} alt={connector.name} style={{ width: "80%", height: "80%", objectFit: "contain" }} />
 			</Box>
@@ -375,7 +375,7 @@ function CapabilityPanel({ vau, title, onClose }: { vau: VAU; title: string; onC
 	return (
 		<>
 			<Box onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(57,62,50,0.32)", zIndex: 40 }} />
-			<Box style={{ position: "fixed", top: 0, right: 0, height: "100vh", width: 513, background: "white", borderLeft: "1px solid var(--ax-colors-border-default)", zIndex: 50, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, padding: "24px 24px 40px" }}>
+			<Box style={{ position: "fixed", top: 0, right: 0, height: "100vh", width: 513, background: "var(--ax-colors-bg-default)", borderLeft: "1px solid var(--ax-colors-border-default)", zIndex: 50, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, padding: "24px 24px 40px" }}>
 				<Box display="flex" alignItems="center" justifyContent="space-between">
 					<Badge intent="primary">PREVIEW</Badge>
 					<Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} aria-label="Close panel" onClick={onClose} />
@@ -446,7 +446,7 @@ function DailyBriefingPanel({ vau, onClose }: { vau: VAU; onClose: () => void })
 					right: 0,
 					height: "100vh",
 					width: 513,
-					background: "white",
+					background: "var(--ax-colors-bg-default)",
 					borderLeft: "1px solid var(--ax-colors-border-default)",
 					zIndex: 50,
 					overflowY: "auto",
@@ -515,7 +515,7 @@ function DailyBriefingPanel({ vau, onClose }: { vau: VAU; onClose: () => void })
 								cursor: "pointer",
 							}}
 						>
-							<IconChevronLeft size={18} style={{ color: "white" }} />
+							<IconChevronLeft size={18} style={{ color: "var(--ax-colors-fg-white)" }} />
 						</Box>
 					)}
 				</Box>
@@ -729,7 +729,7 @@ export default function VAUDetailPage() {
 			<Box
 				style={{
 					height: "100%",
-					background: "#F9FCF8",
+					background: "var(--ax-colors-bg-page)",
 					display: "flex",
 					alignItems: "center",
 					justifyContent: "center",
@@ -771,7 +771,7 @@ export default function VAUDetailPage() {
 						</Box>
 						<Box
 							style={{
-								background: "white",
+								background: "var(--ax-colors-bg-default)",
 								border: "1px solid var(--ax-colors-border-default)",
 								borderRadius: 12,
 								padding: 20,
@@ -792,7 +792,7 @@ export default function VAUDetailPage() {
 												padding: 8,
 												border: "1px solid var(--ax-colors-border-secondary)",
 												borderRadius: 8,
-												background: "white",
+												background: "var(--ax-colors-bg-default)",
 											}}
 										>
 											<Box display="flex" alignItems="center" gap="8" style={{ flex: 1, minWidth: 0 }}>
@@ -816,7 +816,7 @@ export default function VAUDetailPage() {
 												</Box>
 												{/* Name + description */}
 												<Box display="flex" flexDirection="column" style={{ gap: 2 }}>
-													<Text style={{ fontSize: 14, fontWeight: 600, color: "#202320", lineHeight: "1.43", letterSpacing: "0.28px" }}>
+													<Text style={{ fontSize: 14, fontWeight: 600, color: "var(--ax-colors-fg-default)", lineHeight: "1.43", letterSpacing: "0.28px" }}>
 														{tool.name}
 													</Text>
 													<Text style={{ fontSize: 12, color: "var(--ax-colors-fg-tertiary)", lineHeight: "1.33", letterSpacing: "0.24px" }}>
@@ -885,7 +885,7 @@ export default function VAUDetailPage() {
 		const currentAvatarSrc = customAvatar?.src ?? vau.cardImage ?? vau.avatar;
 		const currentAvatarBg = customAvatar?.bg ?? vau.cardBg ?? vau.avatarBg;
 		return (
-			<Box style={{ background: "#F9FCF8", height: "100%", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
+			<Box style={{ background: "var(--ax-colors-bg-page)", height: "100%", display: "flex", flexDirection: "column", boxSizing: "border-box" }}>
 				<Box style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "32px 48px 0" }}>
 					<Box style={{ maxWidth: 600, margin: "0 auto" }}>
 						{/* Tabs */}
@@ -972,7 +972,7 @@ export default function VAUDetailPage() {
 		};
 
 		return (
-			<Box style={{ height: "100%", display: "flex", flexDirection: "column", background: "#F9FCF8", boxSizing: "border-box" }}>
+			<Box style={{ height: "100%", display: "flex", flexDirection: "column", background: "var(--ax-colors-bg-page)", boxSizing: "border-box" }}>
 				{/* Scrollable content */}
 				<Box style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "32px 48px 0" }}>
 					<Box style={{ maxWidth: 600, margin: "0 auto" }}>
@@ -1014,7 +1014,7 @@ export default function VAUDetailPage() {
 											border: isSelected ? "2px solid #197a94" : "1px solid var(--ax-colors-border-default)",
 											borderRadius: 12,
 											padding: isSelected ? "15px 15px" : "16px 16px",
-											background: "white",
+											background: "var(--ax-colors-bg-default)",
 											cursor: "pointer",
 											transition: "border-color 0.15s ease",
 										}}
@@ -1022,7 +1022,7 @@ export default function VAUDetailPage() {
 										{/* Card header */}
 										<Box display="flex" alignItems="stretch" gap="16">
 											{/* Personality image */}
-											<Box style={{ width: 64, height: 64, borderRadius: 10, background: "#E3F3F8", overflow: "hidden", flexShrink: 0, alignSelf: "center" }}>
+											<Box style={{ width: 64, height: 64, borderRadius: 10, background: "var(--ax-colors-bg-information-subtle)", overflow: "hidden", flexShrink: 0, alignSelf: "center" }}>
 												{imgSrc
 													? <Image src={imgSrc} alt={p.label} width={64} height={64} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
 													: null}
@@ -1059,7 +1059,7 @@ export default function VAUDetailPage() {
 															<Box style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: displayAvatarBg, border: "1px solid var(--ax-colors-border-default)" }}>
 																<Image src={displayAvatarSrc} alt="" width={32} height={32} unoptimized style={{ width: "100%", height: "100%", objectFit: "contain" }} />
 															</Box>
-															<Box style={{ background: "#EEFFD9", borderRadius: 8, padding: "10px 12px", flex: 1 }}>
+															<Box style={{ background: "var(--ax-colors-bg-success-subtle)", borderRadius: 8, padding: "10px 12px", flex: 1 }}>
 																<Text fontSize="sm" color="fg.default" style={{ lineHeight: "1.5" }}>{p.sampleChat}</Text>
 															</Box>
 														</Box>
@@ -1104,7 +1104,7 @@ export default function VAUDetailPage() {
 			<>
 				<Box
 					style={{
-						background: "#F9FCF8",
+						background: "var(--ax-colors-bg-page)",
 						height: "100%",
 						display: "flex",
 						alignItems: "center",
@@ -1146,7 +1146,7 @@ export default function VAUDetailPage() {
 									style={{
 										position: "absolute", top: -8, right: -16,
 										width: 40, height: 40, borderRadius: "50%",
-										background: "white",
+										background: "var(--ax-colors-bg-default)",
 										border: "1px solid var(--ax-colors-border-default)",
 										display: "flex", alignItems: "center", justifyContent: "center",
 										cursor: "pointer",
@@ -1232,7 +1232,7 @@ export default function VAUDetailPage() {
 
 	return (
 		<>
-			<Box style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#F9FCF8" }}>
+			<Box style={{ position: "absolute", inset: 0, overflowY: "auto", background: "var(--ax-colors-bg-page)" }}>
 				<Box style={{ maxWidth: 997, margin: "0 auto", padding: "32px 40px 64px" }}>
 
 					{/* Breadcrumb */}
@@ -1342,7 +1342,7 @@ export default function VAUDetailPage() {
 									{/* Message bubble */}
 									<Box
 										style={{
-											background: "#EEFFD9",
+											background: "var(--ax-colors-bg-success-subtle)",
 											borderRadius: 8,
 											padding: "8px 12px",
 											flex: 1,
@@ -1447,7 +1447,7 @@ export default function VAUDetailPage() {
 												border: "1px solid var(--ax-colors-border-default)",
 												borderRadius: 12,
 												padding: "14px 20px",
-												background: "white",
+												background: "var(--ax-colors-bg-default)",
 												display: "flex",
 												flexDirection: "column",
 												justifyContent: "space-between",
@@ -1469,8 +1469,8 @@ export default function VAUDetailPage() {
 																			width: 24,
 																			height: 24,
 																			borderRadius: "50%",
-																			border: "1.5px solid white",
-																			backgroundColor: "white",
+																			border: "1.5px solid var(--ax-colors-bg-default)",
+																			backgroundColor: "var(--ax-colors-bg-default)",
 																			display: "flex",
 																			alignItems: "center",
 																			justifyContent: "center",
