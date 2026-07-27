@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { PanelShell } from "@/app/admin-center/components/PanelShell";
 import {
 	Box,
 	Button,
@@ -16,7 +16,6 @@ import {
 	toaster,
 } from "@optiaxiom/react";
 import {
-	IconXmark,
 	IconCheck,
 	IconAngleDown,
 	IconTrashCan,
@@ -59,20 +58,6 @@ export function CreateGroupPanel({
 	const [editorOpen, setEditorOpen] = useState(false);
 
 	useEffect(() => {
-		if (!open) return;
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") onClose();
-		};
-		document.addEventListener("keydown", onKey);
-		const prevOverflow = document.body.style.overflow;
-		document.body.style.overflow = "hidden";
-		return () => {
-			document.removeEventListener("keydown", onKey);
-			document.body.style.overflow = prevOverflow;
-		};
-	}, [open, onClose]);
-
-	useEffect(() => {
 		if (open) {
 			setStep(1);
 			setName("");
@@ -82,8 +67,6 @@ export function CreateGroupPanel({
 			setEditorOpen(false);
 		}
 	}, [open]);
-
-	if (!open || typeof document === "undefined") return null;
 
 	const canContinue =
 		step === 1 ? name.trim().length > 0 :
@@ -96,101 +79,16 @@ export function CreateGroupPanel({
 		onClose();
 	};
 
-	return createPortal(
-		<>
-			<Box
-				onClick={onClose}
-				style={{
-					position: "fixed",
-					inset: 0,
-					zIndex: 1000,
-					background: "var(--ax-colors-bg-overlay)",
-				}}
-			/>
-			<Box
-				role="dialog"
-				aria-modal="true"
-				aria-label="Create group"
-				bg="bg.default"
-				display="flex"
-				flexDirection="column"
-				style={{
-					position: "fixed",
-					top: 0,
-					right: 0,
-					bottom: 0,
-					width: PANEL_WIDTH,
-					maxWidth: "100vw",
-					zIndex: 1001,
-					boxShadow: "var(--ax-shadows-xl)",
-				}}
-			>
-				<Box
-					display="flex"
-					alignItems="center"
-					justifyContent="space-between"
-					px="24"
-					py="20"
-					borderB="1"
-					borderColor="border.tertiary"
-				>
-					<Heading level="2">Create group</Heading>
-					<Button
-						appearance="subtle"
-						size="md"
-						icon={<IconXmark size={20} />}
-						aria-label="Close"
-						onClick={onClose}
-					/>
-				</Box>
-
-				<Box px="24" py="20" borderB="1" borderColor="border.tertiary">
-					<Stepper step={step} />
-				</Box>
-
-				<Box flex="1" overflow="auto" px="24" py="20">
-					{step === 1 && (
-						<StepGroupInfo
-							name={name}
-							setName={setName}
-							description={description}
-							setDescription={setDescription}
-						/>
-					)}
-					{step === 2 && <StepUserList members={members} setMembers={setMembers} />}
-					{step === 3 && (
-						<ProductAccessStep
-							accessList={accessList}
-							setAccessList={setAccessList}
-							onEditorChange={setEditorOpen}
-							showGroupAccess={false}
-						/>
-					)}
-					{step === 4 && (
-						<StepReview
-							name={name}
-							description={description}
-							members={members}
-							accessList={accessList}
-						/>
-					)}
-				</Box>
-
-				<Box
-					display="flex"
-					justifyContent="end"
-					gap="12"
-					px="24"
-					py="16"
-					borderT="1"
-					borderColor="border.tertiary"
-					bg="bg.page"
-				>
+	return (
+		<PanelShell
+			open={open}
+			onClose={onClose}
+			title="Create group"
+			subHeader={<Box py="20"><Stepper step={step} /></Box>}
+			footer={
+				<>
 					{step > 1 && (
-						<Button
-							appearance="subtle"
-							onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}
-						>
+						<Button appearance="subtle" onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}>
 							Back
 						</Button>
 					)}
@@ -207,10 +105,35 @@ export function CreateGroupPanel({
 							Create group
 						</Button>
 					)}
-				</Box>
-			</Box>
-		</>,
-		document.body,
+				</>
+			}
+		>
+			{step === 1 && (
+				<StepGroupInfo
+					name={name}
+					setName={setName}
+					description={description}
+					setDescription={setDescription}
+				/>
+			)}
+			{step === 2 && <StepUserList members={members} setMembers={setMembers} />}
+			{step === 3 && (
+				<ProductAccessStep
+					accessList={accessList}
+					setAccessList={setAccessList}
+					onEditorChange={setEditorOpen}
+					showGroupAccess={false}
+				/>
+			)}
+			{step === 4 && (
+				<StepReview
+					name={name}
+					description={description}
+					members={members}
+					accessList={accessList}
+				/>
+			)}
+		</PanelShell>
 	);
 }
 

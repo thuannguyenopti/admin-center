@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { PanelShell } from "@/app/admin-center/components/PanelShell";
 import {
 	Box,
 	Button,
@@ -15,13 +15,13 @@ import {
 	toaster,
 } from "@optiaxiom/react";
 import {
-	IconXmark,
 	IconPlus,
 	IconTrashCan,
 	IconCheck,
 	IconCircleInfo,
 	IconPaperPlaneTop,
 	IconUpload,
+	IconXmark,
 } from "@optiaxiom/icons";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { BULK_IMPORT_USERS } from "../data";
@@ -67,16 +67,6 @@ export function InviteUserPanel({
 
 	useEffect(() => {
 		if (!open) return;
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") onClose();
-		};
-		document.addEventListener("keydown", onKey);
-		const prevOverflow = document.body.style.overflow;
-		document.body.style.overflow = "hidden";
-		return () => {
-			document.removeEventListener("keydown", onKey);
-			document.body.style.overflow = prevOverflow;
-		};
 	}, [open, onClose]);
 
 	useEffect(() => {
@@ -89,8 +79,6 @@ export function InviteUserPanel({
 			setSendEmail(false);
 		}
 	}, [open]);
-
-	if (!open || typeof document === "undefined") return null;
 
 	const canContinue =
 		step === 1 ? users.length > 0 :
@@ -107,100 +95,16 @@ export function InviteUserPanel({
 		onClose();
 	};
 
-	return createPortal(
-		<>
-			<Box
-				onClick={onClose}
-				style={{
-					position: "fixed",
-					inset: 0,
-					zIndex: 1000,
-					background: "var(--ax-colors-bg-overlay)",
-				}}
-			/>
-			<Box
-				role="dialog"
-				aria-modal="true"
-				aria-label="Invite user"
-				bg="bg.default"
-				display="flex"
-				flexDirection="column"
-				style={{
-					position: "fixed",
-					top: 0,
-					right: 0,
-					bottom: 0,
-					width: PANEL_WIDTH,
-					maxWidth: "100vw",
-					zIndex: 1001,
-					boxShadow: "var(--ax-shadows-xl)",
-				}}
-			>
-				<Box
-					display="flex"
-					alignItems="center"
-					justifyContent="space-between"
-					px="24"
-					py="20"
-					borderB="1"
-					borderColor="border.tertiary"
-				>
-					<Heading level="2">Invite user</Heading>
-					<Button
-						appearance="subtle"
-						size="md"
-						icon={<IconXmark size={20} />}
-						aria-label="Close"
-						onClick={onClose}
-					/>
-				</Box>
-
-				<Box px="24" py="20" borderB="1" borderColor="border.tertiary">
-					<Stepper step={step} />
-				</Box>
-
-				<Box flex="1" overflow="auto" px="24" py="20">
-					{step === 1 &&
-						(mode === "upload" ? (
-							<StepUploadUsers users={users} setUsers={setUsers} />
-						) : (
-							<StepUsers users={users} setUsers={setUsers} />
-						))}
-					{step === 2 && (
-						<ProductAccessStep
-							accessList={accessList}
-							setAccessList={setAccessList}
-							onEditorChange={setEditorOpen}
-							presetProduct={presetProduct}
-						/>
-					)}
-					{step === 3 && (
-						<StepReview
-							users={users}
-							accessList={accessList}
-							requireAccept={requireAccept}
-							setRequireAccept={setRequireAccept}
-							sendEmail={sendEmail}
-							setSendEmail={setSendEmail}
-						/>
-					)}
-				</Box>
-
-				<Box
-					display="flex"
-					justifyContent="end"
-					gap="12"
-					px="24"
-					py="16"
-					borderT="1"
-					borderColor="border.tertiary"
-					bg="bg.page"
-				>
+	return (
+		<PanelShell
+			open={open}
+			onClose={onClose}
+			title="Invite user"
+			subHeader={<Box py="20"><Stepper step={step} /></Box>}
+			footer={
+				<>
 					{step > 1 && (
-						<Button
-							appearance="subtle"
-							onClick={() => setStep((s) => (s - 1) as 1 | 2)}
-						>
+						<Button appearance="subtle" onClick={() => setStep((s) => (s - 1) as 1 | 2)}>
 							Back
 						</Button>
 					)}
@@ -222,10 +126,34 @@ export function InviteUserPanel({
 							Send invite
 						</Button>
 					)}
-				</Box>
-			</Box>
-		</>,
-		document.body,
+				</>
+			}
+		>
+			{step === 1 &&
+				(mode === "upload" ? (
+					<StepUploadUsers users={users} setUsers={setUsers} />
+				) : (
+					<StepUsers users={users} setUsers={setUsers} />
+				))}
+			{step === 2 && (
+				<ProductAccessStep
+					accessList={accessList}
+					setAccessList={setAccessList}
+					onEditorChange={setEditorOpen}
+					presetProduct={presetProduct}
+				/>
+			)}
+			{step === 3 && (
+				<StepReview
+					users={users}
+					accessList={accessList}
+					requireAccept={requireAccept}
+					setRequireAccept={setRequireAccept}
+					sendEmail={sendEmail}
+					setSendEmail={setSendEmail}
+				/>
+			)}
+		</PanelShell>
 	);
 }
 

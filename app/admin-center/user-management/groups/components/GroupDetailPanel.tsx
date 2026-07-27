@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
+import { PanelShell } from "@/app/admin-center/components/PanelShell";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -14,14 +14,13 @@ import {
 	Box,
 	Button,
 	Field,
-	Heading,
 	Input,
 	Text,
 	Textarea,
 	Tooltip,
 	toaster,
 } from "@optiaxiom/react";
-import { IconXmark, IconTrashCan, IconCircleInfo } from "@optiaxiom/icons";
+import { IconTrashCan, IconCircleInfo } from "@optiaxiom/icons";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
 	ProductAccessStep,
@@ -31,7 +30,6 @@ import { BULK_IMPORT_USERS } from "../../users/data";
 import { lookupUserByEmail, UserSearchInput } from "../../users/components/UserSearchInput";
 import type { Group, GroupMember } from "../data";
 
-const PANEL_WIDTH = 700;
 type Tab = "info" | "users" | "access";
 
 /** Fallback members/access for static seed groups that have no stored detail. */
@@ -98,21 +96,7 @@ export function GroupDetailPanel({
 		setEditorOpen(false);
 	}, [group]);
 
-	useEffect(() => {
-		if (!open) return;
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") onClose();
-		};
-		document.addEventListener("keydown", onKey);
-		const prevOverflow = document.body.style.overflow;
-		document.body.style.overflow = "hidden";
-		return () => {
-			document.removeEventListener("keydown", onKey);
-			document.body.style.overflow = prevOverflow;
-		};
-	}, [open, onClose]);
-
-	if (!open || !group || typeof document === "undefined") return null;
+	if (!group) return null;
 
 	const dirty =
 		JSON.stringify({ name, description, members, access }) !== initial &&
@@ -143,156 +127,13 @@ export function GroupDetailPanel({
 		onClose();
 	};
 
-	return createPortal(
-		<>
-			<Box
-				onClick={onClose}
-				style={{
-					position: "fixed",
-					inset: 0,
-					zIndex: 1000,
-					background: "var(--ax-colors-bg-overlay)",
-				}}
-			/>
-			<Box
-				role="dialog"
-				aria-modal="true"
-				aria-label="Group details"
-				bg="bg.default"
-				display="flex"
-				flexDirection="column"
-				style={{
-					position: "fixed",
-					top: 0,
-					right: 0,
-					bottom: 0,
-					width: PANEL_WIDTH,
-					maxWidth: "100vw",
-					zIndex: 1001,
-					boxShadow: "var(--ax-shadows-xl)",
-				}}
-			>
-				<Box
-					display="flex"
-					alignItems="center"
-					justifyContent="space-between"
-					px="24"
-					py="20"
-					borderB="1"
-					borderColor="border.tertiary"
-				>
-					<Heading level="2">Group details</Heading>
-					<Button
-						appearance="subtle"
-						size="md"
-						icon={<IconXmark size={20} />}
-						aria-label="Close"
-						onClick={onClose}
-					/>
-				</Box>
-
-				<Box flex="1" overflow="auto" px="24" py="20">
-					<Box display="flex" flexDirection="column" gap="20">
-						{/* Summary card */}
-						<Box
-							bg="bg.page"
-							rounded="md"
-							p="16"
-							display="flex"
-							flexDirection="column"
-							gap="12"
-						>
-							<Box>
-								<Text fontWeight="600">{group.name}</Text>
-								{group.description && (
-									<Text fontSize="sm" color="fg.secondary">
-										{group.description}
-									</Text>
-								)}
-							</Box>
-							<Box display="flex" justifyContent="end">
-								<Button
-									appearance="danger-outline"
-									size="sm"
-									icon={<IconTrashCan size={14} />}
-									iconPosition="start"
-									onClick={() => setConfirmDelete(true)}
-								>
-									Delete this group
-								</Button>
-							</Box>
-						</Box>
-
-						{/* Tabs */}
-						<Box
-							display="flex"
-							gap="24"
-							borderB="1"
-							borderColor="border.tertiary"
-						>
-							{(
-								[
-									["info", "Group info"],
-									["users", "User list"],
-									["access", "Product access"],
-								] as const
-							).map(([key, label]) => (
-								<Box
-									key={key}
-									pb="12"
-									cursor="pointer"
-									borderB={tab === key ? "2" : "0"}
-									onClick={() => setTab(key)}
-									style={
-										tab === key
-											? { borderBottomColor: "var(--ax-colors-fg-default)" }
-											: {}
-									}
-								>
-									<Text
-										fontWeight={tab === key ? "600" : "400"}
-										color={tab === key ? "fg.default" : "fg.tertiary"}
-									>
-										{label}
-									</Text>
-								</Box>
-							))}
-						</Box>
-
-						{tab === "info" && (
-							<GroupInfoTab
-								group={group}
-								name={name}
-								setName={setName}
-								description={description}
-								setDescription={setDescription}
-							/>
-						)}
-						{tab === "users" && (
-							<UserListTab members={members} setMembers={setMembers} />
-						)}
-						{tab === "access" && (
-							<ProductAccessStep
-								accessList={access}
-								setAccessList={setAccessList}
-								onEditorChange={setEditorOpen}
-								autoOpenWhenEmpty={false}
-								showGroupAccess={false}
-							/>
-						)}
-					</Box>
-				</Box>
-
-				<Box
-					display="flex"
-					justifyContent="end"
-					gap="12"
-					px="24"
-					py="16"
-					borderT="1"
-					borderColor="border.tertiary"
-					bg="bg.page"
-				>
+	return (
+		<PanelShell
+			open={open && !!group}
+			onClose={onClose}
+			title="Group details"
+			footer={
+				<>
 					<Button appearance="subtle" onClick={onClose}>
 						Cancel
 					</Button>
@@ -303,7 +144,97 @@ export function GroupDetailPanel({
 					>
 						Save
 					</Button>
+				</>
+			}
+		>
+			<Box display="flex" flexDirection="column" gap="20">
+				{/* Summary card */}
+				<Box
+					bg="bg.page"
+					rounded="md"
+					p="16"
+					display="flex"
+					flexDirection="column"
+					gap="12"
+				>
+					<Box>
+						<Text fontWeight="600">{group.name}</Text>
+						{group.description && (
+							<Text fontSize="sm" color="fg.secondary">
+								{group.description}
+							</Text>
+						)}
+					</Box>
+					<Box display="flex" justifyContent="end">
+						<Button
+							appearance="danger-outline"
+							size="sm"
+							icon={<IconTrashCan size={14} />}
+							iconPosition="start"
+							onClick={() => setConfirmDelete(true)}
+						>
+							Delete this group
+						</Button>
+					</Box>
 				</Box>
+
+				{/* Tabs */}
+				<Box
+					display="flex"
+					gap="24"
+					borderB="1"
+					borderColor="border.tertiary"
+				>
+					{(
+						[
+							["info", "Group info"],
+							["users", "User list"],
+							["access", "Product access"],
+						] as const
+					).map(([key, label]) => (
+						<Box
+							key={key}
+							pb="12"
+							cursor="pointer"
+							borderB={tab === key ? "2" : "0"}
+							onClick={() => setTab(key)}
+							style={
+								tab === key
+									? { borderBottomColor: "var(--ax-colors-fg-default)" }
+									: {}
+							}
+						>
+							<Text
+								fontWeight={tab === key ? "600" : "400"}
+								color={tab === key ? "fg.default" : "fg.tertiary"}
+							>
+								{label}
+							</Text>
+						</Box>
+					))}
+				</Box>
+
+				{tab === "info" && (
+					<GroupInfoTab
+						group={group}
+						name={name}
+						setName={setName}
+						description={description}
+						setDescription={setDescription}
+					/>
+				)}
+				{tab === "users" && (
+					<UserListTab members={members} setMembers={setMembers} />
+				)}
+				{tab === "access" && (
+					<ProductAccessStep
+						accessList={access}
+						setAccessList={setAccessList}
+						onEditorChange={setEditorOpen}
+						autoOpenWhenEmpty={false}
+						showGroupAccess={false}
+					/>
+				)}
 			</Box>
 
 			<AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
@@ -329,8 +260,7 @@ export function GroupDetailPanel({
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-		</>,
-		document.body,
+		</PanelShell>
 	);
 }
 
