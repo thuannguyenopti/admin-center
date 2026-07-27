@@ -74,7 +74,7 @@ export function OpalPanel({
   agentBar,
   inputAgentCtx,
 }: OpalPanelProps) {
-  const { setOpalPanelWidth, opalActionCard } = useLayout();
+  const { setOpalPanelWidth, opalActionCard, opalPanelTopOffset } = useLayout();
   const pathname = usePathname();
   const [customWidth, setCustomWidth] = useState<number | null>(null);
   const [isResizing, setIsResizing] = useState(false);
@@ -149,7 +149,7 @@ export function OpalPanel({
       className="opal-panel"
       style={{
         position: 'fixed',
-        top: '57px',
+        top: `${opalPanelTopOffset}px`,
         right: 0,
         bottom: 0,
         width: `${totalWidth}px`,

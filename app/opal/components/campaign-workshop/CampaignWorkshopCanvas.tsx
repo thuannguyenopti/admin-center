@@ -71,7 +71,7 @@ export function CampaignWorkshopCanvas({
 	initialTab?: ContentTab;
 	onClose: () => void;
 }) {
-	const { opalPanelControls, opalPanelWidth, setOpalActionCard } = useLayout();
+	const { opalPanelControls, opalPanelWidth, setOpalActionCard, setOpalPanelTopOffset } = useLayout();
 	const [tab, setTab] = useState<ContentTab>(initialTab);
 	const [showRationale, setShowRationale] = useState(initialShowRationale);
 	const [mode, setMode] = useState<Mode>("canvas");
@@ -82,6 +82,17 @@ export function CampaignWorkshopCanvas({
 	const [workflowChecks, setWorkflowChecks] = useState<Record<string, boolean>>({});
 	const [workflowComplete, setWorkflowComplete] = useState(false);
 	const hasSeededOpal = useRef(false);
+
+	// This fullscreen canvas replaces the GlobalBar with its own toolbar (see
+	// Toolbar.tsx's matching 57px minHeight comment), so Opal's usual 57px
+	// inset — there to clear the GlobalBar on normal pages — would just leave
+	// a blank strip above Opal's own header here. Zero it for as long as this
+	// canvas owns the screen; restore the default the moment it closes.
+	useEffect(() => {
+		setOpalPanelTopOffset(0);
+		return () => setOpalPanelTopOffset(57);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	const addPin = (label: string, x: number, y: number, description: string) => {
 		setPins((current) => [...current, { id: crypto.randomUUID(), number: current.length + 1, label, x, y, description }]);

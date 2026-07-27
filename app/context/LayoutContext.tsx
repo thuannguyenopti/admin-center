@@ -44,6 +44,12 @@ type LayoutContextType = {
 	setOpalPanelControls: (controls: OpalPanelControls | null) => void;
 	opalPanelWidth: number;
 	setOpalPanelWidth: (width: number) => void;
+	/** Distance from the viewport top the Opal panel is inset by — 57 to sit below
+	 * the GlobalBar on normal pages. A fullscreen takeover that replaces the
+	 * GlobalBar with its own chrome (e.g. CampaignWorkshopCanvas) sets this to 0
+	 * while mounted and restores it on unmount. */
+	opalPanelTopOffset: number;
+	setOpalPanelTopOffset: (offset: number) => void;
 	codePanelControls: CodePanelControls | null;
 	setCodePanelControls: (controls: CodePanelControls | null) => void;
 	topContent: ReactNode | null;
@@ -65,6 +71,7 @@ export function LayoutProvider({children}: {children: ReactNode}) {
 	const [hidePageHeader, setHidePageHeader] = useState<boolean>(false);
 	const [opalPanelControls, setOpalPanelControls] = useState<OpalPanelControls | null>(null);
 	const [opalPanelWidth, setOpalPanelWidth] = useState<number>(0);
+	const [opalPanelTopOffset, setOpalPanelTopOffset] = useState<number>(57);
 	const [codePanelControls, setCodePanelControls] = useState<CodePanelControls | null>(null);
 	const [titleActions, setTitleActions] = useState<ReactNode | null>(null);
 	const [opalActionCard, setOpalActionCard] = useState<ReactNode | null>(null);
@@ -88,6 +95,8 @@ export function LayoutProvider({children}: {children: ReactNode}) {
 				setOpalPanelControls,
 				opalPanelWidth,
 				setOpalPanelWidth,
+				opalPanelTopOffset,
+				setOpalPanelTopOffset,
 				codePanelControls,
 				setCodePanelControls,
 				titleActions,
