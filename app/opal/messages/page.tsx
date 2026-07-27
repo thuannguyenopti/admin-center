@@ -3547,6 +3547,7 @@ function IMMain({
   const [addParticipantsOpen, setAddParticipantsOpen] = useState(false);
   const [addParticipantMode, setAddParticipantMode] = useState(false);
   const [groupMemberRemovals, setGroupMemberRemovals] = useState<Record<string, string[]>>({});
+  const [channelMemberRemovals, setChannelMemberRemovals] = useState<Record<string, string[]>>({});
   const [participantSearch, setParticipantSearch] = useState("");
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
@@ -3583,10 +3584,22 @@ function IMMain({
   const [dmMenuOpen, setDmMenuOpen] = useState(false);
   // Shared modals
   const [notifModalOpen, setNotifModalOpen] = useState(false);
+  const [notifDraft, setNotifDraft] = useState<"all" | "mentions-only" | "muted">("all");
+  // Notification modal stages the selection in a draft; Save applies it, Cancel discards.
+  useEffect(() => {
+    if (notifModalOpen) setNotifDraft(isMuted ? "muted" : mentionPref);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notifModalOpen]);
+  const applyNotifDraft = () => {
+    if (notifDraft === "muted") { if (!isMuted) toggleMute(); }
+    else { if (isMuted) toggleMute(); setMentionPref(notifDraft); }
+    setNotifModalOpen(false);
+  };
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [renameValue, setRenameValue] = useState("");
   const [moveToSectionOpen, setMoveToSectionOpen] = useState(false);
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<{ name: string; scope: "group" | "channel" } | null>(null);
   // uploading attachment demo (js = Jane Smith)
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({ "up-js-1": 34 });
   const uploadingItems: { id: string; title: string; conversationId: string }[] = [
@@ -3622,6 +3635,9 @@ function IMMain({
   const selectedDM = activeDMS.find(d => d.id === selected);
   const selectedGroup = GROUPS.find(g => g.id === selected) ?? (extraGroups ?? []).find(g => g.id === selected);
   const selectedChannel = CHANNELS.find(ch => ch.id === selected) ?? (extraChannels ?? []).find(ch => ch.id === selected);
+  // Members remaining after any removals made in the members modals (keeps header + modal counts in sync)
+  const groupMembers = (selectedGroup?.memberList ?? []).filter(m => !(groupMemberRemovals[selected] ?? []).includes(m.name));
+  const channelMembers = (selectedChannel?.memberList ?? []).filter(m => !(channelMemberRemovals[selected] ?? []).includes(m.name));
   const unreadCount = selectedDM?.unread ?? selectedGroup?.unread ?? selectedChannel?.unread ?? 0;
   const isGroupWithVAU = !!selectedGroup && (GROUP_VAU_IDS[selected] ?? []).length > 0;
   const isChannelWithVAU = !!selectedChannel && (CHANNEL_VAU_IDS[selected] ?? []).length > 0;
@@ -3731,7 +3747,6 @@ function IMMain({
   const filteredMentions = MENTION_CANDIDATES.filter(m => m.name.toLowerCase().startsWith(mentionQuery));
 
   const notifMenuContent = (() => {
-    const notifPref = isMuted ? "muted" : mentionPref;
     const options = [
       { value: "all",           label: "All new posts",  desc: "Messages and threads you follow",                    Icon: IconBell      },
       { value: "mentions-only", label: "Just @mentions", desc: "@you, @channel, @here",                             Icon: IconBell      },
@@ -3743,16 +3758,12 @@ function IMMain({
           <span style={{ fontSize: 13, color: "var(--ax-colors-fg-tertiary)" }}>Notify you about...</span>
         </div>
         {options.map(({ value, label, desc, Icon }) => {
-          const isSelected = notifPref === value;
+          const isSelected = notifDraft === value;
           return (
             <div
               key={value}
               role="button" tabIndex={0}
-              onClick={() => {
-                if (value === "muted") { if (!isMuted) toggleMute(); }
-                else { if (isMuted) toggleMute(); setMentionPref(value as "all" | "mentions-only"); }
-                setNotifModalOpen(false);
-              }}
+              onClick={() => setNotifDraft(value as "all" | "mentions-only" | "muted")}
               onKeyDown={e => e.key === "Enter" && (e.currentTarget as HTMLDivElement).click()}
               style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "6px 12px", cursor: "pointer", borderRadius: 6 }}
               onMouseEnter={e => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
@@ -4174,7 +4185,7 @@ function IMMain({
                     size="md"
                     icon={
                       <div style={{ display: "flex", alignItems: "center" }}>
-                        {(group.memberList ?? []).slice(0, 3).map((m, i) => (
+                        {groupMembers.slice(0, 3).map((m, i) => (
                           <div key={m.name} style={{ marginLeft: i > 0 ? -5 : 0, borderRadius: "50%", border: "1.5px solid var(--ax-colors-bg-default)", overflow: "hidden", width: 20, height: 20, flexShrink: 0 }}>
                             {m.avatar
                               ? <img src={m.avatar} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -4187,7 +4198,7 @@ function IMMain({
                     onClick={() => setGroupMembersOpen(true)}
                     style={{ marginTop: 4, alignSelf: "flex-start" }}
                   >
-                    {group.memberList ? `${group.memberList.length} members` : group.members}
+                    {group.memberList ? `${groupMembers.length} members` : group.members}
                   </Button>
                 </Box>
                 <Box display="flex" alignItems="center" gap="4" style={{ marginLeft: "auto" }}>
@@ -4228,7 +4239,7 @@ function IMMain({
                     size="md"
                     icon={
                       <div style={{ display: "flex", alignItems: "center" }}>
-                        {(channel.memberList ?? []).slice(0, 3).map((m, i) => (
+                        {channelMembers.slice(0, 3).map((m, i) => (
                           <div key={m.name} style={{ marginLeft: i > 0 ? -5 : 0, borderRadius: "50%", border: "1.5px solid var(--ax-colors-bg-default)", overflow: "hidden", width: 20, height: 20, flexShrink: 0 }}>
                             {m.avatar
                               ? <img src={m.avatar} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -4241,7 +4252,7 @@ function IMMain({
                     onClick={() => setChannelMembersOpen(true)}
                     style={{ marginTop: 4, alignSelf: "flex-start" }}
                   >
-                    {channel.memberList ? `${channel.memberList.length} members` : "0 members"}
+                    {channel.memberList ? `${channelMembers.length} members` : "0 members"}
                   </Button>
                 </Box>
                 <Box display="flex" alignItems="center" gap="4" style={{ marginLeft: "auto" }}>
@@ -5586,7 +5597,7 @@ function IMMain({
                 <Box display="flex" alignItems="center" justifyContent="space-between" px="24" py="16"
                   style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
                   <Text fontSize="md" color="fg.tertiary">
-                    {group.memberList ? `${group.memberList.length} members` : group.members}
+                    {group.memberList ? `${groupMembers.length} members` : group.members}
                   </Text>
                   <Button appearance="default" size="md" icon={<IconUserPlus size={14} />}
                     onClick={() => { setGroupMembersOpen(false); setAddParticipantsOpen(true); }}>
@@ -5594,13 +5605,14 @@ function IMMain({
                   </Button>
                 </Box>
                 <Box display="flex" flexDirection="column" px="16" py="8">
-                  {(group.memberList ?? []).map(m => (
+                  {groupMembers.map(m => (
                     <Box key={m.name} display="flex" alignItems="center" gap="12" px="8" py="12"
                       style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
                       <Avatar name={m.name} src={m.avatar || undefined} size="md" />
                       <Text fontSize="md" color="fg.default" style={{ flex: 1 }}>{m.name}</Text>
                       <Button appearance="subtle" size="sm" icon={<IconTrashCan style={{ width: 16, height: 16 }} />}
-                        aria-label={`Remove ${m.name}`} />
+                        aria-label={`Remove ${m.name}`}
+                        onClick={() => setMemberToRemove({ name: m.name, scope: "group" })} />
                     </Box>
                   ))}
                 </Box>
@@ -5644,7 +5656,7 @@ function IMMain({
                 <Box display="flex" alignItems="center" justifyContent="space-between" px="24" py="16"
                   style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
                   <Text fontSize="md" color="fg.tertiary">
-                    {ch.memberList ? `${ch.memberList.length} members` : "Members"}
+                    {ch.memberList ? `${channelMembers.length} members` : "Members"}
                   </Text>
                   <Button appearance="default" size="md" icon={<IconUserPlus size={14} />}
                     onClick={() => { setChannelMembersOpen(false); setAddParticipantsOpen(true); }}>
@@ -5652,13 +5664,14 @@ function IMMain({
                   </Button>
                 </Box>
                 <Box display="flex" flexDirection="column" px="16" py="8">
-                  {(ch.memberList ?? []).map(m => (
+                  {channelMembers.map(m => (
                     <Box key={m.name} display="flex" alignItems="center" gap="12" px="8" py="12"
                       style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
                       <Avatar name={m.name} src={m.avatar || undefined} size="md" />
                       <Text fontSize="md" color="fg.default" style={{ flex: 1 }}>{m.name}</Text>
                       <Button appearance="subtle" size="sm" icon={<IconTrashCan style={{ width: 16, height: 16 }} />}
-                        aria-label={`Remove ${m.name}`} />
+                        aria-label={`Remove ${m.name}`}
+                        onClick={() => setMemberToRemove({ name: m.name, scope: "channel" })} />
                     </Box>
                   ))}
                 </Box>
@@ -6002,7 +6015,8 @@ function IMMain({
           {notifMenuContent}
         </DialogBody>
         <DialogFooter>
-          <DialogClose asChild><Button appearance="default" size="md">Close</Button></DialogClose>
+          <DialogClose asChild><Button appearance="default" size="md">Cancel</Button></DialogClose>
+          <Button appearance="primary" size="md" onClick={applyNotifDraft}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -6081,6 +6095,34 @@ function IMMain({
             style={{ color: "var(--ax-colors-fg-danger)" }}
             onClick={() => { onLeave(selected); setLeaveConfirmOpen(false); }}>
             Leave
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* ── Remove member confirmation ── */}
+    <Dialog open={!!memberToRemove} onOpenChange={open => { if (!open) setMemberToRemove(null); }}>
+      <DialogContent style={{ width: 360 }}>
+        <DialogHeader>Remove member</DialogHeader>
+        <DialogBody>
+          <Text fontSize="sm">
+            Are you sure you want to remove{" "}
+            <strong>{memberToRemove?.name}</strong> from{" "}
+            <strong>{nameOverrides[selected] ?? (memberToRemove?.scope === "channel" ? selectedChannel?.name : selectedGroup?.name)}</strong>?
+          </Text>
+        </DialogBody>
+        <DialogFooter>
+          <DialogClose asChild><Button appearance="default" size="md">Cancel</Button></DialogClose>
+          <Button appearance="danger" size="md"
+            onClick={() => {
+              if (memberToRemove) {
+                const name = memberToRemove.name;
+                if (memberToRemove.scope === "group") setGroupMemberRemovals(prev => ({ ...prev, [selected]: [...(prev[selected] ?? []), name] }));
+                else setChannelMemberRemovals(prev => ({ ...prev, [selected]: [...(prev[selected] ?? []), name] }));
+              }
+              setMemberToRemove(null);
+            }}>
+            Remove
           </Button>
         </DialogFooter>
       </DialogContent>
