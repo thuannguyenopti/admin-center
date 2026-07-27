@@ -333,7 +333,11 @@ export function CanvasStage({
 				showRationale={showRationale}
 				showWorkflow={showWorkflow}
 			/>
-			<Box style={{ ...canvasBodyStyle, paddingRight: opalPanelWidth }}>
+			{/* In workflow mode this Box only fills the canvas column, not the full
+			    viewport — CampaignWorkshopCanvas's outer layout reserves the Opal-panel
+			    width for the whole row instead, so applying it again here would
+			    double-subtract it and collapse the available content width. */}
+			<Box style={{ ...canvasBodyStyle, paddingRight: showWorkflow ? 0 : opalPanelWidth }}>
 				<div
 					ref={viewportRef}
 					data-cmp-canvas-viewport="true"

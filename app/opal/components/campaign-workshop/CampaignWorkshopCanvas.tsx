@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useLayout } from "@/app/context/LayoutContext";
 import { CanvasStage, type ContentTab } from "./CanvasStage";
 import { BlogPost } from "./BlogPost";
@@ -71,7 +71,7 @@ export function CampaignWorkshopCanvas({
 	initialTab?: ContentTab;
 	onClose: () => void;
 }) {
-	const { opalPanelControls, setOpalActionCard } = useLayout();
+	const { opalPanelControls, opalPanelWidth, setOpalActionCard } = useLayout();
 	const [tab, setTab] = useState<ContentTab>(initialTab);
 	const [showRationale, setShowRationale] = useState(initialShowRationale);
 	const [mode, setMode] = useState<Mode>("canvas");
@@ -163,7 +163,28 @@ export function CampaignWorkshopCanvas({
 
 	if (mode === "workflow") {
 		return (
-			<div className="cmp-workflow-layout" style={{ background: "var(--ax-colors-bg-page)", display: "flex", height: "100%", minHeight: 0, overflow: "hidden", width: "100%" }}>
+			<div
+				className="cmp-workflow-layout"
+				style={{
+					background: "var(--ax-colors-bg-page)",
+					display: "flex",
+					height: "100%",
+					minHeight: 0,
+					overflow: "hidden",
+					width: "100%",
+					"--opal-panel-width": `${opalPanelWidth}px`,
+				} as CSSProperties}
+			>
+				{/* Below 1181px, WorkflowDrawer stacks under the canvas (see CanvasStage's
+				    own media query) and no longer shares the row with the fixed Opal
+				    overlay, so this reservation only applies at the wider, side-by-side
+				    width — matching CanvasStage's own paddingRight, which is skipped in
+				    this same mode to avoid reserving the Opal-panel width twice. */}
+				<style>{`
+					@media (min-width: 1181px) {
+						.cmp-workflow-inline-panel { margin-right: var(--opal-panel-width, 0px); }
+					}
+				`}</style>
 				<div className="cmp-workflow-canvas-column" style={{ flex: "1 1 656px", minHeight: 0, minWidth: 0 }}>
 					<CanvasStage
 						activeTab={tab}
@@ -182,7 +203,7 @@ export function CampaignWorkshopCanvas({
 						showRationale={false}
 						showWorkflow
 					>
-						<SocialPosts imageOverrides={imageOverrides} />
+						<SocialPosts imageOverrides={imageOverrides} onEditText={editText} textOverrides={textOverrides} />
 					</CanvasStage>
 				</div>
 				<WorkflowDrawer
@@ -222,7 +243,9 @@ export function CampaignWorkshopCanvas({
 					textOverrides={textOverrides}
 				/>
 			)}
-			{tab === "social" && <SocialPosts imageOverrides={imageOverrides} />}
+			{tab === "social" && (
+				<SocialPosts imageOverrides={imageOverrides} onEditText={editText} textOverrides={textOverrides} />
+			)}
 			{tab === "email" && (
 				<EmailPreview
 					buildStep={3}
