@@ -238,7 +238,7 @@ export default function CategoriesSettings() {
 		return (
 			<>
 				<EmptyList
-					image="/images/toast.png"
+					image="/images/toast.svg"
 					heading="No categories"
 					body="Categories organise your content into a hierarchy (e.g. Sport > Cycling). Use them to structure navigation, filter content, and group related items. Assign categories to content when editing, and create parent categories to build a taxonomy."
 				>
