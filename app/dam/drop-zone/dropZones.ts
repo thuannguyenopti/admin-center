@@ -52,6 +52,12 @@ export function addDropZone(input: Omit<DropZoneLink, "id" | "createdAt" | "stat
 	return dropZone;
 }
 
+export function updateDropZone(id: string, patch: Partial<DropZoneLink>): void {
+	allDropZones = allDropZones.map((zone) => (zone.id === id ? { ...zone, ...patch } : zone));
+	persist();
+	notify();
+}
+
 export function getAllDropZones(): DropZoneLink[] {
 	return allDropZones;
 }

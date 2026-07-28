@@ -15,6 +15,8 @@ export interface DropZoneLink {
 	maxFileSizeMb: number;
 	requiredFields: string[];
 	submissionCount: number;
+	/** Required to view or submit to this Drop Zone's public link — every zone has one. */
+	password: string;
 }
 
 export const DROP_ZONES: DropZoneLink[] = [
@@ -31,6 +33,7 @@ export const DROP_ZONES: DropZoneLink[] = [
 		maxFileSizeMb: 50,
 		requiredFields: ["Photographer credit", "Usage rights", "Shoot location"],
 		submissionCount: 6,
+		password: "stride-summer26",
 	},
 	{
 		id: "dz2",
@@ -45,6 +48,7 @@ export const DROP_ZONES: DropZoneLink[] = [
 		maxFileSizeMb: 200,
 		requiredFields: ["Videographer credit", "Usage rights"],
 		submissionCount: 4,
+		password: "stride-autumn26",
 	},
 ];
 

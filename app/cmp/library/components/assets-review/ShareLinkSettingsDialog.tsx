@@ -6,6 +6,7 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconChevronDown, IconChevronRight, IconCopy } from "@optimizely/axiom-icons";
 import type { DropZoneLink } from "@/app/dam/drop-zone/data";
+import { updateDropZone } from "@/app/dam/drop-zone/dropZones";
 
 /**
  * Share Link Settings — matches the Collections reference structurally: a top Switch for
@@ -19,7 +20,7 @@ import type { DropZoneLink } from "@/app/dam/drop-zone/data";
 export function ShareLinkSettingsDialog({ zone, open, onClose }: { zone: DropZoneLink; open: boolean; onClose: () => void }) {
 	const [sharable, setSharable] = useState(zone.status === "active");
 	const [expanded, setExpanded] = useState(false);
-	const [password, setPassword] = useState("");
+	const [password, setPassword] = useState(zone.password);
 	const [passwordTouched, setPasswordTouched] = useState(false);
 	const [expirationEnabled, setExpirationEnabled] = useState(true);
 	const [validFrom, setValidFrom] = useState(zone.createdAt);
@@ -61,6 +62,13 @@ export function ShareLinkSettingsDialog({ zone, open, onClose }: { zone: DropZon
 			toaster.create("Set a password before sharing this link", { intent: "danger" });
 			return;
 		}
+		updateDropZone(zone.id, {
+			status: sharable ? "active" : "expired",
+			password: password.trim(),
+			expiresAt: expirationEnabled ? validUntil : zone.expiresAt,
+			requiredFields: fieldsEnabled ? zone.requiredFields.filter((field) => enabledFields.has(field)) : [],
+			allowedFileTypes: filesEnabled ? zone.allowedFileTypes.filter((type) => enabledFileTypes.has(type)) : [],
+		});
 		toaster.create("Share settings saved", { intent: "success" });
 		onClose();
 	}

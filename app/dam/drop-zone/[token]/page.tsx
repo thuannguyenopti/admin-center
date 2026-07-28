@@ -3,9 +3,9 @@
 import { Badge, Box, Field, Input, Textarea } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconCheck, IconFile, IconUpload, IconXmark } from "@optimizely/axiom-icons";
+import { IconCheck, IconFile, IconLock, IconUpload, IconXmark } from "@optimizely/axiom-icons";
 import { useParams } from "next/navigation";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import StrideHeader from "@/app/site/StrideHeader";
 import { useDropZoneUpload } from "@/app/shared/hooks/useDropZoneUpload";
 import { SUBMISSION_STATUS_BADGE } from "@/app/cmp/library/components/assets-review/DropZoneSubmissionCard";
@@ -13,6 +13,7 @@ import { getDropZoneByToken, subscribeDropZones } from "../dropZones";
 import { addSubmission, getSubmissionsForZone, subscribeSubmissions } from "../submissions";
 
 const VISITOR_ID_KEY = "dropZoneVisitorId";
+const UNLOCKED_ZONES_KEY = "dropZoneUnlocked";
 
 /** Identifies "your" submissions on this unauthenticated public page — a
  * random ID generated once per browser and persisted, not real auth. */
@@ -26,6 +27,28 @@ function getOrCreateVisitorId(): string {
 		return generated;
 	} catch {
 		return "anonymous";
+	}
+}
+
+/** Password gate is per-browser, not a real session — once unlocked, a return
+ * visit (e.g. clicking back in from a status-update email) skips straight to
+ * the content instead of asking again every time. */
+function isZoneUnlocked(zoneId: string): boolean {
+	if (typeof window === "undefined") return false;
+	try {
+		const unlocked: string[] = JSON.parse(localStorage.getItem(UNLOCKED_ZONES_KEY) ?? "[]");
+		return unlocked.includes(zoneId);
+	} catch {
+		return false;
+	}
+}
+
+function markZoneUnlocked(zoneId: string) {
+	try {
+		const unlocked: string[] = JSON.parse(localStorage.getItem(UNLOCKED_ZONES_KEY) ?? "[]");
+		if (!unlocked.includes(zoneId)) localStorage.setItem(UNLOCKED_ZONES_KEY, JSON.stringify([...unlocked, zoneId]));
+	} catch {
+		// Best-effort — worst case the gate reappears next visit.
 	}
 }
 
@@ -57,12 +80,30 @@ export default function DropZoneLandingPage() {
 	const [email, setEmail] = useState("");
 	const [notes, setNotes] = useState("");
 	const [visitorId] = useState(getOrCreateVisitorId);
+	const [unlocked, setUnlocked] = useState(false);
+	const [passwordGuess, setPasswordGuess] = useState("");
+	const [gateError, setGateError] = useState(false);
 	const allSubmissionsForZone = useSyncExternalStore(
 		subscribeSubmissions,
 		() => getSubmissionsForZone(link?.id ?? ""),
 		() => getSubmissionsForZone(link?.id ?? ""),
 	);
 	const mySubmissions = allSubmissionsForZone.filter((submission) => submission.visitorId === visitorId);
+
+	useEffect(() => {
+		if (link && isZoneUnlocked(link.id)) setUnlocked(true);
+	}, [link]);
+
+	function attemptUnlock() {
+		if (!link) return;
+		if (passwordGuess === link.password) {
+			markZoneUnlocked(link.id);
+			setUnlocked(true);
+			setGateError(false);
+		} else {
+			setGateError(true);
+		}
+	}
 
 	if (!link || link.status === "expired") {
 		return (
@@ -77,6 +118,46 @@ export default function DropZoneLandingPage() {
 							: "Check the URL and try again."}
 					</p>
 				</div>
+			</ExternalShell>
+		);
+	}
+
+	if (!unlocked) {
+		return (
+			<ExternalShell>
+				<Box display="flex" flexDirection="column" alignItems="center" gap="20" style={{ maxWidth: 380, textAlign: "center", width: "100%" }}>
+					<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ width: 56, height: 56 }}>
+						<IconLock size={22} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+					</Box>
+					<Box display="flex" flexDirection="column" gap="6">
+						<span
+							className="text-stride-dark/50"
+							style={{ fontFamily: "'Roboto Mono', monospace", fontSize: 12, letterSpacing: "0.03em", lineHeight: 1.25, textTransform: "uppercase" }}
+						>
+							{link.campaign}
+						</span>
+						<h1 className="text-stride-dark font-stride-bold" style={{ fontSize: 24, margin: 0 }}>{link.name}</h1>
+						<p className="text-stride-dark/60 text-stride-lg" style={{ margin: 0 }}>
+							This Drop Zone is password protected. Enter the password shared with you to continue.
+						</p>
+					</Box>
+					<Box display="flex" flexDirection="column" gap="12" style={{ textAlign: "left", width: "100%" }}>
+						<Field error={gateError ? "That password doesn't match — check with whoever shared this link." : undefined}>
+							<Input
+								autoFocus
+								placeholder="Enter password"
+								size="lg"
+								type="password"
+								value={passwordGuess}
+								onChange={(e) => { setPasswordGuess(e.target.value); if (gateError) setGateError(false); }}
+								onKeyDown={(e) => { if (e.key === "Enter") attemptUnlock(); }}
+							/>
+						</Field>
+						<Button appearance="primary" disabled={!passwordGuess.trim()} onClick={attemptUnlock} size="lg" style={{ width: "100%" }}>
+							Unlock
+						</Button>
+					</Box>
+				</Box>
 			</ExternalShell>
 		);
 	}
