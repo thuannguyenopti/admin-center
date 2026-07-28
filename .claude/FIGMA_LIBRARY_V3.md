@@ -30,12 +30,8 @@ All `componentKey` values are for use with `importComponentByKeyAsync`. `compone
 | Toggle Button | component_set | `6515d66781a16aa9046b018f90dba6276472a513` | |
 | Menu Label Button | component_set | `bed4de19dc3b95439bd0beba3f4a69599ff8eaef` | |
 | Add Button | component_set | `4c52744eec83189c194e8a77d14afb3476217241` | |
-| Checkbox | component_set | `1b51f2a59548085582454116eecc3835d2d5dbc0` | Use this (updated 2026-06-19); older key: `96ff43a8baf590d1c8bfb4ea84c94475e9058ec9`. ⚠️ Carries a built-in label — see note below |
+| Checkbox | component_set | `1b51f2a59548085582454116eecc3835d2d5dbc0` | Use this (updated 2026-06-19); older key: `96ff43a8baf590d1c8bfb4ea84c94475e9058ec9` |
 | Toggle | component_set | `874be68474689cf5f96831d5029bf55258651f37` | |
-
-**Instance gotchas (verified 2026-07-21):**
-- **Checkbox has a built-in label slot.** A fresh Checkbox instance renders an internal label ("Text frame") and measures ~80px wide, not 24×24. For a bare box (checklist rows, leading slots) hide it: `instance.findOne(n => n.name === 'Text frame').visible = false`. In a HORIZONTAL auto-layout row the sibling text then re-aligns on its own. Never hide the label by clipping the parent — a clip masks the stray "Label" (and any overflow bug) instead of fixing it.
-- **A swapped/renamed instance keeps its custom name, not the component's.** After `swapComponent`-ing an icon into a Button (or any rename), `get_metadata` shows the instance as e.g. "Search"/"Close" — it still IS a Button. Confirm via `await inst.getMainComponentAsync()` → `mc.parent.name` (component-set) + `.key`; don't infer "not a component" from the node name.
 
 ### Feedback & Status
 
@@ -100,13 +96,12 @@ Icon imports in code use `@optiaxiom/icons` — NOT `@optimizely/axiom-icons` or
 | Refresh (Arrow Rotate) | `IconRefresh` | `2e5a2a9b61e4e6b34e8f44603e0e4f3cc513ca9d` | `Active=False` |
 | History (Clock) | `IconHistory` | `d97e050a623235552bb76086c035639a0984f00b` | `Active=False` |
 | Arrow Down Circle | `IconArrowDownCircle` | `0b1d812c80a390277ca81b780e9b12640034febc` | `Active=False` |
-| Close / Xmark | `IconXmark` | `94021c35dea93d114eb2b1c081fecebc71c44c86` | `Active=False` — ⚠️ USE THIS for close buttons. Figma name: "Close", library "Axiom Design System" (confirmed 2026-07-17). Do NOT use the legacy Axiom Icons `6824278e…` "xmark-thin 24" below. |
 
 ### Icons not found in "Axiom Design System" — use Axiom Icons library
 
 | Icon | Axiom Icons componentKey | Notes |
 |------|--------------------------|-------|
-| ~~Xmark / Close~~ | ~~`6824278e82aa2571467fb347e30501ba24e0c328`~~ | ⛔ **LEGACY — do not use.** The V3 "Close" icon IS in Axiom Design System (`94021c35…`, above). This legacy `xmark-thin 24` from the Axiom Icons lib was used by mistake and flagged as wrong. |
+| Xmark / Close | `6824278e82aa2571467fb347e30501ba24e0c328` | From "Axiom Icons" lib; name: `xmark-thin 24` |
 | Plus / Add | Not found via MCP — use `search_design_system` query "Plus Axiom Icons" at build time | From `@optiaxiom/icons` as `IconPlus` |
 
 ---
@@ -152,20 +147,6 @@ These were NOT returned by MCP `search_design_system` queries. At build time, us
 search_design_system(query: "bg default background", fileKey: "qs72V79n1s9wYOcZ1TzBwM", includeVariables: true)
 ```
 Then filter results by libraryKey `lk-d7174ce160e385d2e236c46ac815460e3111dd378e6c26dfa34198e3901b57863dea7e88038763206cbba3b7029f8cb87e136c96694a6ee84036a4cebf6eaab7`.
-
-**Confirmed `fg.*` keys + RESOLVED values (verified 2026-07-21).** ⚠️ Names mislead — always check the resolved swatch before using one as a "blue"/"green":
-
-| Token path | variableKey (Axiom Design System) | Resolves to |
-|-----------|-----------------------------------|-------------|
-| `colors/fg/feedback/information-base` | `d444e9c7d4e8afca66b2182ea55b32f55fb16dba` | **teal** `#197a94` (NOT blue — nearly the card border color) |
-| `colors/fg/feedback/information-strong` | `588521f053dbae89fa85d30e6f9ab63ca8c96790` | darker teal |
-| `colors/fg/feedback/success-strong` | (search "success strong") | clean **dark green** `#226b1e` |
-| `colors/fg/accent/base` | (search "accent") | **lime** `#abff44` (NOT a conventional accent blue) |
-| `colors/fg/tertiary` | `8b3c8986adeddd87364bc513be48cc827cb0e330` | neutral gray "text and icons" |
-
-There is a duplicate `information-base` in the **"Foundations V2 - Legacy"** library (`d231e5ad…`) — pick the **Axiom Design System** key (`d444e9c7…`). If a design genuinely needs a saturated blue that no token provides, FLAG it rather than binding a mislabeled token or hardcoding hex.
-
-**Semantic usage — Planner/tracker tray (Pei's convention, 2026-07-21):** the card left accent bar encodes item **TYPE, not status**: task = `fg.information`, note = `fg.tertiary`. Cards are discrete bordered + shadowed cards with ~16px side margins and ~8px gaps (not full-bleed divider rows). Do not encode approval/workflow status via color.
 
 **Collection: "0. Primitives"**
 variableSetKey: `898663953f1f93cfe7d6c7523abd376c9c7f26db`

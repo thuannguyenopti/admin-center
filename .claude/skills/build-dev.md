@@ -129,20 +129,12 @@ Parse `SCAN_RESULT` to determine the path:
 >
 > **Structural checklist (always apply):**
 > - All UI from `@optiaxiom/react` — no raw HTML when an Axiom component exists
-> - Icons in `app/opal/` from `@optiaxiom/icons`; all other areas from `@optimizely/axiom-icons` — never `@tabler/icons-react` directly
-> - **Before using any icon, verify the export name** — internal name ≠ exported name. Run: `grep "export {" node_modules/@optiaxiom/icons/dist/esm/index.js | grep -i 'keyword'`. Known gotchas: `IconShare` → `IconShareNodes`; `IconAccountTree` → `IconDiagramSubtask`; `IconAgent` = V3 cursor+sparkle icon
+> - Icons ONLY from `@optimizely/axiom-icons` — never `@tabler/icons-react` directly
 > - Spacing tokens only: `"0" "2" "4" "6" "8" "10" "12" "16" "20" "24" "32" "40" "48" "56" "64" "80"`
 > - Inputs wrapped in `<Field label="...">` — no manual `<Text>` labels
 > - `rounded` and `shadow` props — never `style={{ borderRadius, boxShadow }}`
 > - Dark mode via `[data-theme="dark"]` only — never `@media (prefers-color-scheme: dark)`
 > - No `<Text>` nested inside `<Text>` without `asChild` on the outer
-> - `Box` does NOT support `as="span"` — use `<Box asChild><span>...</span></Box>` instead
-> - `flexShrink` is NOT an Axiom sprinkle — use `style={{ flexShrink: 0 }}` only if truly needed
-> - **No inline style overrides for font**: never `style={{ fontWeight }}`, `style={{ fontFamily }}`, or span wrappers inside `SelectTrigger` to fix rendering — use the correct `size` prop instead
-> - **SelectTrigger size**: use `size="md"` in panels and forms. `size="lg"` renders text visually heavy/bold. Only use `size="lg"` when explicitly matching a large-format layout
-> - **Custom `Input` from `@/app/components/Input`** defaults to `size="lg"` but spreads `...props` after, so pass `size="md"` explicitly when you need md height
-> - **Button appearances**: secondary/inline non-destructive actions → `appearance="subtle"`; never `appearance="primary"` for supporting actions. Footer CTA → `appearance="primary" size="md"` explicitly
-> - **HTML prototypes are requirements input only** — extract the user need, rebuild with Axiom components and tokens. Never copy raw `<button>`, `<input>`, `<select>`, `<textarea>`, or hardcoded colors from prototypes
 >
 > `[if VERSION = "v3"]` **V3 typography (inherited — do not set inline):**
 > - Body/UI text = Die Grotesk B; headings h1–h6 = Nudge SemiNormal. Both are applied via `globals.css [data-brand="v3"]`.
@@ -150,13 +142,6 @@ Parse `SCAN_RESULT` to determine the path:
 > - Tab underlines: use `style={{ borderBottomColor: "var(--ax-colors-fg-default)" }}` (dark charcoal). Never `--ax-colors-border-focus` (that is the focus ring / teal).
 > - Tab text: selected = `color="fg.default"` `fontWeight="500"`; unselected = `color="fg.tertiary"` `fontWeight="400"`.
 > - Never override `--ax-colors-fg-default-inverse` to dark — that breaks tooltip text. Primary button dark text is handled by `--v3iotm`.
->
-> `[if VERSION = "v3"]` **Opal/workflow panel patterns:**
-> - **Panel header layout**: put icon + title in the SAME `alignItems="center"` flex Box as `DetailsPanelHeader` children. Never use `addonBefore` for the icon — it misaligns with the title vertically
-> - **Panel body padding**: use `pt="12" px="16" pb="16"` on `DetailsPanelBody`, not uniform `p="20"` — reduces the gap between header and content
-> - **Panel footer buttons**: always explicit `size="md"` on Apply/Cancel/Done
-> - **Avatar/icon shapes**: action nodes → `rounded="md"`; trigger/logic nodes → `rounded="full"` (circles); panel header icons → `rounded="md"` (never full)
-> - **Dialogs**: use `Dialog`, `DialogBody`, `DialogClose`, `DialogContent`, `DialogFooter`, `DialogHeader` from `@optiaxiom/react`
 >
 > `[if VERSION = "v3"]` **Opal checklist (additional):**
 > - Gradient colors → CSS custom properties (`--opal-gradient-*`), never `bg.*` tokens
@@ -183,20 +168,12 @@ Parse `SCAN_RESULT` to determine the path:
 >
 > **Structural checklist (always apply):**
 > - All UI from `@optiaxiom/react` — no raw HTML when an Axiom component exists
-> - Icons in `app/opal/` from `@optiaxiom/icons`; all other areas from `@optimizely/axiom-icons` — never `@tabler/icons-react` directly
-> - **Before using any icon, verify the export name** — internal name ≠ exported name. Run: `grep "export {" node_modules/@optiaxiom/icons/dist/esm/index.js | grep -i 'keyword'`. Known gotchas: `IconShare` → `IconShareNodes`; `IconAccountTree` → `IconDiagramSubtask`
+> - Icons ONLY from `@optimizely/axiom-icons` — never `@tabler/icons-react` directly
 > - Spacing tokens only: `"0" "2" "4" "6" "8" "10" "12" "16" "20" "24" "32" "40" "48" "56" "64" "80"`
 > - Inputs wrapped in `<Field label="...">` — no manual `<Text>` labels
 > - `rounded` and `shadow` props — never `style={{ borderRadius, boxShadow }}`
 > - Dark mode via `[data-theme="dark"]` only — never `@media (prefers-color-scheme: dark)`
 > - No `<Text>` nested inside `<Text>` without `asChild` on the outer
-> - `Box` does NOT support `as="span"` — use `<Box asChild><span>...</span></Box>` instead
-> - `flexShrink` is NOT an Axiom sprinkle — use `style={{ flexShrink: 0 }}` only if truly needed
-> - **No inline style overrides for font**: never `style={{ fontWeight }}`, `style={{ fontFamily }}`, or span wrappers to fix rendering — use the correct `size` prop instead
-> - **SelectTrigger size**: use `size="md"` in panels and forms. `size="lg"` renders text visually heavy/bold
-> - **Custom `Input` from `@/app/components/Input`** defaults to `size="lg"` — pass `size="md"` explicitly when needed
-> - **Button appearances**: secondary/inline non-destructive actions → `appearance="subtle"`. Footer CTA → `appearance="primary" size="md"` explicitly
-> - **HTML prototypes are requirements input only** — extract the user need, rebuild with Axiom components and tokens. Never copy raw HTML elements
 >
 > `[if VERSION = "v3"]` **V3 typography (inherited — do not set inline):**
 > - Body/UI text = Die Grotesk B; headings h1–h6 = Nudge SemiNormal. Both are applied via `globals.css [data-brand="v3"]`.
@@ -204,13 +181,6 @@ Parse `SCAN_RESULT` to determine the path:
 > - Tab underlines: use `style={{ borderBottomColor: "var(--ax-colors-fg-default)" }}` (dark charcoal). Never `--ax-colors-border-focus` (that is the focus ring / teal).
 > - Tab text: selected = `color="fg.default"` `fontWeight="500"`; unselected = `color="fg.tertiary"` `fontWeight="400"`.
 > - Never override `--ax-colors-fg-default-inverse` to dark — that breaks tooltip text. Primary button dark text is handled by `--v3iotm`.
->
-> `[if VERSION = "v3"]` **Opal/workflow panel patterns:**
-> - **Panel header layout**: put icon + title in the SAME `alignItems="center"` flex Box as `DetailsPanelHeader` children. Never use `addonBefore` for the icon — it misaligns with the title vertically
-> - **Panel body padding**: use `pt="12" px="16" pb="16"` on `DetailsPanelBody`, not uniform `p="20"`
-> - **Panel footer buttons**: always explicit `size="md"` on Apply/Cancel/Done
-> - **Avatar/icon shapes**: action nodes → `rounded="md"`; trigger/logic nodes → `rounded="full"` (circles); panel header icons → `rounded="md"` (never full)
-> - **Dialogs**: use `Dialog`, `DialogBody`, `DialogClose`, `DialogContent`, `DialogFooter`, `DialogHeader` from `@optiaxiom/react`
 >
 > `[if VERSION = "v3"]` **Opal checklist (additional):**
 > - Gradient colors → CSS custom properties (`--opal-gradient-*`), never `bg.*` tokens
@@ -246,21 +216,14 @@ Spawn a sub-agent with this prompt (fill in `COMPONENT_CODE`):
 > 2. Invalid enum prop values — check `appearance`, `colorScheme`, `size`, `rounded`, `shadow`, and other enum props on every Axiom component against `COMPONENT_SPECS`
 >
 > **Section B — Structural pattern checklist** (fixed rules, always apply):
-> 3. `@tabler/icons-react` imported directly (must use `@optimizely/axiom-icons` or `@optiaxiom/icons` for `app/opal/`)
-> 4. Icon export name not verified — check `grep "export {" node_modules/@optiaxiom/icons/dist/esm/index.js | grep -i '<name>'` before using any icon
-> 5. Arbitrary spacing — e.g. `p="17"`, `gap="11"` (allowed: 0,2,4,6,8,10,12,16,20,24,32,40,48,56,64,80)
-> 6. `size="sm"` on Input or SearchInput
-> 7. Raw HTML elements used as product UI
-> 8. Manual `<Text>` or `<label>` beside an input instead of `<Field label="...">`
-> 9. `style={{ borderRadius }}` or `style={{ boxShadow }}`
-> 10. `@media (prefers-color-scheme: dark)` (must use `[data-theme="dark"]`)
-> 11. `<Text>` nested inside another `<Text>` without `asChild`
-> 12. `SelectTrigger size="lg"` inside a panel or form — must be `size="md"`
-> 13. `style={{ fontWeight }}` or `style={{ fontFamily }}` inline overrides on text inside form controls — use `size` prop instead
-> 14. `Box as="span"` — Axiom Box ignores `as`; use `<Box asChild><span>…</span></Box>` instead
-> 15. `flexShrink` as an Axiom prop on Box — not a valid sprinkle; use `style={{ flexShrink: 0 }}`
-> 16. Footer CTA buttons without explicit `size="md"` — Apply/Cancel/Done must be sized explicitly
-> 17. Secondary/supporting inline actions using `appearance="primary"` — must be `appearance="subtle"`
+> 3. `@tabler/icons-react` imported directly (must use `@optimizely/axiom-icons`)
+> 4. Arbitrary spacing — e.g. `p="17"`, `gap="11"` (allowed: 0,2,4,6,8,10,12,16,20,24,32,40,48,56,64,80)
+> 5. `size="sm"` on Input or SearchInput
+> 6. Raw HTML elements used as product UI
+> 7. Manual `<Text>` or `<label>` beside an input instead of `<Field label="...">`
+> 8. `style={{ borderRadius }}` or `style={{ boxShadow }}`
+> 9. `@media (prefers-color-scheme: dark)` (must use `[data-theme="dark"]`)
+> 10. `<Text>` nested inside another `<Text>` without `asChild`
 > 11. *(V3 only, page.tsx only)* Page title — use `PAGE_LAYOUT_FLAGS`:
 >     - If `customLayout: true` or `hidePageHeader: true` → render the page title as `<Heading level="1">`. Never `<Text fontSize="...">`, inline `style={{ fontSize }}`, or raw `<h1>`.
 >     - If no flags (`{}`) → do NOT render a `<Heading level="1">` page title; the template auto-generates it.
