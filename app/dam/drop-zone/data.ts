@@ -15,9 +15,6 @@ export interface DropZoneLink {
 	maxFileSizeMb: number;
 	requiredFields: string[];
 	submissionCount: number;
-	/** Who requested this drop zone be created — shown internally, not to external submitters. */
-	creatorName: string;
-	creatorEmail: string;
 }
 
 export const DROP_ZONES: DropZoneLink[] = [
@@ -34,8 +31,6 @@ export const DROP_ZONES: DropZoneLink[] = [
 		maxFileSizeMb: 50,
 		requiredFields: ["Photographer credit", "Usage rights", "Shoot location"],
 		submissionCount: 6,
-		creatorName: "Priya Rajan",
-		creatorEmail: "priya.rajan@stride.com",
 	},
 	{
 		id: "dz2",
@@ -50,8 +45,6 @@ export const DROP_ZONES: DropZoneLink[] = [
 		maxFileSizeMb: 200,
 		requiredFields: ["Videographer credit", "Usage rights"],
 		submissionCount: 4,
-		creatorName: "Marcus Santos",
-		creatorEmail: "marcus.santos@stride.com",
 	},
 ];
 

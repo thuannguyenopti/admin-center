@@ -23,8 +23,6 @@ const BREADCRUMB = [
 export default function NewDropZonePage() {
 	const router = useRouter();
 	const [phase, setPhase] = useState<Phase>("brief");
-	const [creatorName, setCreatorName] = useState("");
-	const [creatorEmail, setCreatorEmail] = useState("");
 	const [brief, setBrief] = useState("");
 	const [suggestion, setSuggestion] = useState<OpalBriefSuggestion | null>(null);
 	const [campaignTag, setCampaignTag] = useState("");
@@ -60,8 +58,6 @@ export default function NewDropZonePage() {
 			allowedFileTypes: fileTypes,
 			maxFileSizeMb,
 			requiredFields: suggestion.requiredFields,
-			creatorName: creatorName.trim(),
-			creatorEmail: creatorEmail.trim(),
 		});
 		setPhase("created");
 	}
@@ -113,19 +109,6 @@ export default function NewDropZonePage() {
 						</Text>
 					</Box>
 
-					<Box display="flex" gap="16">
-						<Box style={{ flex: 1 }}>
-							<Field label="Your name" required>
-								<Input size="lg" value={creatorName} onChange={(e) => setCreatorName(e.target.value)} disabled={phase === "review"} />
-							</Field>
-						</Box>
-						<Box style={{ flex: 1 }}>
-							<Field label="Your email" required>
-								<Input size="lg" type="email" value={creatorEmail} onChange={(e) => setCreatorEmail(e.target.value)} disabled={phase === "review"} />
-							</Field>
-						</Box>
-					</Box>
-
 					<Field label="Campaign brief" required>
 						<Textarea
 							placeholder="e.g. Collecting finish-line and crowd-energy footage from the Autumn Series races for the highlights reel..."
@@ -142,7 +125,7 @@ export default function NewDropZonePage() {
 							appearance="primary"
 							size="md"
 							icon={<IconSparkles size={16} />}
-							disabled={!brief.trim() || !creatorName.trim() || !creatorEmail.trim()}
+							disabled={!brief.trim()}
 							onClick={analyzeBrief}
 							style={{ alignSelf: "flex-start" }}
 						>
