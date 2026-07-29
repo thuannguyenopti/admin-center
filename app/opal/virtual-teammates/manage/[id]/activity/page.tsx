@@ -49,12 +49,40 @@ const ACTIVITY_ROWS = [
 	{ task: "Weekly recap",   runs: 12,  pct: 100, avgMin: 5 },
 ];
 
+const ACTIVITY_ROWS_BY_VAU: Record<string, typeof ACTIVITY_ROWS> = {
+	henry: [
+		{ task: "SERP shift digest",      runs: 142, pct: 98,  avgMin: 3 },
+		{ task: "Keyword cluster report", runs: 48,  pct: 100, avgMin: 8 },
+		{ task: "Content brief draft",    runs: 22,  pct: 91,  avgMin: 12 },
+	],
+	kerby: [
+		{ task: "Conversion drop alert", runs: 134, pct: 97,  avgMin: 2 },
+		{ task: "A/B test report",        runs: 52,  pct: 100, avgMin: 6 },
+		{ task: "Landing page audit",     runs: 8,   pct: 100, avgMin: 15 },
+	],
+};
+
 const INITIAL_QUEUE = [
 	{ id: "q1", task: "Meeting Prep",   sub: "Pre-meeting brief",         time: "11:00 AM" },
 	{ id: "q2", task: "Email Triage",   sub: "Daily inbox sweep",         time: "11:30 AM" },
 	{ id: "q3", task: "Status Nudges",  sub: "Follow-up reminders sent",  time: "12:00 PM" },
 	{ id: "q4", task: "Meeting Prep",   sub: "Pre-meeting brief",         time: "1:00 PM" },
 ];
+
+const INITIAL_QUEUE_BY_VAU: Record<string, typeof INITIAL_QUEUE> = {
+	henry: [
+		{ id: "q1", task: "SERP Shift Digest",      sub: "Daily search ranking changes",       time: "8:00 AM" },
+		{ id: "q2", task: "Keyword Cluster Report", sub: "Weekly keyword gap analysis",        time: "9:00 AM" },
+		{ id: "q3", task: "SERP Shift Digest",      sub: "Daily search ranking changes",       time: "8:00 AM" },
+		{ id: "q4", task: "Content Brief Draft",    sub: "SEO-optimized briefs for new topics", time: "10:00 AM" },
+	],
+	kerby: [
+		{ id: "q1", task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               time: "8:00 AM" },
+		{ id: "q2", task: "A/B Test Report",        sub: "Weekly experiment results summary",      time: "9:00 AM" },
+		{ id: "q3", task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               time: "8:00 AM" },
+		{ id: "q4", task: "Landing Page Audit",     sub: "Monthly conversion optimization review", time: "10:00 AM" },
+	],
+};
 
 const COMPLETED_ITEMS = [
 	{ id: "c1",  task: "Email Triage",     sub: "Daily inbox sweep",             dateIndex: 0,  executionTime: "Jul 6, 2026, 9:53 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 118, duration: "2m 12s" },
@@ -67,9 +95,40 @@ const COMPLETED_ITEMS = [
 	{ id: "c8",  task: "Email Triage",     sub: "Daily inbox sweep",             dateIndex: 7,  executionTime: "Jul 3, 2026, 1:00 PM",  trigger: "scheduled" as const, type: "Workflow", credits: 121, duration: "2m 08s" },
 	{ id: "c9",  task: "Status Nudges",    sub: "Follow-up reminders sent",      dateIndex: 8,  executionTime: "Jul 2, 2026, 3:20 PM",  trigger: "message" as const,   type: "Workflow", credits: 88,  duration: "1m 32s" },
 	{ id: "c10", task: "Morning Brief",    sub: "Daily digest delivered",        dateIndex: 9,  executionTime: "Jul 2, 2026, 7:00 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 158, duration: "2m 48s" },
-	{ id: "c11", task: "Competitor Intel", sub: "Weekly landscape digest",            dateIndex: 10, executionTime: "Jul 1, 2026, 11:15 AM", trigger: "scheduled" as const, type: "Workflow", credits: 203, duration: "3m 57s" },
-	{ id: "c12", task: "Follow-ups",       sub: "Feedback loop continued",           dateIndex: 11, executionTime: "Jul 1, 2026, 10:02 AM", trigger: "message" as const,   type: "Workflow", credits: 97,  duration: "1m 44s" },
+	{ id: "c11", task: "Competitor Intel", sub: "Weekly landscape digest",       dateIndex: 10, executionTime: "Jul 1, 2026, 11:15 AM", trigger: "scheduled" as const, type: "Workflow", credits: 203, duration: "3m 57s" },
+	{ id: "c12", task: "Follow-ups",       sub: "Feedback loop continued",       dateIndex: 11, executionTime: "Jul 1, 2026, 10:02 AM", trigger: "message" as const,   type: "Workflow", credits: 97,  duration: "1m 44s" },
 ];
+
+const COMPLETED_ITEMS_BY_VAU: Record<string, typeof COMPLETED_ITEMS> = {
+	henry: [
+		{ id: "c1",  task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 0,  executionTime: "Jul 6, 2026, 8:02 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 112, duration: "1m 58s" },
+		{ id: "c2",  task: "Keyword Cluster Report", sub: "Weekly keyword gap analysis",         dateIndex: 1,  executionTime: "Jul 6, 2026, 9:05 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 247, duration: "5m 12s" },
+		{ id: "c3",  task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 2,  executionTime: "Jul 5, 2026, 8:01 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 108, duration: "1m 52s" },
+		{ id: "c4",  task: "Content Brief Draft",    sub: "SEO-optimized briefs for new topics", dateIndex: 3,  executionTime: "Jul 4, 2026, 10:14 AM", trigger: "scheduled" as const, type: "Workflow", credits: 391, duration: "8m 44s" },
+		{ id: "c5",  task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 4,  executionTime: "Jul 4, 2026, 8:00 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 115, duration: "2m 03s" },
+		{ id: "c6",  task: "Keyword Cluster Report", sub: "Weekly keyword gap analysis",         dateIndex: 5,  executionTime: "Jul 3, 2026, 9:02 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 259, duration: "5m 28s" },
+		{ id: "c7",  task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 6,  executionTime: "Jul 3, 2026, 8:01 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 110, duration: "1m 55s" },
+		{ id: "c8",  task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 7,  executionTime: "Jul 2, 2026, 8:03 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 119, duration: "2m 06s" },
+		{ id: "c9",  task: "Content Brief Draft",    sub: "SEO-optimized briefs for new topics", dateIndex: 8,  executionTime: "Jul 1, 2026, 10:30 AM", trigger: "scheduled" as const, type: "Workflow", credits: 374, duration: "8m 19s" },
+		{ id: "c10", task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 9,  executionTime: "Jul 1, 2026, 8:00 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 107, duration: "1m 49s" },
+		{ id: "c11", task: "Keyword Cluster Report", sub: "Weekly keyword gap analysis",         dateIndex: 10, executionTime: "Jun 30, 2026, 9:08 AM", trigger: "scheduled" as const, type: "Workflow", credits: 241, duration: "5m 05s" },
+		{ id: "c12", task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 11, executionTime: "Jun 30, 2026, 8:01 AM", trigger: "scheduled" as const, type: "Workflow", credits: 113, duration: "2m 00s" },
+	],
+	kerby: [
+		{ id: "c1",  task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 0,  executionTime: "Jul 6, 2026, 8:04 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 88,  duration: "1m 32s" },
+		{ id: "c2",  task: "A/B Test Report",        sub: "Weekly experiment results summary",      dateIndex: 1,  executionTime: "Jul 6, 2026, 9:01 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 194, duration: "4m 08s" },
+		{ id: "c3",  task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 2,  executionTime: "Jul 5, 2026, 8:02 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 91,  duration: "1m 38s" },
+		{ id: "c4",  task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 3,  executionTime: "Jul 4, 2026, 8:01 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 84,  duration: "1m 27s" },
+		{ id: "c5",  task: "Landing Page Audit",     sub: "Monthly conversion optimization review", dateIndex: 4,  executionTime: "Jul 3, 2026, 10:05 AM", trigger: "scheduled" as const, type: "Workflow", credits: 462, duration: "9m 51s" },
+		{ id: "c6",  task: "A/B Test Report",        sub: "Weekly experiment results summary",      dateIndex: 5,  executionTime: "Jun 30, 2026, 9:00 AM", trigger: "scheduled" as const, type: "Workflow", credits: 188, duration: "3m 58s" },
+		{ id: "c7",  task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 6,  executionTime: "Jun 30, 2026, 8:03 AM", trigger: "scheduled" as const, type: "Workflow", credits: 79,  duration: "1m 21s" },
+		{ id: "c8",  task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 7,  executionTime: "Jun 29, 2026, 8:01 AM", trigger: "scheduled" as const, type: "Workflow", credits: 93,  duration: "1m 41s" },
+		{ id: "c9",  task: "A/B Test Report",        sub: "Weekly experiment results summary",      dateIndex: 8,  executionTime: "Jun 23, 2026, 9:02 AM", trigger: "scheduled" as const, type: "Workflow", credits: 201, duration: "4m 14s" },
+		{ id: "c10", task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 9,  executionTime: "Jun 23, 2026, 8:00 AM", trigger: "scheduled" as const, type: "Workflow", credits: 86,  duration: "1m 29s" },
+		{ id: "c11", task: "Landing Page Audit",     sub: "Monthly conversion optimization review", dateIndex: 10, executionTime: "Jun 2, 2026, 10:10 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 448, duration: "9m 32s" },
+		{ id: "c12", task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 11, executionTime: "Jun 2, 2026, 8:02 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 81,  duration: "1m 24s" },
+	],
+};
 
 const TIME_FRAME_OPTIONS = ["Past 7 days", "Past 30 days", "Past 90 days", "All time"];
 
@@ -80,6 +139,19 @@ const TOP_TASKS = [
 	{ name: "Status nudges", credits: "480" },
 	{ name: "Email triage", credits: "240" },
 ];
+
+const TOP_TASKS_BY_VAU: Record<string, typeof TOP_TASKS> = {
+	henry: [
+		{ name: "SERP shift digest",      credits: "1,580" },
+		{ name: "Keyword cluster report", credits: "1,240" },
+		{ name: "Content brief draft",    credits: "860" },
+	],
+	kerby: [
+		{ name: "Conversion drop alert", credits: "1,180" },
+		{ name: "A/B test report",        credits: "980" },
+		{ name: "Landing page audit",     credits: "460" },
+	],
+};
 const COMPLETED_PAGE_SIZE = 5;
 
 type SortKey = "task" | "executionTime" | "trigger";
@@ -108,8 +180,12 @@ export default function VATActivityPage() {
 	const vau = VAUS.find((v) => v.id === id);
 	const name = vau?.characterName ?? vau?.name ?? "Randy";
 
+	const activityRows    = ACTIVITY_ROWS_BY_VAU[id]    ?? ACTIVITY_ROWS;
+	const completedItems  = COMPLETED_ITEMS_BY_VAU[id]  ?? COMPLETED_ITEMS;
+	const topTasks        = TOP_TASKS_BY_VAU[id]         ?? TOP_TASKS;
+
 	// Queue drag-and-drop
-	const [queueItems, setQueueItems] = useState(INITIAL_QUEUE);
+	const [queueItems, setQueueItems] = useState(() => INITIAL_QUEUE_BY_VAU[id] ?? INITIAL_QUEUE);
 	const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 	const dragIndexRef = useRef<number | null>(null);
@@ -224,7 +300,7 @@ export default function VATActivityPage() {
 		}
 	};
 
-	const filteredCompleted = COMPLETED_ITEMS.filter((item) => {
+	const filteredCompleted = completedItems.filter((item) => {
 		const q = completedQuery.trim().toLowerCase();
 		if (q && !item.task.toLowerCase().includes(q) && !item.sub.toLowerCase().includes(q)) return false;
 		if (completedStatus !== "All" && completedStatus.toLowerCase() !== "completed") return false;

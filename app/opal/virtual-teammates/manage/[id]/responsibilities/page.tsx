@@ -95,6 +95,73 @@ const DEFAULT_RESPONSIBILITIES: Responsibility[] = [
 	},
 ];
 
+const RESPONSIBILITIES_BY_VAU: Record<string, Responsibility[]> = {
+	henry: [
+		{
+			id: "r1",
+			name: "SERP shift digest",
+			description: "Daily search ranking changes",
+			targetAgent: "IM_ability_MC",
+			scheduledTime: "8:00 AM EST",
+			scheduledDays: "Monday – Friday",
+			approvalMode: "auto",
+			status: "active",
+		},
+		{
+			id: "r2",
+			name: "Keyword cluster report",
+			description: "Weekly keyword gap analysis",
+			targetAgent: "Owner",
+			scheduledTime: "9:00 AM EST",
+			scheduledDays: "Monday",
+			approvalMode: "auto",
+			status: "active",
+		},
+		{
+			id: "r3",
+			name: "Content brief draft",
+			description: "SEO-optimized briefs for new topics",
+			targetAgent: "Owner",
+			scheduledTime: "10:00 AM EST",
+			scheduledDays: "Tuesday",
+			approvalMode: "ask-first",
+			status: "paused",
+		},
+	],
+	kerby: [
+		{
+			id: "r1",
+			name: "Conversion drop alert",
+			description: "Funnel anomaly detection",
+			targetAgent: "IM_ability_MC",
+			scheduledTime: "8:00 AM EST",
+			scheduledDays: "Monday – Friday",
+			approvalMode: "auto",
+			status: "active",
+		},
+		{
+			id: "r2",
+			name: "A/B test report",
+			description: "Weekly experiment results summary",
+			targetAgent: "Owner",
+			scheduledTime: "9:00 AM EST",
+			scheduledDays: "Monday",
+			approvalMode: "auto",
+			status: "active",
+		},
+		{
+			id: "r3",
+			name: "Landing page audit",
+			description: "Monthly conversion optimization review",
+			targetAgent: "Owner",
+			scheduledTime: "10:00 AM EST",
+			scheduledDays: "First Monday",
+			approvalMode: "ask-first",
+			status: "paused",
+		},
+	],
+};
+
 const DEFAULT_INTERACTIONS: Interaction[] = [
 	{
 		id: "i1",
@@ -253,20 +320,20 @@ const TABLE: React.CSSProperties = {
 function InitialsAvatar({ name, size = 28 }: { name: string; size?: number }) {
 	const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 	return (
-		<Box style={{ width: size, height: size, borderRadius: "50%", background: "var(--ax-colors-border-default)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+		<span style={{ width: size, height: size, borderRadius: "50%", background: "var(--ax-colors-border-default)", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
 			<span style={{ ...CAPTION, fontSize: size <= 20 ? 8 : 9, color: "var(--ax-colors-fg-default)", lineHeight: 1 }}>
 				{initials}
 			</span>
-		</Box>
+		</span>
 	);
 }
 
 function UserAvatar({ user, size = 28 }: { user: { name: string; avatar: string | null }; size?: number }) {
 	if (user.avatar) {
 		return (
-			<Box style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+			<span style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0, display: "inline-flex" }}>
 				<Image src={user.avatar} alt={user.name} width={size} height={size} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-			</Box>
+			</span>
 		);
 	}
 	return <InitialsAvatar name={user.name} size={size} />;
@@ -275,12 +342,10 @@ function UserAvatar({ user, size = 28 }: { user: { name: string; avatar: string 
 function UserChip({ user, onRemove }: { user: { name: string; avatar: string | null }; onRemove?: () => void }) {
 	return (
 		<Pill onDismiss={onRemove}>
-			<Box asChild display="inline-flex" alignItems="center" gap="6">
-				<span>
-					<UserAvatar user={user} size={16} />
-					{user.name}
-				</span>
-			</Box>
+			<span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+				<UserAvatar user={user} size={16} />
+				{user.name}
+			</span>
 		</Pill>
 	);
 }
@@ -538,7 +603,7 @@ export default function ResponsibilitiesPage() {
 	const vau = VAUS.find((v) => v.id === id);
 	const name = vau?.characterName ?? vau?.name ?? "Randy";
 
-	const [jobs, setJobs] = useState<Responsibility[]>(DEFAULT_RESPONSIBILITIES);
+	const [jobs, setJobs] = useState<Responsibility[]>(RESPONSIBILITIES_BY_VAU[id] ?? DEFAULT_RESPONSIBILITIES);
 	const [dragId, setDragId] = useState<string | null>(null);
 	const [dragOverId, setDragOverId] = useState<string | null>(null);
 	const [interactions, setInteractions] = useState<Interaction[]>(DEFAULT_INTERACTIONS);

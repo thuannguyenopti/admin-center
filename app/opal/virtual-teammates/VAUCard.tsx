@@ -144,13 +144,16 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             )}
           </Box>
 
-          {/* SKILLS */}
+          {/* SKILLS — show up to 3 badges (fits 2 rows), overflow as +N */}
           <Box display="flex" flexDirection="column" gap="8">
             <span style={{ ...CAPTION }}>Skills</span>
-            <Box display="flex" style={{ flexWrap: "wrap", gap: 4, height: 44, overflow: "hidden", alignContent: "flex-start" }}>
-              {frontSkills.map((skill) => (
+            <Box display="flex" style={{ flexWrap: "wrap", gap: 4 }}>
+              {frontSkills.slice(0, 3).map((skill) => (
                 <Badge key={skill} variant="subtle">{skill}</Badge>
               ))}
+              {frontSkills.length > 3 && (
+                <Badge variant="subtle">+{frontSkills.length - 3}</Badge>
+              )}
             </Box>
           </Box>
 
@@ -224,64 +227,67 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             </Box>
           </Box>
 
-          {DIVIDER}
+          {/* Middle content */}
+          <div style={{ flex: 1, overflowY: "hidden", display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
+            {DIVIDER}
 
-          {/* WHY HIRE ME */}
-          {vau.whyHireMe && (
+            {/* WHY HIRE ME */}
+            {vau.whyHireMe && (
+              <Box display="flex" flexDirection="column" gap="4">
+                <span style={{ ...CAPTION }}>Why hire me</span>
+                <Text fontSize="md" color="fg.default" style={{ lineHeight: "1.4" }}>{vau.whyHireMe}</Text>
+              </Box>
+            )}
+
+            {DIVIDER}
+
+            {/* EXPERIENCE */}
+            {vau.experience && vau.experience.length > 0 && (
+              <Box display="flex" flexDirection="column" gap="4">
+                <span style={{ ...CAPTION }}>Experience</span>
+                <ul style={{ margin: 0, paddingLeft: 18, listStyleType: "disc" }}>
+                  {vau.experience.map((item) => (
+                    <li key={item} style={{ fontSize: 13, lineHeight: "1.4", color: "var(--ax-colors-fg-default)", marginBottom: 2, display: "list-item" }}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </Box>
+            )}
+
+            {DIVIDER}
+
+            {/* WORKS WITH YOUR TOOLS */}
             <Box display="flex" flexDirection="column" gap="4">
-              <span style={{ ...CAPTION }}>Why hire me</span>
-              <Text fontSize="md" color="fg.default" style={{ lineHeight: "1.4" }}>{vau.whyHireMe}</Text>
+              <span style={{ ...CAPTION }}>Works with your tools</span>
+              <ToolChips tools={vau.tools} />
             </Box>
-          )}
 
-          {DIVIDER}
+            {DIVIDER}
 
-          {/* EXPERIENCE */}
-          {vau.experience && vau.experience.length > 0 && (
+            {/* PASSIONS */}
+            {vau.passions && (
+              <Box display="flex" flexDirection="column" gap="4">
+                <span style={{ ...CAPTION }}>Passions</span>
+                <Text fontSize="md" color="fg.default" style={{ lineHeight: "1.4" }}>{vau.passions}</Text>
+              </Box>
+            )}
+
+            {DIVIDER}
+
+            {/* SKILLS */}
             <Box display="flex" flexDirection="column" gap="4">
-              <span style={{ ...CAPTION }}>Experience</span>
-              <ul style={{ margin: 0, paddingLeft: 18, listStyleType: "disc" }}>
-                {vau.experience.map((item) => (
-                  <li key={item} style={{ fontSize: 13, lineHeight: "1.4", color: "var(--ax-colors-fg-default)", marginBottom: 2, display: "list-item" }}>
-                    {item}
-                  </li>
+              <span style={{ ...CAPTION }}>Skills</span>
+              <Box display="flex" style={{ flexWrap: "wrap", gap: 4 }}>
+                {frontSkills.map((skill) => (
+                  <Badge key={skill} variant="subtle">{skill}</Badge>
                 ))}
-              </ul>
+              </Box>
             </Box>
-          )}
-
-          {DIVIDER}
-
-          {/* WORKS WITH YOUR TOOLS */}
-          <Box display="flex" flexDirection="column" gap="4">
-            <span style={{ ...CAPTION }}>Works with your tools</span>
-            <ToolChips tools={vau.tools} />
-          </Box>
-
-          {DIVIDER}
-
-          {/* PASSIONS */}
-          {vau.passions && (
-            <Box display="flex" flexDirection="column" gap="4">
-              <span style={{ ...CAPTION }}>Passions</span>
-              <Text fontSize="md" color="fg.default" style={{ lineHeight: "1.4" }}>{vau.passions}</Text>
-            </Box>
-          )}
-
-          {DIVIDER}
-
-          {/* SKILLS */}
-          <Box display="flex" flexDirection="column" gap="4">
-            <span style={{ ...CAPTION }}>Skills</span>
-            <Box display="flex" style={{ flexWrap: "wrap", gap: 4 }}>
-              {frontSkills.map((skill) => (
-                <Badge key={skill} variant="subtle">{skill}</Badge>
-              ))}
-            </Box>
-          </Box>
+          </div>
 
           {/* Hire + Details buttons */}
-          <Box display="flex" gap="8" style={{ paddingTop: 8, marginTop: "auto" }}>
+          <Box display="flex" gap="8" style={{ paddingTop: 8 }}>
             <Button
               appearance="primary"
               size="md"
