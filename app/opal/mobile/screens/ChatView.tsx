@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback, Fragment } from "react";
 import { Box, Text, Avatar, Button, Badge } from "@optiaxiom/react";
-import { IconChevronLeft, IconEllipsisSolid, IconSearch } from "@optiaxiom/icons";
+import { IconChevronLeft, IconEllipsisSolid, IconSearch, IconPenToSquare } from "@optiaxiom/icons";
+import { mobileType } from "../typography";
 import { MessageBubble, PresenceDot } from "../components/MessageBubble";
 import { Composer } from "../components/Composer";
 import { TypingIndicator } from "../components/TypingIndicator";
@@ -25,12 +26,6 @@ const IconHamburger = () => (
   </svg>
 );
 
-const IconComposePen = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-    <path d="M13 2.5L15.5 5L6 14.5H3.5V12L13 2.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-    <line x1="11" y1="4.5" x2="13.5" y2="7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-  </svg>
-);
 
 type Props = {
   conversationId: string;
@@ -38,9 +33,10 @@ type Props = {
   onHamburger?: () => void;
   onNewChat?: () => void;
   onGlobalSearch?: () => void;
+  autoFocus?: boolean;
 };
 
-export function ChatView({ conversationId, onBack, onHamburger, onNewChat, onGlobalSearch }: Props) {
+export function ChatView({ conversationId, onBack, onHamburger, onNewChat, onGlobalSearch, autoFocus = false }: Props) {
   const [messages, setMessages] = useState<Message[]>(
     () => (THREADS[conversationId] ?? []).map((m) => ({ ...m })),
   );
@@ -219,7 +215,7 @@ export function ChatView({ conversationId, onBack, onHamburger, onNewChat, onGlo
                 fontWeight="600"
                 color="fg.default"
                 style={{
-                  fontSize: 16,
+                  ...mobileType.sectionHeader,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
@@ -260,7 +256,7 @@ export function ChatView({ conversationId, onBack, onHamburger, onNewChat, onGlo
               <Button
                 appearance="subtle"
                 size="sm"
-                icon={<IconComposePen />}
+                icon={<IconPenToSquare style={{ width: 18, height: 18 }} />}
                 aria-label="New message"
                 onClick={onNewChat}
                 style={{ width: 40, height: 40, padding: 0 }}
@@ -315,7 +311,7 @@ export function ChatView({ conversationId, onBack, onHamburger, onNewChat, onGlo
               outline: "none",
               background: "transparent",
               fontFamily: "inherit",
-              fontSize: 15,
+              ...mobileType.primary,
               color: "var(--ax-colors-fg-default)",
             }}
           />
@@ -323,7 +319,7 @@ export function ChatView({ conversationId, onBack, onHamburger, onNewChat, onGlo
             appearance="subtle"
             size="sm"
             onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
-            style={{ fontSize: 13, color: "var(--ax-colors-fg-tertiary)", height: 28, padding: "0 8px" }}
+            style={{ ...mobileType.secondary, color: "var(--ax-colors-fg-tertiary)", height: 28, padding: "0 8px" }}
           >
             Cancel
           </Button>
@@ -335,7 +331,7 @@ export function ChatView({ conversationId, onBack, onHamburger, onNewChat, onGlo
           py="4"
           style={{ flexShrink: 0, background: "var(--ax-colors-bg-secondary)" }}
         >
-          <Text color="fg.tertiary" style={{ fontSize: 12 }}>
+          <Text color="fg.tertiary" style={{ ...mobileType.meta }}>
             {displayedMessages.length} result{displayedMessages.length !== 1 ? "s" : ""}
           </Text>
         </Box>
@@ -358,7 +354,7 @@ export function ChatView({ conversationId, onBack, onHamburger, onNewChat, onGlo
         {/* Date separator */}
         <Box display="flex" alignItems="center" gap="10" style={{ marginBottom: 12 }}>
           <Box style={{ flex: 1, height: 1, background: "var(--ax-colors-border-secondary)" }} />
-          <Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap", fontSize: 12 }}>
+          <Text color="fg.tertiary" style={{ whiteSpace: "nowrap", ...mobileType.meta }}>
             Today
           </Text>
           <Box style={{ flex: 1, height: 1, background: "var(--ax-colors-border-secondary)" }} />
@@ -404,7 +400,7 @@ export function ChatView({ conversationId, onBack, onHamburger, onNewChat, onGlo
             color: "white",
             borderRadius: 20,
             padding: "7px 16px",
-            fontSize: 13,
+            ...mobileType.secondary,
             fontWeight: 500,
             cursor: "pointer",
             zIndex: 20,

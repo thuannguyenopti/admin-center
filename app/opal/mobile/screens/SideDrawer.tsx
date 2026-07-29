@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Avatar, Badge, Box, Text } from "@optiaxiom/react";
-import { IconBooks, IconBell, IconGear } from "@optiaxiom/icons";
+import { IconBooks, IconBell, IconComments, IconSquareCheck, IconHouse } from "@optiaxiom/icons";
 import { DMS, GROUPS, THREADS, PRESENCE_COLOR, getConversationName } from "../data";
+import { mobileType } from "../typography";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -46,11 +47,9 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       py="6"
       style={{
         display: "block",
-        fontSize: 11,
+        ...mobileType.caps,
         fontWeight: 600,
         color: "var(--ax-colors-fg-tertiary)",
-        textTransform: "uppercase",
-        letterSpacing: "0.07em",
         marginTop: 8,
       }}
     >
@@ -123,7 +122,7 @@ function DrawerHighlights({
       >
         <Box display="flex" alignItems="center" gap="6">
           <IconBell style={{ width: 14, height: 14, color: "var(--ax-colors-fg-tertiary)" }} />
-          <Text fontWeight="600" color="fg.default" style={{ fontSize: 13 }}>
+          <Text fontWeight="600" color="fg.default" style={{ ...mobileType.secondary }}>
             What you missed
           </Text>
         </Box>
@@ -159,10 +158,10 @@ function DrawerHighlights({
         >
           <Avatar name={dm.name} size="sm" style={{ flexShrink: 0 }} />
           <Box style={{ flex: 1, minWidth: 0 }}>
-            <Text fontWeight="600" color="fg.default" style={{ fontSize: 13 }}>{dm.name}</Text>
+            <Text fontWeight="600" color="fg.default" style={{ ...mobileType.secondary }}>{dm.name}</Text>
             <Text
               color="fg.tertiary"
-              style={{ fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+              style={{ ...mobileType.meta, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
             >
               {getPreview(dm.id)}
             </Text>
@@ -205,22 +204,7 @@ function NewMessagePane({
           flexShrink: 0,
         }}
       >
-        <Box
-          onClick={onBack}
-          style={{
-            width: 32,
-            height: 32,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            color: "var(--ax-colors-fg-secondary)",
-            flexShrink: 0,
-          }}
-        >
-          <IconBack />
-        </Box>
-        <Text fontWeight="600" color="fg.default" style={{ fontSize: 16 }}>
+        <Text fontWeight="600" color="fg.default" style={{ ...mobileType.sectionHeader, flex: 1 }}>
           New message
         </Text>
       </Box>
@@ -253,7 +237,7 @@ function NewMessagePane({
             outline: "none",
             background: "transparent",
             fontFamily: "inherit",
-            fontSize: 14,
+            ...mobileType.body,
             color: "var(--ax-colors-fg-default)",
           }}
         />
@@ -296,13 +280,13 @@ function NewMessagePane({
             </Box>
             <Box style={{ flex: 1, minWidth: 0 }}>
               <Box display="flex" alignItems="center" gap="6">
-                <Text fontWeight="500" color="fg.default" style={{ fontSize: 14 }}>
+                <Text fontWeight="500" color="fg.default" style={{ ...mobileType.body }}>
                   {dm.name}
                 </Text>
                 {dm.isVAU && <Badge intent="information">AI</Badge>}
               </Box>
               {dm.status && (
-                <Text color="fg.tertiary" style={{ fontSize: 12 }}>
+                <Text color="fg.tertiary" style={{ ...mobileType.meta }}>
                   {dm.status === "active" ? "Active now" : dm.status === "away" ? "Away" : "Busy"}
                 </Text>
               )}
@@ -324,6 +308,7 @@ interface SideDrawerProps {
   activeId: string;
   initialMode?: "nav" | "newMsg";
   onCatchup?: () => void;
+  onNavigateTasks?: () => void;
 }
 
 export function SideDrawer({
@@ -334,6 +319,7 @@ export function SideDrawer({
   activeId,
   initialMode = "nav",
   onCatchup,
+  onNavigateTasks,
 }: SideDrawerProps) {
   const [mode, setMode] = useState<"nav" | "newMsg">(initialMode);
 
@@ -405,7 +391,7 @@ export function SideDrawer({
                 flexShrink: 0,
               }}
             >
-              <Text fontWeight="700" color="fg.default" style={{ fontSize: 18 }}>
+              <Text fontWeight="700" color="fg.default" style={{ ...mobileType.title }}>
                 Opal
               </Text>
               <Box display="flex" alignItems="center" gap="4">
@@ -477,8 +463,8 @@ export function SideDrawer({
                     </svg>
                   </Box>
                   <Box style={{ flex: 1, minWidth: 0 }}>
-                    <Text fontWeight="600" color="fg.default" style={{ fontSize: 14 }}>Catch up</Text>
-                    <Text color="fg.tertiary" style={{ fontSize: 12 }}>
+                    <Text fontWeight="600" color="fg.default" style={{ ...mobileType.body }}>Catch up</Text>
+                    <Text color="fg.tertiary" style={{ ...mobileType.meta }}>
                       {totalUnread} unread conversation{totalUnread !== 1 ? "s" : ""}
                     </Text>
                   </Box>
@@ -501,7 +487,7 @@ export function SideDrawer({
                       <Box display="flex" alignItems="center" gap="6">
                         <Text
                           style={{
-                            fontSize: 14,
+                            ...mobileType.body,
                             fontWeight: isActive ? 600 : 500,
                             color: "var(--ax-colors-fg-default)",
                             overflow: "hidden",
@@ -515,7 +501,7 @@ export function SideDrawer({
                       </Box>
                       <Text
                         style={{
-                          fontSize: 12,
+                          ...mobileType.meta,
                           color: "var(--ax-colors-fg-tertiary)",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -561,7 +547,7 @@ export function SideDrawer({
                         </Box>
                         <Text
                           style={{
-                            fontSize: 14,
+                            ...mobileType.body,
                             fontWeight: 500,
                             color: isActive
                               ? "var(--ax-colors-fg-default)"
@@ -580,7 +566,7 @@ export function SideDrawer({
               )}
             </Box>
 
-            {/* Bottom nav (consistent with web: IconBooks, IconBell, IconGear) */}
+            {/* Bottom nav */}
             <Box
               style={{
                 borderTop: "1px solid var(--ax-colors-border-secondary)",
@@ -588,20 +574,50 @@ export function SideDrawer({
                 flexShrink: 0,
               }}
             >
-              {(
-                [
-                  { label: "Artifacts", icon: <IconBooks style={{ width: 17, height: 17 }} /> },
-                  { label: "Activity",  icon: <IconBell  style={{ width: 17, height: 17 }} /> },
-                  { label: "Settings",  icon: <IconGear  style={{ width: 17, height: 17 }} /> },
-                ] as const
-              ).map(({ label, icon }) => (
+              {([
+                {
+                  label: "Opal",
+                  icon: (
+                    <Box style={{ width: 17, height: 17, borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
+                      <img src="/opal_avatar.png" alt="Opal" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </Box>
+                  ),
+                  onClick: () => { onClose(); },
+                },
+                {
+                  label: "Home",
+                  icon: <IconHouse style={{ width: 17, height: 17 }} />,
+                  onClick: () => { onClose(); },
+                },
+                {
+                  label: "Messages",
+                  icon: <IconComments style={{ width: 17, height: 17 }} />,
+                  onClick: () => { onClose(); },
+                },
+                {
+                  label: "Tasks",
+                  icon: <IconSquareCheck style={{ width: 17, height: 17 }} />,
+                  onClick: () => { onNavigateTasks?.(); onClose(); },
+                },
+                {
+                  label: "Activity",
+                  icon: <IconBell style={{ width: 17, height: 17 }} />,
+                  onClick: () => { onClose(); },
+                },
+                {
+                  label: "Artifacts",
+                  icon: <IconBooks style={{ width: 17, height: 17 }} />,
+                  onClick: () => { onClose(); },
+                },
+              ]).map(({ label, icon, onClick }) => (
                 <Box
                   key={label}
                   display="flex"
                   alignItems="center"
                   gap="12"
+                  onClick={onClick}
                   style={{
-                    padding: "10px 12px",
+                    padding: "9px 12px",
                     borderRadius: 10,
                     cursor: "pointer",
                     color: "var(--ax-colors-fg-secondary)",
@@ -611,7 +627,7 @@ export function SideDrawer({
                   <Box style={{ display: "flex", alignItems: "center", color: "var(--ax-colors-fg-tertiary)" }}>
                     {icon}
                   </Box>
-                  <Text style={{ fontSize: 14, color: "var(--ax-colors-fg-secondary)" }}>{label}</Text>
+                  <Text style={{ ...mobileType.body, color: "var(--ax-colors-fg-secondary)" }}>{label}</Text>
                 </Box>
               ))}
             </Box>

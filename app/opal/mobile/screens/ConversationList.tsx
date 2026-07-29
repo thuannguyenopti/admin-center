@@ -1,16 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { Box, Text, Avatar, Badge } from "@optiaxiom/react";
-import { IconSearch } from "@optiaxiom/icons";
-import { PresenceDot } from "../components/MessageBubble";
+import { useState, useRef } from "react";
+import { Box, Text, Avatar, Badge, Heading, Button } from "@optiaxiom/react";
+import { IconSearch, IconPenToSquare, IconSparkles, IconXmark, IconGlassesRound } from "@optiaxiom/icons";
 import { DMS, GROUPS, THREADS, getMockTime, getUnreadQueue, type DMItem, type GroupItem } from "../data";
+import { mobileType } from "../typography";
 
-type Filter = "all" | "catchup" | "unread" | "mentions";
+type Filter = "catchup" | "unread" | "mentions" | "needs";
+
+const IconMenu = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <line x1="3" y1="5"  x2="17" y2="5"  stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+    <line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+    <line x1="3" y1="15" x2="17" y2="15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+);
 
 type Props = {
   onSelect: (id: string) => void;
   onCatchup: () => void;
+  onAvatarClick?: () => void;
+  onHamburger?: () => void;
+  onCompose?: () => void;
+  onOpalClick?: () => void;
+  showPreview?: boolean;
+  foldOpal?: boolean;
 };
 
 function getLastMessage(id: string): string {
@@ -27,165 +41,222 @@ function getLastTime(id: string): string {
   return getMockTime(thread.length - 1);
 }
 
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: "all",      label: "All" },
-  { key: "catchup",  label: "Catch up" },
-  { key: "unread",   label: "Unread" },
-  { key: "mentions", label: "Mentions" },
-];
 
-export function ConversationList({ onSelect, onCatchup }: Props) {
-  const [query, setQuery] = useState("");
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [filter, setFilter] = useState<Filter>("all");
+export function ConversationList({ onSelect, onCatchup, onAvatarClick, onHamburger, onCompose, onOpalClick, showPreview = true, foldOpal = false }: Props) {
+  const [filter, setFilter] = useState<Filter | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  const totalUnread = getUnreadQueue().length;
+  const openSearch = () => {
+    setSearchOpen(true);
+    setSearchQuery("");
+    setTimeout(() => searchRef.current?.focus(), 60);
+  };
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery("");
+  };
+
+  const recentPeople = DMS.filter((d) => !d.isVAU).slice(0, 5);
+
+  // All conversations = DMs + groups, each with a title + preview line
+  type ConvoItem = { id: string; title: string; preview: string };
+  const allConvos: ConvoItem[] = [
+    ...DMS.map((d) => ({ id: d.id, title: d.name, preview: getLastMessage(d.id) })),
+    ...GROUPS.map((g) => ({ id: g.id, title: g.name, preview: getLastMessage(g.id) })),
+  ];
+  const filteredConvos = searchQuery
+    ? allConvos.filter((c) => c.title.toLowerCase().includes(searchQuery.toLowerCase()) || c.preview.toLowerCase().includes(searchQuery.toLowerCase()))
+    : allConvos;
+
   const isUnreadMode = filter === "unread";
+  const isNeedsMode  = filter === "needs";
 
-  const filteredDMs = isUnreadMode
-    ? DMS.filter(d => (d.unread ?? 0) > 0)
-    : DMS.filter(d => d.name.toLowerCase().includes(query.toLowerCase()));
-
-  const filteredGroups = isUnreadMode
-    ? GROUPS.filter(g => (g.unread ?? 0) > 0)
-    : GROUPS.filter(g => g.name.toLowerCase().includes(query.toLowerCase()));
+  const filteredDMs = isUnreadMode ? DMS.filter(d => (d.unread ?? 0) > 0)
+    : isNeedsMode ? DMS.filter(d => !!d.needsAction)
+    : DMS;
+  const filteredGroups = isUnreadMode ? GROUPS.filter(g => (g.unread ?? 0) > 0)
+    : isNeedsMode ? []   // groups don't have needsAction
+    : GROUPS;
 
   return (
     <Box
       display="flex"
       flexDirection="column"
-      style={{ height: "100%", background: "var(--ax-colors-bg-default)" }}
+      style={{ height: "100%", background: "var(--ax-colors-bg-page)" }}
     >
-      {/* ── Header ──────────────────────────────────────────────────── */}
+      {/* ── Search overlay ── */}
+      {searchOpen && (
+        <Box display="flex" flexDirection="column" style={{ position: "absolute", inset: 0, background: "var(--ax-colors-bg-default)", zIndex: 50 }}>
+          {/* Search bar — pill, full-width */}
+          <Box display="flex" alignItems="center" gap="12" style={{ padding: "14px 20px 10px", flexShrink: 0 }}>
+            <Box display="flex" alignItems="center" gap="8" style={{
+              flex: 1, borderRadius: 9999, padding: "10px 16px",
+              background: "var(--ax-colors-bg-secondary)",
+            }}>
+              <IconSearch style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }} />
+              <input ref={searchRef} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search chats…"
+                style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "inherit", ...mobileType.primary, color: "var(--ax-colors-fg-default)" }}
+              />
+            </Box>
+            <Box onClick={closeSearch} style={{ cursor: "pointer", color: "var(--ax-colors-fg-secondary)", flexShrink: 0, fontSize: 15, fontWeight: 500 }}>
+              <IconXmark style={{ width: 18, height: 18 }} />
+            </Box>
+          </Box>
+
+          <Box style={{ flex: 1, overflowY: "auto" }}>
+            {/* Recent people row — only when not typing */}
+            {!searchQuery && (
+              <Box style={{ padding: "4px 20px 16px", flexShrink: 0 }}>
+                <Text style={{
+                  display: "block", ...mobileType.caps, fontWeight: 400,
+                  color: "var(--ax-colors-fg-tertiary)", marginBottom: 12,
+                  fontFamily: "var(--ax-fontFamily-mono, 'Roboto Mono', monospace)",
+                }}>
+                  Recent
+                </Text>
+                <Box display="flex" gap="16">
+                  {recentPeople.map((p) => (
+                    <Box key={p.id} display="flex" flexDirection="column" alignItems="center" gap="4"
+                      onClick={() => { closeSearch(); onSelect(p.id); }}
+                      style={{ cursor: "pointer" }}>
+                      <Avatar name={p.name} src={p.avatar || undefined} size="lg" style={{ flexShrink: 0 }} />
+                      <Text style={{ ...mobileType.meta, color: "var(--ax-colors-fg-secondary)", whiteSpace: "nowrap" }}>
+                        {p.name.split(" ")[0]}
+                      </Text>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            )}
+
+            {/* Conversations list */}
+            {filteredConvos.length === 0 && searchQuery ? (
+              <Box display="flex" alignItems="center" justifyContent="center" style={{ paddingTop: 48 }}>
+                <Text style={{ ...mobileType.body, color: "var(--ax-colors-fg-tertiary)" }}>No results</Text>
+              </Box>
+            ) : (
+              filteredConvos.map((c) => (
+                <Box key={c.id}
+                  onClick={() => { closeSearch(); onSelect(c.id); }}
+                  style={{ padding: "13px 20px", borderBottom: "1px solid var(--ax-colors-border-secondary)", cursor: "pointer" }}>
+                  <Text style={{ ...mobileType.primary, fontWeight: 500, color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 2 }}>
+                    {c.title}
+                  </Text>
+                  {c.preview && (
+                    <Text style={{ ...mobileType.body, color: "var(--ax-colors-fg-tertiary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
+                      {c.preview}
+                    </Text>
+                  )}
+                </Box>
+              ))
+            )}
+          </Box>
+        </Box>
+      )}
+
+      {/* ── Header: persistent avatar + H2 title + pill button container ── */}
       <Box
         display="flex"
         alignItems="center"
-        justifyContent="space-between"
-        px="16"
-        style={{ height: 56, flexShrink: 0, borderBottom: "1px solid var(--ax-colors-border-secondary)" }}
+        gap="12"
+        style={{ padding: "14px 20px 10px", flexShrink: 0 }}
       >
-        <Text fontWeight="700" color="fg.default" style={{ fontSize: 20 }}>
-          Messages
-        </Text>
-      </Box>
-
-      {/* ── Search ──────────────────────────────────────────────────── */}
-      <Box px="12" pt="10" pb="6" style={{ flexShrink: 0 }}>
-        <Box
-          display="flex"
-          alignItems="center"
-          gap="8"
-          style={{
-            background: "var(--ax-colors-bg-secondary)",
-            borderRadius: 12,
-            padding: "8px 12px",
-            transition: "box-shadow 0.15s",
-            boxShadow: searchFocused ? "0 0 0 2px var(--ax-colors-border-accent)" : "none",
-          }}
-        >
-          <IconSearch style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }} />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-            placeholder="Search messages…"
-            style={{
-              flex: 1,
-              border: "none",
-              outline: "none",
-              background: "transparent",
-              fontFamily: "inherit",
-              fontSize: 15,
-              color: "var(--ax-colors-fg-default)",
-            }}
+        {onHamburger ? (
+          <Box onClick={onHamburger} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--ax-colors-fg-secondary)", flexShrink: 0 }}>
+            <IconMenu />
+          </Box>
+        ) : (
+          <Avatar name="Jamie Cohen" src="/avatars/jc.png" size="lg" onClick={onAvatarClick} style={{ flexShrink: 0, cursor: onAvatarClick ? "pointer" : "default" }} />
+        )}
+        <Heading level="2" style={{ flex: 1 }}>Messages</Heading>
+        <Box style={{
+          display: "flex", alignItems: "center",
+          border: "1px solid var(--ax-colors-border-secondary)",
+          borderRadius: 20,
+          padding: "0 8px",
+          flexShrink: 0,
+        }}>
+          <Button appearance="subtle" size="lg" aria-label="Search"
+            icon={<IconSearch style={{ width: 22, height: 22 }} />}
+            style={{ width: 40, height: 40, padding: 0 }}
+            onClick={openSearch}
           />
-          {query && (
-            <Box
-              onClick={() => setQuery("")}
-              style={{ fontSize: 12, color: "var(--ax-colors-fg-tertiary)", cursor: "pointer", padding: "0 4px" }}
-            >
-              ✕
-            </Box>
-          )}
+          <Button appearance="subtle" size="lg" aria-label="New message"
+            icon={<IconPenToSquare style={{ width: 20, height: 20 }} />}
+            style={{ width: 40, height: 40, padding: 0 }}
+            onClick={onCompose}
+          />
         </Box>
       </Box>
 
-      {/* ── Filter chips ────────────────────────────────────────────── */}
-      <Box
-        style={{
-          flexShrink: 0,
-          overflowX: "auto",
-          paddingBottom: 10,
-          paddingLeft: 12,
-          paddingRight: 12,
-          display: "flex",
-          gap: 8,
-          scrollbarWidth: "none",
-        }}
-      >
-        {FILTERS.map(({ key, label }) => {
+      {/* ── Filter chips — iridescent gradient, icon above + label below ── */}
+      <Box style={{ flexShrink: 0, display: "flex", gap: 8, padding: "0 12px 12px", overflowX: "auto", scrollbarWidth: "none" }}>
+        {([
+          {
+            key: "catchup" as const,
+            label: "Catch up",
+            icon: <IconSparkles style={{ width: 20, height: 20 }} />,
+          },
+          {
+            key: "unread" as const,
+            label: "Unread",
+            icon: <IconGlassesRound style={{ width: 20, height: 20 }} />,
+          },
+          {
+            key: "mentions" as const,
+            label: "Mentions",
+            icon: (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M18 10A8 8 0 1 1 10 2c2.6 0 4.9 1.2 6.4 3.1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <circle cx="10" cy="10" r="3" stroke="currentColor" strokeWidth="1.4"/>
+                <path d="M16.4 5.1V11a2 2 0 0 1-2 2v0a2 2 0 0 1-2-2v-1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+            ),
+          },
+          {
+            key: "needs" as const,
+            label: "Needs you",
+            icon: (
+              <svg width="18" height="20" viewBox="0 0 18 20" fill="none">
+                <path d="M9 1.5C6.51 1.5 4.5 3.51 4.5 6v4L3 12h12l-1.5-2V6c0-2.49-2.01-4.5-4.5-4.5z" stroke="currentColor" strokeWidth="1.4"/>
+                <path d="M7 15a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+            ),
+          },
+        ] as const).map(({ key, label, icon }) => {
           const isActive = filter === key;
-          const isCatchupChip = key === "catchup";
-          const showDot = isCatchupChip && totalUnread > 0;
+          const isCatchup = key === "catchup";
           return (
             <Box
               key={key}
-              onClick={() => isCatchupChip ? onCatchup() : setFilter(key)}
+              onClick={() => {
+                if (isCatchup) { onCatchup(); return; }
+                setFilter(isActive ? null : key as Filter);
+              }}
               style={{
-                position: "relative",
-                flexShrink: 0,
-                padding: "5px 14px",
-                paddingLeft: isCatchupChip ? 10 : 14,
-                borderRadius: 20,
-                fontSize: 13,
-                fontWeight: isActive ? 600 : isCatchupChip ? 500 : 400,
-                cursor: "pointer",
-                backgroundImage: isActive
-                  ? "none"
-                  : isCatchupChip
-                  ? "radial-gradient(ellipse at 100% 50%, rgba(186,158,245,0.20) 0%, rgba(168,184,240,0.17) 55%, rgba(144,210,187,0.155) 77%, rgba(119,236,133,0.14) 100%)"
-                  : "none",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                gap: 6, padding: 8, minWidth: 62, borderRadius: 12, cursor: "pointer",
                 background: isActive
-                  ? "var(--ax-colors-fg-accent-strong)"
-                  : isCatchupChip
-                  ? "white"
-                  : "var(--ax-colors-bg-secondary)",
-                color: isActive ? "white" : "var(--ax-colors-fg-default)",
-                border: isActive
-                  ? "none"
-                  : isCatchupChip
-                  ? "1px solid var(--ax-colors-border-default)"
-                  : "1px solid var(--ax-colors-border-secondary)",
-                transition: "all 0.15s ease",
-                whiteSpace: "nowrap",
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
+                  ? "linear-gradient(135deg, rgba(186,158,245,0.25) 0%, rgba(119,236,133,0.2) 100%)"
+                  : "linear-gradient(135deg, rgba(186,158,245,0.12) 0%, rgba(119,236,133,0.1) 100%)",
+                border: isActive ? "1px solid rgba(186,158,245,0.4)" : "1px solid transparent",
+                color: isActive ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
+                transition: "all 0.15s",
+                flexShrink: 0,
               }}
             >
-              {isCatchupChip && (
-                <img
-                  src="/opal-icon-nav.png"
-                  alt=""
-                  style={{ width: 14, height: 14, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-                />
-              )}
-              {label}
-              {showDot && (
-                <Box
-                  style={{
-                    position: "absolute",
-                    top: 2,
-                    right: 2,
-                    width: 7,
-                    height: 7,
-                    borderRadius: "50%",
-                    background: "var(--ax-colors-fg-error)",
-                    border: "1.5px solid var(--ax-colors-bg-default)",
-                  }}
-                />
-              )}
+              {icon}
+              <Text style={{
+                fontFamily: "var(--ax-fontFamily-mono, 'Roboto Mono', monospace)",
+                ...mobileType.caps, fontWeight: 400,
+                color: isActive ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
+                whiteSpace: "nowrap",
+              }}>
+                {label}
+              </Text>
             </Box>
           );
         })}
@@ -193,22 +264,35 @@ export function ConversationList({ onSelect, onCatchup }: Props) {
 
       {/* ── List ────────────────────────────────────────────────────── */}
       <Box style={{ flex: 1, overflowY: "auto" }}>
-        {isUnreadMode && filteredDMs.length === 0 && filteredGroups.length === 0 && (
+        {/* Pinned Opal contact — first row when folded */}
+        {foldOpal && (
+          <Box display="flex" alignItems="center" gap="12" onClick={onOpalClick}
+            style={{ padding: "10px 16px", cursor: "pointer", borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
+            <Box style={{ width: 50, height: 50, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <img src="/opal_avatar.png" alt="Opal" style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover" }} />
+            </Box>
+            <Box style={{ flex: 1, minWidth: 0 }}>
+              <Text style={{ ...mobileType.primary, fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>Opal</Text>
+              <Text style={{ ...mobileType.body, color: "var(--ax-colors-fg-tertiary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Optimizely AI</Text>
+            </Box>
+          </Box>
+        )}
+        {(isUnreadMode || isNeedsMode) && filteredDMs.length === 0 && filteredGroups.length === 0 && (
           <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" style={{ paddingTop: 64, gap: 8 }}>
             <Text color="fg.tertiary" style={{ fontSize: 32 }}>✓</Text>
-            <Text fontWeight="600" color="fg.default" style={{ fontSize: 16 }}>All caught up!</Text>
-            <Text color="fg.tertiary" style={{ fontSize: 14 }}>No unread conversations</Text>
+            <Text fontWeight="600" color="fg.default" style={{ ...mobileType.sectionHeader }}>All caught up!</Text>
+            <Text color="fg.tertiary" style={{ ...mobileType.body }}>No unread conversations</Text>
           </Box>
         )}
 
-        {/* In unread mode: flat list, no section labels */}
-        {isUnreadMode ? (
+        {/* In unread/needs mode: flat list, no section labels */}
+        {(isUnreadMode || isNeedsMode) ? (
           <>
             {filteredDMs.map((dm, i) => (
-              <DMRow key={dm.id} dm={dm} onSelect={onSelect} delay={i * 22} />
+              <DMRow key={dm.id} dm={dm} onSelect={onSelect} delay={i * 22} showPreview={showPreview} />
             ))}
             {filteredGroups.map((g, i) => (
-              <GroupRow key={g.id} group={g} onSelect={onSelect} delay={(filteredDMs.length + i) * 22} />
+              <GroupRow key={g.id} group={g} onSelect={onSelect} delay={(filteredDMs.length + i) * 22} showPreview={showPreview} />
             ))}
           </>
         ) : (
@@ -216,20 +300,20 @@ export function ConversationList({ onSelect, onCatchup }: Props) {
             {filteredDMs.length > 0 && (
               <Section label="Direct Messages">
                 {filteredDMs.map((dm, i) => (
-                  <DMRow key={dm.id} dm={dm} onSelect={onSelect} delay={i * 22} />
+                  <DMRow key={dm.id} dm={dm} onSelect={onSelect} delay={i * 22} showPreview={showPreview} />
                 ))}
               </Section>
             )}
             {filteredGroups.length > 0 && (
               <Section label="Group Chats">
                 {filteredGroups.map((g, i) => (
-                  <GroupRow key={g.id} group={g} onSelect={onSelect} delay={i * 22} />
+                  <GroupRow key={g.id} group={g} onSelect={onSelect} delay={i * 22} showPreview={showPreview} />
                 ))}
               </Section>
             )}
-            {filteredDMs.length === 0 && filteredGroups.length === 0 && query && (
+            {filteredDMs.length === 0 && filteredGroups.length === 0 && (
               <Box display="flex" alignItems="center" justifyContent="center" pt="48">
-                <Text color="fg.tertiary" fontSize="md">No results for "{query}"</Text>
+                <Text color="fg.tertiary" fontSize="md">No conversations</Text>
               </Box>
             )}
           </>
@@ -241,16 +325,17 @@ export function ConversationList({ onSelect, onCatchup }: Props) {
   );
 }
 
+// Section label — Roboto Mono, 12px, uppercase, tertiary (Figma: font-family-caption)
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <Box style={{ marginBottom: 8 }}>
-      <Box px="16" pt="16" pb="4">
-        <Text
-          fontSize="sm"
-          fontWeight="600"
-          color="fg.tertiary"
-          style={{ textTransform: "uppercase", letterSpacing: "0.06em", fontSize: 11 }}
-        >
+    <Box>
+      <Box style={{ padding: "20px 16px 4px" }}>
+        <Text style={{
+          fontFamily: "var(--ax-fontFamily-mono, 'Roboto Mono', monospace)",
+          ...mobileType.meta, fontWeight: 400,
+          color: "var(--ax-colors-fg-tertiary)",
+          textTransform: "uppercase", letterSpacing: "0.03em",
+        }}>
           {label}
         </Text>
       </Box>
@@ -259,78 +344,101 @@ function Section({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
-function DMRow({ dm, onSelect, delay }: { dm: DMItem; onSelect: (id: string) => void; delay: number }) {
+// DM row — 50×50 wrapper, 48×48 avatar at (1,1), 12×12 presence dot at (37,37)
+// Matches Figma dm_block pattern exactly (node I276:48055)
+function DMRow({ dm, onSelect, delay, showPreview = true }: { dm: DMItem; onSelect: (id: string) => void; delay: number; showPreview?: boolean }) {
   const lastMsg = getLastMessage(dm.id);
   const lastTime = getLastTime(dm.id);
   const [pressed, setPressed] = useState(false);
+
+  const presenceColor = dm.status === "active"
+    ? "var(--ax-colors-fg-success)"
+    : dm.status === "away"
+    ? "var(--ax-colors-fg-warning)"
+    : "var(--ax-colors-fg-error)";
 
   return (
     <Box
       display="flex"
       alignItems="center"
       gap="12"
-      px="16"
-      py="10"
       className="mobile-bubble-stagger"
       onClick={() => onSelect(dm.id)}
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
       onMouseLeave={() => setPressed(false)}
       style={{
+        padding: "10px 16px",
         cursor: "pointer",
-        transform: pressed ? "scale(0.985)" : "scale(1)",
-        transition: "transform 0.1s ease, background 0.1s",
         background: pressed ? "var(--ax-colors-bg-secondary)" : "transparent",
+        transition: "background 0.1s",
         animationDelay: `${delay}ms`,
       }}
     >
-      <Box style={{ position: "relative", flexShrink: 0 }}>
-        <Avatar name={dm.name} src={dm.avatar} size="lg" />
-        {dm.status && <PresenceDot status={dm.status} />}
+      {/* Avatar wrap: 50×50 — avatar 48×48 at (1,1), presence dot at (37,37) */}
+      <Box style={{ position: "relative", width: 50, height: 50, flexShrink: 0 }}>
+        <Avatar
+          name={dm.name}
+          src={dm.avatar || undefined}
+          size="lg"
+          colorScheme={dm.isVAU ? "purple" : "neutral"}
+          style={{ position: "absolute", left: 1, top: 1, width: 48, height: 48 }}
+        />
+        {dm.status && (
+          <Box style={{
+            position: "absolute", left: 37, top: 37,
+            width: 12, height: 12, borderRadius: "50%",
+            background: presenceColor,
+            border: "2px solid var(--ax-colors-bg-default)",
+          }} />
+        )}
       </Box>
+
       <Box style={{ flex: 1, minWidth: 0 }}>
+        {/* Name row */}
         <Box display="flex" alignItems="center" justifyContent="space-between" gap="8">
-          <Box display="flex" alignItems="center" gap="6" style={{ minWidth: 0 }}>
-            <Text
-              fontWeight={dm.unread ? "600" : "400"}
-              color="fg.default"
-              style={{ fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-            >
+          <Box display="flex" alignItems="center" gap="6" style={{ flex: 1, minWidth: 0 }}>
+            <Text style={{
+              ...mobileType.primary, fontWeight: 500,
+              color: "var(--ax-colors-fg-default)",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
               {dm.name}
             </Text>
-            {dm.isVAU && <Badge intent="information" size="sm">AI</Badge>}
+            {dm.isVAU && (
+              <Badge intent="information" style={{ flexShrink: 0 }}>AI</Badge>
+            )}
           </Box>
-          <Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap", flexShrink: 0, fontSize: 12 }}>
+          <Text style={{ ...mobileType.meta, color: "var(--ax-colors-fg-tertiary)", whiteSpace: "nowrap", flexShrink: 0 }}>
             {lastTime}
           </Text>
         </Box>
-        <Box display="flex" alignItems="center" justifyContent="space-between" gap="8">
-          <Text
-            color={dm.unread ? "fg.default" : "fg.tertiary"}
-            style={{
-              fontSize: 14,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              fontWeight: dm.unread ? 500 : 400,
-              flex: 1,
-              minWidth: 0,
-            }}
-          >
-            {lastMsg || "No messages yet"}
-          </Text>
-          {dm.unread && (
-            <Badge intent="success" size="sm" style={{ flexShrink: 0 }}>
-              {dm.unread}
-            </Badge>
+        {/* Preview row */}
+        <Box display="flex" alignItems="center" gap="8" style={{ marginTop: 2 }}>
+          {showPreview && (
+            <Text style={{
+              ...mobileType.body,
+              color: "var(--ax-colors-fg-secondary)",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              flex: 1, minWidth: 0,
+            }}>
+              {lastMsg || "No messages yet"}
+            </Text>
           )}
+          {dm.needsAction === "approval" && <Badge intent="warning" style={{ flexShrink: 0 }}>Needs approval</Badge>}
+          {dm.needsAction === "question" && <Badge intent="information" style={{ flexShrink: 0 }}>Needs input</Badge>}
+          {dm.needsAction === "review"   && <Badge intent="success"     style={{ flexShrink: 0 }}>Ready to review</Badge>}
+          {!dm.needsAction && dm.unread ? (
+            <Box style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--ax-colors-fg-information-strong)", flexShrink: 0 }} />
+          ) : null}
         </Box>
       </Box>
     </Box>
   );
 }
 
-function GroupRow({ group, onSelect, delay }: { group: GroupItem; onSelect: (id: string) => void; delay: number }) {
+// Group row — same 50×50 wrapper pattern, emoji circle inside
+function GroupRow({ group, onSelect, delay, showPreview = true }: { group: GroupItem; onSelect: (id: string) => void; delay: number; showPreview?: boolean }) {
   const lastMsg = getLastMessage(group.id);
   const lastTime = getLastTime(group.id);
   const [pressed, setPressed] = useState(false);
@@ -340,69 +448,59 @@ function GroupRow({ group, onSelect, delay }: { group: GroupItem; onSelect: (id:
       display="flex"
       alignItems="center"
       gap="12"
-      px="16"
-      py="10"
       className="mobile-bubble-stagger"
       onClick={() => onSelect(group.id)}
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
       onMouseLeave={() => setPressed(false)}
       style={{
+        padding: "10px 16px",
         cursor: "pointer",
-        transform: pressed ? "scale(0.985)" : "scale(1)",
-        transition: "transform 0.1s ease, background 0.1s",
         background: pressed ? "var(--ax-colors-bg-secondary)" : "transparent",
+        transition: "background 0.1s",
         animationDelay: `${delay}ms`,
       }}
     >
-      <Box
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: "50%",
-          background: "var(--ax-colors-bg-accent-subtle)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 22,
-          flexShrink: 0,
-        }}
-      >
-        {group.emoji}
+      {/* 50×50 wrapper — emoji circle 36×36 centered */}
+      <Box style={{ position: "relative", width: 50, height: 50, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Box style={{
+          width: 36, height: 36, borderRadius: 18,
+          background: "var(--ax-colors-bg-secondary)",
+          border: "1px solid var(--ax-colors-border-secondary)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 18,
+        }}>
+          {group.emoji}
+        </Box>
       </Box>
+
       <Box style={{ flex: 1, minWidth: 0 }}>
         <Box display="flex" alignItems="center" justifyContent="space-between" gap="8">
-          <Text
-            fontWeight={group.unread ? "600" : "400"}
-            color="fg.default"
-            style={{ fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-          >
+          <Text style={{
+            ...mobileType.primary, fontWeight: 500,
+            color: "var(--ax-colors-fg-default)",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
+          }}>
             {group.name}
           </Text>
-          <Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap", flexShrink: 0, fontSize: 12 }}>
+          <Text style={{ ...mobileType.meta, color: "var(--ax-colors-fg-tertiary)", whiteSpace: "nowrap", flexShrink: 0 }}>
             {lastTime}
           </Text>
         </Box>
-        <Box display="flex" alignItems="center" justifyContent="space-between" gap="8">
-          <Text
-            color={group.unread ? "fg.default" : "fg.tertiary"}
-            style={{
-              fontSize: 14,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              fontWeight: group.unread ? 500 : 400,
-              flex: 1,
-              minWidth: 0,
-            }}
-          >
-            {lastMsg || "No messages yet"}
-          </Text>
-          {group.unread && (
-            <Badge intent="success" size="sm" style={{ flexShrink: 0 }}>
-              {group.unread}
-            </Badge>
+        <Box display="flex" alignItems="center" gap="8" style={{ marginTop: 2 }}>
+          {showPreview && (
+            <Text style={{
+              ...mobileType.body,
+              color: "var(--ax-colors-fg-secondary)",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              flex: 1, minWidth: 0,
+            }}>
+              {lastMsg || "No messages yet"}
+            </Text>
           )}
+          {group.unread ? (
+            <Box style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--ax-colors-fg-information-strong)", flexShrink: 0 }} />
+          ) : null}
         </Box>
       </Box>
     </Box>

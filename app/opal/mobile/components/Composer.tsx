@@ -2,9 +2,9 @@
 
 import { useRef, useState } from "react";
 import { Box, Button, Tooltip } from "@optiaxiom/react";
+import { mobileType } from "../typography";
 import {
   IconPlus,
-  IconPaperclip,
   IconPaperPlaneTop,
   IconBold,
   IconItalic,
@@ -107,17 +107,17 @@ export function Composer({ placeholder = "Message…", disabled = false, onSend 
       <Box
         display="flex"
         alignItems="end"
-        gap="8"
+        gap="4"
         px="12"
         pt="10"
         pb="4"
       >
-        {/* Attach / format toggle */}
+        {/* + button — always shows Plus regardless of focus state */}
         <Button
           appearance="subtle"
           size="sm"
-          icon={fmtVisible ? <IconPaperclip /> : <IconPlus />}
-          aria-label={fmtVisible ? "Attach file" : "More options"}
+          icon={<IconPlus />}
+          aria-label="More options"
           onClick={() => setFmtVisible((v) => !v)}
           style={{
             width: 36,
@@ -135,7 +135,7 @@ export function Composer({ placeholder = "Message…", disabled = false, onSend 
           style={{
             flex: 1,
             background: "var(--ax-colors-bg-secondary)",
-            borderRadius: 22,
+            borderRadius: 8,
             padding: "9px 14px",
             minHeight: 38,
             display: "flex",
@@ -158,45 +158,28 @@ export function Composer({ placeholder = "Message…", disabled = false, onSend 
               resize: "none",
               background: "transparent",
               fontFamily: "inherit",
-              fontSize: 15,
+              ...mobileType.primary,
               lineHeight: 1.45,
               color: "var(--ax-colors-fg-default)",
               maxHeight: 120,
-              overflowY: "auto",
+              overflowY: "hidden",
               width: "100%",
+              scrollbarWidth: "none",
             }}
           />
         </Box>
 
         {/* Send button */}
-        <Box
+        <Button
+          appearance={isEmpty || disabled ? "subtle" : "primary"}
+          size="sm"
+          icon={<IconPaperPlaneTop style={{ width: 18, height: 18, transform: "translateX(1px)" }} />}
+          aria-label="Send"
+          disabled={isEmpty || disabled}
           onClick={handleSend}
           className={sendPulsing ? "mobile-send-tap" : undefined}
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: "50%",
-            background: isEmpty || disabled
-              ? "var(--ax-colors-bg-tertiary)"
-              : "var(--ax-colors-bg-accent)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            cursor: isEmpty || disabled ? "default" : "pointer",
-            transition: "background 0.18s ease",
-            marginBottom: 1,
-          }}
-        >
-          <IconPaperPlaneTop
-            style={{
-              width: 18,
-              height: 18,
-              color: isEmpty || disabled ? "var(--ax-colors-fg-disabled)" : "white",
-              transform: "translateX(1px)",
-            }}
-          />
-        </Box>
+          style={{ width: 38, height: 38, padding: 0, borderRadius: "50%", flexShrink: 0, marginBottom: 1 }}
+        />
       </Box>
     </Box>
   );

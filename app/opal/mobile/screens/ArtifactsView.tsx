@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Box, Text, Badge, Button } from "@optiaxiom/react";
 import { IconSearch, IconArrowUpRightFromSquare, IconShareNodes, IconDownload, IconEllipsisSolid } from "@optiaxiom/icons";
 import { ARTIFACTS, ARTIFACT_TYPES, STATUS_LABEL, type Artifact } from "../data";
+import { mobileType } from "../typography";
 
 const STATUS_COLOR: Record<Artifact["status"], string> = {
   draft:     "var(--ax-colors-fg-tertiary)",
@@ -40,31 +41,23 @@ export function ArtifactsView() {
     <Box
       display="flex"
       flexDirection="column"
-      style={{ height: "100%", background: "var(--ax-colors-bg-default)" }}
+      style={{ height: "100%", background: "var(--ax-colors-bg-page)" }}
     >
-      {/* ── Header ──────────────────────────────────────────────────── */}
+      {/* ── Large title header ──────────────────────────────────────── */}
       <Box
         display="flex"
-        alignItems="center"
         justifyContent="space-between"
-        px="16"
-        style={{ height: 56, flexShrink: 0, borderBottom: "1px solid var(--ax-colors-border-secondary)" }}
+        style={{ alignItems: "flex-end", padding: "16px 20px 12px", flexShrink: 0 }}
       >
-        <Box display="flex" alignItems="center" gap="8">
-          <Text fontWeight="700" color="fg.default" style={{ fontSize: 20 }}>
-            Artifacts
-          </Text>
-          {needsReview > 0 && (
-            <Badge intent="warning">{needsReview} to review</Badge>
-          )}
+        <Text style={{ ...mobileType.hero, fontWeight: 800, color: "var(--ax-colors-fg-default)", letterSpacing: "-0.5px", lineHeight: 1 }}>
+          Artifacts
+        </Text>
+        <Box style={{ cursor: "pointer", paddingBottom: 2 }}>
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <circle cx="9.5" cy="9.5" r="6.5" stroke="var(--ax-colors-fg-default)" strokeWidth="1.8" />
+            <line x1="14.5" y1="14.5" x2="19.5" y2="19.5" stroke="var(--ax-colors-fg-default)" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
         </Box>
-        <Button
-          appearance="subtle"
-          size="sm"
-          icon={<IconSearch style={{ width: 18, height: 18 }} />}
-          aria-label="Search artifacts"
-          style={{ width: 40, height: 40, padding: 0 }}
-        />
       </Box>
 
       {/* ── Search ──────────────────────────────────────────────────── */}
@@ -94,12 +87,12 @@ export function ArtifactsView() {
               outline: "none",
               background: "transparent",
               fontFamily: "inherit",
-              fontSize: 15,
+              ...mobileType.primary,
               color: "var(--ax-colors-fg-default)",
             }}
           />
           {query && (
-            <Box onClick={() => setQuery("")} style={{ fontSize: 12, color: "var(--ax-colors-fg-tertiary)", cursor: "pointer", padding: "0 4px" }}>
+            <Box onClick={() => setQuery("")} style={{ ...mobileType.meta, color: "var(--ax-colors-fg-tertiary)", cursor: "pointer", padding: "0 4px" }}>
               ✕
             </Box>
           )}
@@ -129,7 +122,7 @@ export function ArtifactsView() {
                 flexShrink: 0,
                 padding: "5px 14px",
                 borderRadius: 20,
-                fontSize: 13,
+                ...mobileType.secondary,
                 fontWeight: isActive ? 600 : 400,
                 cursor: "pointer",
                 background: isActive
@@ -254,7 +247,7 @@ function ArtifactCard({
             fontWeight="500"
             color="fg.default"
             style={{
-              fontSize: 14,
+              ...mobileType.body,
               lineHeight: 1.35,
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -270,7 +263,7 @@ function ArtifactCard({
             {/* Status chip */}
             <Box
               style={{
-                fontSize: 11,
+                ...mobileType.label,
                 fontWeight: 600,
                 color: STATUS_COLOR[artifact.status],
                 background: STATUS_BG[artifact.status],
@@ -302,7 +295,7 @@ function ArtifactCard({
                   {artifact.author[0]}
                 </Box>
               ) : null}
-              <Text fontSize="sm" color="fg.tertiary" style={{ fontSize: 12 }}>
+              <Text color="fg.tertiary" style={{ ...mobileType.meta }}>
                 {artifact.author} · {artifact.updatedAt}
               </Text>
             </Box>
@@ -339,18 +332,18 @@ function ArtifactCard({
               appearance="primary"
               size="sm"
               icon={<IconArrowUpRightFromSquare />}
-              style={{ flex: 1, borderRadius: 10, fontSize: 13 }}
+              style={{ flex: 1, borderRadius: 10, ...mobileType.secondary }}
             >
-              Open to review
+              Preview
             </Button>
           ) : (
             <Button
               appearance="default"
               size="sm"
               icon={<IconArrowUpRightFromSquare />}
-              style={{ flex: 1, borderRadius: 10, fontSize: 13 }}
+              style={{ flex: 1, borderRadius: 10, ...mobileType.secondary }}
             >
-              Open
+              Preview
             </Button>
           )}
           <Button
