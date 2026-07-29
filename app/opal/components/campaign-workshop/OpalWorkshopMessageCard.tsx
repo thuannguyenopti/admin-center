@@ -3,6 +3,7 @@
 import { AskQuestionsActionCard } from "@/app/components/Opal/AskQuestionsActionCard";
 import { CampaignBriefOptions } from "./MessageCards";
 import { QuickActionRow } from "./QuickActionRow";
+import { CanvasReadyCard } from "./CanvasReadyCard";
 import type { ContentTab } from "./CanvasStage";
 
 // Every distinct decision point in the Boston Marathon campaign script, in
@@ -10,9 +11,11 @@ import type { ContentTab } from "./CanvasStage";
 // via its existing "hitl" message pattern, switched on the message's own id
 // since — unlike the file's other hitl threads (sg/kara, one card per whole
 // conversation) — this one conversation has several distinct cards in sequence.
-// The flow ends at "opal-angle": once that's answered, the canvas takes over
-// fullscreen and the conversation continues there, not in this thread.
-export type OpalWorkshopMessageId = "opal-brief" | "opal-audience" | "opal-angle";
+// "opal-angle" hands off to the canvas fullscreen, but "opal-suite-ready"
+// (added alongside the closing reply — see messages/page.tsx's onOpenCanvas)
+// stays behind in this real thread so there's a permanent card with a working
+// Edit button to get back into canvas after closing it.
+export type OpalWorkshopMessageId = "opal-brief" | "opal-audience" | "opal-angle" | "opal-suite-ready";
 
 // Stride is participating in the marathon — this is a promotional task to
 // market that participation, not a generic "pick a persona" exercise, so the
@@ -52,7 +55,7 @@ export function OpalWorkshopMessageCard({
 }: {
 	messageId: string;
 	onAdvance: (userText: string, assistantText?: string, nextCardId?: OpalWorkshopMessageId) => void;
-	onOpenCanvas: (tab: ContentTab, showRationale: boolean) => void;
+	onOpenCanvas: (tab: ContentTab, showRationale: boolean, closingReply?: string) => void;
 }) {
 	switch (messageId) {
 		case "opal-brief":
@@ -91,15 +94,23 @@ export function OpalWorkshopMessageCard({
 						questions={[ANGLE_Q]}
 						submitLabel="Generate"
 						onSubmit={(answers) => {
-							// Last question in the flow — no further chat reply here.
-							// Opal keeps talking, but from inside the fullscreen canvas.
+							// Last question in the flow. The closing reply is handed to
+							// onOpenCanvas rather than onAdvance so it lands in this
+							// thread AND seeds the canvas's Opal panel from the exact
+							// same array — the two surfaces can't drift apart.
 							onAdvance(labelFor(ANGLE_Q, answers.angle));
-							onOpenCanvas("blog", false);
+							onOpenCanvas(
+								"blog",
+								false,
+								"I've finished generating your Boston Marathon campaign — blog post, social posts, and email are ready for your review.",
+							);
 						}}
 					/>
 					<QuickActionRow onEditInCanvas={() => onOpenCanvas("blog", false)} />
 				</>
 			);
+		case "opal-suite-ready":
+			return <CanvasReadyCard onEdit={() => onOpenCanvas("blog", false)} />;
 		default:
 			return null;
 	}

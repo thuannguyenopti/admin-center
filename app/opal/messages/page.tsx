@@ -3475,8 +3475,6 @@ function IMMain({
   const [workshopCanvasOpen, setWorkshopCanvasOpen] = useState(false);
   const [workshopCanvasTab, setWorkshopCanvasTab] = useState<ContentTab>("blog");
   const [workshopCanvasRationale, setWorkshopCanvasRationale] = useState(false);
-  // assistantText is omitted for the final question in the flow — once the
-  // canvas opens fullscreen, the conversation continues there, not here.
   const advanceOpalThread = (userText: string, assistantText?: string, nextCardId?: OpalWorkshopMessageId) => {
     setThreads((prev) => ({
       ...prev,
@@ -4425,7 +4423,27 @@ function IMMain({
                             <OpalWorkshopMessageCard
                               messageId={msg.id}
                               onAdvance={advanceOpalThread}
-                              onOpenCanvas={(tab, rationale) => {
+                              onOpenCanvas={(tab, rationale, closingReply) => {
+                                // Update the real thread (if there's a closing reply to add)
+                                // and open canvas in the SAME batch — CampaignWorkshopCanvas
+                                // only mounts once this re-render lands, so its own seed
+                                // effect always reads threads.opal already caught up, never
+                                // a stale pre-update snapshot from this handler's closure.
+                                //
+                                // The "suite ready" card rides along with the closing reply
+                                // (added to the real thread, not just the ephemeral canvas
+                                // panel) so it's still there — with a working Edit button —
+                                // after you close canvas. That's the only way back in.
+                                if (closingReply) {
+                                  setThreads((prev) => ({
+                                    ...prev,
+                                    opal: [
+                                      ...(prev.opal ?? []),
+                                      { id: crypto.randomUUID(), from: "vau" as const, senderName: "Opal", senderAvatar: "/opal-orb.png", text: closingReply },
+                                      { id: "opal-suite-ready", from: "vau" as const, type: "hitl" as const, senderName: "Opal", senderAvatar: "/opal-orb.png", text: "" },
+                                    ],
+                                  }));
+                                }
                                 setWorkshopCanvasTab(tab);
                                 setWorkshopCanvasRationale(rationale);
                                 setWorkshopCanvasOpen(true);
@@ -5168,6 +5186,7 @@ function IMMain({
             initialTab={workshopCanvasTab}
             initialShowRationale={workshopCanvasRationale}
             onClose={() => setWorkshopCanvasOpen(false)}
+            opalThreadMessages={threads.opal ?? []}
           />
         </Box>,
         document.body,

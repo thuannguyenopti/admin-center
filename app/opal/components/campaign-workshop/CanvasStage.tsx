@@ -65,7 +65,6 @@ export function CanvasStage({
 	children,
 	commentMode,
 	onAddPin,
-	onAskOpal,
 	onClose,
 	onOpenWorkflow,
 	onRemovePin,
@@ -82,7 +81,6 @@ export function CanvasStage({
 	children: React.ReactNode;
 	commentMode: boolean;
 	onAddPin: (label: string, x: number, y: number, description: string) => void;
-	onAskOpal: () => void;
 	onClose: () => void;
 	onOpenWorkflow: () => void;
 	onRemovePin: (id: string) => void;
@@ -322,7 +320,6 @@ export function CanvasStage({
 			<Toolbar
 				activeTab={activeTab}
 				commentMode={commentMode}
-				onAskOpal={onAskOpal}
 				onClose={onClose}
 				onOpenWorkflow={onOpenWorkflow}
 				onRunQueuedEdits={onRunQueuedEdits}

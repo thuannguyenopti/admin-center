@@ -33,22 +33,6 @@ const LABEL_TO_SLOT: Record<string, ImageSlotId> = {
 
 const WORKFLOW_CHECK_IDS = ["blog", "email", "social"];
 
-// Carries over the full lookup → brief → audience → angle conversation that
-// already happened in the Opal Messages thread (see OpalWorkshopMessageCard.tsx
-// and messages/page.tsx's seeded "opal" thread) into the real panel, so
-// arriving at the canvas continues that chat instead of resetting to Opal's
-// default empty-chat greeting. Mirror any copy changes there here too.
-const CARRIED_OVER_TRANSCRIPT: Array<{ role: "user" | "assistant"; content: string }> = [
-	{ role: "user", content: "What do we have set up for the Boston Marathon?" },
-	{ role: "assistant", content: "Found it — you're running Boston Marathon 2027 (CPN-42), with one task already in motion: Boston Marathon blog post (TSK-2720). Want me to open the brief and get started on the content?" },
-	{ role: "user", content: "Yes, open the brief" },
-	{ role: "assistant", content: "Stride's participating in Boston Marathon 2027, so this is all about promoting that. Who's the primary audience for this push?" },
-	{ role: "user", content: "Registered runners" },
-	{ role: "assistant", content: "Got it — registered runners it is! One more thing before I start generating." },
-	{ role: "user", content: "Motivational send-off" },
-	{ role: "assistant", content: "I've finished generating your Boston Marathon campaign — blog post, social posts, and email are ready for your review." },
-];
-
 // The canvas view opened from the "suite ready" message card — renders inline
 // as `leftCanvas` in the real Opal Chats page (app/opal/page.tsx), not a
 // separate route. Owns its own view state (tab/mode/per-image/per-text
@@ -61,15 +45,24 @@ const CARRIED_OVER_TRANSCRIPT: Array<{ role: "user" | "assistant"; content: stri
 // it. There is no canvas-owned chat panel: the one real, shared Opal panel
 // (useLayout().opalPanelControls) opens automatically on arrival, pinned
 // with the pin queue (or a "suite ready" card when empty), instead of
-// rendering a second, out-of-sync lookalike.
+// rendering a second, out-of-sync lookalike — and closes again the moment
+// you leave, so it never lingers over unrelated pages once canvas is gone.
 export function CampaignWorkshopCanvas({
 	initialShowRationale = false,
 	initialTab = "blog",
 	onClose,
+	opalThreadMessages,
 }: {
 	initialShowRationale?: boolean;
 	initialTab?: ContentTab;
 	onClose: () => void;
+	/** The real Messages thread up to the moment canvas was opened (see
+	 *  messages/page.tsx's onOpenCanvas) — seeds the shared Opal panel with
+	 *  exactly what happened upstream instead of a hand-maintained copy that
+	 *  can silently drift from it. Read directly off live state at mount
+	 *  time (not a prop computed ahead of time), so it can't ever reflect a
+	 *  stale pre-update snapshot. */
+	opalThreadMessages: Array<{ from: string; type?: string; text: string }>;
 }) {
 	const { opalPanelControls, opalPanelWidth, setOpalActionCard, setOpalPanelTopOffset } = useLayout();
 	const [tab, setTab] = useState<ContentTab>(initialTab);
@@ -138,8 +131,14 @@ export function CampaignWorkshopCanvas({
 	useEffect(() => {
 		if (hasSeededOpal.current || !opalPanelControls) return;
 		hasSeededOpal.current = true;
-		opalPanelControls.seedChat(CARRIED_OVER_TRANSCRIPT);
-		return () => setOpalActionCard(null);
+		const seedTranscript = opalThreadMessages
+			.filter((message) => message.type !== "hitl" && message.text)
+			.map((message) => ({ role: message.from === "user" ? ("user" as const) : ("assistant" as const), content: message.text }));
+		opalPanelControls.seedChat(seedTranscript);
+		return () => {
+			setOpalActionCard(null);
+			opalPanelControls.closePanel();
+		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [opalPanelControls]);
 
@@ -150,10 +149,6 @@ export function CampaignWorkshopCanvas({
 		setOpalActionCard(pins.length === 0 ? <CanvasReadyCard /> : <QueuedEditsCard onRemove={removePin} onRunNow={runQueuedEdits} pins={pins} />);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [pins]);
-
-	const askOpal = () => {
-		opalPanelControls?.openPanel();
-	};
 
 	const editText = (fieldId: string, value: string) => {
 		setTextOverrides((current) => ({ ...current, [fieldId]: value }));
@@ -201,7 +196,6 @@ export function CampaignWorkshopCanvas({
 						activeTab={tab}
 						commentMode={commentMode}
 						onAddPin={addPin}
-						onAskOpal={askOpal}
 						onClose={onClose}
 						onOpenWorkflow={() => setMode("workflow")}
 						onRemovePin={removePin}
@@ -233,7 +227,6 @@ export function CampaignWorkshopCanvas({
 			activeTab={tab}
 			commentMode={commentMode}
 			onAddPin={addPin}
-			onAskOpal={askOpal}
 			onClose={onClose}
 			onOpenWorkflow={() => setMode("workflow")}
 			onRemovePin={removePin}

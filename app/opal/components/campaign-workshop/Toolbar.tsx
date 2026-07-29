@@ -2,12 +2,8 @@
 
 import { Box, Button, Switch, Tabs, TabsList, TabsTrigger, Tooltip, ToggleButton } from "@optiaxiom/react";
 import {
-	IconArrowRotateLeft,
-	IconArrowRotateRight,
-	IconArrowsMaximize,
 	IconCode,
 	IconCommentPlus,
-	IconCopy,
 	IconEllipsisStroke,
 	IconEye,
 	IconXmark,
@@ -20,14 +16,12 @@ import type { ContentTab } from "./CanvasStage";
 // (node 6708:90368/89886): code/preview toggle, content tabs, rationale switch,
 // workflow trigger, and version/copy/fullscreen/close icon buttons.
 //
-// "Ask Opal" and "Run Now" live here instead of a canvas-owned chat panel —
-// there's only ever one real Opal conversation (app/components/OpalPanel.tsx,
-// opened via useLayout().opalPanelControls), so the canvas triggers it rather
-// than rendering a second, out-of-sync lookalike.
+// "Run Now" lives here instead of a canvas-owned chat panel — the real Opal
+// conversation (app/components/OpalPanel.tsx) is a persistent overlay that's
+// always visible already, so there's no separate "ask Opal" entry point here.
 export function Toolbar({
 	activeTab,
 	commentMode,
-	onAskOpal,
 	onClose,
 	onOpenWorkflow,
 	onRunQueuedEdits,
@@ -40,7 +34,6 @@ export function Toolbar({
 }: {
 	activeTab: ContentTab;
 	commentMode: boolean;
-	onAskOpal: () => void;
 	onClose: () => void;
 	onOpenWorkflow: () => void;
 	onRunQueuedEdits: () => void;
@@ -103,9 +96,6 @@ export function Toolbar({
 				<Tooltip content="Comment on anything">
 					<ToggleButton size="sm" appearance="subtle" pressed={commentMode} icon={<IconCommentPlus size={17} />} aria-label="Comment" onPressedChange={onToggleCommentMode} />
 				</Tooltip>
-				<Tooltip content="Ask Opal">
-					<Button appearance="subtle" size="sm" icon={<img alt="" src="/opal-orb.png" style={{ borderRadius: 4, height: 18, width: 18 }} />} aria-label="Ask Opal" onClick={onAskOpal} />
-				</Tooltip>
 				{showWorkflow ? (
 					<Tooltip content="More">
 						<Button appearance="subtle" size="sm" icon={<IconEllipsisStroke size={18} />} aria-label="More" />
@@ -121,18 +111,6 @@ export function Toolbar({
 						<Button appearance="subtle" size="sm" onClick={onOpenWorkflow}>
 							Workflow
 						</Button>
-						<Tooltip content="Previous Version">
-							<Button appearance="subtle" size="sm" icon={<IconArrowRotateLeft size={17} />} aria-label="Previous Version" />
-						</Tooltip>
-						<Tooltip content="Next Version">
-							<Button appearance="subtle" size="sm" icon={<IconArrowRotateRight size={17} />} aria-label="Next Version" />
-						</Tooltip>
-						<Tooltip content="Copy">
-							<Button appearance="subtle" size="sm" icon={<IconCopy size={17} />} aria-label="Copy" />
-						</Tooltip>
-						<Tooltip content="Fullscreen">
-							<Button appearance="subtle" size="sm" icon={<IconArrowsMaximize size={17} />} aria-label="Fullscreen" />
-						</Tooltip>
 						<Tooltip content="Close chat window">
 							<Button appearance="subtle" size="sm" icon={<IconXmark size={17} />} aria-label="Close" onClick={onClose} />
 						</Tooltip>

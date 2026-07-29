@@ -209,7 +209,6 @@ export function OpalPanel({
         <OpalHeader
           onClose={onClose}
           onToggleHistory={toggleHistory}
-          onNewChat={createNewChat}
           onToggleMode={toggleMode}
         />
         <OpalChat
