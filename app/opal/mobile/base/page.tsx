@@ -10,7 +10,7 @@ function BaseContent() {
   const islandNav = params.get("island") !== "0";
   const foldOpal = params.get("fold") === "1";
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "var(--ax-colors-bg-default)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "var(--ax-colors-bg-default)" }}>
       <PhoneBase standalone showArtifacts={showArtifacts} showPreview={showPreview} islandNav={islandNav} foldOpal={foldOpal} />
     </div>
   );

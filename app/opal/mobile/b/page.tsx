@@ -10,7 +10,7 @@ function OptionBContent() {
   const islandNav = params.get("island") === "1";
   const foldOpal = params.get("fold") === "1";
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "var(--ax-colors-bg-default)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "var(--ax-colors-bg-default)" }}>
       <PhoneB standalone showArtifacts={showArtifacts} showPreview={showPreview} islandNav={islandNav} foldOpal={foldOpal} />
     </div>
   );

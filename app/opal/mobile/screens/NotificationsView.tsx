@@ -254,7 +254,7 @@ function HITLCard({
         onPointerDown={notif.read ? undefined : handlePointerDown}
         onPointerMove={notif.read ? undefined : handlePointerMove}
         onPointerUp={notif.read ? undefined : handlePointerUp}
-        onPointerLeave={notif.read ? undefined : handlePointerUp}
+        onPointerCancel={notif.read ? undefined : handlePointerUp}
         style={{
           animationDelay: `${delay}ms`,
           background: notif.read ? "var(--ax-colors-bg-page)" : "var(--ax-colors-bg-secondary)",

@@ -165,10 +165,15 @@ export function PhoneBase({ standalone = false, showArtifacts = true, showPrevie
   return (
     <>
       {!standalone && <StatusBar />}
-      <Box style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
+      <Box style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0, background: "var(--ax-colors-bg-page)" }}>
+        {/* islandClearance: shrink screen wrappers so island doesn't overlap last row */}
+        {(() => {
+          const clr = islandNav && screen !== "chat" ? 88 : 0;
+          return (
+        <>
         {tab === "messages" && (
           <>
-            <Box style={{ position: "absolute", inset: 0, transform: screen !== "list" ? "translateX(-8%)" : "translateX(0)", transition: "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)", opacity: screen !== "list" ? 0.5 : 1, pointerEvents: screen !== "list" ? "none" : "auto" }}>
+            <Box style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr, transform: screen !== "list" ? "translateX(-8%)" : "translateX(0)", transition: "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)", opacity: screen !== "list" ? 0.5 : 1, pointerEvents: screen !== "list" ? "none" : "auto" }}>
               <ConversationList onSelect={handleSelectConversation} onCatchup={() => setScreen("catchup")} onAvatarClick={() => setProfileOpen(true)} onCompose={() => setComposeOpen(true)} onOpalClick={() => handleTabChange("opal")} showPreview={showPreview} foldOpal={foldOpal} />
             </Box>
             {(screen === "chat" || chatAnimating) && (
@@ -177,17 +182,20 @@ export function PhoneBase({ standalone = false, showArtifacts = true, showPrevie
               </Box>
             )}
             {screen === "catchup" && (
-              <Box className="mobile-screen-push" style={{ position: "absolute", inset: 0, background: "var(--ax-colors-bg-default)" }}>
+              <Box className="mobile-screen-push" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr, background: "var(--ax-colors-bg-default)" }}>
                 <CatchUpView title="Catch up" onBack={() => setScreen("list")} showPreview={showPreview} onSelect={(id) => { setSelectedId(id); setChatAnimating(true); setScreen("chat"); setTimeout(() => setChatAnimating(false), 400); }} />
               </Box>
             )}
           </>
         )}
-        {tab === "home"      && <Box style={{ position: "absolute", inset: 0 }}><CatchUpView title="Home" onAvatarClick={() => setProfileOpen(true)} onBellClick={() => handleTabChange("activity")} showPreview={showPreview} launchpadPrompt onSelect={(id) => { handleSelectConversation(id); handleTabChange("messages"); }} /></Box>}
-        {tab === "opal"      && <Box style={{ position: "absolute", inset: 0 }}><OpalHomeView onAvatarClick={() => setProfileOpen(true)} onBack={foldOpal ? () => handleTabChange("messages") : undefined} onOpenChat={(id) => { setSelectedId(id === "new" ? "bubs" : id); setScreen("chat"); handleTabChange("messages"); }} /></Box>}
-        {tab === "tasks"     && <TrackerView onAvatarClick={() => setProfileOpen(true)} />}
-        {tab === "artifacts" && <ArtifactsView />}
-        {tab === "activity"  && <NotificationsView onAvatarClick={() => setProfileOpen(true)} />}
+        {tab === "home"      && <Box style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr }}><CatchUpView title="Home" onAvatarClick={() => setProfileOpen(true)} onBellClick={() => handleTabChange("activity")} showPreview={showPreview} launchpadPrompt onSelect={(id) => { handleSelectConversation(id); handleTabChange("messages"); }} /></Box>}
+        {tab === "opal"      && <Box style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr }}><OpalHomeView onAvatarClick={() => setProfileOpen(true)} onBack={foldOpal ? () => handleTabChange("messages") : undefined} onOpenChat={(id) => { setSelectedId(id === "new" ? "bubs" : id); setScreen("chat"); handleTabChange("messages"); }} /></Box>}
+        {tab === "tasks"     && <Box style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr }}><TrackerView onAvatarClick={() => setProfileOpen(true)} /></Box>}
+        {tab === "artifacts" && <Box style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr }}><ArtifactsView /></Box>}
+        {tab === "activity"  && <Box style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr }}><NotificationsView onAvatarClick={() => setProfileOpen(true)} /></Box>}
+        </>
+          );
+        })()}
         <SideDrawer
           open={composeOpen}
           onClose={() => setComposeOpen(false)}
@@ -198,7 +206,7 @@ export function PhoneBase({ standalone = false, showArtifacts = true, showPrevie
         />
         <ProfilePanel open={profileOpen} onClose={() => setProfileOpen(false)} />
         {islandNav && screen !== "chat" && (
-          <Box style={{ position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)", zIndex: 50 }}>
+          <Box style={{ position: "absolute", bottom: "max(16px, calc(env(safe-area-inset-bottom) + 8px))", left: "50%", transform: "translateX(-50%)", zIndex: 50 }}>
             <TabBar active={tab} onChange={handleTabChange} onMore={() => {}} showArtifacts={showArtifacts} foldOpal={foldOpal} island />
           </Box>
         )}
@@ -233,9 +241,13 @@ export function PhoneA({ standalone = false, showArtifacts = false, showPreview 
     <>
       {!standalone && <StatusBar />}
       <Box style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
+        {(() => {
+          const clr = islandNav && screen !== "chat" ? 88 : 0;
+          return (
+        <>
         {tab === "messages" && (
           <>
-            <Box style={{ position: "absolute", inset: 0, transform: screen !== "list" ? "translateX(-8%)" : "translateX(0)", transition: "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)", opacity: screen !== "list" ? 0.5 : 1, pointerEvents: screen !== "list" ? "none" : "auto" }}>
+            <Box style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr, transform: screen !== "list" ? "translateX(-8%)" : "translateX(0)", transition: "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)", opacity: screen !== "list" ? 0.5 : 1, pointerEvents: screen !== "list" ? "none" : "auto" }}>
               <ConversationList onSelect={handleSelectConversation} onCatchup={() => setScreen("catchup")} onAvatarClick={() => setProfileOpen(true)} onCompose={() => setComposeOpen(true)} onOpalClick={() => handleTabChange("opal")} showPreview={showPreview} foldOpal={foldOpal} />
             </Box>
             {(screen === "chat" || chatAnimating) && (
@@ -244,18 +256,21 @@ export function PhoneA({ standalone = false, showArtifacts = false, showPreview 
               </Box>
             )}
             {screen === "catchup" && (
-              <Box className="mobile-screen-push" style={{ position: "absolute", inset: 0, background: "var(--ax-colors-bg-default)" }}>
+              <Box className="mobile-screen-push" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr, background: "var(--ax-colors-bg-default)" }}>
                 <CatchUpView title="Catch up" onBack={() => setScreen("list")} showPreview={showPreview} onSelect={(id) => { setSelectedId(id); setChatAnimating(true); setScreen("chat"); setTimeout(() => setChatAnimating(false), 400); }} />
               </Box>
             )}
           </>
         )}
-        {tab === "home"      && <Box style={{ position: "absolute", inset: 0 }}><LaunchPadView onBellClick={() => handleTabChange("activity")} onAvatarClick={() => setProfileOpen(true)} showPreview={showPreview} /></Box>}
-        {tab === "opal"      && <Box style={{ position: "absolute", inset: 0 }}><OpalHomeView onAvatarClick={() => setProfileOpen(true)} onBack={foldOpal ? () => handleTabChange("messages") : undefined} onOpenChat={(id) => { setSelectedId(id === "new" ? "bubs" : id); setScreen("chat"); handleTabChange("messages"); }} /></Box>}
-        {tab === "tasks"     && <TrackerView onAvatarClick={() => setProfileOpen(true)} />}
-        {tab === "artifacts" && <ArtifactsView />}
-        {tab === "activity"  && <NotificationsView onAvatarClick={() => setProfileOpen(true)} />}
+        {tab === "home"      && <Box style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr }}><LaunchPadView onBellClick={() => handleTabChange("activity")} onAvatarClick={() => setProfileOpen(true)} showPreview={showPreview} /></Box>}
+        {tab === "opal"      && <Box style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr }}><OpalHomeView onAvatarClick={() => setProfileOpen(true)} onBack={foldOpal ? () => handleTabChange("messages") : undefined} onOpenChat={(id) => { setSelectedId(id === "new" ? "bubs" : id); setScreen("chat"); handleTabChange("messages"); }} /></Box>}
+        {tab === "tasks"     && <Box style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr }}><TrackerView onAvatarClick={() => setProfileOpen(true)} /></Box>}
+        {tab === "artifacts" && <Box style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr }}><ArtifactsView /></Box>}
+        {tab === "activity"  && <Box style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: clr }}><NotificationsView onAvatarClick={() => setProfileOpen(true)} /></Box>}
         {tab === "me"        && <MeView />}
+        </>
+          );
+        })()}
 
         <SideDrawer
           open={composeOpen}
@@ -267,7 +282,7 @@ export function PhoneA({ standalone = false, showArtifacts = false, showPreview 
         />
         <ProfilePanel open={profileOpen} onClose={() => setProfileOpen(false)} />
         {islandNav && screen !== "chat" && (
-          <Box style={{ position: "absolute", bottom: 16, left: "50%", transform: "translateX(-50%)", zIndex: 50 }}>
+          <Box style={{ position: "absolute", bottom: "max(16px, calc(env(safe-area-inset-bottom) + 8px))", left: "50%", transform: "translateX(-50%)", zIndex: 50 }}>
             <TabBar active={tab} onChange={handleTabChange} onMore={() => {}} showArtifacts={showArtifacts} foldOpal={foldOpal} island />
           </Box>
         )}
@@ -296,7 +311,7 @@ export function PhoneB({ standalone = false, showArtifacts = false, showPreview 
   return (
     <>
       {!standalone && <StatusBar />}
-      <Box style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
+      <Box style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0, ...(islandNav && screen !== "chat" ? { paddingBottom: 88 } : {}) }}>
         {tab === "home"     && <CatchUpView title="Home" onHamburger={() => setDrawerOpen(true)} showPreview={showPreview} onSelect={(id) => { setSelectedId(id); setTab("messages"); setScreen("chat"); }} />}
         {tab === "opal"     && <OpalHomeView onHamburger={foldOpal ? undefined : () => setDrawerOpen(true)} onBack={foldOpal ? () => { setTab("messages"); } : undefined} onOpenChat={(id) => { setSelectedId(id === "new" ? "bubs" : id); setTab("messages"); setScreen("chat"); }} />}
         {tab === "messages" && (
