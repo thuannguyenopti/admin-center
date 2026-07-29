@@ -3474,6 +3474,9 @@ function IMMain({
 }) {
   const [message, setMessage] = useState("");
   const [typing, setTyping] = useState(false);
+  const [formatToolbarOpen, setFormatToolbarOpen] = useState(false);
+  const [composerEmojiOpen, setComposerEmojiOpen] = useState(false);
+  const mainComposerRef = useRef<HTMLTextAreaElement>(null);
   const [pendingAttachments, setPendingAttachments] = useState<ContentItem[]>([]);
   const [activeTab, setActiveTab] = useState("messages");
   const [profileOpen, setProfileOpen] = useState(false);
@@ -4808,29 +4811,31 @@ function IMMain({
         pb="16"
         style={{ background: "var(--ax-colors-bg-default, white)", flexShrink: 0 }}
       >
-        {/* Formatting toolbar */}
-        <Box
-          display="flex"
-          alignItems="center"
-          px="4"
-          style={{
-            height: 37,
-            background: "var(--ax-colors-bg-tertiary, #eff5eb)",
-            borderRadius: "4px 4px 0 0",
-          }}
-        >
-          <ToolbarBtn icon={<IconBold />} label="Bold" />
-          <ToolbarBtn icon={<IconItalic />} label="Italic" />
-          <ToolbarBtn icon={<IconUnderline />} label="Underline" />
-          <ToolbarBtn icon={<IconStrikethrough />} label="Strikethrough" />
-          <Box style={{ width: 1, height: 18, background: "var(--ax-colors-border-secondary)", margin: "0 4px", flexShrink: 0 }} />
-          <ToolbarBtn icon={<IconLink />} label="Link" />
-          <ToolbarBtn icon={<IconListOl />} label="Ordered list" />
-          <ToolbarBtn icon={<IconListUl />} label="Bullet list" />
-          <ToolbarBtn icon={<IconQuoteRight />} label="Block quote" />
-          <Box style={{ width: 1, height: 18, background: "var(--ax-colors-border-secondary)", margin: "0 4px", flexShrink: 0 }} />
-          <ToolbarBtn icon={<IconCode />} label="Code" />
-        </Box>
+        {/* Formatting toolbar — toggled via the "Aa" button below */}
+        {formatToolbarOpen && (
+          <Box
+            display="flex"
+            alignItems="center"
+            px="4"
+            style={{
+              height: 37,
+              background: "var(--ax-colors-bg-tertiary, #eff5eb)",
+              borderRadius: "4px 4px 0 0",
+            }}
+          >
+            <ToolbarBtn icon={<IconBold />} label="Bold" />
+            <ToolbarBtn icon={<IconItalic />} label="Italic" />
+            <ToolbarBtn icon={<IconUnderline />} label="Underline" />
+            <ToolbarBtn icon={<IconStrikethrough />} label="Strikethrough" />
+            <Box style={{ width: 1, height: 18, background: "var(--ax-colors-border-secondary)", margin: "0 4px", flexShrink: 0 }} />
+            <ToolbarBtn icon={<IconLink />} label="Link" />
+            <ToolbarBtn icon={<IconListOl />} label="Ordered list" />
+            <ToolbarBtn icon={<IconListUl />} label="Bullet list" />
+            <ToolbarBtn icon={<IconQuoteRight />} label="Block quote" />
+            <Box style={{ width: 1, height: 18, background: "var(--ax-colors-border-secondary)", margin: "0 4px", flexShrink: 0 }} />
+            <ToolbarBtn icon={<IconCode />} label="Code" />
+          </Box>
+        )}
 
         {/* Input box */}
         <Box style={{ position: "relative" }}>
@@ -4858,8 +4863,8 @@ function IMMain({
           style={{
             background: "var(--ax-colors-bg-default, white)",
             border: "1px solid var(--ax-colors-border-default, #d8e4cb)",
-            borderTop: "none",
-            borderRadius: "0 0 8px 8px",
+            borderTop: formatToolbarOpen ? "none" : "1px solid var(--ax-colors-border-default, #d8e4cb)",
+            borderRadius: formatToolbarOpen ? "0 0 8px 8px" : "8px",
             minHeight: 111,
             display: "flex",
             flexDirection: "column",
@@ -4917,6 +4922,7 @@ function IMMain({
             </Box>
           )}
           <textarea
+            ref={mainComposerRef}
             value={message}
             onChange={e => {
               const val = e.target.value;
@@ -4966,6 +4972,58 @@ function IMMain({
               </MenuTrigger>
               <MenuContent align="start" />
             </Menu>
+            <Tooltip content="Formatting">
+              <Button
+                appearance="subtle"
+                size="sm"
+                onClick={() => setFormatToolbarOpen(v => !v)}
+                aria-label="Text formatting"
+                aria-pressed={formatToolbarOpen}
+                style={{ width: 28, height: 28, padding: 0, fontSize: 13, fontWeight: 600, textDecoration: "underline", color: formatToolbarOpen ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)" }}
+              >
+                Aa
+              </Button>
+            </Tooltip>
+            <Box style={{ position: "relative" }}>
+              <Tooltip content="Emoji">
+                <Button
+                  appearance="subtle"
+                  size="sm"
+                  icon={<IconFaceSmile />}
+                  aria-label="Emoji"
+                  onClick={() => setComposerEmojiOpen(v => !v)}
+                  style={{ width: 28, height: 28, padding: 0, color: "var(--ax-colors-fg-tertiary)" }}
+                />
+              </Tooltip>
+              {composerEmojiOpen && (
+                <Box style={{ position: "absolute", bottom: 34, left: 0, zIndex: 100 }}>
+                  <Picker
+                    data={data}
+                    onEmojiSelect={(e: { native: string }) => { setMessage(m => m + e.native); setComposerEmojiOpen(false); mainComposerRef.current?.focus(); }}
+                    onClickOutside={() => setComposerEmojiOpen(false)}
+                    theme="light"
+                    previewPosition="none"
+                    skinTonePosition="search"
+                  />
+                </Box>
+              )}
+            </Box>
+            <Tooltip content="Mention someone">
+              <Button
+                appearance="subtle"
+                size="sm"
+                icon={<IconAt />}
+                aria-label="Mention someone"
+                onClick={() => {
+                  setMessage(m => m + "@");
+                  setMentionQuery("");
+                  setMentionOpen(true);
+                  setMentionIdx(0);
+                  mainComposerRef.current?.focus();
+                }}
+                style={{ width: 28, height: 28, padding: 0, color: "var(--ax-colors-fg-tertiary)" }}
+              />
+            </Tooltip>
             <Box style={{ flex: 1 }} />
             <Tooltip content="Send">
               <Button
