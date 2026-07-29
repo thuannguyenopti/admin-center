@@ -37,6 +37,8 @@ import Link from "next/link";
 import {useTheme} from "@/app/hooks/useTheme";
 import {useLayout} from "@/app/context/LayoutContext";
 import NotificationDropdown from "./NotificationDropdown";
+import {TrackerPanel} from "@/app/opal/tracker/TrackerPanel";
+import {usePlannerLabel} from "@/app/opal/tracker/usePlannerLabel";
 import OpalChatButton from "./OpalChatButton";
 import { DemoResetButton } from "@/app/opal/components/DemoResetButton";
 import {useState, useEffect} from "react";
@@ -44,6 +46,7 @@ import {
 	IconComments,
 	IconMessages,
 	IconSearch,
+	IconSquareCheck,
 	IconCircleQuestion,
 	IconXmark,
 	IconSunBright,
@@ -65,7 +68,18 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const light = theme === "light";
 	const isOpalRoute = pathname.startsWith("/opal");
 	const isImRoute = pathname.startsWith("/opal/im");
-	const {codePanelControls} = useLayout();
+	const {codePanelControls, setAsideContent} = useLayout();
+	const plannerLabel = usePlannerLabel();
+	const [trackerOpen, setTrackerOpen] = useState(false);
+	const toggleTracker = () => {
+		if (trackerOpen) {
+			setAsideContent(null);
+			setTrackerOpen(false);
+		} else {
+			setAsideContent(<TrackerPanel onClose={() => { setAsideContent(null); setTrackerOpen(false); }} />);
+			setTrackerOpen(true);
+		}
+	};
 
 	const handleCodeClick = () => {
 		codePanelControls?.openPanel(pathname);
@@ -624,7 +638,6 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 				</Box>
 
 				<Box display="flex" alignItems="center" gap="4">
-					<DemoResetButton />
 					{isOpalRoute ? (
 						<>
 							<DemoResetButton />
@@ -634,6 +647,14 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 								icon={<IconSearch size={20} />}
 								color="fg.secondary"
 								aria-label="Search"
+							/>
+							<Button
+								appearance="subtle"
+								size="md"
+								icon={<IconSquareCheck size={20} />}
+								color="fg.secondary"
+								aria-label={plannerLabel}
+								onClick={toggleTracker}
 							/>
 							<NotificationDropdown />
 							<Button
@@ -806,7 +827,6 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 									},
 								]}
 							/>
-							<DemoResetButton />
 							<Button
 								appearance="subtle"
 								size="md"

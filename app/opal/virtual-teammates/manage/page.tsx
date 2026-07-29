@@ -12,6 +12,7 @@ import {
 	IconSearch,
 	IconTrashCan,
 	IconUserPlus,
+	IconUserCheck,
 } from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import { VAUS } from "@/app/opal/data/vaus";
@@ -72,7 +73,7 @@ export default function VirtualTeammatesManagePage() {
 		<Box
 			display="flex"
 			flexDirection="column"
-			style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#F9FCF8" }}
+			style={{ position: "absolute", inset: 0, overflowY: "auto", background: "var(--ax-colors-bg-page)" }}
 		>
 			<Box style={{ padding: "32px 40px" }}>
 				<Heading level="1" mb="4">
@@ -119,7 +120,7 @@ export default function VirtualTeammatesManagePage() {
 							<VAUCard
 								key={vau.id}
 								vau={vau}
-								onSelect={(v) => router.push(`/opal/virtual-teammates/manage/${v.id}`)}
+								onSelect={(v) => router.push(`/opal/virtual-teammates/manage/${v.id}/activity`)}
 							/>
 						))}
 					</Box>
@@ -128,18 +129,17 @@ export default function VirtualTeammatesManagePage() {
 						<thead>
 							<tr>
 								<Th style={{ paddingLeft: 16 }}>Teammate</Th>
-								<Th>Principle User</Th>
-								<Th>Type</Th>
+								<Th>Managed by</Th>
+								<Th>Email</Th>
+								<Th>Created</Th>
 								<Th>Status</Th>
-								<Th>Attention Required</Th>
 								<Th />
 							</tr>
 						</thead>
 						<tbody>
 							{filtered.map((vau) => {
-								const needsReview = NEEDS_REVIEW_IDS.has(vau.id);
 								return (
-									<Tr key={vau.id} onClick={() => router.push(`/opal/virtual-teammates/manage/${vau.id}`)}>
+									<Tr key={vau.id} onClick={() => router.push(`/opal/virtual-teammates/manage/${vau.id}/activity`)}>
 										<Td style={{ paddingLeft: 16 }}>
 											<Box display="flex" alignItems="center" gap="12">
 												<Box style={{ width: 36, height: 36, borderRadius: 8, background: vau.avatarBg, overflow: "hidden", flexShrink: 0 }}>
@@ -155,24 +155,21 @@ export default function VirtualTeammatesManagePage() {
 											<Text fontSize="md" color="fg.default">Mona Chen</Text>
 										</Td>
 										<Td>
-											<Text fontSize="md" color="fg.default">Private</Text>
-											<Text fontSize="sm" color="fg.secondary">This teammate can only be used by you</Text>
+											<Text fontSize="sm" color="fg.secondary" style={{ fontFamily: "var(--ax-font-family-mono)" }}>
+												{`${(vau.characterName ?? vau.name).toLowerCase().replace(/\s+/g, "")}@vau.opal.optimizely.com`}
+											</Text>
+										</Td>
+										<Td>
+											<Text fontSize="sm" color="fg.secondary">{vau.createdAt ?? "—"}</Text>
 										</Td>
 										<Td>
 											{vau.status === "active" ? (
-												<Badge style={{ background: "#D4F5D4", color: "#166534", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+												<Badge style={{ background: "var(--ax-colors-bg-success-subtle)", color: "var(--ax-colors-fg-success-strong)", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
 													Active
 												</Badge>
 											) : (
-												<Badge style={{ background: "#FCE7F3", color: "#9D174D", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+												<Badge style={{ background: "var(--ax-colors-bg-error-subtle)", color: "var(--ax-colors-fg-error)", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
 													Paused
-												</Badge>
-											)}
-										</Td>
-										<Td>
-											{needsReview && (
-												<Badge style={{ background: "#FEF3C7", color: "#92400E", border: "none", fontFamily: "var(--ax-font-family-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-													Needs Review
 												</Badge>
 											)}
 										</Td>
@@ -186,12 +183,17 @@ export default function VirtualTeammatesManagePage() {
 															execute: () => router.push("/opal/im"),
 														},
 														{
+															label: `Sign in as ${vau.characterName ?? vau.name}`,
+															addon: <IconUserCheck />,
+															execute: () => {},
+														},
+														{
 															label: "Pause",
 															addon: <IconCirclePause />,
 															execute: () => {},
 														},
 														{
-															label: "Delete",
+															label: "Deactivate",
 															addon: <IconTrashCan />,
 															intent: "danger" as const,
 															execute: () => {},

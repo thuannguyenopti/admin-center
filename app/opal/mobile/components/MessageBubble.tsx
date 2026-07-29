@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Box, Text, Avatar, Button } from "@optiaxiom/react";
 import { IconFileLines, IconArrowUpRightFromSquare } from "@optiaxiom/icons";
 import { type Message, type Reaction, QUICK_EMOJIS, PRESENCE_COLOR, type PresenceStatus } from "../data";
+import { mobileType } from "../typography";
 
 type Props = {
   msg: Message;
@@ -116,7 +117,7 @@ export function MessageBubble({ msg, time, animationDelay = 0, isNew = false }: 
               </Box>
             </Box>
             <Button appearance="default" size="sm" icon={<IconArrowUpRightFromSquare />} iconPosition="end">
-              Open to review
+              Preview
             </Button>
           </Box>
           <Text fontSize="sm" color="fg.tertiary" style={{ paddingRight: 4 }}>{time}</Text>
@@ -145,7 +146,7 @@ export function MessageBubble({ msg, time, animationDelay = 0, isNew = false }: 
               borderRadius: "18px 18px 4px 18px",
               padding: "10px 14px",
               maxWidth: 260,
-              fontSize: 15,
+              ...mobileType.primary,
               lineHeight: 1.55,
               color: "var(--ax-colors-fg-default)",
               whiteSpace: "pre-wrap",
@@ -247,7 +248,7 @@ export function MessageBubble({ msg, time, animationDelay = 0, isNew = false }: 
             borderRadius: "4px 18px 18px 18px",
             padding: "10px 14px",
             maxWidth: 260,
-            fontSize: 15,
+            ...mobileType.primary,
             lineHeight: 1.55,
             color: "var(--ax-colors-fg-default)",
             whiteSpace: "pre-wrap",
@@ -322,7 +323,7 @@ function ReactionChip({
       }}
     >
       <span>{emoji}</span>
-      <span style={{ fontSize: 12, color: "var(--ax-colors-fg-secondary)" }}>{count}</span>
+      <span style={{ ...mobileType.meta, color: "var(--ax-colors-fg-secondary)" }}>{count}</span>
     </Box>
   );
 }

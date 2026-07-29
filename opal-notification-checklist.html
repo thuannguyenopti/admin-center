@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Opal Notification — UI Checklist</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0f0f17;
+    --surface:   #16161f;
+    --surface2:  #1c1c28;
+    --border:    #2a2a3d;
+    --purple:    #9b7ef8;
+    --purple-lo: #9b7ef822;
+    --blue:      #7eb8f7;
+    --green:     #4ade80;
+    --green-lo:  #4ade8018;
+    --amber:     #fbbf24;
+    --muted:     #525270;
+    --text:      #d4d4ef;
+    --text-dim:  #7070a0;
+    --radius:    10px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 20px 64px;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    max-width: 720px;
+    margin: 0 auto 28px;
+  }
+  .page-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .bell-icon {
+    width: 32px; height: 32px;
+    background: var(--purple-lo);
+    border: 1px solid var(--purple);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  h1 { font-size: 18px; font-weight: 700; color: #fff; }
+  .subtitle { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+  /* ── Overall progress card ── */
+  .progress-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 10px;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .progress-meta-label { font-size: 12px; color: var(--text-dim); }
+  .progress-meta-count { font-size: 22px; font-weight: 700; color: #fff; }
+  .progress-meta-count span { font-size: 13px; font-weight: 400; color: var(--text-dim); }
+  .progress-meta-pct { font-size: 22px; font-weight: 700; color: var(--purple); }
+
+  .track {
+    width: 100%;
+    height: 8px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), var(--blue));
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(.4,0,.2,1);
+    min-width: 0;
+  }
+
+  .section-pills {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .pill {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
+    white-space: nowrap;
+  }
+  .pill:hover, .pill.active { border-color: var(--purple); color: var(--purple); background: var(--purple-lo); }
+  .pill.complete { border-color: var(--green); color: var(--green); background: var(--green-lo); }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    max-width: 720px;
+    margin: 0 auto 16px;
+    flex-wrap: wrap;
+  }
+  .search {
+    flex: 1;
+    min-width: 180px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 12px;
+    padding: 7px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search:focus { border-color: var(--purple); }
+  .search::placeholder { color: var(--muted); }
+
+  .filter-tabs { display: flex; gap: 4px; }
+  .ftab {
+    padding: 6px 12px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    transition: all 0.15s;
+  }
+  .ftab:hover { color: var(--text); border-color: var(--text-dim); }
+  .ftab.active { background: var(--purple-lo); border-color: var(--purple); color: var(--purple); }
+
+  .btn-reset {
+    padding: 6px 12px;
+    border-radius: 7px;
+    font-size: 11px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    transition: all 0.15s;
+  }
+  .btn-reset:hover { border-color: #f87171; color: #f87171; }
+
+  /* ── Sections ── */
+  .sections { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .section.all-done { border-color: #4ade8044; }
+
+  .sec-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s;
+  }
+  .sec-header:hover { background: var(--surface2); }
+
+  .sec-chevron {
+    font-size: 8px;
+    color: var(--muted);
+    transition: transform 0.22s;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .section.open .sec-chevron { transform: rotate(90deg); }
+
+  .sec-name {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    min-width: 0;
+  }
+  .section.all-done .sec-name { color: var(--green); }
+
+  .sec-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .sec-track {
+    width: 60px; height: 3px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .sec-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), var(--blue));
+    border-radius: 99px;
+    transition: width 0.35s;
+  }
+  .section.all-done .sec-fill { background: var(--green); }
+  .sec-count { font-size: 10px; color: var(--text-dim); min-width: 28px; text-align: right; }
+
+  /* ── Items ── */
+  .items-wrap { display: none; padding: 0 16px 10px; }
+  .section.open .items-wrap { display: block; }
+
+  .subsection-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+    padding: 10px 0 6px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+  .subsection-label:first-child { border-top: none; margin-top: 0; }
+
+  .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .item:last-child { border-bottom: none; }
+  .item:hover .item-label { color: #fff; }
+
+  .checkbox {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--muted);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.18s;
+    background: transparent;
+  }
+  .item.checked .checkbox {
+    background: var(--purple);
+    border-color: var(--purple);
+  }
+  .item.checked .checkbox::after {
+    content: "";
+    display: block;
+    width: 8px; height: 4.5px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) translateY(-1px);
+  }
+
+  .item-text { flex: 1; min-width: 0; }
+  .item-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.45;
+    transition: color 0.15s;
+    display: block;
+  }
+  .item.checked .item-label {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+  .item-desc {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .item.checked .item-desc { text-decoration: line-through; }
+
+  /* search highlight */
+  mark { background: #fbbf2430; color: var(--amber); border-radius: 2px; }
+
+  /* empty state */
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  /* confetti burst */
+  @keyframes pop { 0%{transform:scale(0.8);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+  .done-banner {
+    display: none;
+    background: var(--green-lo);
+    border: 1px solid var(--green);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 16px;
+    max-width: 720px;
+    margin-left: auto; margin-right: auto;
+    animation: pop 0.3s ease forwards;
+  }
+  .done-banner.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Page header -->
+<div class="page-header">
+  <div class="page-title">
+    <div class="bell-icon">🔔</div>
+    <div>
+      <h1>Opal Notification System</h1>
+      <div class="subtitle">UI Patterns & Elements — Design Checklist</div>
+    </div>
+  </div>
+
+  <!-- Overall progress card -->
+  <div class="progress-card">
+    <div class="progress-meta">
+      <div>
+        <div class="progress-meta-label">Overall Progress</div>
+        <div class="progress-meta-count"><span id="doneNum">0</span> <span>/ <span id="totalNum">0</span> items</span></div>
+      </div>
+      <div class="progress-meta-pct" id="pctLabel">0%</div>
+    </div>
+    <div class="track"><div class="fill" id="mainFill" style="width:0%"></div></div>
+    <div class="section-pills" id="sectionPills"></div>
+  </div>
+</div>
+
+<!-- Done banner -->
+<div class="done-banner" id="doneBanner">🎉 All items complete! Great work, Hsiao-Pei.</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <input class="search" id="searchInput" type="text" placeholder="Search items…"/>
+  <div class="filter-tabs">
+    <button class="ftab active" data-f="all">All</button>
+    <button class="ftab" data-f="todo">Remaining</button>
+    <button class="ftab" data-f="done">Done</button>
+  </div>
+  <button class="btn-reset" id="resetBtn">Reset</button>
+</div>
+
+<!-- List -->
+<div class="sections" id="sections"></div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────
+const DATA = [
+  {
+    id: "s1",
+    name: "1. Notification Entry Point",
+    items: [
+      { id: "bell",        label: "Bell icon",       desc: "Persistent icon in the top navigation bar, accessible from all pages" },
+      { id: "badge",       label: "Unread badge",    desc: "Numeric count badge overlaid on the bell icon indicating unread notifications" },
+      { id: "badge-clear", label: "Badge auto-clear",desc: "Badge count decrements as notifications are read" },
+    ]
+  },
+  {
+    id: "s2",
+    name: "2. Notification Center (Flyout / Inbox)",
+    items: [
+      { id: "flyout",   label: "Flyout panel",       desc: "Slide-in or dropdown panel anchored to the bell icon" },
+      { id: "inbox-lg", label: "Larger inbox view",  desc: "Expanded full-page or wide-panel inbox mode" },
+      { id: "chron",    label: "Chronological list", desc: "Notifications listed newest-first" },
+      { id: "paginate", label: "Pagination",         desc: "50 notifications per page with previous/next controls" },
+      { id: "empty",    label: "Empty state",        desc: "Illustrated or text empty state when no notifications exist" },
+      { id: "skeleton", label: "Loading skeleton",   desc: "Placeholder while notifications fetch" },
+    ]
+  },
+  {
+    id: "s3",
+    name: "3. Individual Notification Item",
+    items: [
+      { id: "timestamp",    label: "Timestamp",                  desc: "Relative (e.g., '2 min ago') and absolute (hover tooltip) display" },
+      { id: "title",        label: "Title",                      desc: "Bold, short summary of the event" },
+      { id: "message",      label: "Detailed message",           desc: "Secondary text with event details (agent name, error summary, score, etc.)" },
+      { id: "read-state",   label: "Unread / read visual state", desc: "Unread items visually distinguished (bold text, colored dot, or highlighted background)" },
+      { id: "read-on-click",label: "Read-on-interact behavior",  desc: "Clicking a notification marks it as read" },
+      { id: "deeplink",     label: "Deeplink / CTA",             desc: "Entire notification row (or a button) navigates to the relevant context" },
+      { id: "dismiss",      label: "Dismiss button",             desc: "Per-item '×' or dismiss control to remove a single notification" },
+      { id: "approve-deny", label: "Approve / Deny inline actions", desc: "For admin-targeted notifications requiring approval — inline Approve and Deny buttons" },
+      { id: "role-badge",   label: "Role badge or type label",   desc: "Optional chip indicating notification category (e.g., Agent Execution, Guardrail, Admin Action)" },
+    ]
+  },
+  {
+    id: "s4",
+    name: "4. Notification States & Bulk Actions",
+    items: [
+      { id: "unread-style",  label: "Unread state styling",       desc: "Distinct visual treatment for unread notifications" },
+      { id: "read-style",    label: "Read state styling",         desc: "Dimmed or default visual treatment for read notifications" },
+      { id: "multi-select",  label: "Multi-select checkboxes",    desc: "Ability to select individual notifications for bulk actions" },
+      { id: "select-all",    label: "Select all control",         desc: "Checkbox or button to select all visible notifications" },
+      { id: "bulk-read",     label: "Bulk Mark as read",          desc: "Action button to mark selected/all as read" },
+      { id: "bulk-unread",   label: "Bulk Mark as unread",        desc: "Action button to mark selected/all as unread" },
+      { id: "clear-read",    label: "Clear all read",             desc: "Button to dismiss/remove all read notifications" },
+      { id: "bulk-toolbar",  label: "Bulk action toolbar",        desc: "Appears contextually when one or more items are selected" },
+    ]
+  },
+  {
+    id: "s5",
+    name: "5. Search & Filter",
+    items: [
+      { id: "search-bar",     label: "Keyword search bar",          desc: "Text input to search notification content" },
+      { id: "filter-type",    label: "Filter by type",              desc: "Dropdown or multi-select filter for notification categories" },
+      { id: "filter-date",    label: "Filter by date range",        desc: "Date picker (start/end) to narrow notifications by time" },
+      { id: "filter-status",  label: "Filter by read/unread status",desc: "Toggle or dropdown to show only read, only unread, or all" },
+      { id: "filter-agent",   label: "Filter by agent",             desc: "Typeahead or dropdown to filter notifications related to a specific agent" },
+      { id: "filter-chips",   label: "Active filter chips",         desc: "Visible tags showing applied filters with individual remove (×) controls" },
+      { id: "clear-filters",  label: "Clear all filters",           desc: "Single action to reset all active filters" },
+      { id: "no-results",     label: "No results state",            desc: "Message or illustration when search/filter returns nothing" },
+    ]
+  },
+  {
+    id: "s6",
+    name: "6. Toast / In-App Notifications",
+    items: [
+      { id: "toast",        label: "Toast component",            desc: "Brief pop-up appearing in a consistent screen position (e.g., bottom-right)" },
+      { id: "toast-auto",   label: "Toast auto-dismiss",         desc: "Disappears after a configurable timeout" },
+      { id: "toast-manual", label: "Toast manual dismiss",       desc: "'×' button to close immediately" },
+      { id: "toast-link",   label: "Toast deeplink",             desc: "'View' or action link within the toast to navigate to context" },
+      { id: "toast-ctx",    label: "Context-aware suppression",  desc: "Toast is NOT shown if user is actively viewing the relevant chat thread or page" },
+    ]
+  },
+  {
+    id: "s7",
+    name: "7. Notification Preferences & Settings",
+    items: [
+      { id: "prefs-page",   label: "Notifications settings page",   desc: "Accessible from user profile or account settings" },
+      { id: "global-toggle",label: "Global on/off toggle",          desc: "Master switch to enable or disable all notifications" },
+      { id: "per-event",    label: "Per-event-type toggle",         desc: "Individual on/off switches for each notification event category" },
+      { id: "channels",     label: "Delivery channel selector",     desc: "Per-event choice of delivery method: in-app, email, browser push, Slack, Teams, SMS, phone" },
+      { id: "watch",        label: "Watch / Unwatch Agent control", desc: "Toggle on agent detail pages to subscribe/unsubscribe; agent creator defaults to watched" },
+      { id: "admin-prefs",  label: "Admin default settings panel",  desc: "Admin-only UI to configure org-wide default notification preferences for new users" },
+      { id: "weekly-digest",label: "Weekly wrap-up toggle",         desc: "Opt-in/out of a weekly digest notification" },
+    ]
+  },
+  {
+    id: "s8",
+    name: "8. Notification Types",
+    subsections: [
+      {
+        label: "Agent Execution — Chat-Triggered",
+        items: [
+          { id: "ct-success",  label: "Chat Trigger — Agent Execution Success" },
+          { id: "ct-failed",   label: "Chat Trigger — Agent Execution Failed" },
+          { id: "ct-progress", label: "Chat Trigger — Long-Running Agent Progress Update" },
+          { id: "ct-paused",   label: "Chat Trigger — Agent Paused" },
+        ]
+      },
+      {
+        label: "Agent Execution — Autonomous Trigger",
+        items: [
+          { id: "at-started", label: "Autonomous — Agent Execution Started" },
+          { id: "at-success", label: "Autonomous — Agent Execution Success" },
+          { id: "at-failed",  label: "Autonomous — Agent Execution Failed" },
+          { id: "at-paused",  label: "Autonomous — Agent Paused" },
+          { id: "at-ticket",  label: "ARE Service Ticket Created", desc: "Agent Builder / Admin only, watched" },
+        ]
+      },
+      {
+        label: "Guardrail & Quality",
+        items: [
+          { id: "grd-obs-warn",  label: "Guardrail Violation — Observer Mode (Warning)" },
+          { id: "grd-enf-warn",  label: "Guardrail Violation — Enforcer Mode (Warning)" },
+          { id: "grd-enf-term",  label: "Guardrail Violation — Enforcer Mode (Terminated)" },
+          { id: "quality-score", label: "Output Quality Score Below Threshold" },
+        ]
+      },
+      {
+        label: "Collaborative / Multi-User",
+        items: [
+          { id: "agent-modified", label: "Agent Modified by Another User" },
+          { id: "agent-activated",label: "Agent Activated" },
+          { id: "agent-deactivated",label: "Agent Deactivated" },
+        ]
+      },
+      {
+        label: "Agent Directory",
+        items: [
+          { id: "dir-new",       label: "New Agents in Agent Directory" },
+          { id: "dir-update",    label: "Agent Update Available (for installed agent)" },
+          { id: "dir-req",       label: "Agent Install Request Submitted (Admin)" },
+          { id: "dir-approved",  label: "Agent Install Request Approved (Requester)" },
+          { id: "dir-denied",    label: "Agent Install Request Denied (Requester)" },
+        ]
+      },
+      {
+        label: "Tools & Connections",
+        items: [
+          { id: "tools-new",   label: "New Tools Available" },
+          { id: "conn-new",    label: "New Connections Available" },
+          { id: "auth-req",    label: "Tool Authentication Required" },
+          { id: "auth-exp",    label: "Connection Authentication Expired" },
+          { id: "tools-dep",   label: "Tool Deprecation Notice" },
+        ]
+      },
+      {
+        label: "System",
+        items: [
+          { id: "sys-announce", label: "System Announcement (role-specific)" },
+        ]
+      }
+    ]
+  },
+];
+
+// Flatten all items for progress counting
+function allItems() {
+  const out = [];
+  for (const sec of DATA) {
+    if (sec.items) sec.items.forEach(i => out.push(i));
+    if (sec.subsections) sec.subsections.forEach(sub => sub.items.forEach(i => out.push(i)));
+  }
+  return out;
+}
+
+// ── Persistence ───────────────────────────────────────────────────
+const STORE = "opal_checklist_v2";
+function loadState() { try { return JSON.parse(localStorage.getItem(STORE) || "{}"); } catch { return {}; } }
+function saveState(s) { localStorage.setItem(STORE, JSON.stringify(s)); }
+
+let state = loadState();
+let filter = "all";
+let search = "";
+let openSections = new Set(DATA.map(s => s.id));
+
+// ── Progress ──────────────────────────────────────────────────────
+function updateProgress() {
+  const items = allItems();
+  const total = items.length;
+  const done  = items.filter(i => state[i.id]).length;
+  const pct   = total ? Math.round((done / total) * 100) : 0;
+
+  document.getElementById("doneNum").textContent = done;
+  document.getElementById("totalNum").textContent = total;
+  document.getElementById("pctLabel").textContent = pct + "%";
+  document.getElementById("mainFill").style.width = pct + "%";
+
+  const banner = document.getElementById("doneBanner");
+  if (done === total && total > 0) banner.classList.add("show");
+  else banner.classList.remove("show");
+
+  // Section pills
+  const pillsEl = document.getElementById("sectionPills");
+  pillsEl.innerHTML = "";
+  for (const sec of DATA) {
+    const secItems = sec.items
+      ? sec.items
+      : (sec.subsections || []).flatMap(s => s.items);
+    const secDone = secItems.filter(i => state[i.id]).length;
+    const allDone = secDone === secItems.length;
+    const pill = document.createElement("button");
+    pill.className = "pill" + (allDone ? " complete" : "");
+    pill.textContent = allDone ? "✓ " + sec.name.split(".")[0].trim() : sec.name.split(".")[0].trim() + " " + secDone + "/" + secItems.length;
+    pill.addEventListener("click", () => {
+      openSections.add(sec.id);
+      renderSections();
+      const el = document.getElementById("sec-" + sec.id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    pillsEl.appendChild(pill);
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+function esc(str) { return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function highlight(text, q) {
+  if (!q) return esc(text);
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if (i === -1) return esc(text);
+  return esc(text.slice(0,i)) + "<mark>" + esc(text.slice(i, i+q.length)) + "</mark>" + esc(text.slice(i+q.length));
+}
+function itemMatchesSearch(item) {
+  if (!search) return true;
+  return (item.label + " " + (item.desc||"")).toLowerCase().includes(search.toLowerCase());
+}
+function itemMatchesFilter(item) {
+  if (filter === "done") return !!state[item.id];
+  if (filter === "todo") return !state[item.id];
+  return true;
+}
+function itemVisible(item) { return itemMatchesSearch(item) && itemMatchesFilter(item); }
+
+// ── Render ────────────────────────────────────────────────────────
+function renderSections() {
+  const container = document.getElementById("sections");
+  container.innerHTML = "";
+  let anyVisible = false;
+
+  for (const sec of DATA) {
+    const secItems = sec.items
+      ? sec.items
+      : (sec.subsections || []).flatMap(s => s.items);
+    const visible = secItems.filter(itemVisible);
+    if (!visible.length) continue;
+    anyVisible = true;
+
+    const secDone = secItems.filter(i => state[i.id]).length;
+    const secTotal = secItems.length;
+    const secPct = secTotal ? Math.round((secDone/secTotal)*100) : 0;
+    const allDone = secDone === secTotal;
+    const isOpen = openSections.has(sec.id) || !!search;
+
+    const secEl = document.createElement("div");
+    secEl.className = "section" + (isOpen ? " open" : "") + (allDone ? " all-done" : "");
+    secEl.id = "sec-" + sec.id;
+
+    // Header
+    const hdr = document.createElement("div");
+    hdr.className = "sec-header";
+    hdr.innerHTML = `
+      <span class="sec-chevron">▶</span>
+      <span class="sec-name">${esc(sec.name)}</span>
+      <div class="sec-bar-wrap">
+        <div class="sec-track"><div class="sec-fill" style="width:${secPct}%"></div></div>
+        <span class="sec-count">${secDone}/${secTotal}</span>
+      </div>`;
+    hdr.addEventListener("click", () => {
+      if (openSections.has(sec.id)) openSections.delete(sec.id);
+      else openSections.add(sec.id);
+      renderSections();
+    });
+    secEl.appendChild(hdr);
+
+    // Items wrap
+    const wrap = document.createElement("div");
+    wrap.className = "items-wrap";
+
+    if (sec.items) {
+      // flat list
+      for (const item of sec.items) {
+        if (!itemVisible(item)) continue;
+        wrap.appendChild(makeItemEl(item));
+      }
+    } else if (sec.subsections) {
+      for (const sub of sec.subsections) {
+        const subVisible = sub.items.filter(itemVisible);
+        if (!subVisible.length) continue;
+        const lbl = document.createElement("div");
+        lbl.className = "subsection-label";
+        lbl.textContent = sub.label;
+        wrap.appendChild(lbl);
+        for (const item of sub.items) {
+          if (!itemVisible(item)) continue;
+          wrap.appendChild(makeItemEl(item));
+        }
+      }
+    }
+
+    secEl.appendChild(wrap);
+    container.appendChild(secEl);
+  }
+
+  if (!anyVisible) {
+    container.innerHTML = '<div class="empty">No items match your filter.</div>';
+  }
+
+  updateProgress();
+}
+
+function makeItemEl(item) {
+  const el = document.createElement("div");
+  el.className = "item" + (state[item.id] ? " checked" : "");
+  el.dataset.id = item.id;
+  el.innerHTML = `
+    <div class="checkbox"></div>
+    <div class="item-text">
+      <span class="item-label">${highlight(item.label, search)}</span>
+      ${item.desc ? `<div class="item-desc">${highlight(item.desc, search)}</div>` : ""}
+    </div>`;
+  el.addEventListener("click", () => {
+    if (state[item.id]) delete state[item.id];
+    else state[item.id] = true;
+    saveState(state);
+    renderSections();
+  });
+  return el;
+}
+
+// ── Controls ──────────────────────────────────────────────────────
+document.querySelectorAll(".ftab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".ftab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    filter = btn.dataset.f;
+    renderSections();
+  });
+});
+
+document.getElementById("searchInput").addEventListener("input", e => {
+  search = e.target.value.trim();
+  renderSections();
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset all progress? This cannot be undone.")) {
+    state = {};
+    saveState(state);
+    renderSections();
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────
+renderSections();
+</script>
+</body>
+</html>

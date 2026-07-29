@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Box, Text, Avatar, Button } from "@optiaxiom/react";
 import { IconSearch } from "@optiaxiom/icons";
 import { DMS, GROUPS, THREADS } from "../data";
+import { mobileType } from "../typography";
 
 type Props = {
   onClose: () => void;
@@ -89,7 +90,7 @@ export function GlobalSearchPane({ onClose, onSelect }: Props) {
               outline: "none",
               background: "transparent",
               fontFamily: "inherit",
-              fontSize: 15,
+              ...mobileType.primary,
               color: "var(--ax-colors-fg-default)",
             }}
           />
@@ -110,13 +111,13 @@ export function GlobalSearchPane({ onClose, onSelect }: Props) {
             style={{ paddingTop: 80, gap: 10 }}
           >
             <IconSearch style={{ width: 36, height: 36, color: "var(--ax-colors-fg-tertiary)", opacity: 0.5 }} />
-            <Text color="fg.tertiary" style={{ fontSize: 15 }}>Search everything</Text>
+            <Text color="fg.tertiary" style={{ ...mobileType.primary }}>Search everything</Text>
           </Box>
         )}
 
         {query && !hasResults && (
           <Box display="flex" alignItems="center" justifyContent="center" style={{ paddingTop: 80 }}>
-            <Text color="fg.tertiary" style={{ fontSize: 15 }}>No results for "{query}"</Text>
+            <Text color="fg.tertiary" style={{ ...mobileType.primary }}>No results for "{query}"</Text>
           </Box>
         )}
 
@@ -126,9 +127,9 @@ export function GlobalSearchPane({ onClose, onSelect }: Props) {
               <ResultRow key={dm.id} onClick={() => onSelect(dm.id)}>
                 <Avatar name={dm.name} style={{ width: 34, height: 34, flexShrink: 0 }} />
                 <Box style={{ minWidth: 0 }}>
-                  <Text fontWeight="500" color="fg.default" style={{ fontSize: 14 }}>{dm.name}</Text>
+                  <Text fontWeight="500" color="fg.default" style={{ ...mobileType.body }}>{dm.name}</Text>
                   {dm.isVAU && (
-                    <Text color="fg.tertiary" style={{ fontSize: 12 }}>Virtual Teammate</Text>
+                    <Text color="fg.tertiary" style={{ ...mobileType.meta }}>Virtual Teammate</Text>
                   )}
                 </Box>
               </ResultRow>
@@ -157,8 +158,8 @@ export function GlobalSearchPane({ onClose, onSelect }: Props) {
                   {g.emoji}
                 </Box>
                 <Box style={{ minWidth: 0 }}>
-                  <Text fontWeight="500" color="fg.default" style={{ fontSize: 14 }}>{g.name}</Text>
-                  <Text color="fg.tertiary" style={{ fontSize: 12 }}>{g.members}</Text>
+                  <Text fontWeight="500" color="fg.default" style={{ ...mobileType.body }}>{g.name}</Text>
+                  <Text color="fg.tertiary" style={{ ...mobileType.meta }}>{g.members}</Text>
                 </Box>
               </ResultRow>
             ))}
@@ -170,11 +171,11 @@ export function GlobalSearchPane({ onClose, onSelect }: Props) {
             {messageResults.map(({ convId, text, convName }, i) => (
               <ResultRow key={i} onClick={() => onSelect(convId)}>
                 <Box style={{ flex: 1, minWidth: 0 }}>
-                  <Text color="fg.tertiary" style={{ fontSize: 12, marginBottom: 2 }}>{convName}</Text>
+                  <Text color="fg.tertiary" style={{ ...mobileType.meta, marginBottom: 2 }}>{convName}</Text>
                   <Text
                     color="fg.default"
                     style={{
-                      fontSize: 14,
+                      ...mobileType.body,
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
@@ -199,9 +200,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
         color="fg.tertiary"
         fontWeight="600"
         style={{
-          fontSize: 11,
-          textTransform: "uppercase",
-          letterSpacing: "0.06em",
+          ...mobileType.caps,
           paddingLeft: 16,
           paddingRight: 16,
           marginBottom: 4,

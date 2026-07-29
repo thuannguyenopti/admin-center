@@ -406,7 +406,7 @@ function TemplateContent({
 
 	if (fullscreen) {
 		return (
-			<Box style={{height: "100vh", width: "100vw"}} bg="bg.default">
+			<Box style={{height: "100vh", width: "100vw", display: "flex", flexDirection: "column", overflow: "hidden"}} bg="bg.default">
 				{children}
 			</Box>
 		);

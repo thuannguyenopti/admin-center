@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Fragment } from "react";
+import { useState, useMemo, useRef, Fragment } from "react";
 import { useParams } from "next/navigation";
 import { Pill } from "@optiaxiom/react/unstable";
 import {
@@ -56,7 +56,7 @@ const CARD: React.CSSProperties = {
 	background: "var(--ax-colors-bg-default)",
 	border: "1px solid var(--ax-colors-border-default)",
 	borderRadius: 8,
-	padding: "20px 24px",
+	padding: "16px 20px",
 	marginBottom: 12,
 };
 
@@ -80,7 +80,7 @@ const ALL_USERS = [
 function InitialsAvatar({ name, size = 28 }: { name: string; size?: number }) {
 	const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 	return (
-		<Box style={{ width: size, height: size, borderRadius: "50%", background: "#D8E4CB", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+		<Box style={{ width: size, height: size, borderRadius: "50%", background: "var(--ax-colors-border-default)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
 			<span style={{ ...CAPTION, fontSize: size <= 20 ? 8 : 9, color: "var(--ax-colors-fg-default)", lineHeight: 1 }}>
 				{initials}
 			</span>
@@ -275,8 +275,8 @@ type TierConfig = {
 
 const TIER_CONFIGS: TierConfig[] = [
 	{ id: "principal", label: "Primary user", readOnly: true,  icon: <IconUser      style={{ width: 16, height: 16, flexShrink: 0 }} /> },
-	{ id: "team",      label: "Team member",  readOnly: false, icon: <IconUserGroup style={{ width: 16, height: 16, flexShrink: 0 }} /> },
-	{ id: "org",       label: "Org member",   readOnly: false, icon: <IconUsers     style={{ width: 16, height: 16, flexShrink: 0 }} /> },
+	{ id: "team",      label: "Team member",  readOnly: false, icon: <IconUsers     style={{ width: 16, height: 16, flexShrink: 0 }} /> },
+	{ id: "org",       label: "Org member",   readOnly: false, icon: <IconUserGroup style={{ width: 16, height: 16, flexShrink: 0 }} /> },
 	{ id: "public",    label: "Public",       readOnly: false, icon: <IconGlobe     style={{ width: 16, height: 16, flexShrink: 0 }} /> },
 ];
 
@@ -364,6 +364,8 @@ function GuardrailsSection({ name, customGuardrails = [], onRemoveCustom, onAddC
 	const [expandedTier, setExpandedTier] = useState<TierId | null>(null);
 	const [editingTier, setEditingTier] = useState<TierId | null>(null);
 	const [inputValue, setInputValue] = useState("");
+	const [usedSuggestions, setUsedSuggestions] = useState<Set<string>>(new Set());
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 	const toggleExpand = (tierId: TierId) => {
 		setExpandedTier((prev) => {
@@ -377,6 +379,7 @@ function GuardrailsSection({ name, customGuardrails = [], onRemoveCustom, onAddC
 		setExpandedTier(tierId);
 		setEditingTier(tierId);
 		setInputValue(savedStates[tierId].rules.join("\n\n"));
+		setUsedSuggestions(new Set());
 	};
 
 	const commitEdit = (tierId: TierId) => {
@@ -392,13 +395,12 @@ function GuardrailsSection({ name, customGuardrails = [], onRemoveCustom, onAddC
 		<Box style={CARD}>
 			{/* Primary user — flat, no accordion, distinct background */}
 			<Box
-				bg="bg.secondary"
 				display="flex"
 				alignItems="start"
 				gap="10"
-				style={{ padding: "12px 16px", borderRadius: 6, margin: "-4px -4px 12px -4px" }}
+				style={{ padding: "8px 0", borderRadius: 6, marginBottom: 8 }}
 			>
-				<Box style={{ color: "var(--ax-colors-fg-secondary)", marginTop: 2, flexShrink: 0 }}>
+				<Box style={{ color: "var(--ax-colors-fg-secondary)", flexShrink: 0, marginTop: 3 }}>
 					<IconUser style={{ width: 16, height: 16 }} />
 				</Box>
 				<Box>
@@ -411,7 +413,7 @@ function GuardrailsSection({ name, customGuardrails = [], onRemoveCustom, onAddC
 			{customGuardrails.length > 0 && (
 				<>
 					<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)" }} />
-					<Box style={{ padding: "14px 0" }}>
+					<Box style={{ padding: "10px 0" }}>
 						<Box style={{ display: "flex", flexDirection: "column", gap: 10 }}>
 							{customGuardrails.map((g) => (
 								<Box key={g.id} display="flex" alignItems="start" justifyContent="space-between" gap="8">
@@ -458,33 +460,31 @@ function GuardrailsSection({ name, customGuardrails = [], onRemoveCustom, onAddC
 							display="flex"
 							alignItems="start"
 							onClick={() => toggleExpand(tier.id)}
-							style={{ padding: "14px 0", cursor: "pointer", userSelect: "none" as const }}
+							style={{ padding: "10px 0", cursor: "pointer", userSelect: "none" as const }}
 						>
 							{/* Left: icon */}
-							<Box style={{ color: "var(--ax-colors-fg-secondary)", flexShrink: 0, marginRight: 10, marginTop: 2 }}>
+							<Box style={{ color: "var(--ax-colors-fg-secondary)", flexShrink: 0, marginRight: 10, marginTop: 3 }}>
 								{tier.icon}
 							</Box>
 							{/* Middle: label + chips on separate line */}
 							<Box style={{ flex: 1, minWidth: 0 }}>
-								<Text fontSize="md" color="fg.default" style={{ fontWeight: 500, display: "block", marginBottom: 6 }}>{tier.label}</Text>
-								<Box display="flex" flexWrap="wrap" gap="4">
-									{savedStates[tier.id].tags.map((tag) => (
-										<Badge key={tag} intent="information" variant="subtle" style={CHIP_LABEL}>{tag}</Badge>
-									))}
-								</Box>
+								<Text fontSize="md" color="fg.default" style={{ fontWeight: 500, display: "block", marginBottom: 4 }}>{tier.label}</Text>
 							</Box>
 							{/* Right: edit + chevron */}
 							<Box style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 8 }}>
-								<button
-									onClick={(e) => startEditing(tier.id, e)}
-									style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "var(--ax-colors-fg-tertiary)", display: "flex", alignItems: "center", borderRadius: 4 }}
+								<Button
+									appearance="subtle"
+									size="sm"
+									icon={<IconPen />}
 									aria-label="Edit"
-								>
-									<IconPen style={{ width: 13, height: 13 }} />
-								</button>
-								<Box style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ax-colors-fg-default)", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 200ms ease", width: 20, height: 20 }}>
-									<IconAngleDown style={{ width: 14, height: 14 }} />
-								</Box>
+									onClick={(e: React.MouseEvent) => startEditing(tier.id, e)}
+								/>
+								<Button
+									appearance="subtle"
+									size="sm"
+									icon={<IconAngleDown style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 200ms ease" }} />}
+									aria-label={isExpanded ? "Collapse" : "Expand"}
+								/>
 							</Box>
 						</Box>
 
@@ -497,14 +497,22 @@ function GuardrailsSection({ name, customGuardrails = [], onRemoveCustom, onAddC
 								transition: "max-height 220ms ease, opacity 180ms ease",
 							}}
 						>
-							<Box style={{ paddingBottom: 20 }}>
+							<Box style={{ paddingBottom: 12 }}>
 								{editingTier === tier.id ? (
 									<Box>
 										<Box style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
-											{QUICK_ADD_SUGGESTIONS.slice(0, 4).map((s) => (
+											{QUICK_ADD_SUGGESTIONS.filter((s) => !usedSuggestions.has(s)).slice(0, 4).map((s) => (
 												<button
 													key={s}
-													onClick={() => setInputValue((v) => v ? v + "\n" + s : s)}
+													onClick={() => {
+														setInputValue((v) => v ? v + "\n" + s : s);
+														setUsedSuggestions((prev) => new Set([...prev, s]));
+														setTimeout(() => {
+															if (textareaRef.current) {
+																textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+															}
+														}, 0);
+													}}
 													style={{
 														display: "inline-flex", alignItems: "center", gap: 4,
 														padding: "4px 10px", borderRadius: 99,
@@ -521,6 +529,7 @@ function GuardrailsSection({ name, customGuardrails = [], onRemoveCustom, onAddC
 											))}
 										</Box>
 										<textarea
+											ref={textareaRef}
 											autoFocus
 											value={inputValue}
 											onChange={(e) => setInputValue(e.target.value)}
@@ -586,24 +595,24 @@ type Tool = {
 const TOOLS: Tool[] = [
 	{
 		id: "t1",
-		name: "Email integration",
-		description: "Reads, drafts, and sends email on your behalf via your connected provider.",
+		name: "events_insert",
+		description: "Creates a new event on the specified calendar.",
 		externalProvider: true,
 		activeOn: true,
 		enabledInChat: false,
 	},
 	{
 		id: "t2",
-		name: "Calendar sync",
-		description: "Pulls meeting context and blocks time based on your schedule.",
+		name: "events_update",
+		description: "Updates an existing event, replacing all properties with new values.",
 		externalProvider: true,
 		activeOn: false,
 		enabledInChat: true,
 	},
 	{
 		id: "t3",
-		name: "Task manager",
-		description: "Creates, assigns, and tracks tasks across connected project tools.",
+		name: "events_delete",
+		description: "Deletes a specific event from the calendar.",
 		externalProvider: true,
 		activeOn: false,
 		enabledInChat: true,
@@ -638,7 +647,7 @@ function ConnectorLogo({ connector }: { connector: Connector }) {
 	}
 	return (
 		<Box style={{ width: 32, height: 32, borderRadius: 8, background: connector.logoBg ?? "#333", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-			<span style={{ fontFamily: "Roboto Mono, monospace", fontSize: 10, fontWeight: 700, color: "#fff", letterSpacing: "0.04em" }}>
+			<span style={{ fontFamily: "Roboto Mono, monospace", fontSize: 10, fontWeight: 700, color: "var(--ax-colors-fg-white)", letterSpacing: "0.04em" }}>
 				{connector.logoLabel ?? connector.name.slice(0, 2)}
 			</span>
 		</Box>
@@ -689,86 +698,25 @@ export default function VATPermissionsPage() {
 
 	return (
 		<Box style={{ padding: "32px 40px" }}>
-			<Heading level="2" mb="4">Permissions</Heading>
-			<Text color="fg.secondary" fontSize="md" mb="24">{"What " + name + " has access to and what's off limits."}</Text>
+			<Heading level="1" mb="4">Tools</Heading>
+			<Text color="fg.secondary" fontSize="lg" mb="24">{"What " + name + " has access to and what's off limits"}</Text>
 
-			<Tabs defaultValue="access">
+			<Tabs defaultValue="connectors">
 				<TabsList mb="24">
-					<TabsTrigger value="access">Access</TabsTrigger>
 					<TabsTrigger value="connectors">
 						<Box asChild display="inline-flex" alignItems="center" gap="6">
 							<span>
 								Connectors
 								<svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-									<circle cx="7" cy="7" r="7" fill="#8F4764" />
-									<rect x="6.25" y="3.5" width="1.5" height="5" rx="0.75" fill="white" />
-									<circle cx="7" cy="10.5" r="0.75" fill="white" />
+									<circle cx="7" cy="7" r="7" fill="var(--ax-colors-fg-error)" />
+									<rect x="6.25" y="3.5" width="1.5" height="5" rx="0.75" fill="var(--ax-colors-fg-white)" />
+									<circle cx="7" cy="10.5" r="0.75" fill="var(--ax-colors-fg-white)" />
 								</svg>
 							</span>
 						</Box>
 					</TabsTrigger>
 					<TabsTrigger value="tools">Tools</TabsTrigger>
 				</TabsList>
-
-				{/* ── Access tab ── */}
-				<TabsContent value="access">
-					{/* People section header */}
-					<Box display="flex" alignItems="start" justifyContent="space-between" mb="12">
-						<Box>
-							<Text style={SECTION_HEADING}>{name}&apos;s team</Text>
-							<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 4 }}>Full access to direct, review, and approve {name}&apos;s work.</Text>
-						</Box>
-						<AddUserPopover
-							reportsTo={reportsTo}
-							worksWith={worksWith}
-							onAdd={(u, section) => {
-								if (section === "reports-to") setReportsTo((prev) => [...prev, u]);
-								else setWorksWith((prev) => [...prev, u]);
-							}}
-						/>
-					</Box>
-
-					{/* People card */}
-					<Box style={CARD}>
-						<Box mb="20">
-							<Text fontSize="md" color="fg.default" style={{ fontWeight: 500, display: "block", marginBottom: 4 }}>Managed by</Text>
-							<Text fontSize="sm" color="fg.tertiary">People who can direct, review, and approve {name}&apos;s work.</Text>
-							<Box display="flex" alignItems="center" gap="8" style={{ flexWrap: "wrap", marginTop: 12 }}>
-								{reportsTo.map((u) => (
-									<UserChip key={u.name} user={u} onRemove={() => setReportsTo((prev) => prev.filter((x) => x.name !== u.name))} />
-								))}
-							</Box>
-						</Box>
-
-						<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "0 0 20px" }} />
-
-						<Box>
-							<Text fontSize="md" color="fg.default" style={{ fontWeight: 500, display: "block", marginBottom: 4 }}>Collaborates with</Text>
-							<Text fontSize="sm" color="fg.tertiary">Teammates {name} can message, share updates with, and receive requests from.</Text>
-							<Box display="flex" alignItems="center" gap="8" style={{ flexWrap: "wrap", marginTop: 12 }}>
-								{worksWith.map((u) => (
-									<UserChip key={u.name} user={u} onRemove={() => setWorksWith((prev) => prev.filter((x) => x.name !== u.name))} />
-								))}
-							</Box>
-						</Box>
-					</Box>
-
-					{/* Conversation guardrails */}
-					<Box mt="24">
-						<Box mb="12">
-							<Text style={SECTION_HEADING}>Conversation guardrails</Text>
-							<Text fontSize="sm" color="fg.secondary" style={{ marginTop: 4 }}>
-								{name}&apos;s hard lines — set by the company handbook. Can&apos;t be overridden, but you can add your own on top.
-							</Text>
-						</Box>
-						<GuardrailsSection
-							name={name}
-							customGuardrails={customGuardrails}
-							onRemoveCustom={(id) => setCustomGuardrails((p) => p.filter((g) => g.id !== id))}
-							onAddCustom={(text, appliesTo, category) => setCustomGuardrails((p) => [...p, { id: String(Date.now()), text, appliesTo, category }])}
-						/>
-					</Box>
-				</TabsContent>
 
 				{/* ── Connectors tab ── */}
 				<TabsContent value="connectors">
@@ -794,19 +742,6 @@ export default function VATPermissionsPage() {
 							<MenuContent />
 						</Menu>
 						<Box style={{ flex: 1 }} />
-						<SplitDialog type="manage_connectors" name={name}>
-							<Button
-								appearance="primary"
-								size="md"
-								addonBefore={
-									<Box style={{ width: 18, height: 18, borderRadius: 4, background: "#202320", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-										<IconGear style={{ color: "#BBFF00", width: 12, height: 12 }} />
-									</Box>
-								}
-							>
-								Manage connectors
-							</Button>
-						</SplitDialog>
 					</Box>
 
 					<Box style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 16 }}>
@@ -822,9 +757,9 @@ export default function VATPermissionsPage() {
 										<Text fontSize="md" color="fg.default" style={{ fontWeight: 600 }}>{connector.name}</Text>
 									</Box>
 									{connector.status === "connected" ? (
-										<IconCircleCheckSolid style={{ color: "#226B1E", width: 20, height: 20, flexShrink: 0 }} />
+										<IconCircleCheckSolid style={{ color: "var(--ax-colors-fg-success-strong)", width: 20, height: 20, flexShrink: 0 }} />
 									) : (
-										<span style={{ ...CAPTION, fontSize: 9, background: "#FAD9E7", color: "#8B1A3A", padding: "2px 8px", borderRadius: 32, whiteSpace: "nowrap" as const }}>
+										<span style={{ ...CAPTION, fontSize: 9, background: "var(--ax-colors-bg-error-subtle)", color: "var(--ax-colors-fg-error)", padding: "2px 8px", borderRadius: 32, whiteSpace: "nowrap" as const }}>
 											Auth expired
 										</span>
 									)}
@@ -876,19 +811,6 @@ export default function VATPermissionsPage() {
 							<MenuContent />
 						</Menu>
 						<Box style={{ flex: 1 }} />
-						<SplitDialog type="manage_tools" name={name}>
-							<Button
-								appearance="primary"
-								size="md"
-								addonBefore={
-									<Box style={{ width: 18, height: 18, borderRadius: 4, background: "#202320", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-										<IconGear style={{ color: "#BBFF00", width: 12, height: 12 }} />
-									</Box>
-								}
-							>
-								Manage tools
-							</Button>
-						</SplitDialog>
 					</Box>
 
 					<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden" }}>

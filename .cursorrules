@@ -1,0 +1,44 @@
+# Axiom Play — Cursor Rules
+
+## Design System (MANDATORY)
+
+Read **DESIGN_SYSTEM.md** at the repo root before writing any UI code. It is the single source of truth for all tokens, components, colors, spacing, and patterns.
+
+**Non-negotiable rules:**
+- Always use `@optiaxiom/react` components — never raw HTML for product UI
+- Always use spacing tokens (`p="16"`, `gap="12"`) — never arbitrary px
+- Always use semantic color tokens (`bg.default`, `fg.secondary`) — never hex
+- Exception: `app/components/vb/blocks/` uses raw HTML + Tailwind (customer website, not CMS UI)
+- Use `[data-theme="dark"]` for dark mode — never `@media (prefers-color-scheme: dark)`
+
+## MCP
+
+An Axiom MCP server (`@optiaxiom/mcp`) is available. Use it to look up component APIs, props, and live examples when unsure about a component.
+
+## Tech Stack
+
+- **Framework**: Next.js (App Router), TypeScript, React
+- **Package manager**: Yarn (`corepack enable` if missing)
+- **Dev server**: `yarn dev`
+- **State**: `app/usePersistentState.js` for localStorage-backed prototype state. Check `isHydrated` before rendering.
+- **Icons**: `@tabler/icons-react` (primary), `@fortawesome` (secondary)
+
+## No Monolithic Files (MANDATORY)
+
+On every new conversation, check if the files you're about to touch are monolithic (300+ lines, multiple concerns). If so, split them first. Never create or extend monolithic files. See full guide in `DESIGN_SYSTEM.md`.
+
+## Coding Standards
+
+- Use functional components with TypeScript
+- Use `"use client"` only when needed (state, effects, Axiom client components)
+- Prefer `@optiaxiom/react` imports over local wrappers unless the wrapper's defaults are specifically needed
+- Ensure premium, modern aesthetics using Axiom design tokens
+- Verify build after changes to core components
+
+## Git & Deployment
+
+- **Repo**: `Ben-Holme/axiom-play` — **Hosting**: Vercel (auto-deploys)
+- **Never push directly to `main`** — always create a PR
+- **Never merge locally** — merge via GitHub so checks run and Vercel auto-deploys
+- Always verify build (`yarn build`) before pushing
+- Preview deploys happen automatically per PR branch

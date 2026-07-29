@@ -411,7 +411,7 @@ export function FilesPage() {
 					{dsHydrated && !dsRegistryJson ? (
 						<Box py="0">
 							<EmptyList
-								image="/images/toast.png"
+								image="/images/toast.svg"
 								heading="No design system connected"
 								body="Run the Stride DS setup to scan your Storybook, extract design tokens, and build a component registry."
 							>

@@ -6,12 +6,13 @@ import {
 	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
 	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
 	Badge, Box, Button, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger,
-	SegmentedControl, SegmentedControlItem, Text,
+	SegmentedControl, SegmentedControlItem, Text, Tooltip,
 } from "@optiaxiom/react";
 import {
-	IconArrowRight, IconChevronLeft, IconChevronRight, IconComments, IconEllipsisSolid,
+	IconArrowRight, IconArrowUpRightFromSquare, IconChevronLeft, IconChevronRight,
+	IconComments, IconDownload, IconEllipsisSolid,
 	IconFile, IconFileLines, IconGrid, IconImage, IconList, IconLock,
-	IconPause, IconSearch, IconThumbtack, IconThumbtackSolid,
+	IconPause, IconPen, IconSearch, IconShareNodes, IconThumbtack, IconThumbtackSolid, IconUserCheck, IconTrashCan,
 } from "@optiaxiom/icons";
 import { ReviewCanvas } from "./ReviewCanvas";
 import Image from "next/image";
@@ -45,13 +46,13 @@ const APPROVALS = [
 ];
 
 type PinnedItem =
-	| { type: "artifact"; title: string; image: string; visibility: string; age: string; tags: string[]; initials: string }
+	| { type: "artifact"; title: string; image: string; visibility: string; age: string; tags: string[]; initials: string; label?: string }
 	| { type: "action"; priority: string; priorityBg: string; priorityColor: string; title: string; description: string; filename: string; fileType: string; age: string };
 
 const PINNED_ITEMS: PinnedItem[] = [
 	{ type: "artifact", title: "Opti sunset", image: "/Sunset.jpg", visibility: "Private", age: "5 days ago", tags: ["Image", "Campaign"], initials: "AS" },
 	{ type: "artifact", title: "Mountain image", image: "/nature-bg.png", visibility: "Private", age: "5 days ago", tags: ["Image", "Brand"], initials: "AS" },
-	{ type: "action", priority: "Urgent", priorityBg: "#FAD9E7", priorityColor: "#8B1A3A", title: "Team approval needed", description: "Review the updated Q&A article. Approve to proceed to publishing, or request further changes.", filename: "Discover-the-unknown-qa.md", fileType: "GEO Q&A ARTICLE", age: "5 days ago" },
+	{ type: "action", priority: "Urgent", priorityBg: "var(--ax-colors-bg-error-subtle)", priorityColor: "var(--ax-colors-fg-error)", title: "Team approval needed", description: "Review the updated Q&A article. Approve to proceed to publishing, or request further changes.", filename: "Discover-the-unknown-qa.md", fileType: "GEO Q&A ARTICLE", age: "5 days ago" },
 ];
 
 type WorkItem = {
@@ -64,6 +65,7 @@ type WorkItem = {
 	created: string;
 	size: string;
 	image?: string;
+	label?: string;
 	tags?: string[];
 	priority?: string;
 	priorityBg?: string;
@@ -74,15 +76,15 @@ type WorkItem = {
 };
 
 const ALL_WORK: WorkItem[] = [
-	{ type: "image",   name: "Daily brief: 6-30-26",    source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/Daily_Brief.png", tags: ["Campaign", "Q3"] },
-	{ type: "image",   name: "Mountain image",           source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature-bg.png",  tags: ["Brand", "2026"] },
-	{ type: "image",   name: "Valley image",             source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature1.png",    tags: ["Weekly", "Internal"] },
-	{ type: "image",   name: "Sunset image",             source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature2.png",    tags: ["Weekly", "Brand"] },
-	{ type: "article", name: "Q3_Campaign_Brief",        source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "Urgent",    priorityBg: "#FAD9E7", priorityColor: "#8B1A3A", description: "Review the updated Q3 campaign brief. Approve to proceed to publishing, or request further changes.", filename: "Q3-campaign-brief.md", fileType: "Campaign Brief" },
-	{ type: "image",   name: "Weekly wrap: 6/1-6/8",    source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/Weekly_Wrap_2.png" },
-	{ type: "article", name: "Experiment_Launch",        source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "No Rush",   priorityBg: "var(--ax-colors-bg-secondary)", priorityColor: "var(--ax-colors-fg-secondary)", description: "Experiment 123 has been successfully created and launched. No action needed.", filename: "Experiment-123-launch.md", fileType: "Experiment Summary" },
-	{ type: "image",   name: "Mountain view",            source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/MT.png" },
-	{ type: "article", name: "Onboarding_Recap",         source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "Complete", priorityBg: "#D1FAE5", priorityColor: "#065F46", description: "New hire onboarding recap has been drafted and shared with the People team for final sign-off.", filename: "Onboarding-recap-june.md", fileType: "HR Document" },
+	{ type: "image",   name: "Daily brief: 6-30-26",    label: "Daily Brief",    source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/Daily_Brief.png", tags: ["Campaign", "Q3"] },
+	{ type: "image",   name: "Mountain image",           label: "Image",          source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature-bg.png",  tags: ["Brand", "2026"] },
+	{ type: "image",   name: "Valley image",             label: "Image",          source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature1.png",    tags: ["Weekly", "Internal"] },
+	{ type: "image",   name: "Sunset image",             label: "Image",          source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/nature2.png",    tags: ["Weekly", "Brand"] },
+	{ type: "article", name: "Q3_Campaign_Brief",        label: "Brief",          source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "Urgent",    priorityBg: "var(--ax-colors-bg-error-subtle)", priorityColor: "var(--ax-colors-fg-error)", description: "Review the updated Q3 campaign brief. Approve to proceed to publishing, or request further changes.", filename: "Q3-campaign-brief.md", fileType: "Campaign Brief" },
+	{ type: "image",   name: "Weekly wrap: 6/1-6/8",    label: "Weekly Digest",  source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/Weekly_Wrap_2.png" },
+	{ type: "article", name: "Experiment_Launch",        label: "Email",          source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "No Rush",   priorityBg: "var(--ax-colors-bg-secondary)", priorityColor: "var(--ax-colors-fg-secondary)", description: "Experiment 123 has been successfully created and launched. No action needed.", filename: "Experiment-123-launch.md", fileType: "Experiment Summary" },
+	{ type: "image",   name: "Mountain view",            label: "Image",          source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", image: "/MT.png" },
+	{ type: "article", name: "Onboarding_Recap",         label: "Brief",          source: "Yes", createdBy: "Randy", initials: "AS", visibility: "Private", created: "June 24, 2026", size: "3 KB", priority: "Complete", priorityBg: "var(--ax-colors-bg-success-subtle)", priorityColor: "var(--ax-colors-fg-success-strong)", description: "New hire onboarding recap has been drafted and shared with the People team for final sign-off.", filename: "Onboarding-recap-june.md", fileType: "HR Document" },
 ];
 
 const TYPE_OPTIONS = ["All", "Image", "Article", "Doc"];
@@ -113,14 +115,14 @@ function TypeIcon({ type }: { type: WorkItem["type"] }) {
 function Avatar({ initials, src, bg }: { initials?: string; src?: string; bg?: string }) {
 	if (src) {
 		return (
-			<Box style={{ width: 24, height: 24, borderRadius: "50%", background: bg ?? "#FAF6E8", overflow: "hidden", flexShrink: 0 }}>
+			<Box style={{ width: 24, height: 24, borderRadius: "50%", background: bg ?? "var(--ax-colors-bg-page)", overflow: "hidden", flexShrink: 0 }}>
 				<Image src={src} alt="" width={24} height={24} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
 			</Box>
 		);
 	}
 	return (
-		<Box style={{ width: 24, height: 24, borderRadius: "50%", background: "#C4B5FD", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-			<span style={{ fontFamily: "Roboto Mono, monospace", fontSize: 9, fontWeight: 700, color: "#4C1D95" }}>{initials}</span>
+		<Box style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--ax-colors-bg-avatar-purple)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+			<span style={{ fontFamily: "Roboto Mono, monospace", fontSize: 9, fontWeight: 700, color: "var(--ax-colors-fg-avatar-purple)" }}>{initials}</span>
 		</Box>
 	);
 }
@@ -199,13 +201,11 @@ function PinnedArtifactCard({ item, flexBasis, avatarSrc, avatarBg }: { item: Ex
 								<Image src={avatarSrc} alt="" width={24} height={24} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
 							</Box>
 						) : (
-							<Box style={{ width: 24, height: 24, borderRadius: "50%", background: "#C4B5FD", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-								<span style={{ fontFamily: "Roboto Mono, monospace", fontSize: 9, fontWeight: 700, color: "#4C1D95" }}>{item.initials}</span>
+							<Box style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--ax-colors-bg-avatar-purple)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+								<span style={{ fontFamily: "Roboto Mono, monospace", fontSize: 9, fontWeight: 700, color: "var(--ax-colors-fg-avatar-purple)" }}>{item.initials}</span>
 							</Box>
 						)}
-						{item.tags.slice(0, 1).map((tag) => (
-							<Badge key={tag} intent="neutral">{tag}</Badge>
-						))}
+						{item.label && <Badge intent="neutral">{item.label}</Badge>}
 					</Box>
 					<Button appearance="subtle" size="sm" addonAfter={<IconArrowRight style={{ width: 12, height: 12 }} />}>View</Button>
 				</Box>
@@ -214,9 +214,10 @@ function PinnedArtifactCard({ item, flexBasis, avatarSrc, avatarBg }: { item: Ex
 	);
 }
 
-function GridImageCard({ item, avatarSrc, avatarBg }: { item: WorkItem; avatarSrc?: string; avatarBg?: string }) {
+function GridImageCard({ item, avatarSrc, avatarBg, isPinned, onTogglePin }: { item: WorkItem; avatarSrc?: string; avatarBg?: string; isPinned: boolean; onTogglePin: () => void }) {
 	const [hovered, setHovered] = useState(false);
-	const [pinned, setPinned] = useState(false);
+	const pinned = isPinned;
+	const setPinned = onTogglePin;
 	return (
 		<Box
 			bg="bg.default"
@@ -228,7 +229,7 @@ function GridImageCard({ item, avatarSrc, avatarBg }: { item: WorkItem; avatarSr
 				<Image src={item.image!} alt={item.name} fill unoptimized style={{ objectFit: "cover" }} />
 				{pinned && !hovered && (
 					<Box style={{ position: "absolute", top: 8, left: 8 }} onClick={(e) => e.stopPropagation()}>
-						<Button appearance="default" size="sm" aria-label="Unpin" icon={<IconThumbtackSolid style={{ width: 10, height: 10 }} />} style={BTN_STYLE} onClick={() => setPinned(false)} />
+						<Button appearance="default" size="sm" aria-label="Unpin" icon={<IconThumbtackSolid style={{ width: 10, height: 10 }} />} style={BTN_STYLE} onClick={() => setPinned()} />
 					</Box>
 				)}
 				<Box style={{
@@ -241,10 +242,27 @@ function GridImageCard({ item, avatarSrc, avatarBg }: { item: WorkItem; avatarSr
 					padding: 8,
 				}}>
 					<Box onClick={(e) => e.stopPropagation()}>
-						<Button appearance="default" size="sm" aria-label={pinned ? "Unpin" : "Pin"} icon={pinned ? <IconThumbtackSolid style={{ width: 10, height: 10 }} /> : <IconThumbtack style={{ width: 10, height: 10 }} />} style={BTN_STYLE} onClick={() => setPinned((p) => !p)} />
+						<Button appearance="default" size="sm" aria-label={pinned ? "Unpin" : "Pin"} icon={pinned ? <IconThumbtackSolid style={{ width: 10, height: 10 }} /> : <IconThumbtack style={{ width: 10, height: 10 }} />} style={BTN_STYLE} onClick={() => setPinned()} />
 					</Box>
 					<Box onClick={(e) => e.stopPropagation()}>
-						<Button appearance="default" size="sm" aria-label="Options" icon={<IconEllipsisSolid style={{ width: 13, height: 13 }} />} style={BTN_STYLE} />
+						<Menu options={[
+								{ label: "Open", addon: <IconArrowUpRightFromSquare /> },
+								{ label: "Share", addon: <IconShareNodes /> },
+								{ label: "Download as", addon: <IconDownload />, subOptions: [
+									{ label: "PDF" },
+									{ label: "Word (.docx)" },
+									{ label: "Markdown" },
+									{ label: "Plain text" },
+								]},
+								{ label: "Rename", addon: <IconPen /> },
+								{ label: "Pin", addon: <IconThumbtack /> },
+								{ label: "Delete", intent: "danger" as const, addon: <IconTrashCan />, group: { label: "", separator: true } },
+							]}>
+							<MenuTrigger asChild>
+								<Button appearance="default" size="sm" aria-label="Options" icon={<IconEllipsisSolid style={{ width: 13, height: 13 }} />} style={BTN_STYLE} />
+							</MenuTrigger>
+							<MenuContent />
+						</Menu>
 					</Box>
 				</Box>
 			</Box>
@@ -279,9 +297,7 @@ function GridImageCard({ item, avatarSrc, avatarBg }: { item: WorkItem; avatarSr
 				}}>
 					<Box display="flex" alignItems="center" gap="6" style={{ overflow: "hidden" }}>
 						<Avatar src={avatarSrc} bg={avatarBg} initials={item.initials} />
-						{(item.tags ?? []).slice(0, 1).map((tag) => (
-							<Badge key={tag} intent="neutral">{tag}</Badge>
-						))}
+						{item.label && <Badge intent="neutral">{item.label}</Badge>}
 					</Box>
 					<Button appearance="subtle" size="sm" addonAfter={<IconArrowRight style={{ width: 12, height: 12 }} />}>View</Button>
 				</Box>
@@ -303,6 +319,7 @@ export default function VATWorkPage() {
 	const router = useRouter();
 	const id = params?.id as string;
 	const vau = VAUS.find((v) => v.id === id);
+
 	const [showBreakDialog, setShowBreakDialog] = useState(false);
 	const [reviewItem, setReviewItem] = useState<{ title: string; description: string; source: string; priority: string } | null>(null);
 	const [dismissedTitles, setDismissedTitles] = useState<Set<string>>(new Set());
@@ -326,13 +343,26 @@ export default function VATWorkPage() {
 		return () => ro.disconnect();
 	}, []);
 
+	// All work state
+	const [workItems, setWorkItems] = useState<WorkItem[]>(ALL_WORK);
+	const deleteWorkItem = (name: string) => setWorkItems(prev => prev.filter(w => w.name !== name));
+
+	// Pinned state (lifted so filter can use it)
+	const [pinnedNames, setPinnedNames] = useState<Set<string>>(new Set());
+	const togglePin = (name: string) => setPinnedNames(prev => {
+		const next = new Set(prev);
+		next.has(name) ? next.delete(name) : next.add(name);
+		return next;
+	});
+
 	// All work filters
-	const [view, setView] = useState<"list" | "grid">("grid");
+	const [view, setView] = useState<"list" | "grid">("list");
 	const [query, setQuery] = useState("");
 	const [typeFilter, setTypeFilter] = useState("All");
 	const [sourceFilter, setSourceFilter] = useState("All");
 	const [visibilityFilter, setVisibilityFilter] = useState("All");
 	const [createdByFilter, setCreatedByFilter] = useState("All");
+	const [sortBy, setSortBy] = useState("Newest");
 
 	if (!vau) return null;
 
@@ -348,60 +378,34 @@ export default function VATWorkPage() {
 	const translateX = cardWidth > 0 ? -(carouselPage * 3 * (cardWidth + GAP)) : 0;
 	const flexBasis = cardWidth > 0 ? `${cardWidth}px` : `calc((100% - ${GAP * 2}px) / 3)`;
 
-	const filtered = ALL_WORK.filter((w) => {
-		if (query && !w.name.toLowerCase().includes(query.toLowerCase())) return false;
-		if (typeFilter !== "All" && w.type !== typeFilter.toLowerCase()) return false;
-		if (sourceFilter !== "All" && w.source !== sourceFilter) return false;
-		if (visibilityFilter !== "All" && w.visibility !== visibilityFilter) return false;
-		if (createdByFilter !== "All" && w.createdBy !== createdByFilter) return false;
-		return true;
-	});
+	const filtered = workItems
+		.filter((w) => {
+			if (sortBy === "Pinned" && !pinnedNames.has(w.name)) return false;
+			if (query && !w.name.toLowerCase().includes(query.toLowerCase())) return false;
+			if (typeFilter !== "All" && w.type !== typeFilter.toLowerCase()) return false;
+			if (sourceFilter !== "All" && w.source !== sourceFilter) return false;
+			if (visibilityFilter !== "All" && w.visibility !== visibilityFilter) return false;
+			if (createdByFilter !== "All" && w.createdBy !== createdByFilter) return false;
+			return true;
+		})
+		.sort((a, b) => {
+			if (sortBy === "Name A–Z") return a.name.localeCompare(b.name);
+			if (sortBy === "Name Z–A") return b.name.localeCompare(a.name);
+			if (sortBy === "Oldest") return workItems.indexOf(a) - workItems.indexOf(b);
+			return workItems.indexOf(b) - workItems.indexOf(a); // Newest
+		});
 
 	return (
 		<>
-		<Box style={{ padding: "32px 40px" }}>
+		<Box style={{ padding: "32px" }}>
 			{/* Page header */}
 			<Box display="flex" alignItems="center" gap="16" mb="32">
-				<Box style={{ width: 56, height: 56, minWidth: 56, borderRadius: 8, overflow: "hidden", backgroundColor: vau.avatarBg, flexShrink: 0, border: "1px solid var(--ax-colors-border-default)" }}>
-					<Image src={vau.avatar} alt={name} width={56} height={56} unoptimized style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-				</Box>
 				<Box style={{ flex: 1, minWidth: 0 }}>
-					<Heading level="2" mb="4">{name}&apos;s work</Heading>
-					<Text color="fg.secondary" fontSize="md">What {name}&apos;s been up to and where he still needs your help.</Text>
+					<Heading level="1" mb="4">{name}&apos;s work</Heading>
+					<Text color="fg.secondary" fontSize="lg">What {name}&apos;s been up to and where he still needs your help</Text>
 				</Box>
-				<Menu
-					options={[
-						{ label: "Chat", execute: () => router.push("/opal/messages?conversation=bubs") },
-						{ label: "Pause", execute: () => setShowBreakDialog(true) },
-					]}
-				>
-					<MenuTrigger asChild>
-						<Button appearance="subtle" size="md" icon={<IconEllipsisSolid />} aria-label="Options" />
-					</MenuTrigger>
-					<MenuContent />
-				</Menu>
 			</Box>
 			<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", marginBottom: 32 }} />
-
-			{/* Randy's Impact stats */}
-			<Box mb="40">
-				<Text style={{ ...SECTION_HEADING, marginBottom: 4 }}>{name}&apos;s Impact</Text>
-				<Text fontSize="sm" color="fg.secondary" mb="16">Here&apos;s how {name}&apos;s been making your week easier.</Text>
-				<Box style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12 }}>
-					{[
-						{ label: "TIME RECLAIMED", value: "4.5 hrs", sub: "+12% vs last week" },
-						{ label: "FIRES PREVENTED", value: "9", sub: "Across 4 workstreams" },
-						{ label: "THREADS CLOSED", value: "14", sub: "−4 min avg response time" },
-						{ label: "COMMITMENTS TRACKED", value: "23", sub: "0% dropped" },
-					].map((stat) => (
-						<Box key={stat.label} bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "16px 20px" }}>
-							<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)", display: "block", marginBottom: 8 }}>{stat.label}</span>
-							<Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 28, fontWeight: 700, lineHeight: "1", color: "var(--ax-colors-fg-default)", display: "block", marginBottom: 6 }}>{stat.value}</Text>
-							<Text fontSize="sm" color="fg.secondary">{stat.sub}</Text>
-						</Box>
-					))}
-				</Box>
-			</Box>
 
 			{/* Give a break dialog */}
 			<AlertDialog open={showBreakDialog} onOpenChange={setShowBreakDialog}>
@@ -423,8 +427,8 @@ export default function VATWorkPage() {
 							appearance="primary"
 							size="md"
 							addonBefore={
-								<Box asChild display="inline-flex" alignItems="center" justifyContent="center" style={{ background: "#202320", borderRadius: 4, width: 18, height: 18 }}>
-									<span><IconPause style={{ width: 10, height: 10, color: "#fff" }} /></span>
+								<Box asChild display="inline-flex" alignItems="center" justifyContent="center" style={{ background: "var(--ax-colors-bg-default-inverse)", borderRadius: 4, width: 18, height: 18 }}>
+									<span><IconPause style={{ width: 10, height: 10, color: "var(--ax-colors-fg-white)" }} /></span>
 								</Box>
 							}
 							onClick={() => setShowBreakDialog(false)}
@@ -435,69 +439,18 @@ export default function VATWorkPage() {
 				</AlertDialogContent>
 			</AlertDialog>
 
-			{/* Needs review */}
-			<Box mb="40">
-				<Box display="flex" alignItems="center" gap="8" mb="4">
-					<Text style={SECTION_HEADING}>Needs review</Text>
-					<CountBadge count={APPROVALS.length} />
-				</Box>
-				<Text color="fg.secondary" fontSize="sm" mb="16">
-					A few things {name} can&apos;t finish without you.
-				</Text>
-				<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden" }}>
-					{APPROVALS.slice(0, visibleApprovals).map((item, i) => (
-						<Box
-							key={item.title}
-							className={`vat-review-row${i >= prevVisibleRef.current && visibleApprovals > prevVisibleRef.current ? " vat-approval-appear" : ""}`}
-							display="flex"
-							alignItems="center"
-							gap="16"
-							onClick={() => setReviewItem({ title: item.title, description: item.sub, source: "Randy", priority: "High" })}
-							style={{ padding: "16px 20px", borderTop: i > 0 ? "1px solid var(--ax-colors-border-secondary)" : "none", cursor: "pointer" }}
-						>
-							<span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
-							<Box style={{ flex: 1, minWidth: 0 }}>
-								<Text fontSize="md" color="fg.default" style={{ fontWeight: 500 }} mb="2">{item.title}</Text>
-								<Text fontSize="sm" color="fg.secondary">{item.sub}</Text>
-							</Box>
-							<Button appearance="subtle" size="sm" icon={<IconArrowRight />} aria-label="View" />
-						</Box>
-					))}
-					{APPROVALS.length > 3 && (
-						<Box
-							display="flex"
-							alignItems="center"
-							justifyContent="center"
-							className="vat-nav-item"
-							style={{ padding: "12px 20px", borderTop: "1px solid var(--ax-colors-border-secondary)", cursor: "pointer" }}
-							onClick={() => {
-								if (allApprovalsVisible) {
-									setVisibleApprovals(3);
-								} else {
-									setVisibleApprovals((v) => Math.min(v + 3, APPROVALS.length));
-								}
-							}}
-						>
-							<Text fontSize="sm" color="fg.secondary" style={{ fontWeight: 500 }}>
-								{allApprovalsVisible ? "Collapse ↑" : `Show ${nextBatch} more`}
-							</Text>
-						</Box>
-					)}
-				</Box>
-			</Box>
-
 			{/* All work */}
 			<Box>
-				<Text style={SECTION_HEADING} mb="4">All work</Text>
-				<Text color="fg.secondary" fontSize="sm" mb="16">
+				<Heading level="3" mb="4">All work</Heading>
+				<Text color="fg.secondary" fontSize="md" mb="16">
 					Everything your chief of staff has done
 				</Text>
 
 				{/* Filters */}
 				<Box display="flex" alignItems="center" gap="8" mb="16">
-					<Box style={{ width: 240 }}>
+					<Box style={{ width: 300 }}>
 						<Input
-							placeholder="Search name"
+							placeholder="Search"
 							addonBefore={<IconSearch />}
 							value={query}
 							onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
@@ -507,18 +460,17 @@ export default function VATWorkPage() {
 						<MenuTrigger asChild><LabelMenuButton label="TYPE">{typeFilter}</LabelMenuButton></MenuTrigger>
 						<MenuContent />
 					</Menu>
-					<Menu options={SOURCE_OPTIONS.map((o) => ({ label: o, onClick: () => setSourceFilter(o) }))}>
-						<MenuTrigger asChild><LabelMenuButton label="SOURCE">{sourceFilter}</LabelMenuButton></MenuTrigger>
-						<MenuContent />
-					</Menu>
+
 					<Menu options={VISIBILITY_OPTIONS.map((o) => ({ label: o, onClick: () => setVisibilityFilter(o) }))}>
 						<MenuTrigger asChild><LabelMenuButton label="VISIBILITY">{visibilityFilter}</LabelMenuButton></MenuTrigger>
 						<MenuContent />
 					</Menu>
-					<Menu options={CREATED_BY_OPTIONS.map((o) => ({ label: o, onClick: () => setCreatedByFilter(o) }))}>
-						<MenuTrigger asChild><LabelMenuButton label="CREATED BY">{createdByFilter}</LabelMenuButton></MenuTrigger>
+
+					<Menu options={["Newest", "Oldest", "Name A–Z", "Name Z–A", "Pinned"].map((o) => ({ label: o, onClick: () => setSortBy(o) }))}>
+						<MenuTrigger asChild><LabelMenuButton label="SORT BY">{sortBy}</LabelMenuButton></MenuTrigger>
 						<MenuContent />
 					</Menu>
+
 					<Box style={{ flex: 1 }} />
 					<SegmentedControl
 						value={view}
@@ -535,7 +487,6 @@ export default function VATWorkPage() {
 						<Box display="flex" alignItems="center" style={{ padding: "10px 16px", borderBottom: "1px solid var(--ax-colors-border-secondary)", background: "var(--ax-colors-bg-secondary)" }}>
 							<Box style={{ width: 44 }} />
 							<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)", flex: 1 }}>Name</span>
-							<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)", width: 80 }}>Source</span>
 							<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)", width: 160 }}>Created By</span>
 							<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)", width: 90 }}>Visibility</span>
 							<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)", width: 130 }}>Created ↓</span>
@@ -551,7 +502,6 @@ export default function VATWorkPage() {
 							>
 								<Box style={{ width: 44 }}><TypeIcon type={item.type} /></Box>
 								<Text fontSize="md" color="fg.default" style={{ fontWeight: 500, flex: 1 }}>{item.name}</Text>
-								<Text fontSize="sm" color="fg.secondary" style={{ width: 80 }}>{item.source}</Text>
 								<Box display="flex" alignItems="center" gap="6" style={{ width: 160 }}>
 									<Avatar src={vau?.avatar} bg={vau?.avatarBg} initials={item.initials} />
 									<Text fontSize="sm" color="fg.secondary">{item.createdBy}</Text>
@@ -559,8 +509,27 @@ export default function VATWorkPage() {
 								<Text fontSize="sm" color="fg.secondary" style={{ width: 90 }}>{item.visibility}</Text>
 								<Text fontSize="sm" color="fg.secondary" style={{ width: 130 }}>{item.created}</Text>
 								<Text fontSize="sm" color="fg.secondary" style={{ width: 60 }}>{item.size}</Text>
-								<Box style={{ width: 40 }}>
-									<Text fontSize="sm" color="fg.tertiary" style={{ letterSpacing: 2 }}>···</Text>
+								<Box style={{ width: 40 }} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+									<Menu
+										options={[
+											{ label: "Open", addon: <IconArrowUpRightFromSquare /> },
+											{ label: "Share", addon: <IconShareNodes /> },
+											{ label: "Download as", addon: <IconDownload />, subOptions: [
+												{ label: "PDF" },
+												{ label: "Word (.docx)" },
+												{ label: "Markdown" },
+												{ label: "Plain text" },
+											]},
+											{ label: "Rename", addon: <IconPen /> },
+											{ label: "Pin", addon: <IconThumbtack /> },
+											{ label: "Delete", intent: "danger" as const, addon: <IconTrashCan />, execute: () => deleteWorkItem(item.name), group: { label: "", separator: true } },
+										]}
+									>
+										<MenuTrigger asChild>
+											<Button appearance="subtle" size="sm" icon={<IconEllipsisSolid />} aria-label="Actions" />
+										</MenuTrigger>
+										<MenuContent />
+									</Menu>
 								</Box>
 							</Box>
 						))}
@@ -592,7 +561,7 @@ export default function VATWorkPage() {
 								</Box>
 							</Box>
 						) : (
-							<GridImageCard key={`${item.name}-${i}`} item={item} avatarSrc={vau?.avatar} avatarBg={vau?.avatarBg} />
+							<GridImageCard key={`${item.name}-${i}`} item={item} avatarSrc={vau?.avatar} avatarBg={vau?.avatarBg} isPinned={pinnedNames.has(item.name)} onTogglePin={() => togglePin(item.name)} />
 						))}
 					</Box>
 				)}

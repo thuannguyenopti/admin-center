@@ -7,6 +7,7 @@ export type DMItem = {
   status?: PresenceStatus;
   unread?: number;
   isVAU?: boolean;
+  needsAction?: "approval" | "question" | "review";
 };
 
 export type GroupItem = {
@@ -41,6 +42,7 @@ export type Responder = {
 export type HITLNotification = {
   id: string;
   type: "approval" | "question" | "review" | "complete";
+  category?: "mention" | "reaction" | "new_message" | "new_reply";
   vauName: string;
   vauAvatar: string;
   vauColor: string;
@@ -67,9 +69,9 @@ export const DMS: DMItem[] = [
   { id: "pr",   name: "Priya Rajan",           avatar: "https://i.pravatar.cc/150?img=44", status: "away",  unread: 3 },
   { id: "td",   name: "Tom Decker",            avatar: "https://i.pravatar.cc/150?img=53", status: "busy"   },
   { id: "ao",   name: "Amara Osei",            avatar: "https://i.pravatar.cc/150?img=38", status: "active" },
-  { id: "bubs", name: "Bubs",                  avatar: "/vau-bubs.svg",                    status: "active", isVAU: true },
-  { id: "kara", name: "Kara",                  avatar: "/vau-kara.svg",                    status: "active", isVAU: true },
-  { id: "eric", name: "Eric",                  avatar: "/vau-eric.svg",                    status: "active", isVAU: true },
+  { id: "bubs", name: "Bubs",                  avatar: "/vau-bubs.svg",                    status: "active", isVAU: true, needsAction: "approval" },
+  { id: "kara", name: "Kara",                  avatar: "/vau-kara.svg",                    status: "active", isVAU: true, needsAction: "question" },
+  { id: "eric", name: "Eric",                  avatar: "/vau-eric.svg",                    status: "active", isVAU: true, needsAction: "review"   },
 ];
 
 export const GROUPS: GroupItem[] = [
@@ -317,6 +319,7 @@ export const STATUS_INTENT: Record<Artifact["status"], string> = {
 };
 
 export const HITL_NOTIFICATIONS: HITLNotification[] = [
+  // Approval — needs sign-off, has buttons
   {
     id: "h1",
     type: "approval",
@@ -324,12 +327,13 @@ export const HITL_NOTIFICATIONS: HITLNotification[] = [
     vauAvatar: "/vau-bubs.svg",
     vauColor: "#2563eb",
     title: "Ready to publish — needs your sign-off",
-    description: "I've finished the Q3 blog post draft. It's 1,240 words, SEO-optimized, and includes the personalization section Priya requested. Ready to push to WordPress?",
+    description: "I've finished the Q3 blog post draft. It's 1,240 words, SEO-optimized, and includes the personalization section Priya requested.",
     timestamp: "2 min ago",
     read: false,
     artifact: { title: "Q3 Content Strategy: How AI Is Reshaping Marketing", type: "Blog Post" },
-    actions: [{ label: "Approve & publish" }, { label: "Request changes" }, { label: "Decline", intent: "danger" }],
+    actions: [{ label: "Approve & publish" }, { label: "Request changes" }],
   },
+  // Question — needs input, has buttons
   {
     id: "h2",
     type: "question",
@@ -337,47 +341,133 @@ export const HITL_NOTIFICATIONS: HITLNotification[] = [
     vauAvatar: "/vau-kara.svg",
     vauColor: "#6B5CE7",
     title: "Direction needed before I proceed",
-    description: "I'm updating the brand voice guidelines and hit a decision point: should the new tone apply to social copy only, or all content channels including email and long-form? This affects about 40 templates.",
+    description: "Should the new brand voice apply to social copy only, or all channels including email and long-form? This affects about 40 templates.",
     timestamp: "14 min ago",
     read: false,
-    actions: [{ label: "Social only" }, { label: "All channels" }, { label: "Let's discuss" }],
+    actions: undefined,
   },
+  // Complete — no action needed, no buttons
   {
     id: "h3",
-    type: "review",
-    vauName: "Eric",
-    vauAvatar: "/vau-eric.svg",
-    vauColor: "#059669",
-    title: "Test results ready for your review",
-    description: "The homepage hero A/B test hit statistical significance at 94% confidence. Variant B ('Create Better Content, 10x Faster') is outperforming control by 23% on trial sign-ups. Recommend declaring a winner.",
-    timestamp: "1 hr ago",
-    read: false,
-    artifact: { title: "Homepage CTA Multivariate Test — Results", type: "Test Report" },
-    actions: [{ label: "Declare Variant B winner" }, { label: "Run longer" }, { label: "Review full data" }],
-  },
-  {
-    id: "h4",
     type: "complete",
     vauName: "Bubs",
     vauAvatar: "/vau-bubs.svg",
     vauColor: "#2563eb",
     title: "LinkedIn series — all 5 posts drafted",
-    description: "Your November thought leadership series is ready. Posts are scheduled for Mon/Wed/Fri cadence and optimized for peak engagement windows. No action needed unless you'd like to review.",
+    description: "Your November thought leadership series is ready. Posts are scheduled for Mon/Wed/Fri cadence and optimized for peak engagement windows.",
+    timestamp: "1 hr ago",
+    read: false,
+    artifact: { title: "LinkedIn Thought Leadership Series — November", type: "Social Copy" },
+    actions: undefined,
+  },
+  // Review — results ready, has buttons
+  {
+    id: "h4",
+    type: "review",
+    vauName: "Eric",
+    vauAvatar: "/vau-eric.svg",
+    vauColor: "#059669",
+    title: "Test results ready for your review",
+    description: "The homepage hero A/B test hit significance at 94% confidence. Variant B is outperforming control by 23% on trial sign-ups.",
     timestamp: "3 hr ago",
     read: true,
-    artifact: { title: "LinkedIn Thought Leadership Series — November", type: "Social Copy" },
-    actions: [{ label: "Review drafts" }, { label: "Looks good" }],
+    artifact: { title: "Homepage CTA Multivariate Test — Results", type: "Test Report" },
+    actions: undefined,
   },
+  // Complete — workflow finished, no buttons
   {
     id: "h5",
+    type: "complete",
+    vauName: "Kara",
+    vauAvatar: "/vau-kara.svg",
+    vauColor: "#6B5CE7",
+    title: "SEO audit complete — 12 pages optimized",
+    description: "Kara finished updating meta descriptions and title tags across the top-traffic pages. No action needed.",
+    timestamp: "4 hr ago",
+    read: true,
+    actions: undefined,
+  },
+  // Question — missing source, has buttons
+  {
+    id: "h6",
     type: "question",
     vauName: "Kara",
     vauAvatar: "/vau-kara.svg",
     vauColor: "#6B5CE7",
     title: "Missing source — can you help?",
-    description: "The SEO article references a 2025 Gartner report on content ROI, but I can't locate the original document in Context. Can you upload it or point me to where it lives?",
+    description: "The SEO article references a 2025 Gartner report on content ROI, but I can't locate the original document in Context.",
     timestamp: "Yesterday",
     read: true,
-    actions: [{ label: "Upload document" }, { label: "Skip that citation" }],
+    actions: undefined,
+  },
+  // Approval — Black Friday campaign, no buttons (already actioned)
+  {
+    id: "h7",
+    type: "approval",
+    vauName: "Bubs",
+    vauAvatar: "/vau-bubs.svg",
+    vauColor: "#2563eb",
+    title: "Black Friday email sequence — approved",
+    description: "You approved the 4-email sequence on Jul 24. Scheduled to send starting Nov 25.",
+    timestamp: "2 days ago",
+    read: true,
+    artifact: { title: "Black Friday Email Series", type: "Email Draft" },
+    actions: undefined,
+  },
+  // New message — from Priya
+  {
+    id: "h8",
+    type: "complete",
+    category: "new_message",
+    vauName: "Priya Rajan",
+    vauAvatar: "https://i.pravatar.cc/150?img=44",
+    vauColor: "#6B5CE7",
+    title: "New message from Priya Rajan",
+    description: "Can you share the brand voice doc before Friday? The agency needs it for the brief.",
+    timestamp: "32 min ago",
+    read: false,
+    actions: undefined,
+  },
+  // New reply — Marcus in group
+  {
+    id: "h9",
+    type: "complete",
+    category: "new_reply",
+    vauName: "Marcus Santos",
+    vauAvatar: "https://i.pravatar.cc/150?img=68",
+    vauColor: "#059669",
+    title: "Marcus replied in Black Friday Campaign",
+    description: "\"Let's align on the final copy before launch — are we still shipping Thursday?\"",
+    timestamp: "1 hr ago",
+    read: false,
+    actions: undefined,
+  },
+  // Reaction — Jane
+  {
+    id: "h10",
+    type: "complete",
+    category: "reaction",
+    vauName: "Jane Smith",
+    vauAvatar: "https://i.pravatar.cc/150?img=47",
+    vauColor: "#f59e0b",
+    title: "Jane reacted 👍 to your message",
+    description: "\"The new content calendar looks great — shipping Friday\" in Campaign Planning.",
+    timestamp: "2 hr ago",
+    read: true,
+    actions: undefined,
+  },
+  // Mention — Tom
+  {
+    id: "h11",
+    type: "complete",
+    category: "mention",
+    vauName: "Tom Decker",
+    vauAvatar: "https://i.pravatar.cc/150?img=53",
+    vauColor: "#2563eb",
+    title: "@Pei — quick question on the Q4 roadmap",
+    description: "Tom mentioned you in VAU Working Group. He wants your input on prioritisation before the planning session.",
+    timestamp: "3 hr ago",
+    read: true,
+    actions: undefined,
   },
 ];

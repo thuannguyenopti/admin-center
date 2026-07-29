@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Disclosure, DisclosureContent, DisclosureTrigger, Text as AxiomText, Tooltip } from "@optiaxiom/react";
+import { Box, Disclosure, DisclosureContent, DisclosureTrigger, Link as AxiomLink, Text as AxiomText, Tooltip } from "@optiaxiom/react";
 import { IconSparkles } from "@optimizely/axiom-icons";
 import {
   IconPen,
@@ -44,7 +44,24 @@ import { OpalLoaderV3 } from "@/app/opal/components/OpalLoaderV3";
 import { OpalLoaderV4 } from "@/app/opal/components/OpalLoaderV4";
 import { useLoaderDev } from "@/app/opal/components/useLoaderDev";
 import type { LoaderSequenceOption } from "@/app/opal/components/useLoaderDev";
-import { ActivityStreamBlock } from "@/app/opal/im/components/ActivityStreamBlock";
+import { ActivityStreamBlock, type ActivityPhase } from "@/app/opal/im/components/ActivityStreamBlock";
+
+/** Static collapsed view of all phases — used when the stream has already completed to prevent re-animation on remount */
+function StaticActivitySummary({ script }: { script: ActivityPhase[] }) {
+  return (
+    <Box display="flex" flexDirection="column" gap="4">
+      {script.map((phase, i) => (
+        <Box key={i} display="flex" alignItems="center" gap="6" style={{ padding: "2px 0" }}>
+          <AxiomText fontSize="md" color="fg.tertiary">{phase.summary}</AxiomText>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--ax-colors-fg-tertiary)" }}>
+            <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+import { CanvasOutputCard } from "@/app/opal/im/components/CanvasOutputCard";
 
 /** Borders / strokes — Opal greys (no product blue accent). */
 const OPAL_STEP_BORDER = "var(--opal-border-secondary)";
@@ -684,15 +701,15 @@ const MarkdownContent = ({ content }: { content: string }) => {
             ),
           strong: ({ node, ...props }) => <strong style={{ fontWeight: 600 }} {...props} />,
           em: ({ node, ...props }) => <em style={{ fontStyle: 'italic' }} {...props} />,
-          a: ({ node, href, ...props }) => {
+          a: ({ node, href, children }) => {
             const isInternal = typeof href === 'string' && href.startsWith('/');
             return (
-              <a
-                href={href}
-                style={{ color: 'var(--ax-colors-fg-accent)', textDecoration: 'underline' }}
-                {...(isInternal ? {} : { target: "_blank", rel: "noopener noreferrer" })}
-                {...props}
-              />
+              <AxiomLink
+                href={href ?? '#'}
+                {...(!isInternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              >
+                {children}
+              </AxiomLink>
             );
           },
         }}
@@ -1305,9 +1322,19 @@ export function OpalMessage({
             ) : (
               message.activityScript ? (
                 <Box display="flex" flexDirection="column" gap="12" w="full">
-                  <ActivityStreamBlock key={`${message.id}-${message.timestamp}`} script={message.activityScript} onComplete={() => onActivityComplete?.(message.id)} />
+                  {/* When stream is done, render a static summary to avoid re-animation on remount */}
+                  {!isLoading && !message.isLoading && (message as any).showCanvasCard ? (
+                    <StaticActivitySummary script={message.activityScript} />
+                  ) : (
+                    <ActivityStreamBlock key={`${message.id}-${message.timestamp}`} script={message.activityScript} onComplete={() => onActivityComplete?.(message.id)} />
+                  )}
                   {!isLoading && message.content && (
                     <MarkdownContent content={message.content} />
+                  )}
+                  {!isLoading && (message as any).showCanvasCard && (
+                    <Box mt="8" mb="8">
+                      <CanvasOutputCard />
+                    </Box>
                   )}
                 </Box>
               ) : (

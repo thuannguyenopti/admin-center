@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import {
-	Badge, Box, Button, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger,
-	Tabs, TabsContent, TabsList, TabsTrigger, Text,
+	Badge, Box, Button, Checkbox, Heading, LabelMenuButton, Menu, MenuContent, MenuTrigger,
+	Popover, PopoverContent, PopoverTrigger, Text,
 } from "@optiaxiom/react";
-import { IconArrowDown, IconArrowUp, IconArrowUpRightFromSquare, IconChevronLeft, IconChevronRight, IconGripVertical, IconSearch } from "@optiaxiom/icons";
+import { IconArrowDown, IconArrowRight, IconArrowUp, IconArrowUpRightFromSquare, IconDiagramSubtask, IconChevronLeft, IconChevronRight, IconGear, IconGripVertical, IconSearch } from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import { VAUS } from "@/app/opal/data/vaus";
 
 const CAPTION: React.CSSProperties = {
 	fontFamily: "Roboto Mono, monospace",
-	fontSize: 10,
+	fontSize: 12,
 	fontWeight: 400,
 	lineHeight: "1.25",
 	letterSpacing: "0.36px",
@@ -35,6 +35,9 @@ const TABLE_HEADER: React.CSSProperties = {
 	letterSpacing: "0.36px",
 	textTransform: "uppercase" as const,
 	color: "var(--ax-colors-fg-tertiary)",
+	display: "inline-flex",
+	alignItems: "center",
+	gap: 4,
 };
 
 const ACTIVITY_ROWS = [
@@ -46,47 +49,128 @@ const ACTIVITY_ROWS = [
 	{ task: "Weekly recap",   runs: 12,  pct: 100, avgMin: 5 },
 ];
 
+const ACTIVITY_ROWS_BY_VAU: Record<string, typeof ACTIVITY_ROWS> = {
+	henry: [
+		{ task: "SERP shift digest",      runs: 142, pct: 98,  avgMin: 3 },
+		{ task: "Keyword cluster report", runs: 48,  pct: 100, avgMin: 8 },
+		{ task: "Content brief draft",    runs: 22,  pct: 91,  avgMin: 12 },
+	],
+	kerby: [
+		{ task: "Conversion drop alert", runs: 134, pct: 97,  avgMin: 2 },
+		{ task: "A/B test report",        runs: 52,  pct: 100, avgMin: 6 },
+		{ task: "Landing page audit",     runs: 8,   pct: 100, avgMin: 15 },
+	],
+};
+
 const INITIAL_QUEUE = [
-	{ id: "q1", task: "Meeting Prep", sub: 'Pre-meeting brief: "Q3 Roadmap Review"', time: "11:00 AM" },
-	{ id: "q2", task: "Email Triage", sub: "Morning inbox sweep — 22 unread flagged", time: "11:30 AM" },
-	{ id: "q3", task: "Status Nudges", sub: "Follow-up pings to 3 open threads", time: "12:00 PM" },
-	{ id: "q4", task: "Meeting Prep", sub: 'Pre-meeting brief: "Design Review"', time: "1:00 PM" },
+	{ id: "q1", task: "Meeting Prep",   sub: "Pre-meeting brief",         time: "11:00 AM" },
+	{ id: "q2", task: "Email Triage",   sub: "Daily inbox sweep",         time: "11:30 AM" },
+	{ id: "q3", task: "Status Nudges",  sub: "Follow-up reminders sent",  time: "12:00 PM" },
+	{ id: "q4", task: "Meeting Prep",   sub: "Pre-meeting brief",         time: "1:00 PM" },
 ];
+
+const INITIAL_QUEUE_BY_VAU: Record<string, typeof INITIAL_QUEUE> = {
+	henry: [
+		{ id: "q1", task: "SERP Shift Digest",      sub: "Daily search ranking changes",       time: "8:00 AM" },
+		{ id: "q2", task: "Keyword Cluster Report", sub: "Weekly keyword gap analysis",        time: "9:00 AM" },
+		{ id: "q3", task: "SERP Shift Digest",      sub: "Daily search ranking changes",       time: "8:00 AM" },
+		{ id: "q4", task: "Content Brief Draft",    sub: "SEO-optimized briefs for new topics", time: "10:00 AM" },
+	],
+	kerby: [
+		{ id: "q1", task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               time: "8:00 AM" },
+		{ id: "q2", task: "A/B Test Report",        sub: "Weekly experiment results summary",      time: "9:00 AM" },
+		{ id: "q3", task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               time: "8:00 AM" },
+		{ id: "q4", task: "Landing Page Audit",     sub: "Monthly conversion optimization review", time: "10:00 AM" },
+	],
+};
 
 const COMPLETED_ITEMS = [
-	{ id: "c1",  task: "Email Triage",     sub: "Morning inbox sweep",               dateIndex: 0,  executionTime: "Jul 6, 2026, 9:53 AM",  trigger: "scheduled" as const, artifactLabel: "Triage summary",         artifactHref: "#" },
-	{ id: "c2",  task: "Meeting Prep",     sub: '"Q3 Roadmap Review" brief',          dateIndex: 1,  executionTime: "Jul 6, 2026, 8:01 AM",  trigger: "scheduled" as const, artifactLabel: "Q3 Roadmap brief",       artifactHref: "#" },
-	{ id: "c3",  task: "Status Nudges",    sub: "Follow-up pings to 3 threads",       dateIndex: 2,  executionTime: "Jul 5, 2026, 4:12 PM",  trigger: "message" as const,   artifactLabel: "Thread summary",         artifactHref: "#" },
-	{ id: "c4",  task: "Morning Brief",    sub: "Daily digest delivered",             dateIndex: 3,  executionTime: "Jul 5, 2026, 7:00 AM",  trigger: "scheduled" as const, artifactLabel: "Daily digest",           artifactHref: "#" },
-	{ id: "c5",  task: "Follow-ups",       sub: "Sarah Chen feedback loop",           dateIndex: 4,  executionTime: "Jul 4, 2026, 2:45 PM",  trigger: "message" as const,   artifactLabel: "Draft follow-up email",  artifactHref: "#" },
-	{ id: "c6",  task: "Weekly Recap",     sub: "End-of-week performance summary",    dateIndex: 5,  executionTime: "Jul 4, 2026, 5:00 PM",  trigger: "scheduled" as const, artifactLabel: "Weekly recap report",    artifactHref: "#" },
-	{ id: "c7",  task: "Meeting Prep",     sub: '"Design Review" brief',              dateIndex: 6,  executionTime: "Jul 3, 2026, 9:30 AM",  trigger: "scheduled" as const, artifactLabel: "Design Review brief",    artifactHref: "#" },
-	{ id: "c8",  task: "Email Triage",     sub: "Afternoon inbox sweep",              dateIndex: 7,  executionTime: "Jul 3, 2026, 1:00 PM",  trigger: "scheduled" as const, artifactLabel: "Triage summary",         artifactHref: "#" },
-	{ id: "c9",  task: "Status Nudges",    sub: "CMP task deadline reminders",        dateIndex: 8,  executionTime: "Jul 2, 2026, 3:20 PM",  trigger: "message" as const,   artifactLabel: "Reminder log",           artifactHref: "#" },
-	{ id: "c10", task: "Morning Brief",    sub: "Daily digest delivered",             dateIndex: 9,  executionTime: "Jul 2, 2026, 7:00 AM",  trigger: "scheduled" as const, artifactLabel: "Daily digest",           artifactHref: "#" },
-	{ id: "c11", task: "Competitor Intel", sub: "Weekly landscape digest",            dateIndex: 10, executionTime: "Jul 1, 2026, 11:15 AM", trigger: "scheduled" as const, artifactLabel: "Landscape digest",       artifactHref: "#" },
-	{ id: "c12", task: "Follow-ups",       sub: "Q3 campaign brief feedback",         dateIndex: 11, executionTime: "Jul 1, 2026, 10:02 AM", trigger: "message" as const,   artifactLabel: "Draft response",         artifactHref: "#" },
+	{ id: "c1",  task: "Email Triage",     sub: "Daily inbox sweep",             dateIndex: 0,  executionTime: "Jul 6, 2026, 9:53 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 118, duration: "2m 12s" },
+	{ id: "c2",  task: "Meeting Prep",     sub: "Pre-meeting brief",             dateIndex: 1,  executionTime: "Jul 6, 2026, 8:01 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 184, duration: "3m 41s" },
+	{ id: "c3",  task: "Status Nudges",    sub: "Follow-up reminders sent",      dateIndex: 2,  executionTime: "Jul 5, 2026, 4:12 PM",  trigger: "message" as const,   type: "Workflow", credits: 92,  duration: "1m 28s" },
+	{ id: "c4",  task: "Morning Brief",    sub: "Daily digest delivered",        dateIndex: 3,  executionTime: "Jul 5, 2026, 7:00 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 163, duration: "2m 55s" },
+	{ id: "c5",  task: "Follow-ups",       sub: "Feedback loop continued",       dateIndex: 4,  executionTime: "Jul 4, 2026, 2:45 PM",  trigger: "message" as const,   type: "Workflow", credits: 104, duration: "1m 50s" },
+	{ id: "c6",  task: "Weekly Recap",     sub: "End-of-week performance summary", dateIndex: 5, executionTime: "Jul 4, 2026, 5:00 PM",  trigger: "scheduled" as const, type: "Workflow", credits: 228, duration: "4m 22s" },
+	{ id: "c7",  task: "Meeting Prep",     sub: "Pre-meeting brief",             dateIndex: 6,  executionTime: "Jul 3, 2026, 9:30 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 177, duration: "3m 38s" },
+	{ id: "c8",  task: "Email Triage",     sub: "Daily inbox sweep",             dateIndex: 7,  executionTime: "Jul 3, 2026, 1:00 PM",  trigger: "scheduled" as const, type: "Workflow", credits: 121, duration: "2m 08s" },
+	{ id: "c9",  task: "Status Nudges",    sub: "Follow-up reminders sent",      dateIndex: 8,  executionTime: "Jul 2, 2026, 3:20 PM",  trigger: "message" as const,   type: "Workflow", credits: 88,  duration: "1m 32s" },
+	{ id: "c10", task: "Morning Brief",    sub: "Daily digest delivered",        dateIndex: 9,  executionTime: "Jul 2, 2026, 7:00 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 158, duration: "2m 48s" },
+	{ id: "c11", task: "Competitor Intel", sub: "Weekly landscape digest",       dateIndex: 10, executionTime: "Jul 1, 2026, 11:15 AM", trigger: "scheduled" as const, type: "Workflow", credits: 203, duration: "3m 57s" },
+	{ id: "c12", task: "Follow-ups",       sub: "Feedback loop continued",       dateIndex: 11, executionTime: "Jul 1, 2026, 10:02 AM", trigger: "message" as const,   type: "Workflow", credits: 97,  duration: "1m 44s" },
 ];
 
+const COMPLETED_ITEMS_BY_VAU: Record<string, typeof COMPLETED_ITEMS> = {
+	henry: [
+		{ id: "c1",  task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 0,  executionTime: "Jul 6, 2026, 8:02 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 112, duration: "1m 58s" },
+		{ id: "c2",  task: "Keyword Cluster Report", sub: "Weekly keyword gap analysis",         dateIndex: 1,  executionTime: "Jul 6, 2026, 9:05 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 247, duration: "5m 12s" },
+		{ id: "c3",  task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 2,  executionTime: "Jul 5, 2026, 8:01 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 108, duration: "1m 52s" },
+		{ id: "c4",  task: "Content Brief Draft",    sub: "SEO-optimized briefs for new topics", dateIndex: 3,  executionTime: "Jul 4, 2026, 10:14 AM", trigger: "scheduled" as const, type: "Workflow", credits: 391, duration: "8m 44s" },
+		{ id: "c5",  task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 4,  executionTime: "Jul 4, 2026, 8:00 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 115, duration: "2m 03s" },
+		{ id: "c6",  task: "Keyword Cluster Report", sub: "Weekly keyword gap analysis",         dateIndex: 5,  executionTime: "Jul 3, 2026, 9:02 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 259, duration: "5m 28s" },
+		{ id: "c7",  task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 6,  executionTime: "Jul 3, 2026, 8:01 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 110, duration: "1m 55s" },
+		{ id: "c8",  task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 7,  executionTime: "Jul 2, 2026, 8:03 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 119, duration: "2m 06s" },
+		{ id: "c9",  task: "Content Brief Draft",    sub: "SEO-optimized briefs for new topics", dateIndex: 8,  executionTime: "Jul 1, 2026, 10:30 AM", trigger: "scheduled" as const, type: "Workflow", credits: 374, duration: "8m 19s" },
+		{ id: "c10", task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 9,  executionTime: "Jul 1, 2026, 8:00 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 107, duration: "1m 49s" },
+		{ id: "c11", task: "Keyword Cluster Report", sub: "Weekly keyword gap analysis",         dateIndex: 10, executionTime: "Jun 30, 2026, 9:08 AM", trigger: "scheduled" as const, type: "Workflow", credits: 241, duration: "5m 05s" },
+		{ id: "c12", task: "SERP Shift Digest",      sub: "Daily search ranking changes",        dateIndex: 11, executionTime: "Jun 30, 2026, 8:01 AM", trigger: "scheduled" as const, type: "Workflow", credits: 113, duration: "2m 00s" },
+	],
+	kerby: [
+		{ id: "c1",  task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 0,  executionTime: "Jul 6, 2026, 8:04 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 88,  duration: "1m 32s" },
+		{ id: "c2",  task: "A/B Test Report",        sub: "Weekly experiment results summary",      dateIndex: 1,  executionTime: "Jul 6, 2026, 9:01 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 194, duration: "4m 08s" },
+		{ id: "c3",  task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 2,  executionTime: "Jul 5, 2026, 8:02 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 91,  duration: "1m 38s" },
+		{ id: "c4",  task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 3,  executionTime: "Jul 4, 2026, 8:01 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 84,  duration: "1m 27s" },
+		{ id: "c5",  task: "Landing Page Audit",     sub: "Monthly conversion optimization review", dateIndex: 4,  executionTime: "Jul 3, 2026, 10:05 AM", trigger: "scheduled" as const, type: "Workflow", credits: 462, duration: "9m 51s" },
+		{ id: "c6",  task: "A/B Test Report",        sub: "Weekly experiment results summary",      dateIndex: 5,  executionTime: "Jun 30, 2026, 9:00 AM", trigger: "scheduled" as const, type: "Workflow", credits: 188, duration: "3m 58s" },
+		{ id: "c7",  task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 6,  executionTime: "Jun 30, 2026, 8:03 AM", trigger: "scheduled" as const, type: "Workflow", credits: 79,  duration: "1m 21s" },
+		{ id: "c8",  task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 7,  executionTime: "Jun 29, 2026, 8:01 AM", trigger: "scheduled" as const, type: "Workflow", credits: 93,  duration: "1m 41s" },
+		{ id: "c9",  task: "A/B Test Report",        sub: "Weekly experiment results summary",      dateIndex: 8,  executionTime: "Jun 23, 2026, 9:02 AM", trigger: "scheduled" as const, type: "Workflow", credits: 201, duration: "4m 14s" },
+		{ id: "c10", task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 9,  executionTime: "Jun 23, 2026, 8:00 AM", trigger: "scheduled" as const, type: "Workflow", credits: 86,  duration: "1m 29s" },
+		{ id: "c11", task: "Landing Page Audit",     sub: "Monthly conversion optimization review", dateIndex: 10, executionTime: "Jun 2, 2026, 10:10 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 448, duration: "9m 32s" },
+		{ id: "c12", task: "Conversion Drop Alert", sub: "Funnel anomaly detection",               dateIndex: 11, executionTime: "Jun 2, 2026, 8:02 AM",  trigger: "scheduled" as const, type: "Workflow", credits: 81,  duration: "1m 24s" },
+	],
+};
+
 const TIME_FRAME_OPTIONS = ["Past 7 days", "Past 30 days", "Past 90 days", "All time"];
+
+const TOP_TASKS = [
+	{ name: "Meeting prep", credits: "1,240" },
+	{ name: "Daily brief", credits: "820" },
+	{ name: "Weekly wrap", credits: "620" },
+	{ name: "Status nudges", credits: "480" },
+	{ name: "Email triage", credits: "240" },
+];
+
+const TOP_TASKS_BY_VAU: Record<string, typeof TOP_TASKS> = {
+	henry: [
+		{ name: "SERP shift digest",      credits: "1,580" },
+		{ name: "Keyword cluster report", credits: "1,240" },
+		{ name: "Content brief draft",    credits: "860" },
+	],
+	kerby: [
+		{ name: "Conversion drop alert", credits: "1,180" },
+		{ name: "A/B test report",        credits: "980" },
+		{ name: "Landing page audit",     credits: "460" },
+	],
+};
 const COMPLETED_PAGE_SIZE = 5;
 
 type SortKey = "task" | "executionTime" | "trigger";
 type SortDir = "asc" | "desc";
 
+type ColKey = "executionTime" | "trigger" | "status" | "credits" | "type" | "duration";
+
+const COL_META: Record<ColKey, { label: string; width: number; sortKey?: SortKey }> = {
+	executionTime: { label: "Execution Time", width: 200, sortKey: "executionTime" },
+	trigger:       { label: "Trigger",        width: 140, sortKey: "trigger" },
+	status:        { label: "Status",         width: 120 },
+	credits:       { label: "Credits",        width: 90 },
+	type:          { label: "Type",           width: 110 },
+	duration:      { label: "Duration",       width: 100 },
+};
+const DEFAULT_COL_ORDER: ColKey[] = ["executionTime", "trigger", "status", "credits", "type", "duration"];
+
 function QueueStatusBadge({ status }: { status: "next_up" | "queued" }) {
-	if (status === "next_up") {
-		return (
-			<span style={{ ...CAPTION, background: "var(--ax-colors-fg-default)", color: "var(--ax-colors-bg-default)", padding: "3px 10px", borderRadius: 32, whiteSpace: "nowrap" as const }}>
-				Next up
-			</span>
-		);
-	}
-	return (
-		<span style={{ ...CAPTION, background: "var(--ax-colors-bg-secondary)", color: "var(--ax-colors-fg-secondary)", padding: "3px 10px", borderRadius: 32, whiteSpace: "nowrap" as const, border: "1px solid var(--ax-colors-border-default)" }}>
-			Queued
-		</span>
-	);
+	return <Badge intent="primary" variant="strong">{status === "next_up" ? "Next up" : "Queued"}</Badge>;
 }
 
 
@@ -96,8 +180,13 @@ export default function VATActivityPage() {
 	const vau = VAUS.find((v) => v.id === id);
 	const name = vau?.characterName ?? vau?.name ?? "Randy";
 
+	const activityRows    = ACTIVITY_ROWS_BY_VAU[id]    ?? ACTIVITY_ROWS;
+	const completedItems  = COMPLETED_ITEMS_BY_VAU[id]  ?? COMPLETED_ITEMS;
+	const topTasks        = TOP_TASKS_BY_VAU[id]         ?? TOP_TASKS;
+
 	// Queue drag-and-drop
-	const [queueItems, setQueueItems] = useState(INITIAL_QUEUE);
+	const [queueItems, setQueueItems] = useState(() => INITIAL_QUEUE_BY_VAU[id] ?? INITIAL_QUEUE);
+	const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 	const dragIndexRef = useRef<number | null>(null);
 
@@ -123,6 +212,49 @@ export default function VATActivityPage() {
 		setDragOverIndex(null);
 	};
 
+	// Column visibility + order
+	const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(DEFAULT_COL_ORDER));
+	const [colOrder, setColOrder] = useState<ColKey[]>([...DEFAULT_COL_ORDER]);
+	const [colConfigOpen, setColConfigOpen] = useState(false);
+	const colConfigRef = useRef<HTMLDivElement>(null);
+	const completedRef = useRef<HTMLDivElement>(null);
+	const scrollToCompleted = () => completedRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+	const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+	const [dragColKey, setDragColKey] = useState<ColKey | null>(null);
+	const [dragOverColKey, setDragOverColKey] = useState<ColKey | null>(null);
+
+	const toggleCol = (key: ColKey) =>
+		setVisibleCols((prev) => {
+			const next = new Set(prev);
+			next.has(key) ? next.delete(key) : next.add(key);
+			return next;
+		});
+
+	const handleColDragOver = (e: React.DragEvent, key: ColKey) => { e.preventDefault(); setDragOverColKey(key); };
+	const handleColDrop = (targetKey: ColKey) => {
+		if (!dragColKey || dragColKey === targetKey) return;
+		setColOrder((prev) => {
+			const from = prev.indexOf(dragColKey);
+			const to = prev.indexOf(targetKey);
+			const next = [...prev];
+			const [moved] = next.splice(from, 1);
+			next.splice(to, 0, moved);
+			return next;
+		});
+		setDragColKey(null);
+		setDragOverColKey(null);
+	};
+
+	useEffect(() => {
+		const handleClickOutside = (e: MouseEvent) => {
+			if (colConfigRef.current && !colConfigRef.current.contains(e.target as Node)) {
+				setColConfigOpen(false);
+			}
+		};
+		if (colConfigOpen) document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, [colConfigOpen]);
+
 	// Completed filters
 	const [completedQuery, setCompletedQuery] = useState("");
 	const [completedStatus, setCompletedStatus] = useState("All");
@@ -143,9 +275,34 @@ export default function VATActivityPage() {
 		setCompletedPage(0);
 	};
 
-	const filteredCompleted = COMPLETED_ITEMS.filter((item) => {
+	// Column render helpers
+	const renderHeaderCell = (key: ColKey) => {
+		const meta = COL_META[key];
+		if (meta.sortKey) {
+			return (
+				<Box key={key} style={{ width: meta.width, cursor: "pointer", userSelect: "none" as const }} onClick={() => handleSort(meta.sortKey!)}>
+					<span style={TABLE_HEADER}>{meta.label}<SortIcon col={meta.sortKey!} /></span>
+				</Box>
+			);
+		}
+		return <span key={key} style={{ ...TABLE_HEADER, width: meta.width }}>{meta.label}</span>;
+	};
+
+	const renderRowCell = (item: (typeof COMPLETED_ITEMS)[0], key: ColKey) => {
+		const { width } = COL_META[key];
+		switch (key) {
+			case "executionTime": return <Text key={key} fontSize="sm" color="fg.secondary" style={{ width }}>{item.executionTime}</Text>;
+			case "trigger":       return <Box key={key} style={{ width }}>{item.trigger === "message" ? <Badge intent="information" variant="subtle">Message</Badge> : <Badge variant="subtle">Scheduled</Badge>}</Box>;
+			case "status":        return <Box key={key} style={{ width }}><Badge intent="success" variant="subtle">Completed</Badge></Box>;
+			case "credits":       return <Text key={key} fontSize="sm" color="fg.secondary" style={{ width }}>{item.credits.toLocaleString()}</Text>;
+			case "type":          return <Box key={key} style={{ width }}><Badge variant="subtle">{item.type}</Badge></Box>;
+			case "duration":      return <Text key={key} fontSize="sm" color="fg.secondary" style={{ width }}>{item.duration}</Text>;
+		}
+	};
+
+	const filteredCompleted = completedItems.filter((item) => {
 		const q = completedQuery.trim().toLowerCase();
-		if (q && !item.task.toLowerCase().includes(q) && !item.sub.toLowerCase().includes(q) && !item.artifactLabel.toLowerCase().includes(q)) return false;
+		if (q && !item.task.toLowerCase().includes(q) && !item.sub.toLowerCase().includes(q)) return false;
 		if (completedStatus !== "All" && completedStatus.toLowerCase() !== "completed") return false;
 		return true;
 	});
@@ -178,38 +335,49 @@ export default function VATActivityPage() {
 
 	return (
 		<Box style={{ padding: "32px 40px" }}>
-			<Heading level="2" mb="4">
+			<Heading level="1" mb="4">
 				Activity
 			</Heading>
-			<Text color="fg.secondary" fontSize="md" mb="24">
-				A breakdown of how {name} spends their time.
+			<Text color="fg.secondary" fontSize="lg" mb="24">
+				A breakdown of how {name} spends their time
 			</Text>
 
-			<Tabs defaultValue="overview">
-				<TabsList>
-					<TabsTrigger value="overview">Overview</TabsTrigger>
-					<TabsTrigger value="completed">Completed</TabsTrigger>
-				</TabsList>
+			{/* Scroll-nav tabs */}
+			<Box display="flex" gap="24" mb="32" style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
+				<Box
+					onClick={scrollToTop}
+					style={{ paddingBottom: 12, borderBottom: "2px solid var(--ax-colors-fg-default)", cursor: "pointer", fontWeight: 500, fontSize: 14, color: "var(--ax-colors-fg-default)" }}
+				>
+					Overview
+				</Box>
+				<Box
+					onClick={scrollToCompleted}
+					style={{ paddingBottom: 12, borderBottom: "2px solid transparent", cursor: "pointer", fontWeight: 500, fontSize: 14, color: "var(--ax-colors-fg-secondary)" }}
+				>
+					Completed
+				</Box>
+			</Box>
 
-				{/* ─── Overview ──────────────────────────────────────────────── */}
-				<TabsContent value="overview">
-					<Box pt="32">
+			{/* ─── Overview ──────────────────────────────────────────────── */}
+			<Box>
+				<Box pt="0">
 						{/* Upcoming work */}
 						<Box mb="40">
-							<Text style={SECTION_HEADING} mb="4">
-								Upcoming work
-							</Text>
-							<Text color="fg.secondary" fontSize="sm" mb="16">
-								What&apos;s coming up and when it&apos;ll run.
+							<Heading level="3" mb="4">
+								Upcoming
+							</Heading>
+							<Text color="fg.secondary" fontSize="md" mb="16">
+								Upcoming jobs and when they will run next
 							</Text>
 							<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden" }}>
 								{/* Header */}
 								<Box display="flex" alignItems="center" style={{ padding: "10px 20px", borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
-									<Box style={{ width: 28, flexShrink: 0 }} />
-									<span style={{ ...TABLE_HEADER, flex: 1 }}>Task</span>
-									<span style={{ ...TABLE_HEADER, width: 140 }}>Status</span>
-									<span style={{ ...TABLE_HEADER, width: 120 }}>Date/Time</span>
-									<span style={{ ...TABLE_HEADER, width: 200 }}>Actions</span>
+									<Box style={{ width: 24, flexShrink: 0 }} />
+									<span style={{ ...TABLE_HEADER, flex: 1 }}>Job</span>
+									<span style={{ ...TABLE_HEADER, width: 120 }}>Status</span>
+									<span style={{ ...TABLE_HEADER, width: 120 }}>Priority</span>
+									<span style={{ ...TABLE_HEADER, width: 120 }}>Trigger</span>
+									<span style={{ ...TABLE_HEADER, width: 120 }}>Scheduled for</span>
 								</Box>
 								{queueItems.map((item, i) => (
 									<Box
@@ -222,8 +390,8 @@ export default function VATActivityPage() {
 										onDrop={() => handleDrop(i)}
 										onDragEnd={handleDragEnd}
 										style={{
-											padding: "14px 20px",
-											borderBottom: "1px solid var(--ax-colors-border-secondary)",
+											padding: "10px 20px",
+											borderBottom: i < queueItems.length - 1 ? "1px solid var(--ax-colors-border-secondary)" : undefined,
 											background: dragOverIndex === i
 												? "var(--ax-colors-bg-secondary)"
 												: "var(--ax-colors-bg-default)",
@@ -231,273 +399,159 @@ export default function VATActivityPage() {
 											transition: "background 0.1s",
 										}}
 									>
-										<Box style={{ width: 28, flexShrink: 0, display: "flex", alignItems: "center" }}>
-											<IconGripVertical style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)", cursor: "grab" }} />
+										<Box style={{ width: 24, flexShrink: 0, display: "flex", alignItems: "center" }}>
+											<IconGripVertical style={{ width: 14, height: 14, color: "var(--ax-colors-fg-tertiary)", cursor: "grab" }} />
 										</Box>
 										<Box style={{ flex: 1, minWidth: 0 }}>
 											<Text fontSize="md" color="fg.default" style={{ fontWeight: 500 }}>{item.task}</Text>
 											<Text fontSize="sm" color="fg.secondary">{item.sub}</Text>
 										</Box>
-										<Box style={{ width: 140 }}>
+										<Box style={{ width: 120 }}>
 											<QueueStatusBadge status={i === 0 ? "next_up" : "queued"} />
 										</Box>
-										<Text fontSize="md" color="fg.secondary" style={{ width: 120 }}>{item.time}</Text>
-										<Box display="flex" gap="8" style={{ width: 200 }}>
-											<Button appearance="default" size="sm">View details</Button>
-											<Button appearance="subtle" size="sm">Remove</Button>
+										<Box style={{ width: 120 }}>
+											<Badge intent="information" variant="subtle">Standard</Badge>
 										</Box>
+										<Box style={{ width: 120 }}>
+											<Badge intent="neutral" variant="subtle">Scheduled</Badge>
+										</Box>
+										<Text fontSize="sm" color="fg.secondary" style={{ width: 120 }}>{item.time}</Text>
 									</Box>
 								))}
 							</Box>
 						</Box>
 
-						{/* Activity Overview */}
-						<Box>
-							<Box display="flex" alignItems="center" justifyContent="space-between" mb="4">
-								<Text style={SECTION_HEADING}>Activity Overview</Text>
-								<Menu options={TIME_FRAME_OPTIONS.map((opt) => ({ label: opt, onClick: () => setTimeFrame(opt) }))}>
+				</Box>
+			</Box>
+			<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "32px 0" }} />
+
+			{/* ─── Completed ─────────────────────────────────────────────── */}
+			<Box ref={completedRef}>
+				<Box pt="0">
+						<Heading level="3" mb="4">
+							Completed
+						</Heading>
+						<Text color="fg.secondary" fontSize="md" mb="16">
+							A record of what jobs {name} has completed to date
+						</Text>
+
+						{/* Filters */}
+						<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
+							<Box display="flex" alignItems="center" gap="8">
+								<Box style={{ width: 260 }}>
+									<Input
+										placeholder="Search jobs"
+										addonBefore={<IconSearch />}
+										value={completedQuery}
+										onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+											setCompletedQuery(e.target.value);
+											setCompletedPage(0);
+										}}
+									/>
+								</Box>
+								<Menu
+									options={["All", "Completed", "Failed", "Canceled"].map((opt) => ({
+										label: opt,
+										onClick: () => { setCompletedStatus(opt); setCompletedPage(0); },
+									}))}
+								>
 									<MenuTrigger asChild>
-										<LabelMenuButton label="Time Frame">{timeFrame}</LabelMenuButton>
+										<LabelMenuButton label="Status">{completedStatus}</LabelMenuButton>
+									</MenuTrigger>
+									<MenuContent />
+								</Menu>
+								<Menu
+									options={["All time", "Today", "Past 7 days", "Past 30 days", "Past 90 days"].map((opt) => ({
+										label: opt,
+										onClick: () => { setCompletedDateRange(opt); setCompletedPage(0); },
+									}))}
+								>
+									<MenuTrigger asChild>
+										<LabelMenuButton label="Date range">{completedDateRange}</LabelMenuButton>
 									</MenuTrigger>
 									<MenuContent />
 								</Menu>
 							</Box>
-							<Text color="fg.secondary" fontSize="sm" mb="20">
-								Where {name}&apos;s effort goes — and what&apos;s trending up.
-							</Text>
-							<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "24px 24px 16px" }}>
-								{/* Chart area */}
-								<Box style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-around", height: 180, position: "relative" }}>
-									{/* Y-axis gridlines */}
-									{[0, 25, 50, 75, 100].map((pct) => (
-										<Box key={pct} style={{
-											position: "absolute",
-											left: 0,
-											right: 0,
-											bottom: `${pct}%`,
-											height: 1,
-											background: pct === 0 ? "var(--ax-colors-border-default)" : "var(--ax-colors-border-secondary)",
-											zIndex: 0,
-										}} />
-									))}
-									{(() => {
-										const maxRuns = Math.max(...ACTIVITY_ROWS.map((r) => r.runs));
-										const CHART_H = 160;
-										return ACTIVITY_ROWS.map((row) => {
-											const soloRuns = Math.round(row.runs * row.pct / 100);
-											const supportedRuns = row.runs - soloRuns;
-											const totalPx = (row.runs / maxRuns) * CHART_H;
-											const soloPx = totalPx * (soloRuns / row.runs);
-											const supportedPx = totalPx * (supportedRuns / row.runs);
-											const timeSavedHrs = ((soloRuns * row.avgMin) / 60).toFixed(1);
-											const isHovered = hoveredBar === row.task;
 
-											return (
-												<Box
-													key={row.task}
-													style={{ width: 68, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 1 }}
-													onMouseEnter={() => setHoveredBar(row.task)}
-													onMouseLeave={() => setHoveredBar(null)}
-												>
-													{/* Tooltip */}
-													{isHovered && (
-														<Box style={{
-															position: "absolute",
-															bottom: `${totalPx + 12}px`,
-															left: "50%",
-															transform: "translateX(-50%)",
-															background: "var(--ax-colors-fg-default)",
-															color: "var(--ax-colors-bg-default)",
-															borderRadius: 8,
-															padding: "10px 14px",
-															minWidth: 180,
-															zIndex: 10,
-															pointerEvents: "none",
-															boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-														}}>
-															<Text fontSize="sm" style={{ fontWeight: 600, color: "inherit", marginBottom: 8, display: "block" }}>
-																{row.task}
-															</Text>
-															<Box style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-																<Box display="flex" justifyContent="space-between" gap="16">
-																	<Text fontSize="sm" style={{ color: "inherit", opacity: 0.7 }}>Total runs</Text>
-																	<Text fontSize="sm" style={{ color: "inherit", fontWeight: 500 }}>{row.runs}</Text>
-																</Box>
-																<Box display="flex" justifyContent="space-between" gap="16">
-																	<Box display="flex" alignItems="center" gap="4">
-																		<Box style={{ width: 8, height: 8, borderRadius: 2, background: "#226B1E", flexShrink: 0 }} />
-																		<Text fontSize="sm" style={{ color: "inherit", opacity: 0.7 }}>Solo</Text>
-																	</Box>
-																	<Text fontSize="sm" style={{ color: "inherit", fontWeight: 500 }}>{soloRuns} ({row.pct}%)</Text>
-																</Box>
-																{supportedRuns > 0 && (
-																	<Box display="flex" justifyContent="space-between" gap="16">
-																		<Box display="flex" alignItems="center" gap="4">
-																			<Box style={{ width: 8, height: 8, borderRadius: 2, background: "#D2DEC2", flexShrink: 0 }} />
-																			<Text fontSize="sm" style={{ color: "inherit", opacity: 0.7 }}>Supported</Text>
-																		</Box>
-																		<Text fontSize="sm" style={{ color: "inherit", fontWeight: 500 }}>{supportedRuns} ({100 - row.pct}%)</Text>
-																	</Box>
-																)}
-																<Box style={{ height: 1, background: "rgba(255,255,255,0.15)", margin: "4px 0" }} />
-																<Box display="flex" justifyContent="space-between" gap="16">
-																	<Text fontSize="sm" style={{ color: "inherit", opacity: 0.7 }}>Avg duration</Text>
-																	<Text fontSize="sm" style={{ color: "inherit", fontWeight: 500 }}>{row.avgMin}m</Text>
-																</Box>
-																<Box display="flex" justifyContent="space-between" gap="16">
-																	<Text fontSize="sm" style={{ color: "inherit", opacity: 0.7 }}>Time saved</Text>
-																	<Text fontSize="sm" style={{ color: "inherit", fontWeight: 500 }}>{timeSavedHrs}h</Text>
-																</Box>
-															</Box>
-														</Box>
-													)}
-													{/* Stacked bar segments — supported on top, solo on bottom */}
-													{supportedRuns > 0 && (
-														<Box style={{
-															width: "100%",
-															height: supportedPx,
-															background: "#D2DEC2",
-															borderRadius: "4px 4px 0 0",
-															transition: "opacity 0.15s",
-															opacity: hoveredBar && !isHovered ? 0.3 : 1,
-														}} />
-													)}
-													<Box style={{
-														width: "100%",
-														height: soloPx,
-														background: "#226B1E",
-														borderRadius: supportedRuns > 0 ? 0 : "4px 4px 0 0",
-														transition: "opacity 0.15s",
-														opacity: hoveredBar && !isHovered ? 0.3 : 1,
-													}} />
-												</Box>
-											);
-										});
-									})()}
-								</Box>
-								{/* X-axis labels */}
-								<Box style={{ display: "flex", justifyContent: "space-around", marginTop: 8 }}>
-									{ACTIVITY_ROWS.map((row) => (
-										<Box key={row.task} style={{ width: 68, textAlign: "center" }}>
-											<span style={{ ...TABLE_HEADER, fontSize: 9, whiteSpace: "nowrap" as const }}>{row.task}</span>
-										</Box>
-									))}
-								</Box>
-								{/* Legend */}
-								<Box display="flex" alignItems="center" gap="16" style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--ax-colors-border-secondary)" }}>
-									<Box display="flex" alignItems="center" gap="6">
-										<Box style={{ width: 10, height: 10, borderRadius: 2, background: "#226B1E" }} />
-										<Text fontSize="sm" color="fg.secondary">Solo</Text>
-									</Box>
-									<Box display="flex" alignItems="center" gap="6">
-										<Box style={{ width: 10, height: 10, borderRadius: 2, background: "#D2DEC2" }} />
-										<Text fontSize="sm" color="fg.secondary">Supported</Text>
-									</Box>
-								</Box>
-							</Box>
-						</Box>
-
-						{/* Usage */}
-						<Box mt="40">
-							<Text style={SECTION_HEADING} mb="4">Usage</Text>
-							<Text color="fg.secondary" fontSize="sm" mb="16">
-								{name}&apos;s credit usage for the current billing period.
-							</Text>
-							<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, padding: "20px 24px" }}>
-								<Box style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 12 }}>
-									<Text style={{ fontSize: 18, fontWeight: 700, lineHeight: "1", color: "var(--ax-colors-fg-default)" }}>340</Text>
-									<Text fontSize="md" color="fg.tertiary" style={{ fontWeight: 400 }}>/1000</Text>
-								</Box>
-								<Box style={{ display: "flex", alignItems: "center", gap: 12 }}>
-									<Box style={{ flex: 1, height: 8, background: "var(--ax-colors-bg-secondary)", borderRadius: 999, overflow: "hidden" }}>
-										<Box style={{ width: "34%", height: "100%", background: "var(--ax-colors-fg-default)", borderRadius: 999 }} />
-									</Box>
-									<span style={{ ...CAPTION, fontSize: 9, color: "var(--ax-colors-fg-tertiary)", whiteSpace: "nowrap" as const }}>34% USED</span>
-								</Box>
-							</Box>
-						</Box>
-					</Box>
-				</TabsContent>
-
-				{/* ─── Completed ─────────────────────────────────────────────── */}
-				<TabsContent value="completed">
-					<Box pt="32">
-						<Text style={SECTION_HEADING} mb="4">
-							Completed tasks
-						</Text>
-						<Text color="fg.secondary" fontSize="sm" mb="16">
-							A record of what {name} handled — click a column header to sort.
-						</Text>
-
-						{/* Filters */}
-						<Box display="flex" alignItems="center" gap="8" mb="16">
-							<Box style={{ width: 260 }}>
-								<Input
-									placeholder="Search tasks or artifacts"
-									addonBefore={<IconSearch />}
-									value={completedQuery}
-									onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-										setCompletedQuery(e.target.value);
-										setCompletedPage(0);
-									}}
+							{/* Column configurator */}
+							<Box ref={colConfigRef} style={{ position: "relative" }}>
+								<Button
+									appearance="subtle"
+									size="sm"
+									icon={<IconGear />}
+									aria-label="Configure columns"
+									onClick={() => setColConfigOpen((o) => !o)}
 								/>
+								{colConfigOpen && (
+									<Box style={{
+										position: "absolute", right: 0, top: "calc(100% + 6px)",
+										background: "var(--ax-colors-bg-default)",
+										border: "1px solid var(--ax-colors-border-default)",
+										borderRadius: 10,
+										boxShadow: "0 6px 20px rgba(0,0,0,0.10)",
+										padding: "16px 20px",
+										width: 240,
+										zIndex: 50,
+									}}>
+										<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, display: "block", marginBottom: 2 }}>
+											Configure Columns
+										</Text>
+										<Text fontSize="sm" color="fg.tertiary" style={{ display: "block", marginBottom: 14 }}>
+											Drag to reorder, toggle to show/hide
+										</Text>
+										<Box display="flex" flexDirection="column" gap="2">
+											{colOrder.map((key) => {
+												const on = visibleCols.has(key);
+												const isDragging = dragColKey === key;
+												const isOver = dragOverColKey === key && dragColKey !== key;
+												return (
+													<Box
+														key={key}
+														display="flex"
+														alignItems="center"
+														gap="10"
+														draggable
+														onDragStart={() => setDragColKey(key)}
+														onDragEnd={() => { setDragColKey(null); setDragOverColKey(null); }}
+														onDragOver={(e: React.DragEvent) => handleColDragOver(e, key)}
+														onDrop={() => handleColDrop(key)}
+														style={{
+															padding: "6px 0",
+															opacity: isDragging ? 0.4 : 1,
+															borderTop: isOver ? "2px solid var(--ax-colors-border-focus)" : "2px solid transparent",
+															transition: "opacity 0.15s",
+															cursor: "default",
+														}}
+													>
+														<Box style={{ color: "var(--ax-colors-fg-tertiary)", flexShrink: 0, display: "flex", cursor: "grab" }}>
+															<IconGripVertical size={14} />
+														</Box>
+														<Box onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+															<Checkbox checked={on} onCheckedChange={() => toggleCol(key)} />
+														</Box>
+														<Text fontSize="sm" color="fg.default">{COL_META[key].label}</Text>
+													</Box>
+												);
+											})}
+										</Box>
+									</Box>
+								)}
 							</Box>
-							<Menu
-								options={["All", "Completed", "Failed", "Canceled"].map((opt) => ({
-									label: opt,
-									onClick: () => { setCompletedStatus(opt); setCompletedPage(0); },
-								}))}
-							>
-								<MenuTrigger asChild>
-									<LabelMenuButton label="Status">{completedStatus}</LabelMenuButton>
-								</MenuTrigger>
-								<MenuContent />
-							</Menu>
-							<Menu
-								options={["All time", "Today", "Past 7 days", "Past 30 days", "Past 90 days"].map((opt) => ({
-									label: opt,
-									onClick: () => { setCompletedDateRange(opt); setCompletedPage(0); },
-								}))}
-							>
-								<MenuTrigger asChild>
-									<LabelMenuButton label="Date range">{completedDateRange}</LabelMenuButton>
-								</MenuTrigger>
-								<MenuContent />
-							</Menu>
 						</Box>
 
 						<Box bg="bg.default" style={{ border: "1px solid var(--ax-colors-border-default)", borderRadius: 8, overflow: "hidden" }}>
 							{/* Sortable header */}
 							<Box display="flex" alignItems="center" style={{ padding: "10px 20px", borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
 								<Box
-									style={{ flex: 1, minWidth: 200, cursor: "pointer", userSelect: "none" as const }}
+									style={{ flex: 1, minWidth: 0, cursor: "pointer", userSelect: "none" as const }}
 									onClick={() => handleSort("task")}
 								>
 									<span style={TABLE_HEADER}>
-										Task
+										Job
 										<SortIcon col="task" />
 									</span>
 								</Box>
-								<Box
-									style={{ width: 200, cursor: "pointer", userSelect: "none" as const }}
-									onClick={() => handleSort("executionTime")}
-								>
-									<span style={TABLE_HEADER}>
-										Execution Time
-										<SortIcon col="executionTime" />
-									</span>
-								</Box>
-								<Box
-									style={{ width: 140, cursor: "pointer", userSelect: "none" as const }}
-									onClick={() => handleSort("trigger")}
-								>
-									<span style={TABLE_HEADER}>
-										Trigger
-										<SortIcon col="trigger" />
-									</span>
-								</Box>
-								<span style={{ ...TABLE_HEADER, width: 120 }}>Status</span>
-								<span style={{ ...TABLE_HEADER, width: 180 }}>Artifact</span>
+								{colOrder.filter(k => visibleCols.has(k)).map(renderHeaderCell)}
 							</Box>
 
 							{pagedCompleted.map((item) => (
@@ -506,30 +560,7 @@ export default function VATActivityPage() {
 										<Text fontSize="md" color="fg.default" style={{ fontWeight: 500 }}>{item.task}</Text>
 										<Text fontSize="sm" color="fg.secondary">{item.sub}</Text>
 									</Box>
-									<Text fontSize="sm" color="fg.secondary" style={{ width: 200 }}>{item.executionTime}</Text>
-									<Box style={{ width: 140 }}>
-										{item.trigger === "message"
-											? <Badge intent="information" variant="subtle">Message</Badge>
-											: <Badge variant="subtle">Scheduled</Badge>}
-									</Box>
-									<Box style={{ width: 120 }}>
-										<Badge intent="success" variant="subtle">Completed</Badge>
-									</Box>
-									<Box style={{ width: 180 }}>
-										<Box
-											asChild
-											display="inline-flex"
-											alignItems="center"
-											gap="4"
-											className="vat-artifact-link"
-											style={{ cursor: "pointer", color: "var(--ax-colors-fg-default)", fontSize: 14 }}
-										>
-											<span>
-												{item.artifactLabel}
-												<IconArrowUpRightFromSquare style={{ width: 12, height: 12, flexShrink: 0 }} />
-											</span>
-										</Box>
-									</Box>
+									{colOrder.filter(k => visibleCols.has(k)).map(key => renderRowCell(item, key))}
 								</Box>
 							))}
 						</Box>
@@ -561,10 +592,8 @@ export default function VATActivityPage() {
 								/>
 							</Box>
 						</Box>
-					</Box>
-				</TabsContent>
-
-			</Tabs>
+				</Box>
+			</Box>
 		</Box>
 	);
 }

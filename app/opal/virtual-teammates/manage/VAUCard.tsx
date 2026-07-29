@@ -2,8 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Badge, Box, Button, EllipsisMenuButton, Menu, MenuContent, MenuTrigger, Text } from "@optiaxiom/react";
-import { IconCircleExclamation, IconComments } from "@optiaxiom/icons";
+import {
+	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
+	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
+	Badge, Box, Button, EllipsisMenuButton, Menu, MenuContent, MenuTrigger, Text,
+} from "@optiaxiom/react";
+import { IconCircleExclamation, IconCirclePause, IconComments, IconUserCheck, IconTrashCan, IconUserSlash } from "@optiaxiom/icons";
 import Image from "next/image";
 import { type VAU } from "@/app/opal/data/vaus";
 
@@ -18,14 +22,15 @@ const CAPTION = {
 
 const NEEDS_REVIEW_IDS = new Set(["frank"]);
 
-const ELLIPSIS_OPTIONS = [
-	{ label: "Pause" },
-	{ label: "Delete", intent: "danger" as const },
+const ELLIPSIS_OPTIONS = (name: string) => [
+	{ label: `Sign in as ${name}`, addon: <IconUserCheck /> },
+	{ label: "Pause", addon: <IconCirclePause /> },
 ];
 
 export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => void }) {
 	const router = useRouter();
 	const [hovered, setHovered] = useState(false);
+	const [showDeactivate, setShowDeactivate] = useState(false);
 	const needsReview = NEEDS_REVIEW_IDS.has(vau.id);
 	const maxTags = 3;
 	const visibleTags = vau.tags.slice(0, maxTags);
@@ -43,11 +48,11 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 				flexDirection: "column",
 				gap: 12,
 				boxShadow: hovered
-					? "0 0 0 1.5px #A1AC8D, 0 2px 8px rgba(0,0,0,0.06)"
+					? "0 0 0 1.5px var(--ax-colors-border-control), 0 2px 8px rgba(0,0,0,0.06)"
 					: "none",
 				transition: "box-shadow 0.15s ease",
 			}}
-			onClick={() => router.push(`/opal/virtual-teammates/manage/${vau.id}`)}
+			onClick={() => router.push(`/opal/virtual-teammates/manage/${vau.id}/activity`)}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 		>
@@ -85,7 +90,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 								color: "var(--ax-colors-fg-default)",
 							}}
 						>
-							{vau.name}
+							{vau.characterName ?? vau.name}
 						</Text>
 						<Box style={{ flexShrink: 0 }}>
 							<Badge intent="success" variant="subtle">Active</Badge>
@@ -93,7 +98,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 					</Box>
 					{vau.characterName && (
 						<span style={{ ...CAPTION, color: "var(--ax-colors-fg-tertiary)", marginTop: 4 }}>
-							{vau.characterName}
+							{vau.name}
 						</span>
 					)}
 				</Box>
@@ -132,21 +137,9 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 				alignItems="center"
 				justifyContent="flex-end"
 				gap="8"
+				style={{ marginTop: "auto" }}
 				onClick={(e) => e.stopPropagation()}
 			>
-				{needsReview && (
-					<Button
-						appearance="danger"
-						size="md"
-						addonAfter={<IconCircleExclamation />}
-						onClick={(e) => {
-							e.stopPropagation();
-							router.push(`/opal/virtual-teammates/manage/${vau.id}`);
-						}}
-					>
-						Needs review
-					</Button>
-				)}
 				<Button
 					appearance="default"
 					size="md"
@@ -158,13 +151,42 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 				>
 					Chat
 				</Button>
-				<Menu options={ELLIPSIS_OPTIONS}>
+				<Menu options={[
+					{ label: `Sign in as ${vau.name}`, addon: <IconUserCheck /> },
+					{ label: "Pause", addon: <IconCirclePause /> },
+					{ label: "Deactivate", intent: "danger" as const, addon: <IconTrashCan />, execute: () => setShowDeactivate(true) },
+				]}>
 					<MenuTrigger asChild>
 						<EllipsisMenuButton appearance="subtle" size="md" aria-label="More options" />
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>
 			</Box>
+
+			<AlertDialog open={showDeactivate} onOpenChange={setShowDeactivate}>
+				<AlertDialogContent size="sm" style={{ width: 520, borderRadius: 24 }}>
+					<AlertDialogHeader>{"Are you sure you want to deactivate " + vau.name + "?"}</AlertDialogHeader>
+					<AlertDialogBody>
+						<Text fontSize="md" color="fg.default" style={{ lineHeight: "1.6" }}>
+							{"This can't be undone. Everything " + vau.name + " has learned — context, memory, conversation history, and all personal instructions — will be permanently deleted. All workflows will stop immediately."}
+						</Text>
+					</AlertDialogBody>
+					<AlertDialogFooter>
+						<AlertDialogCancel appearance="subtle" size="md" onClick={() => setShowDeactivate(false)}>
+							{"Keep " + vau.name + " active"}
+						</AlertDialogCancel>
+						<AlertDialogAction
+							appearance="primary"
+							size="md"
+							addonBefore={<IconUserSlash />}
+							style={{ background: "var(--ax-colors-bg-error-hovered)", border: "none", color: "var(--ax-colors-fg-white)" }}
+							onClick={() => setShowDeactivate(false)}
+						>
+							{"Deactivate " + vau.name}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</Box>
 	);
 }

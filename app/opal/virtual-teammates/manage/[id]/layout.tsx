@@ -1,8 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { Badge, Box, Button, Text } from "@optiaxiom/react";
-import { IconArrowLeft, IconArrowsRotate } from "@optiaxiom/icons";
+import {
+	AlertDialog, AlertDialogAction, AlertDialogBody, AlertDialogCancel,
+	AlertDialogContent, AlertDialogFooter, AlertDialogHeader,
+	Badge, Box, Button, Menu, MenuContent, MenuTrigger, Text,
+} from "@optiaxiom/react";
+import { IconArrowLeft, IconArrowsRotate, IconCircleXmark, IconComments, IconEllipsisSolid, IconPause, IconUserSlash } from "@optiaxiom/icons";
 import Image from "next/image";
 import { VAUS } from "@/app/opal/data/vaus";
 
@@ -76,6 +81,7 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 	const router = useRouter();
 	const id = params?.id as string;
 	const vau = VAUS.find((v) => v.id === id);
+	const [showDeactivate, setShowDeactivate] = useState(false);
 
 	const isActivity = pathname?.endsWith("/activity");
 	const isPermissions = pathname?.endsWith("/permissions");
@@ -146,12 +152,12 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 									width: 10,
 									height: 10,
 									borderRadius: "50%",
-									background: "#ABFF44",
+									background: "var(--ax-colors-bg-accent)",
 									border: "2px solid var(--ax-colors-bg-default)",
 								}}
 							/>
 						</Box>
-						<Box display="flex" flexDirection="column" gap="2">
+						<Box display="flex" flexDirection="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
 							<Text fontSize="md" color="fg.default" style={{ fontWeight: 600, lineHeight: "1.2" }}>
 								{vau.characterName ?? vau.name}
 							</Text>
@@ -159,6 +165,18 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 								{vau.name}
 							</Text>
 						</Box>
+						<Menu
+							options={[
+								{ label: "Chat", addon: <IconComments />, execute: () => router.push("/opal/messages?conversation=bubs") },
+								{ label: "Pause", addon: <IconPause /> },
+								{ label: "Deactivate", addon: <IconCircleXmark />, intent: "danger" as const, execute: () => setShowDeactivate(true) },
+							]}
+						>
+							<MenuTrigger asChild>
+								<Button appearance="subtle" size="sm" icon={<IconEllipsisSolid />} aria-label="Options" style={{ flexShrink: 0 }} />
+							</MenuTrigger>
+							<MenuContent />
+						</Menu>
 					</Box>
 				)}
 
@@ -167,15 +185,14 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 				{/* SUPERVISE */}
 				<SectionLabel>Supervise</SectionLabel>
 				<NavItem
-					label="Work"
-					active={isWork}
-					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}`)}
-					badge={<Badge intent="information">Needs review</Badge>}
-				/>
-				<NavItem
 					label="Activity"
 					active={isActivity}
 					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/activity`)}
+				/>
+				<NavItem
+					label="Work"
+					active={isWork}
+					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}`)}
 				/>
 
 				<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", margin: "6px 0" }} />
@@ -188,41 +205,56 @@ export default function VATDetailLayout({ children }: { children: React.ReactNod
 					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/identity`)}
 				/>
 				<NavItem
-					label="Permissions"
+					label="Tools"
 					active={isPermissions}
 					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/permissions`)}
 					badge={
 						<svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-							<circle cx="7" cy="7" r="7" fill="#8F4764" />
-							<rect x="6.25" y="3.5" width="1.5" height="5" rx="0.75" fill="white" />
-							<circle cx="7" cy="10.5" r="0.75" fill="white" />
+							<circle cx="7" cy="7" r="7" fill="var(--ax-colors-fg-error)" />
+							<rect x="6.25" y="3.5" width="1.5" height="5" rx="0.75" fill="var(--ax-colors-fg-white)" />
+							<circle cx="7" cy="10.5" r="0.75" fill="var(--ax-colors-fg-white)" />
 						</svg>
 					}
 				/>
 				<NavItem
-					label="Responsibilities"
+					label="Permissions"
 					active={isResponsibilities}
 					onClick={() => router.push(`/opal/virtual-teammates/manage/${id}/responsibilities`)}
 				/>
 
-				{/* Bottom: Sign in as */}
-				<Box style={{ flex: 1 }} />
-				<Box style={{ padding: "0 16px 24px" }}>
-					<Button
-						appearance="default"
-						size="md"
-						addonBefore={<IconArrowsRotate size={14} />}
-						style={{ width: "100%", justifyContent: "center" }}
-					>
-						Sign in as {vau?.characterName ?? vau?.name ?? "teammate"}
-					</Button>
-				</Box>
 			</Box>
 
 			{/* Main content */}
-			<Box style={{ flex: 1, overflowY: "auto", background: "#F9FCF8" }}>
+			<Box style={{ flex: 1, overflowY: "auto", background: "var(--ax-colors-bg-page)" }}>
 				{children}
 			</Box>
+
+			{vau && (
+				<AlertDialog open={showDeactivate} onOpenChange={setShowDeactivate}>
+					<AlertDialogContent size="sm" style={{ width: 520, borderRadius: 24 }}>
+						<AlertDialogHeader>{"Are you sure you want to deactivate " + vau.name + "?"}</AlertDialogHeader>
+						<AlertDialogBody>
+							<Text fontSize="md" color="fg.default" style={{ lineHeight: "1.6" }}>
+								{"This can't be undone. Everything " + vau.name + " has learned — context, memory, conversation history, and all personal instructions — will be permanently deleted. All workflows will stop immediately."}
+							</Text>
+						</AlertDialogBody>
+						<AlertDialogFooter>
+							<AlertDialogCancel appearance="subtle" size="md" onClick={() => setShowDeactivate(false)}>
+								{"Keep " + vau.name + " active"}
+							</AlertDialogCancel>
+							<AlertDialogAction
+								appearance="primary"
+								size="md"
+								addonBefore={<IconUserSlash />}
+								style={{ background: "var(--ax-colors-bg-error-hovered)", border: "none", color: "var(--ax-colors-fg-white)" }}
+								onClick={() => setShowDeactivate(false)}
+							>
+								{"Deactivate " + vau.name}
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
+			)}
 		</Box>
 	);
 }

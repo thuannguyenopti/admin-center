@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Box, Button, Text, Tooltip } from "@optiaxiom/react";
+import { IconUsers } from "@optiaxiom/icons";
 import Image from "next/image";
 import { type VAU } from "@/app/opal/data/vaus";
 import { TOOL_ICONS } from "./tool-icons";
@@ -23,7 +24,7 @@ const TOOL_CHIP: React.CSSProperties = {
   width: 24,
   height: 24,
   borderRadius: 8,
-  border: "1px solid #e4f0da",
+  border: "1px solid var(--ax-colors-border-secondary)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -33,7 +34,7 @@ const TOOL_CHIP: React.CSSProperties = {
 };
 
 const DIVIDER = (
-  <Box style={{ height: 1, background: "#e4f0da", width: "100%", flexShrink: 0, margin: "4px 0" }} />
+  <Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", width: "100%", flexShrink: 0, margin: "4px 0" }} />
 );
 
 function ToolChips({ tools }: { tools: string[] }) {
@@ -97,7 +98,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             inset: 0,
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
-            background: "white",
+            background: "var(--ax-colors-bg-default)",
             border: "1px solid #d8e4cb",
             borderRadius: 12,
             padding: 20,
@@ -107,15 +108,10 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             overflow: "hidden",
           }}
         >
-          {/* Optimizely logo top-right */}
-          <div style={{ position: "absolute", top: 16, right: 16 }}>
-            <Image src="/logo-green.svg" alt="Optimizely" width={28} height={28} unoptimized style={{ objectFit: "contain" }} />
-          </div>
-
           {/* Header: RESUME label + title + category badge */}
           <Box display="flex" flexDirection="column" gap="8" style={{ alignItems: "flex-start" }}>
             <span style={{ ...CAPTION }}>Resume</span>
-            <Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "#000" }}>
+            <Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 28, fontWeight: 800, lineHeight: "1.04", letterSpacing: "0.56px", color: "var(--ax-colors-fg-default)" }}>
               {vau.name}
             </Text>
             {vau.cardCategory && (
@@ -148,13 +144,16 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             )}
           </Box>
 
-          {/* SKILLS */}
+          {/* SKILLS — show up to 3 badges (fits 2 rows), overflow as +N */}
           <Box display="flex" flexDirection="column" gap="8">
             <span style={{ ...CAPTION }}>Skills</span>
-            <Box display="flex" style={{ flexWrap: "wrap", gap: 4, height: 44, overflow: "hidden", alignContent: "flex-start" }}>
-              {frontSkills.map((skill) => (
+            <Box display="flex" style={{ flexWrap: "wrap", gap: 4 }}>
+              {frontSkills.slice(0, 3).map((skill) => (
                 <Badge key={skill} variant="subtle">{skill}</Badge>
               ))}
+              {frontSkills.length > 3 && (
+                <Badge variant="subtle">+{frontSkills.length - 3}</Badge>
+              )}
             </Box>
           </Box>
 
@@ -173,6 +172,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             <Button
               appearance="primary"
               size="lg"
+              addonBefore={<Box style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-default-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><IconUsers style={{ color: "var(--ax-colors-fg-default-inverse)", width: 13, height: 13 }} /></Box>}
               style={{ width: "100%", justifyContent: "center" }}
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
@@ -181,6 +181,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             >
               Work together
             </Button>
+
           </Box>
         </div>
 
@@ -192,7 +193,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
-            background: "white",
+            background: "var(--ax-colors-bg-default)",
             border: "1px solid #d8e4cb",
             borderRadius: 12,
             padding: 20,
@@ -210,7 +211,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
                 height: 52,
                 minWidth: 52,
                 borderRadius: 8,
-                border: "1px solid #e4f0da",
+                border: "1px solid var(--ax-colors-border-secondary)",
                 overflow: "hidden",
                 background: vau.cardBg ?? vau.avatarBg,
                 flexShrink: 0,
@@ -219,74 +220,78 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
               <Image src={vau.cardImage ?? vau.avatar} alt={vau.name} width={52} height={52} unoptimized style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             </Box>
             <Box display="flex" flexDirection="column" gap="6" style={{ alignItems: "flex-start" }}>
-              <Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 22, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.44px", color: "#000" }}>
+              <Text style={{ fontFamily: "var(--ax-font-family-headings, 'VC Nudge', sans-serif)", fontSize: 22, fontWeight: 800, lineHeight: "1.1", letterSpacing: "0.44px", color: "var(--ax-colors-fg-default)" }}>
                 {vau.name}
               </Text>
               {vau.cardCategory && <Badge intent="information" variant="subtle">{vau.cardCategory}</Badge>}
             </Box>
           </Box>
 
-          {DIVIDER}
+          {/* Middle content */}
+          <div style={{ flex: 1, overflowY: "hidden", display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
+            {DIVIDER}
 
-          {/* WHY HIRE ME */}
-          {vau.whyHireMe && (
+            {/* WHY HIRE ME */}
+            {vau.whyHireMe && (
+              <Box display="flex" flexDirection="column" gap="4">
+                <span style={{ ...CAPTION }}>Why hire me</span>
+                <Text fontSize="md" color="fg.default" style={{ lineHeight: "1.4" }}>{vau.whyHireMe}</Text>
+              </Box>
+            )}
+
+            {DIVIDER}
+
+            {/* EXPERIENCE */}
+            {vau.experience && vau.experience.length > 0 && (
+              <Box display="flex" flexDirection="column" gap="4">
+                <span style={{ ...CAPTION }}>Experience</span>
+                <ul style={{ margin: 0, paddingLeft: 18, listStyleType: "disc" }}>
+                  {vau.experience.map((item) => (
+                    <li key={item} style={{ fontSize: 13, lineHeight: "1.4", color: "var(--ax-colors-fg-default)", marginBottom: 2, display: "list-item" }}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </Box>
+            )}
+
+            {DIVIDER}
+
+            {/* WORKS WITH YOUR TOOLS */}
             <Box display="flex" flexDirection="column" gap="4">
-              <span style={{ ...CAPTION }}>Why hire me</span>
-              <Text fontSize="md" color="fg.default" style={{ lineHeight: "1.4" }}>{vau.whyHireMe}</Text>
+              <span style={{ ...CAPTION }}>Works with your tools</span>
+              <ToolChips tools={vau.tools} />
             </Box>
-          )}
 
-          {DIVIDER}
+            {DIVIDER}
 
-          {/* EXPERIENCE */}
-          {vau.experience && vau.experience.length > 0 && (
+            {/* PASSIONS */}
+            {vau.passions && (
+              <Box display="flex" flexDirection="column" gap="4">
+                <span style={{ ...CAPTION }}>Passions</span>
+                <Text fontSize="md" color="fg.default" style={{ lineHeight: "1.4" }}>{vau.passions}</Text>
+              </Box>
+            )}
+
+            {DIVIDER}
+
+            {/* SKILLS */}
             <Box display="flex" flexDirection="column" gap="4">
-              <span style={{ ...CAPTION }}>Experience</span>
-              <ul style={{ margin: 0, paddingLeft: 18, listStyleType: "disc" }}>
-                {vau.experience.map((item) => (
-                  <li key={item} style={{ fontSize: 13, lineHeight: "1.4", color: "var(--ax-colors-fg-default)", marginBottom: 2, display: "list-item" }}>
-                    {item}
-                  </li>
+              <span style={{ ...CAPTION }}>Skills</span>
+              <Box display="flex" style={{ flexWrap: "wrap", gap: 4 }}>
+                {frontSkills.map((skill) => (
+                  <Badge key={skill} variant="subtle">{skill}</Badge>
                 ))}
-              </ul>
+              </Box>
             </Box>
-          )}
-
-          {DIVIDER}
-
-          {/* WORKS WITH YOUR TOOLS */}
-          <Box display="flex" flexDirection="column" gap="4">
-            <span style={{ ...CAPTION }}>Works with your tools</span>
-            <ToolChips tools={vau.tools} />
-          </Box>
-
-          {DIVIDER}
-
-          {/* PASSIONS */}
-          {vau.passions && (
-            <Box display="flex" flexDirection="column" gap="4">
-              <span style={{ ...CAPTION }}>Passions</span>
-              <Text fontSize="md" color="fg.default" style={{ lineHeight: "1.4" }}>{vau.passions}</Text>
-            </Box>
-          )}
-
-          {DIVIDER}
-
-          {/* SKILLS */}
-          <Box display="flex" flexDirection="column" gap="4">
-            <span style={{ ...CAPTION }}>Skills</span>
-            <Box display="flex" style={{ flexWrap: "wrap", gap: 4 }}>
-              {frontSkills.map((skill) => (
-                <Badge key={skill} variant="subtle">{skill}</Badge>
-              ))}
-            </Box>
-          </Box>
+          </div>
 
           {/* Hire + Details buttons */}
-          <Box display="flex" gap="8" style={{ paddingTop: 8, marginTop: "auto" }}>
+          <Box display="flex" gap="8" style={{ paddingTop: 8 }}>
             <Button
               appearance="primary"
               size="md"
+              addonBefore={<Box style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-default-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><IconUsers style={{ color: "var(--ax-colors-fg-default-inverse)", width: 13, height: 13 }} /></Box>}
               style={{ flex: 1, justifyContent: "center" }}
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
@@ -295,6 +300,7 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
             >
               Work together
             </Button>
+
             <Button
               appearance="default"
               size="md"

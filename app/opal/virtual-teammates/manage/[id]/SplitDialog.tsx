@@ -99,8 +99,8 @@ export function SplitDialog({
 								size="lg"
 								style={{ width: "100%", justifyContent: "center" }}
 								addonBefore={
-									<Box style={{ width: 22, height: 22, borderRadius: 5, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-										<IconArrowRightArrowLeft style={{ color: "#fff", fontSize: 13, width: 13, height: 13 }} />
+									<Box style={{ width: 22, height: 22, borderRadius: 5, background: "var(--ax-colors-bg-default-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+										<IconArrowRightArrowLeft style={{ color: "var(--ax-colors-fg-white)", fontSize: 13, width: 13, height: 13 }} />
 									</Box>
 								}
 							>
@@ -119,7 +119,7 @@ export function SplitDialog({
 				<Box
 					style={{
 						flex: "0 0 50%",
-						background: "#BBFF00",
+						background: "var(--ax-colors-bg-accent)",
 						position: "relative",
 						minHeight: 420,
 						overflow: "hidden",

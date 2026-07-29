@@ -41,15 +41,13 @@ const OpalLanding = dynamic(
 
 // ── Activity stream scripts ───────────────────────────────────────────────────
 
-const MOCK_RESEARCH_RESPONSE = `Virtual teammates and AI agents for marketing are specialized AI systems designed to work alongside human marketing teams. They can autonomously handle research, content creation, campaign optimization, and data analysis — functioning as always-on collaborators rather than simple tools.
+const MOCK_RESEARCH_RESPONSE = `Great picks — ODP for C-Suite, covering conversion + post-launch, via blog/SEO. Let me put together a set of content angles that hit those marks.
 
-**Key capabilities:**
-- Research and competitive intelligence at scale
-- Content drafting, personalization, and brand alignment
-- Campaign performance analysis and optimization recommendations
-- Cross-channel workflow coordination
+Here's your ODP content angles doc — 8 angles split across **Conversion** and **Post-Launch Retention**, each with a punchy hook, SEO targets, and format recommendations, plus a suggested 8-week content calendar.
 
-Optimizely's approach positions Opal agents as specialized teammates with defined roles, skills, and memory — rather than generic chatbots.`;
+You can view and edit it here: [ODP Product Launch — Content Angles](/opal/artifacts)
+
+Want me to draft any of these angles into a full blog post, or adjust the calendar timing? 🎯`;
 
 const MOCK_IMAGE_RESPONSE = `Here's your illustration! I generated a simple, flat-style image of a unicorn riding a dinosaur — bright colors, minimal details, ready to use in your campaign assets.
 
@@ -219,7 +217,16 @@ export default function OpalPage() {
   });
 
   const [editorOpen, setEditorOpen] = useState(false);
+  /** When true, canvas was opened from the research streaming flow — suppress IM thread sidebar */
+  const [editorFromStream, setEditorFromStream] = useState(false);
   const activityCallbacksRef = useRef<Map<string, () => void>>(new Map());
+
+  // Open artifact preview when CanvasOutputCard is clicked (research streaming flow)
+  useEffect(() => {
+    const handler = () => { setEditorVersion('v2'); setEditorFromStream(true); setEditorOpen(true); };
+    window.addEventListener("opal-open-canvas", handler);
+    return () => window.removeEventListener("opal-open-canvas", handler);
+  }, []);
 
   // Hint banner visibility — controlled by DemoResetButton toggle
   const [showHintBanner, setShowHintBanner] = useState(() => {
@@ -350,6 +357,7 @@ export default function OpalPage() {
       const qs = params.toString();
       window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
     } else if (editorWasOpen.current) {
+      setEditorFromStream(false);
       // Closing canvas → navigate to artifacts page
       window.location.href = '/opal/artifacts';
     }
@@ -446,8 +454,9 @@ export default function OpalPage() {
     } as any);
 
     // Store callback — response only shown after ActivityStreamBlock calls onComplete
+    const showCanvas = !isImageRequest && !isAskQuestions;
     activityCallbacksRef.current.set(loadingMsg.id, () => {
-      updateMessage(loadingMsg.id, { isLoading: false, content: mockResponse } as any);
+      updateMessage(loadingMsg.id, { isLoading: false, content: mockResponse, showCanvasCard: showCanvas } as any);
     });
   }, [addMessage, updateMessage]);
 
@@ -586,11 +595,11 @@ export default function OpalPage() {
           variant="home"
           streamingMode="expanded"
           headerTitle={undefined}
-          imThreadName={(editorOpen || headlessTaskOpen) ? "Frank" : undefined}
-          imIsVAU={(editorOpen || headlessTaskOpen) || undefined}
-          imTemplateName={(editorOpen || headlessTaskOpen) ? "GEO Content Strategist" : undefined}
-          imThreadAvatar={(editorOpen || headlessTaskOpen) ? "/avatars/vau-frank.png" : undefined}
-          imSimplified={editorOpen || headlessTaskOpen}
+          imThreadName={(!editorFromStream && (editorOpen || headlessTaskOpen)) ? "Frank" : undefined}
+          imIsVAU={(!editorFromStream && (editorOpen || headlessTaskOpen)) || undefined}
+          imTemplateName={(!editorFromStream && (editorOpen || headlessTaskOpen)) ? "GEO Content Strategist" : undefined}
+          imThreadAvatar={(!editorFromStream && (editorOpen || headlessTaskOpen)) ? "/avatars/vau-frank.png" : undefined}
+          imSimplified={!editorFromStream && (editorOpen || headlessTaskOpen)}
           onImThreadNameClick={landingPageReady ? () => { try { sessionStorage.setItem('im-initial-chat', 'conv-demo-geo-qa'); } catch {} window.location.href = '/opal/im'; } : undefined}
           messages={messages}
           inputValue={inputValue}

@@ -391,8 +391,8 @@ export default function VATSettingsPage() {
 						appearance="default"
 						size="lg"
 						addonBefore={
-							<Box style={{ width: 20, height: 20, borderRadius: 4, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-								<IconArrowRightArrowLeft style={{ color: "#fff", width: 12, height: 12 }} />
+							<Box style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-default-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+								<IconArrowRightArrowLeft style={{ color: "var(--ax-colors-fg-white)", width: 12, height: 12 }} />
 							</Box>
 						}
 					>
@@ -406,7 +406,7 @@ export default function VATSettingsPage() {
 					<Text fontSize="sm" color="fg.tertiary">/1000</Text>
 				</Box>
 				<Box style={{ height: 6, borderRadius: 3, background: "var(--ax-colors-bg-secondary)", overflow: "hidden" }}>
-					<Box style={{ width: "34%", height: "100%", background: "#7EC06B", borderRadius: 3 }} />
+					<Box style={{ width: "34%", height: "100%", background: "var(--ax-colors-fg-success)", borderRadius: 3 }} />
 				</Box>
 			</Box>
 
@@ -527,7 +527,7 @@ export default function VATSettingsPage() {
 			{/* Danger zone */}
 			<Box
 				style={{
-					background: "#FDF2F4",
+					background: "var(--ax-colors-bg-error-subtlest)",
 					border: "1px solid #F5C6CB",
 					borderRadius: 8,
 					padding: "20px 24px",
@@ -537,15 +537,15 @@ export default function VATSettingsPage() {
 				}}
 			>
 				<Box>
-					<Text style={{ ...SECTION_HEADING, color: "#8B1A2A" }} mb="4">Deactivate {name}</Text>
-					<Text fontSize="sm" style={{ color: "#8B1A2A", opacity: 0.8 }}>
+					<Text style={{ ...SECTION_HEADING, color: "var(--ax-colors-fg-error)" }} mb="4">Deactivate {name}</Text>
+					<Text fontSize="sm" style={{ color: "var(--ax-colors-fg-error)", opacity: 0.8 }}>
 						This action is permanent. All context and history will be deleted.
 					</Text>
 				</Box>
 				<Button
 					addonBefore={<IconToggleOff />}
 					onClick={() => setShowDeactivateDialog(true)}
-					style={{ background: "#A0284A", color: "#fff", border: "none", flexShrink: 0, marginLeft: 16 }}
+					style={{ background: "var(--ax-colors-bg-error)", color: "var(--ax-colors-fg-white)", border: "none", flexShrink: 0, marginLeft: 16 }}
 				>
 					Deactivate
 				</Button>
@@ -567,7 +567,7 @@ export default function VATSettingsPage() {
 						<Button
 							addonBefore={<IconToggleOff />}
 							onClick={() => setShowDeactivateDialog(false)}
-							style={{ background: "#A0284A", color: "#fff", border: "none" }}
+							style={{ background: "var(--ax-colors-bg-error)", color: "var(--ax-colors-fg-white)", border: "none" }}
 						>
 							Deactivate {name}
 						</Button>

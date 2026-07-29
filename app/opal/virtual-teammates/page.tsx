@@ -27,9 +27,8 @@ import { VAUCard } from "./VAUCard";
 const BROWSE_ITEMS = [
   { label: "Virtual Teammates", count: VAUS.filter((v) => !v.isCandidate).length },
   { label: "Agents",            count: 48 },
-  { label: "Plugins",           count: 12 },
-  { label: "Skills",            count: 30 },
   { label: "Connectors",        count: 28 },
+  { label: "Skills",            count: 30 },
 ];
 
 function NavRow({
@@ -200,7 +199,7 @@ export default function VirtualTeammatesPage() {
       <Box
         display="flex"
         flexDirection="column"
-        style={{ flex: 1, minHeight: 0, overflowY: "auto", background: "#F9FCF8" }}
+        style={{ flex: 1, minHeight: 0, overflowY: "auto", background: "var(--ax-colors-bg-page)" }}
       >
         <Box display="flex" flexDirection="column" style={{ padding: "16px 40px" }}>
         <Heading level="1" mb="4">Directory</Heading>

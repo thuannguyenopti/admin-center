@@ -38,11 +38,11 @@ const DEFAULT_INTERACTIONS: Interaction[] = [
 function AddInteractionIcon() {
 	return (
 		<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-			<rect width="16" height="16" rx="3.5" fill="#202320" />
-			<rect x="3.5" y="3.5" width="3.5" height="3.5" rx="0.75" fill="#ABFF44" />
-			<rect x="9" y="3.5" width="3.5" height="3.5" rx="0.75" fill="#ABFF44" />
-			<rect x="3.5" y="9" width="3.5" height="3.5" rx="0.75" fill="#ABFF44" />
-			<rect x="9" y="9" width="3.5" height="3.5" rx="0.75" fill="#ABFF44" />
+			<rect width="16" height="16" rx="3.5" fill="var(--ax-colors-fg-default)" />
+			<rect x="3.5" y="3.5" width="3.5" height="3.5" rx="0.75" fill="var(--ax-colors-bg-accent)" />
+			<rect x="9" y="3.5" width="3.5" height="3.5" rx="0.75" fill="var(--ax-colors-bg-accent)" />
+			<rect x="3.5" y="9" width="3.5" height="3.5" rx="0.75" fill="var(--ax-colors-bg-accent)" />
+			<rect x="9" y="9" width="3.5" height="3.5" rx="0.75" fill="var(--ax-colors-bg-accent)" />
 		</svg>
 	);
 }

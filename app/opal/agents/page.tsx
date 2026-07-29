@@ -19,7 +19,7 @@ import {Table, Tr, Td} from "@/app/components/Table";
 import {DataTableHeaderCell} from "@optiaxiom/react/unstable";
 import {useReactTable, getCoreRowModel, type ColumnDef} from "@tanstack/react-table";
 import {
-	IconUserRobot as IconAgent,
+	IconDiagramSubtask,
 	IconCodeBranch,
 	IconUpload,
 	IconSearch,
@@ -62,7 +62,7 @@ function MultiTurnIcon({size = 14}: {size?: number}) {
 const STATIC_AGENTS = [
 	{
 		id: "email-campaign",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "✍️",
 		name: "Write an email campaign",
 		handle: "@email_gen_agent",
@@ -82,7 +82,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "optimize-geo",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "🌐",
 		name: "Optimize my GEO",
 		handle: "@opal_GEO",
@@ -100,7 +100,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "analyze-competitors",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "📊",
 		name: "Analyze my competitors",
 		handle: "@competitors_are_dust",
@@ -118,7 +118,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "ab-experiment",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "⚗️",
 		name: "Set up an A/B experiment",
 		handle: "@ab_test_plan",
@@ -138,7 +138,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "content-calendar",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "📅",
 		name: "Build a content calendar",
 		handle: "@content_cal",
@@ -156,7 +156,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "ad-variations",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "🎨",
 		name: "Generate ad variations",
 		handle: "@ad_variants",
@@ -173,7 +173,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "seo-audit",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "🔎",
 		name: "Audit my SEO performance",
 		handle: "@seo_audit",
@@ -192,7 +192,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "social-media-strategy",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "📱",
 		name: "Create social media strategy",
 		handle: "@social_strategy",
@@ -209,7 +209,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "content-localizer",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "🌍",
 		name: "Content Localizer",
 		handle: "@content_localizer",
@@ -226,7 +226,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "heatmap-analysis",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "🔥",
 		name: "Heatmap Analysis",
 		handle: "@heatmap_analysis",
@@ -243,7 +243,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "experiment-planning",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "🧪",
 		name: "Experiment Planning Agent",
 		handle: "@test_planning",
@@ -261,7 +261,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "geo-recommendations",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "📡",
 		name: "GEO Recommendations",
 		handle: "@opti_geo_recommendati...",
@@ -279,7 +279,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "resource-manager",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "👥",
 		name: "Resource Manager",
 		handle: "@rm",
@@ -296,7 +296,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "seo-keyword-research",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "🔑",
 		name: "SEO Keyword Research",
 		handle: "@seo_keyword_resaerch",
@@ -330,7 +330,7 @@ const STATIC_AGENTS = [
 	},
 	{
 		id: "meeting-synthesizer",
-		icon: <IconAgent />,
+		icon: <IconDiagramSubtask />,
 		emoji: "📝",
 		name: "Meeting Synthesizer",
 		handle: "@meeting_synthesizer",
@@ -405,7 +405,7 @@ export default function AgentsPage() {
 				setUserAgents(
 					parsed.map((a: Record<string, unknown>) => ({
 						...a,
-						icon: <IconAgent />,
+						icon: <IconDiagramSubtask />,
 						tag: "Draft",
 					}))
 				);
@@ -742,7 +742,7 @@ export default function AgentsPage() {
 								label: "Build with Opal",
 								description:
 									"Start with Opal in chat, use action cards to shape the brief, and then refine the draft.",
-								addon: <IconAgent />,
+								addon: <IconDiagramSubtask />,
 								group: {label: "build", hidden: true, separator: true},
 								execute: () => {
 									setAddAgentOpen(false);
@@ -1047,7 +1047,7 @@ export default function AgentsPage() {
 											}}
 										>
 											<Box
-												rounded="lg"
+												rounded="md"
 												style={{
 													width: 28,
 													height: 28,
