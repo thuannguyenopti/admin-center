@@ -160,11 +160,11 @@ export function CampaignWorkshopCanvas({
 	};
 
 	const toggleWorkflowCheck = (id: string) => {
-		setWorkflowChecks((current) => {
-			const next = { ...current, [id]: !current[id] };
-			setWorkflowComplete(WORKFLOW_CHECK_IDS.every((checkId) => Boolean(next[checkId])));
-			return next;
-		});
+		// Checking off every review item only finishes the Design Review step
+		// (WorkflowDrawer's assetsStepDone already derives that from `checks`).
+		// It must never flip workflowComplete itself — that's Pei Chen's own
+		// Final Approval action via the "Mark Complete" button.
+		setWorkflowChecks((current) => ({ ...current, [id]: !current[id] }));
 	};
 
 	const completeWorkflow = () => {
