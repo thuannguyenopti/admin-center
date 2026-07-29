@@ -62,16 +62,16 @@ export const PRESENCE_COLOR: Record<PresenceStatus, string> = {
 
 export const DMS: DMItem[] = [
   { id: "js",   name: "Jane Smith",           avatar: "https://i.pravatar.cc/150?img=47", status: "active", unread: 2 },
+  { id: "bubs", name: "Bubs",                  avatar: "/vau-bubs.svg",                    status: "active", isVAU: true, needsAction: "approval" },
+  { id: "kara", name: "Kara",                  avatar: "/vau-kara.svg",                    status: "active", isVAU: true, needsAction: "question" },
   { id: "lg",   name: "Lisa Gray",             avatar: "https://i.pravatar.cc/150?img=9",  status: "active" },
+  { id: "eric", name: "Eric",                  avatar: "/vau-eric.svg",                    status: "active", isVAU: true, needsAction: "review"   },
   { id: "hw",   name: "Harry Winston-Brown",   avatar: "https://i.pravatar.cc/150?img=52", status: "busy"   },
   { id: "bw",   name: "Brendan Wilmington",    avatar: "https://i.pravatar.cc/150?img=57", status: "away"   },
   { id: "ms",   name: "Marcus Santos",         avatar: "https://i.pravatar.cc/150?img=68", status: "active" },
   { id: "pr",   name: "Priya Rajan",           avatar: "https://i.pravatar.cc/150?img=44", status: "away",  unread: 3 },
   { id: "td",   name: "Tom Decker",            avatar: "https://i.pravatar.cc/150?img=53", status: "busy"   },
   { id: "ao",   name: "Amara Osei",            avatar: "https://i.pravatar.cc/150?img=38", status: "active" },
-  { id: "bubs", name: "Bubs",                  avatar: "/vau-bubs.svg",                    status: "active", isVAU: true, needsAction: "approval" },
-  { id: "kara", name: "Kara",                  avatar: "/vau-kara.svg",                    status: "active", isVAU: true, needsAction: "question" },
-  { id: "eric", name: "Eric",                  avatar: "/vau-eric.svg",                    status: "active", isVAU: true, needsAction: "review"   },
 ];
 
 export const GROUPS: GroupItem[] = [
