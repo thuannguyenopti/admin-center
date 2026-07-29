@@ -43,6 +43,41 @@ export type GroupPanelData = {
 type PanelTab = "Credit usage" | "Members" | "Group details";
 const TABS: PanelTab[] = ["Credit usage", "Members", "Group details"];
 
+// ── Constants & types ─────────────────────────────────────────────────────────
+
+const ORG_CREDITS = 12000;
+type AllocMode = "credits" | "percentage";
+type BehaviorMode = "notify" | "org-credits" | "stop";
+
+type HistoryEntry = {
+  type: "increase" | "decrease" | "created";
+  label: string;
+  user: string;
+  date: string;
+  credits: number;
+  delta: number | null;
+};
+
+const INITIAL_HISTORY: HistoryEntry[] = [
+  { type: "increase", label: "Allocation increased", user: "olivia.bennett@optimizely.com", date: "Jul 25, 2026, 10:32 AM", credits: 15000, delta: 3000 },
+  { type: "created",  label: "Group created",        user: "olivia.bennett@optimizely.com", date: "Jul 20, 2026, 2:15 PM",  credits: 12000, delta: null  },
+];
+
+function RadioOption({ selected, onSelect, label, description }: {
+  selected: boolean; onSelect: () => void; label: string; description?: string;
+}) {
+  return (
+    <Box display="flex" alignItems="start" gap="12" cursor="pointer" onClick={onSelect}>
+      <Box style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, marginTop: 2, transition: "border 150ms ease",
+        border: selected ? "6px solid var(--ax-colors-fg-accent-strong)" : "2px solid var(--ax-colors-border-default)" }} />
+      <Box>
+        <Text fontWeight={selected ? "600" : "400"} color="fg.default">{label}</Text>
+        {description && <Text fontSize="sm" color="fg.tertiary">{description}</Text>}
+      </Box>
+    </Box>
+  );
+}
+
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
 const MEMBERS_INITIAL: GroupMember[] = [
@@ -55,138 +90,214 @@ const MEMBERS_INITIAL: GroupMember[] = [
   { email: "sofia.harris@optimizely.com",   first: "Sofia",  last: "Harris",  sourceGroupId: null },
 ];
 
-const ALLOCATION_HISTORY = [
-  {
-    type: "increase" as const,
-    label: "Allocation increased",
-    user: "olivia.bennett@optimizely.com",
-    date: "Jul 25, 2026, 10:32 AM",
-    credits: 15000,
-    delta: 3000,
-  },
-  {
-    type: "created" as const,
-    label: "Group created",
-    user: "olivia.bennett@optimizely.com",
-    date: "Jul 20, 2026, 2:15 PM",
-    credits: 12000,
-    delta: null,
-  },
-];
-
 // ── Credit usage tab ──────────────────────────────────────────────────────────
 
-function CreditUsageTab({ group }: { group: GroupPanelData }) {
-  const pct = Math.min(100, Math.round((group.consumed / group.assigned) * 100));
+function CreditUsageTab({
+  group,
+  allocated,
+  history,
+  onAllocationSave,
+}: {
+  group: GroupPanelData;
+  allocated: number;
+  history: HistoryEntry[];
+  onAllocationSave: (newCredits: number, behavior: BehaviorMode) => void;
+}) {
+  const [editMode, setEditMode] = useState(false);
+  const [allocMode, setAllocMode] = useState<AllocMode>("credits");
+  const [credits, setCredits] = useState(allocated);
+  const [percentage, setPercentage] = useState(Math.round((allocated / ORG_CREDITS) * 100));
+  const [behavior, setBehavior] = useState<BehaviorMode>("notify");
+
+  const derivedCredits = allocMode === "credits" ? credits : Math.round((ORG_CREDITS * percentage) / 100);
+  const barPct = Math.min(100, Math.round((derivedCredits / ORG_CREDITS) * 100));
+
+  const handleApply = () => {
+    onAllocationSave(derivedCredits, behavior);
+    setEditMode(false);
+  };
+
+  const handleCancelEdit = () => {
+    setCredits(allocated);
+    setPercentage(Math.round((allocated / ORG_CREDITS) * 100));
+    setEditMode(false);
+  };
+
+  if (editMode) {
+    return (
+      <Box display="flex" flexDirection="column" gap="24">
+        {/* Org availability bar */}
+        <Box>
+          <Text fontWeight="600" mb="12">
+            Organization credit availability: {ORG_CREDITS.toLocaleString()} credits
+          </Text>
+          <Box rounded="md" overflow="hidden" display="flex" style={{ height: 40 }}>
+            <Box
+              style={{
+                width: `${barPct}%`,
+                minWidth: derivedCredits > 0 ? 90 : 0,
+                background: "var(--ax-colors-fg-accent-strong)",
+                display: "flex", alignItems: "center", paddingLeft: 12,
+                transition: "width 200ms ease", whiteSpace: "nowrap", overflow: "hidden", flexShrink: 0,
+              }}
+            >
+              <Text fontSize="sm" fontWeight="600" style={{ color: "var(--ax-colors-bg-default)" }}>
+                This group  {derivedCredits.toLocaleString()}
+              </Text>
+            </Box>
+            <Box
+              style={{
+                flex: 1, background: "var(--ax-colors-bg-accent)",
+                display: "flex", alignItems: "center", justifyContent: "flex-end",
+                paddingRight: 12, overflow: "hidden",
+              }}
+            >
+              <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>
+                Unallocated: {Math.max(0, ORG_CREDITS - derivedCredits).toLocaleString()} credits
+              </Text>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Allocation mode */}
+        <Box>
+          <Heading level="4" mb="4">Set this group&apos;s allocation</Heading>
+          <Text fontSize="sm" color="fg.secondary" mb="16">Choose how you want to set the credit limit.</Text>
+          <Box display="flex" flexDirection="column" gap="16">
+            <Box>
+              <RadioOption selected={allocMode === "credits"} onSelect={() => setAllocMode("credits")} label="Credits" />
+              {allocMode === "credits" && (
+                <Box mt="8" ml="32">
+                  <Input
+                    value={String(credits)}
+                    onChange={(e) => { const v = parseInt(e.target.value.replace(/\D/g, ""), 10); setCredits(isNaN(v) ? 0 : v); }}
+                    style={{ width: 160 }}
+                  />
+                </Box>
+              )}
+            </Box>
+            <Box>
+              <RadioOption selected={allocMode === "percentage"} onSelect={() => setAllocMode("percentage")} label="Percentage (%) of available organization credits" />
+              {allocMode === "percentage" && (
+                <Box mt="8" ml="32" display="flex" flexDirection="column" gap="8">
+                  <Box display="flex" alignItems="center" gap="8">
+                    <Input
+                      value={String(percentage)}
+                      onChange={(e) => { const v = parseInt(e.target.value.replace(/\D/g, ""), 10); setPercentage(isNaN(v) ? 0 : Math.min(100, v)); }}
+                      style={{ width: 80 }}
+                    />
+                    <Text>%</Text>
+                    <Text color="fg.tertiary">→</Text>
+                    <Text fontWeight="700">{Math.round((ORG_CREDITS * percentage) / 100).toLocaleString()} credits</Text>
+                  </Box>
+                  <input
+                    type="range" min={0} max={100} value={percentage}
+                    onChange={(e) => setPercentage(Number(e.target.value))}
+                    style={{ width: "100%", accentColor: "var(--ax-colors-fg-accent-strong)", height: 6 }}
+                  />
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Allocation behavior */}
+        {/* <Box>
+          <Heading level="4" mb="4">Allocation behavior</Heading>
+          <Text fontSize="sm" color="fg.secondary" mb="16">When this group reaches its allocation</Text>
+          <Box display="flex" flexDirection="column" gap="16">
+            <RadioOption selected={behavior === "notify"} onSelect={() => setBehavior("notify")} label="Notify only" description="Usage continues and admins are notified." />
+            <RadioOption selected={behavior === "org-credits"} onSelect={() => setBehavior("org-credits")} label="Use organization credits" description="Usage can continue if unallocated credits are available." />
+            <RadioOption selected={behavior === "stop"} onSelect={() => setBehavior("stop")} label="Stop new usage" description="New eligible actions are blocked." />
+          </Box>
+        </Box> */}
+
+        <Box display="flex" justifyContent="end" gap="12">
+          <Button appearance="subtle" onClick={handleCancelEdit}>Cancel</Button>
+          <Button appearance="primary" onClick={handleApply}>Save changes</Button>
+        </Box>
+      </Box>
+    );
+  }
+
+  // ── Normal view ───────────────────────────────────────────────────────────────
+  const pct = Math.min(100, Math.round((group.consumed / allocated) * 100));
   const barColor =
-    pct >= 90
-      ? "var(--ax-colors-fg-error)"
-      : pct >= 75
-        ? "var(--ax-colors-fg-warning)"
-        : "var(--ax-colors-fg-accent-strong)";
+    pct >= 90 ? "var(--ax-colors-fg-error)"
+    : pct >= 75 ? "var(--ax-colors-fg-warning)"
+    : "var(--ax-colors-fg-accent-strong)";
 
   return (
     <Box>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
         <Heading level="4">Credit usage summary</Heading>
-        <Button appearance="default" size="sm" icon={<IconPenToSquare size={14} />}>
+        <Button appearance="default" size="sm" icon={<IconPenToSquare size={14} />} onClick={() => setEditMode(true)}>
           Edit allocation
         </Button>
       </Box>
 
       <Box p="20" rounded="md" border="1" borderColor="border.tertiary" bg="bg.default" mb="32">
         <Box display="flex" gap="10" mb="10" style={{ alignItems: "baseline" }}>
-          <Text
-            style={{
-              fontSize: 32,
-              fontWeight: 700,
-              lineHeight: 1,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
+          <Text style={{ fontSize: 32, fontWeight: 700, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
             {pct}%
           </Text>
           <Text fontSize="sm" color="fg.secondary">
-            {group.consumed.toLocaleString()} of {group.assigned.toLocaleString()} credits used
+            {group.consumed.toLocaleString()} of {allocated.toLocaleString()} credits used
           </Text>
         </Box>
         <Box rounded="full" bg="bg.tertiary" mb="10" style={{ height: 8, overflow: "hidden" }}>
-          <Box
-            style={{
-              height: "100%",
-              width: `${pct}%`,
-              background: barColor,
-              transition: "width 200ms ease",
-            }}
-          />
+          <Box style={{ height: "100%", width: `${pct}%`, background: barColor, transition: "width 200ms ease" }} />
         </Box>
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Badge intent="success" variant="subtle">
-            ON TRACK
-          </Badge>
-          <Text fontSize="sm" color="fg.tertiary">
-            Resets August 1, 2026
-          </Text>
+          <Badge intent="success" variant="subtle">ON TRACK</Badge>
+          <Text fontSize="sm" color="fg.tertiary">Resets August 1, 2026</Text>
         </Box>
       </Box>
+ {/* Allocation behavior */}
+         <Box>
+          <Heading level="4" mb="4">Allocation behavior</Heading>
+          <Text fontSize="sm" color="fg.secondary" mb="16">When this group reaches its allocation</Text>
+          <Box display="flex" flexDirection="column" gap="16">
+            <RadioOption selected={behavior === "notify"} onSelect={() => setBehavior("notify")} label="Notify only" description="Usage continues and admins are notified." />
+            <RadioOption selected={behavior === "org-credits"} onSelect={() => setBehavior("org-credits")} label="Use organization credits" description="Usage can continue if unallocated credits are available." />
+            <RadioOption selected={behavior === "stop"} onSelect={() => setBehavior("stop")} label="Stop new usage" description="New eligible actions are blocked." />
+          </Box>
+        </Box> 
 
-      <Heading level="4" mb="16">
-        Allocation history
-      </Heading>
+{/* Allocation history */}
+      <Heading level="4" mb="16">Allocation history</Heading>
       <Box display="flex" flexDirection="column">
-        {ALLOCATION_HISTORY.map((ev, i) => (
-          <Box
-            key={i}
-            display="flex"
-            alignItems="start"
-            justifyContent="space-between"
-            pb="20"
-          >
+        {history.map((ev, i) => (
+          <Box key={i} display="flex" alignItems="start" justifyContent="space-between" pb="20">
             <Box display="flex" alignItems="start" gap="12">
               <Box
                 rounded="full"
                 style={{
-                  width: 10,
-                  height: 10,
-                  flexShrink: 0,
-                  marginTop: 4,
-                  background:
-                    ev.type === "increase"
-                      ? "var(--ax-colors-fg-accent-strong)"
+                  width: 10, height: 10, flexShrink: 0, marginTop: 4,
+                  background: ev.type === "increase"
+                    ? "var(--ax-colors-fg-accent-strong)"
+                    : ev.type === "decrease"
+                      ? "var(--ax-colors-fg-error)"
                       : "var(--ax-colors-fg-tertiary)",
                 }}
               />
               <Box>
-                <Text fontWeight="500" fontSize="sm">
-                  {ev.label}
-                </Text>
-                <Text fontSize="sm" color="fg.tertiary">
-                  {ev.user}
-                </Text>
-                <Text fontSize="sm" color="fg.tertiary">
-                  {ev.date}
-                </Text>
+                <Text fontWeight="500" fontSize="sm">{ev.label}</Text>
+                <Text fontSize="sm" color="fg.tertiary">{ev.user}</Text>
+                <Text fontSize="sm" color="fg.tertiary">{ev.date}</Text>
               </Box>
             </Box>
             <Box style={{ textAlign: "right", flexShrink: 0 }}>
-              {ev.delta && (
-                <Text
-                  fontSize="sm"
-                  fontWeight="600"
-                  style={{
-                    color: "var(--ax-colors-fg-accent-strong)",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  +{ev.delta.toLocaleString()} credits
+              {ev.delta !== null && (
+                <Text fontSize="sm" fontWeight="600" style={{
+                  color: ev.type === "decrease" ? "var(--ax-colors-fg-error)" : "var(--ax-colors-fg-accent-strong)",
+                  fontVariantNumeric: "tabular-nums",
+                }}>
+                  {ev.type === "decrease" ? "-" : "+"}{ev.delta.toLocaleString()} credits
                 </Text>
               )}
-              <Text
-                fontSize="sm"
-                color="fg.secondary"
-                style={{ fontVariantNumeric: "tabular-nums" }}
-              >
-                {ev.credits.toLocaleString()} {ev.delta ? "total" : "credits"}
+              <Text fontSize="sm" color="fg.secondary" style={{ fontVariantNumeric: "tabular-nums" }}>
+                {ev.credits.toLocaleString()} {ev.delta !== null ? "total" : "credits"}
               </Text>
             </Box>
           </Box>
@@ -194,6 +305,7 @@ function CreditUsageTab({ group }: { group: GroupPanelData }) {
       </Box>
     </Box>
   );
+  
 }
 
 // ── Members tab ───────────────────────────────────────────────────────────────
@@ -489,18 +601,18 @@ function GroupDetailsTab({
       </Field>
 
       <Box>
-        <Text fontSize="sm" color="fg.tertiary">
+        <Text fontSize="md" color="fg.tertiary">
           Created date
         </Text>
-        <Text fontSize="sm" fontWeight="500">
+        <Text fontSize="md" fontWeight="500">
           Oct 6, 2025, 9:31 PM
         </Text>
       </Box>
       <Box>
-        <Text fontSize="sm" color="fg.tertiary">
+        <Text fontSize="md" color="fg.tertiary">
           Created by
         </Text>
-        <Text fontSize="sm" fontWeight="500">
+        <Text fontSize="md" fontWeight="500">
           olivia.bennett@optimizely.com
         </Text>
       </Box>
@@ -532,12 +644,34 @@ type Props = { group: GroupPanelData | null; onClose: () => void };
 export function GroupDetailPanel({ group, onClose }: Props) {
   const [tab, setTab] = useState<PanelTab>("Credit usage");
   const [isDirty, setIsDirty] = useState(false);
+  const [allocated, setAllocated] = useState(() => group?.assigned ?? 0);
+  const [history, setHistory] = useState<HistoryEntry[]>(INITIAL_HISTORY);
 
   const markDirty = () => setIsDirty(true);
   const handleClose = () => { setIsDirty(false); onClose(); };
   const handleSave = () => {
     toaster.create("Group updated", { intent: "success" });
     handleClose();
+  };
+
+  const handleAllocationSave = (newCredits: number, _behavior: BehaviorMode) => {
+    const delta = newCredits - allocated;
+    setAllocated(newCredits);
+    const now = new Date();
+    const dateStr =
+      now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) +
+      ", " +
+      now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+    const entry: HistoryEntry = {
+      type: delta >= 0 ? "increase" : "decrease",
+      label: delta >= 0 ? "Allocation increased" : "Allocation decreased",
+      user: "admin@optimizely.com",
+      date: dateStr,
+      credits: newCredits,
+      delta: Math.abs(delta),
+    };
+    setHistory((h) => [entry, ...h]);
+    markDirty();
   };
 
   const tabsRow = (
@@ -587,7 +721,7 @@ export function GroupDetailPanel({ group, onClose }: Props) {
     >
       {group && (
         <>
-          {tab === "Credit usage"  && <CreditUsageTab group={group} />}
+          {tab === "Credit usage"  && <CreditUsageTab group={group} allocated={allocated} history={history} onAllocationSave={handleAllocationSave} />}
           {tab === "Members"       && <MembersTab totalCount={group.members} markDirty={markDirty} />}
           {tab === "Group details" && <GroupDetailsTab group={group} markDirty={markDirty} />}
         </>

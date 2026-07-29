@@ -5,6 +5,7 @@ import { Badge, Box, Button, Heading, Text } from "@optiaxiom/react";
 import { IconPlus, IconSparkles } from "@optiaxiom/icons";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { GroupDetailPanel, type GroupPanelData } from "./GroupDetailPanel";
+import { NewGroupAllocationPanel } from "./NewGroupAllocationPanel";
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -24,9 +25,9 @@ type CreditGroup = {
 const CREDIT_GROUPS: CreditGroup[] = [
   { id: "g1", name: "Experimentation - Editor",                                          subtitle: "An automatically generated group for all users in this Organization.", members: 12, assigned: 2500, consumed: 1575 },
   { id: "g2", name: "Marketing - Account",                                               subtitle: "An automatically generated group for all users in this Organization.", members: 12, assigned: 2500, consumed: 1575 },
-  { id: "g3", name: "Experimentation - Editor",        subtitle: "An automatically generated group for all users in this Organization.", members: 12, assigned: 2500, consumed: 2250 },
+  { id: "g3", name: "Collaboration - Editor",        subtitle: "An automatically generated group for all users in this Organization.", members: 12, assigned: 2500, consumed: 2250 },
   { id: "g4", name: "Experimentation - Editor",        subtitle: "An automatically generated group for all users in this Organization.", members: 12, assigned: 2500, consumed: 1575 },
-  { id: "g5", name: "Experimentation - Editor",        subtitle: "An automatically generated group for all users in this Organization.", members: 8,  assigned: 2000, consumed: 1600 },
+  { id: "g5", name: "Collaboration - Admin",        subtitle: "An automatically generated group for all users in this Organization.", members: 8,  assigned: 2000, consumed: 1600 },
   { id: "g6", name: "Experimentation -Editor",        subtitle: "An automatically generated group for all users in this Organization.", members: 6,  assigned: 1500, consumed: 945  },
   { id: "g7", name: "Experimentation - Editor",        subtitle: "An automatically generated group for all users in this Organization.", members: 10, assigned: 2000, consumed: 1260 },
 ];
@@ -35,15 +36,16 @@ type VTAgent = {
   id: string;
   name: string;
   color: string;
+  avatar: string;
   vtCreated: number;
   creditsConsumed: number;
   totalCost: number;
 };
 
 const VT_AGENTS: VTAgent[] = [
-  { id: "vt1", name: "Chief of Staff",      color: "#f59e0b", vtCreated: 12, creditsConsumed: 2000, totalCost: 2500 },
-  { id: "vt2", name: "Content Producer",    color: "#3b82f6", vtCreated: 12, creditsConsumed: 2000, totalCost: 2500 },
-  { id: "vt3", name: "Campaign Strategist", color: "#8b5cf6", vtCreated: 12, creditsConsumed: 2000, totalCost: 2500 },
+  { id: "vt1", name: "Chief of Staff",      color: "#f59e0b", avatar: "/avatars/vau-henry.png",   vtCreated: 12, creditsConsumed: 2000, totalCost: 2500 },
+  { id: "vt2", name: "Content Producer",    color: "#3b82f6", avatar: "/avatars/vau-mayling.png", vtCreated: 12, creditsConsumed: 2000, totalCost: 2500 },
+  { id: "vt3", name: "Campaign Strategist", color: "#8b5cf6", avatar: "/avatars/vau-frank.png",   vtCreated: 12, creditsConsumed: 2000, totalCost: 2500 },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -75,6 +77,7 @@ function GroupBar({ consumed, assigned }: { consumed: number; assigned: number }
 
 export function OpalCreditsSection() {
   const [selectedGroup, setSelectedGroup] = useState<GroupPanelData | null>(null);
+  const [newGroupOpen, setNewGroupOpen] = useState(false);
 
   const openGroup = (g: CreditGroup) =>
     setSelectedGroup({ id: g.id, name: g.name, assigned: g.assigned, consumed: g.consumed, members: g.members });
@@ -140,7 +143,7 @@ export function OpalCreditsSection() {
             <Heading level="4">Credit allocation by group</Heading>
             <Text fontSize="sm" color="fg.tertiary" mt="2">Allocate credits and track usage across groups.</Text>
           </Box>
-          <Button appearance="default" size="md" icon={<IconPlus />}>Add group</Button>
+          <Button appearance="default" size="md" icon={<IconPlus />} onClick={() => setNewGroupOpen(true)}>Create group</Button>
         </Box>
 
         <Box mt="16" rounded="md" border="1" borderColor="border.tertiary" bg="bg.default" style={{ overflow: "hidden" }}>
@@ -185,6 +188,7 @@ export function OpalCreditsSection() {
       </Box>
 
       <GroupDetailPanel key={selectedGroup?.id} group={selectedGroup} onClose={() => setSelectedGroup(null)} />
+      <NewGroupAllocationPanel open={newGroupOpen} onClose={() => setNewGroupOpen(false)} />
 
       {/* Virtual Teammates Usage */}
       <Box mb="24">
@@ -209,23 +213,18 @@ export function OpalCreditsSection() {
                 <Tr key={vt.id}>
                   <Td type="raw">
                     <Box display="flex" alignItems="center" gap="10">
-                      <Box
-                        rounded="sm"
+                      <img
+                        src={vt.avatar}
+                        alt={vt.name}
                         style={{
-                          width: 28,
-                          height: 28,
+                          width: 32,
+                          height: 32,
+                          borderRadius: 6,
+                          objectFit: "cover",
                           flexShrink: 0,
                           background: vt.color,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 12,
-                          color: "#fff",
-                          fontWeight: 700,
                         }}
-                      >
-                        {vt.name.charAt(0)}
-                      </Box>
+                      />
                       <Text fontSize="sm" fontWeight="500">{vt.name}</Text>
                     </Box>
                   </Td>
