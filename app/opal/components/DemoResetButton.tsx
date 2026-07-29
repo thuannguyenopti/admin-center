@@ -7,6 +7,7 @@ import { Text } from "@/app/components/Text";
 import { useEffect, useRef, useState } from "react";
 import { usePlannerLabel, setPlannerLabel, type PlannerLabel } from "@/app/opal/tracker/usePlannerLabel";
 import { usePlannerNavVisible, setPlannerNavVisible } from "@/app/opal/usePlannerNavVisible";
+import { useStrideDsNavVisible, setStrideDsNavVisible } from "@/app/opal/useStrideDsNavVisible";
 import { useTrayDesign, setTrayDesign, type TrayDesign } from "@/app/opal/tracker/useTrayDesign";
 import { clearSessionTracker } from "@/app/opal/tracker/useSessionTasks";
 
@@ -19,6 +20,7 @@ export function DemoResetButton() {
   const [resetting, setResetting] = useState(false);
   const plannerLabel = usePlannerLabel();
   const plannerNavVisible = usePlannerNavVisible();
+  const strideDsNavVisible = useStrideDsNavVisible();
   const trayDesign = useTrayDesign();
   const [hintVisible, setHintVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -169,6 +171,22 @@ export function DemoResetButton() {
               size="md"
               checked={plannerNavVisible}
               onCheckedChange={setPlannerNavVisible}
+            />
+          </Box>
+
+          {/* Show/hide the Design System Setup item in the left nav */}
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            gap="12"
+            style={{ padding: "8px 8px" }}
+          >
+            <Text style={{ fontSize: 14 }}>DS Setup in left nav</Text>
+            <Switch
+              size="md"
+              checked={strideDsNavVisible}
+              onCheckedChange={setStrideDsNavVisible}
             />
           </Box>
 

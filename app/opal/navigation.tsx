@@ -11,15 +11,16 @@ import {
 	IconPuzzlePiece,
 	IconGear,
 	IconImagePortrait,
-	IconStar,
 	IconListUl,
 } from "@optiaxiom/icons";
 import { usePlannerNavVisible } from "@/app/opal/usePlannerNavVisible";
+import { useStrideDsNavVisible } from "@/app/opal/useStrideDsNavVisible";
 
 export function useOpalNav() {
 	const pathname = usePathname();
 	const [imLayout, setImLayout] = useState<string>("A");
 	const plannerNavVisible = usePlannerNavVisible();
+	const strideDsNavVisible = useStrideDsNavVisible();
 
 	useEffect(() => {
 		try {
@@ -154,28 +155,8 @@ export function useOpalNav() {
 			highlight: "/opal/settings",
 			icon: <IconGear filled={active("/opal/settings")} />,
 		},
-		{ label: "   " },
-		{
-			label: "Experimental",
-			url: "/opal/experimental",
-			highlight: "/opal/experimental",
-			customLayout: true,
-			icon: <IconStar />,
-		},
-		{ label: "Labs" },
-		{
-			label: "Mobile Preview",
-			url: "/opal/mobile",
-			highlight: "/opal/mobile",
-			customLayout: true,
-			icon: (
-				<svg width={20} height={20} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-					<rect x="5" y="1" width="10" height="18" rx="2" />
-					<circle cx="10" cy="16" r="0.8" fill="currentColor" stroke="none" />
-				</svg>
-			),
-		},
-		{
+		// Design System Setup — toggled via key menu
+		...(strideDsNavVisible ? [{
 			label: "Design System Setup",
 			url: "/opal/context/stride-ds-setup",
 			highlight: "/opal/context/stride-ds-setup",
@@ -185,7 +166,7 @@ export function useOpalNav() {
 					<path d="M1 1.75C1 1.34375 1.3125 1 1.75 1H6.25C6.65625 1 7 1.34375 7 1.75V6.25C7 6.6875 6.65625 7 6.25 7H1.75C1.3125 7 1 6.6875 1 6.25V1.75ZM2.5 2.5V5.5H5.5V2.5H2.5ZM9 1.75C9 1.34375 9.3125 1 9.75 1H14.25C14.6562 1 15 1.34375 15 1.75V6.25C15 6.6875 14.6562 7 14.25 7H9.75C9.3125 7 9 6.6875 9 6.25V1.75ZM10.5 2.5V5.5H13.5V2.5H10.5ZM1 9.75C1 9.34375 1.3125 9 1.75 9H6.25C6.65625 9 7 9.34375 7 9.75V14.25C7 14.6875 6.65625 15 6.25 15H1.75C1.3125 15 1 14.6875 1 14.25V9.75ZM2.5 10.5V13.5H5.5V10.5H2.5ZM12 9C12.4062 9 12.75 9.34375 12.75 9.75V11.25H14.25C14.6562 11.25 15 11.5938 15 12C15 12.4375 14.6562 12.75 14.25 12.75H12.75V14.25C12.75 14.6875 12.4062 15 12 15C11.5625 15 11.25 14.6875 11.25 14.25V12.75H9.75C9.3125 12.75 9 12.4375 9 12C9 11.5938 9.3125 11.25 9.75 11.25H11.25V9.75C11.25 9.34375 11.5625 9 12 9Z" />
 				</svg>
 			),
-		},
+		}] as const : []),
 		// Experimental hidden entries
 		{
 			label: "Experimental — Chief of Staff",
