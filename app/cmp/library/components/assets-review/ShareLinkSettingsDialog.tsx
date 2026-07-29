@@ -6,6 +6,7 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconChevronDown, IconChevronRight, IconCopy } from "@optimizely/axiom-icons";
 import type { DropZoneLink } from "@/app/dam/drop-zone/data";
+import { updateDropZone } from "@/app/dam/drop-zone/dropZones";
 
 /**
  * Share Link Settings — matches the Collections reference structurally: a top Switch for
@@ -19,8 +20,8 @@ import type { DropZoneLink } from "@/app/dam/drop-zone/data";
 export function ShareLinkSettingsDialog({ zone, open, onClose }: { zone: DropZoneLink; open: boolean; onClose: () => void }) {
 	const [sharable, setSharable] = useState(zone.status === "active");
 	const [expanded, setExpanded] = useState(false);
-	const [passwordEnabled, setPasswordEnabled] = useState(false);
-	const [password, setPassword] = useState("");
+	const [password, setPassword] = useState(zone.password);
+	const [passwordTouched, setPasswordTouched] = useState(false);
 	const [expirationEnabled, setExpirationEnabled] = useState(true);
 	const [validFrom, setValidFrom] = useState(zone.createdAt);
 	const [validUntil, setValidUntil] = useState(zone.expiresAt);
@@ -55,6 +56,19 @@ export function ShareLinkSettingsDialog({ zone, open, onClose }: { zone: DropZon
 	}
 
 	function confirm() {
+		if (sharable && !password.trim()) {
+			setPasswordTouched(true);
+			setExpanded(true);
+			toaster.create("Set a password before sharing this link", { intent: "danger" });
+			return;
+		}
+		updateDropZone(zone.id, {
+			status: sharable ? "active" : "expired",
+			password: password.trim(),
+			expiresAt: expirationEnabled ? validUntil : zone.expiresAt,
+			requiredFields: fieldsEnabled ? zone.requiredFields.filter((field) => enabledFields.has(field)) : [],
+			allowedFileTypes: filesEnabled ? zone.allowedFileTypes.filter((type) => enabledFileTypes.has(type)) : [],
+		});
 		toaster.create("Share settings saved", { intent: "success" });
 		onClose();
 	}
@@ -101,13 +115,20 @@ export function ShareLinkSettingsDialog({ zone, open, onClose }: { zone: DropZon
 								{expanded && (
 									<Box display="flex" flexDirection="column" gap="20" style={{ paddingLeft: 20 }}>
 										<Box display="flex" flexDirection="column" gap="8">
-											<Box alignItems="center" display="flex" gap="8">
-												<Checkbox checked={passwordEnabled} onCheckedChange={(checked) => setPasswordEnabled(Boolean(checked))} />
-												<Text color="fg.default" fontSize="sm" fontWeight="500">Password</Text>
-											</Box>
-											{passwordEnabled && (
-												<Input placeholder="Set a password" size="lg" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-											)}
+											<Text color="fg.default" fontSize="sm" fontWeight="500">Password</Text>
+											<Field
+												description="Required on every share link — reviewers must enter it before they can open this Drop Zone."
+												error={passwordTouched && !password.trim() ? "Enter a password to protect this link" : undefined}
+											>
+												<Input
+													placeholder="Set a password"
+													size="lg"
+													type="password"
+													value={password}
+													onBlur={() => setPasswordTouched(true)}
+													onChange={(e) => setPassword(e.target.value)}
+												/>
+											</Field>
 										</Box>
 
 										<Box display="flex" flexDirection="column" gap="8">

@@ -28,6 +28,7 @@ export function DropZoneUploadTile({ zone }: { zone: DropZoneLink }) {
 			submitterEmail: "team-upload@stride-agency.com",
 			files: files.map((file) => ({ name: file.name, sizeMb: file.size / (1024 * 1024) })),
 			notes: "Uploaded directly by the internal team.",
+			visitorId: "internal",
 		});
 		upload.reset();
 	}

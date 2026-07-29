@@ -36,14 +36,33 @@ const CATEGORY_OPTIONS = [
 	{ label: "Display", value: "Display" },
 ];
 
-const FONT_LIBRARY: Typeface[] = [
+const FONT_LIBRARY_BY_BRAND: Record<string, Typeface[]> = {
+	"coca-cola": [
+		{ family: "Trade Gothic Bold Condensed No. 20", category: "Primary", role: "Headlines & Campaign", meta: "Condensed grotesque sans-serif", styles: 6, weight: 700, source: "library", inUse: true },
+		{ family: "Gotham", category: "Secondary", role: "Body & Documents", meta: "Geometric sans-serif", styles: 12, weight: 400, source: "library", inUse: true },
+		{ family: "Spencerian Script (Coca-Cola Script)", category: "Display", role: "Logotype only", meta: "Custom script typeface", styles: 1, weight: 400, source: "custom", inUse: true },
+	],
+	fanta: [
+		{ family: "Fanta Bespoke Sans", category: "Primary", role: "Wordmark & Headlines", meta: "Custom extruded sans (Colophon Foundry)", styles: 1, weight: 700, source: "custom", inUse: true },
+		{ family: "Poppins", category: "Secondary", role: "Body & Packaging Copy", meta: "Geometric sans-serif", styles: 9, weight: 400, source: "library", inUse: true },
+	],
+	sprite: [
+		{ family: "Refraktiv", category: "Primary", role: "Wordmark & Headlines", meta: "Custom display face (Turner Duckworth)", styles: 3, weight: 700, source: "custom", inUse: true },
+		{ family: "Aktiv Grotesk", category: "Secondary", role: "Body & UI", meta: "Neutral grotesque sans-serif", styles: 10, weight: 400, source: "library", inUse: true },
+	],
+	"minute-maid": [
+		{ family: "Minute Maid Hand", category: "Primary", role: "Wordmark & Headlines", meta: "Custom hand-drawn type (JKR + Erik Marinovich)", styles: 1, weight: 400, source: "custom", inUse: true },
+		{ family: "Museo Sans", category: "Secondary", role: "Body & Packaging Copy", meta: "Warm humanist sans-serif", styles: 9, weight: 400, source: "library", inUse: true },
+	],
+};
+
+const DEFAULT_FONT_LIBRARY: Typeface[] = [
 	{ family: "Inter", category: "Primary", role: "Product UI", meta: "Humanist sans-serif", styles: 14, weight: 700, source: "library", inUse: true },
-	{ family: "Inter Tight", category: "Secondary", role: "Marketing", meta: "Tight spacing variant", styles: 12, weight: 500, source: "library" },
-	{ family: "JetBrains Mono", category: "Mono", role: "Code and tokens", meta: "Monospace", styles: 10, weight: 700, source: "library", inUse: true },
-	{ family: "Overpass", category: "Display", role: "Campaign display", meta: "Condensed sans-serif", styles: 1, weight: 800, source: "web" },
-	{ family: "Manrope", category: "Secondary", role: "Accent", meta: "Geometric sans-serif", styles: 7, weight: 700, source: "web" },
-	{ family: "Source Serif 4", category: "Secondary", role: "Long-form editorial", meta: "Serif", styles: 7, weight: 400, source: "upload" },
 ];
+
+function getFontLibraryForPack(pack: BrandPack): Typeface[] {
+	return FONT_LIBRARY_BY_BRAND[pack.id] ?? DEFAULT_FONT_LIBRARY;
+}
 
 function fontStack(typeface: Typeface) {
 	if (typeface.category === "Mono") return `"${typeface.family}", monospace`;
@@ -189,8 +208,9 @@ export function TypographyTab({ pack }: TypographyTabProps) {
 	const [category, setCategory] = useState("all");
 	const [manageTypeSystemOpen, setManageTypeSystemOpen] = useState(false);
 	const [saved, setSaved] = useState(false);
-	const primaryTypeface = FONT_LIBRARY.find((font) => font.family === pack.typography.heading) ?? FONT_LIBRARY[0];
-	const filtered = category === "all" ? FONT_LIBRARY : FONT_LIBRARY.filter((font) => font.category === category);
+	const fontLibrary = getFontLibraryForPack(pack);
+	const primaryTypeface = fontLibrary.find((font) => font.family === pack.typography.heading) ?? fontLibrary[0];
+	const filtered = category === "all" ? fontLibrary : fontLibrary.filter((font) => font.category === category);
 
 	const save = () => {
 		setSaved(true);
@@ -209,7 +229,7 @@ export function TypographyTab({ pack }: TypographyTabProps) {
 			<Box alignItems="center" display="flex" justifyContent="space-between" style={{ flexWrap: "wrap", gap: 12 }}>
 				<Box display="flex" flexDirection="column" gap="4">
 					<Text fontWeight="600" style={{ fontSize: 18 }}>All typefaces</Text>
-					<Text color="fg.secondary" fontSize="sm">Showing {filtered.length} of {FONT_LIBRARY.length} available typefaces</Text>
+					<Text color="fg.secondary" fontSize="sm">Showing {filtered.length} of {fontLibrary.length} available typefaces</Text>
 				</Box>
 				<Box alignItems="center" display="flex" gap="8">
 					<Select value={category} onValueChange={setCategory} options={CATEGORY_OPTIONS} />
@@ -223,8 +243,8 @@ export function TypographyTab({ pack }: TypographyTabProps) {
 				<Box display="flex" flexDirection="column" gap="8">
 					{["All typefaces", "Primary", "Secondary", "Mono", "Display", "System"].map((label) => (
 						<Box key={label} alignItems="center" bg={label === "All typefaces" ? "bg.success.subtle" : undefined} display="flex" justifyContent="space-between" p="12" rounded="lg">
-							<Text color={label === "All typefaces" ? "fg.success" : "fg.secondary"} fontSize="sm" fontWeight={label === "All typefaces" ? "600" : "400"}>{label}</Text>
-							<Text color="fg.tertiary" fontSize="xs">{label === "All typefaces" ? FONT_LIBRARY.length : FONT_LIBRARY.filter((font) => font.category === label).length}</Text>
+							<Text color={label === "All typefaces" ? "fg.success.strong" : "fg.secondary"} fontSize="sm" fontWeight={label === "All typefaces" ? "600" : "400"}>{label}</Text>
+							<Text color="fg.tertiary" fontSize="xs">{label === "All typefaces" ? fontLibrary.length : fontLibrary.filter((font) => font.category === label).length}</Text>
 						</Box>
 					))}
 					<Box bg="bg.secondary" display="flex" flexDirection="column" gap="12" mt="24" p="16" rounded="xl">
@@ -241,7 +261,7 @@ export function TypographyTab({ pack }: TypographyTabProps) {
 			</Box>
 			<AddTypefaceDialog open={addTypefaceOpen} onOpenChange={setAddTypefaceOpen} />
 			<ManageTypeSystemDialog
-				fonts={FONT_LIBRARY}
+				fonts={fontLibrary}
 				onOpenChange={setManageTypeSystemOpen}
 				onSave={save}
 				open={manageTypeSystemOpen}

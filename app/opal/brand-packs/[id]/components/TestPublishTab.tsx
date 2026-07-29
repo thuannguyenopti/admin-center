@@ -1,13 +1,9 @@
 "use client";
 
-import {useState} from "react";
-import {Box, Button, Text} from "@optiaxiom/react";
-import {
-	IconCheck,
-	IconSparkles,
-	IconTriangleExclamation as IconWarning,
-} from "@optimizely/axiom-icons";
-import type {BrandPack} from "../../types";
+import { useState } from "react";
+import { Box, Button, Text, Textarea } from "@optiaxiom/react";
+import { IconCheck, IconSparkles } from "@optimizely/axiom-icons";
+import type { BrandPack } from "../../types";
 
 type TestPublishTabProps = {
 	pack: BrandPack;
@@ -21,91 +17,127 @@ type CheckItem = {
 	blocking: boolean;
 };
 
-function CheckRow({item}: {item: CheckItem}) {
+function segmentColor(item: CheckItem): string {
+	if (item.passed) return "var(--ax-colors-fg-success)";
+	if (item.blocking) return "#DC2626";
+	return "var(--ax-colors-border-default)";
+}
+
+function statusLabel(item: CheckItem): string {
+	if (item.passed) return "Ready";
+	if (item.blocking) return "Required";
+	return "Optional";
+}
+
+function statusColor(item: CheckItem): string {
+	if (item.passed) return "var(--ax-colors-fg-success)";
+	if (item.blocking) return "#DC2626";
+	return "var(--ax-colors-fg-tertiary)";
+}
+
+function ReadinessBar({ checks }: { checks: CheckItem[] }) {
+	const passed = checks.filter((c) => c.passed).length;
+	const total = checks.length;
+
 	return (
-		<Box
-			alignItems="start"
-			display="flex"
-			gap="12"
-			py="12"
-			style={{borderBottom: "1px solid var(--ax-colors-border-tertiary)"}}
-		>
-			{/* Status icon */}
-			<Box
-				alignItems="center"
-				display="flex"
-				justifyContent="center"
-				rounded="full"
-				style={{
-					background: item.passed
-						? "var(--ax-colors-bg-success-subtle)"
-						: item.blocking
-							? "rgba(220, 38, 38, 0.08)"
-							: "var(--ax-colors-bg-secondary)",
-					flexShrink: 0,
-					height: 28,
-					width: 28,
-				}}
-			>
-				{item.passed ? (
-					<IconCheck size={13} style={{color: "var(--ax-colors-fg-success)"}} />
-				) : item.blocking ? (
-					<IconWarning size={13} style={{color: "#DC2626"}} />
-				) : (
-					<span
-						style={{
-							color: "var(--ax-colors-fg-tertiary)",
-							fontSize: 13,
-							fontWeight: 500,
-						}}
-					>
-						–
-					</span>
-				)}
+		<Box display="flex" flexDirection="column" gap="12">
+			{/* Score */}
+			<Box alignItems="center" display="flex" justifyContent="space-between">
+				<Text fontWeight="600" style={{ fontSize: 14 }}>Readiness check</Text>
+				<Text color="fg.tertiary" fontSize="sm">
+					{passed} of {total} ready
+				</Text>
 			</Box>
 
-			{/* Text */}
-			<Box display="flex" flexDirection="column" gap="2" style={{flex: 1}}>
-				<Text
-					fontWeight="500"
+			{/* Segmented bar */}
+			<Box display="flex" gap="4">
+				{checks.map((check) => (
+					<Box
+						key={check.id}
+						rounded="sm"
+						style={{
+							background: segmentColor(check),
+							flex: 1,
+							height: 12,
+							transition: "background 0.3s",
+						}}
+					/>
+				))}
+			</Box>
+
+			{/* Labels under each segment */}
+			<Box display="flex" gap="4">
+				{checks.map((check) => (
+					<Box
+						key={check.id}
+						display="flex"
+						flexDirection="column"
+						gap="2"
+						style={{ flex: 1, textAlign: "center" }}
+					>
+						<Text
+							style={{
+								fontSize: 11,
+								fontWeight: 500,
+								lineHeight: 1.3,
+								overflow: "hidden",
+								textOverflow: "ellipsis",
+								whiteSpace: "nowrap",
+							}}
+						>
+							{check.label}
+						</Text>
+						<Text style={{ color: statusColor(check), fontSize: 10, fontWeight: 600 }}>
+							{statusLabel(check)}
+						</Text>
+					</Box>
+				))}
+			</Box>
+
+			{/* Description row for failed items */}
+			{checks.some((c) => !c.passed) && (
+				<Box
+					display="flex"
+					flexDirection="column"
+					gap="6"
+					rounded="lg"
 					style={{
-						color: item.passed
-							? "var(--ax-colors-fg-default)"
-							: item.blocking
-								? "#DC2626"
-								: "var(--ax-colors-fg-secondary)",
-						fontSize: 14,
+						background: "var(--ax-colors-bg-secondary)",
+						marginTop: 4,
+						padding: "10px 14px",
 					}}
 				>
-					{item.label}
-				</Text>
-				<Text color="fg.tertiary" fontSize="xs">
-					{item.description}
-				</Text>
-			</Box>
-
-			{/* Status text */}
-			<Text
-				fontSize="xs"
-				fontWeight="500"
-				style={{
-					color: item.passed
-						? "var(--ax-colors-fg-success)"
-						: item.blocking
-							? "#DC2626"
-							: "var(--ax-colors-fg-tertiary)",
-					flexShrink: 0,
-				}}
-			>
-				{item.passed ? "Ready" : item.blocking ? "Required" : "Optional"}
-			</Text>
+					{checks.filter((c) => !c.passed).map((check) => (
+						<Box key={check.id} alignItems="start" display="flex" gap="8">
+							<Box
+								rounded="full"
+								style={{
+									background: check.blocking ? "#DC2626" : "var(--ax-colors-border-default)",
+									flexShrink: 0,
+									height: 6,
+									marginTop: 5,
+									width: 6,
+								}}
+							/>
+							<Box>
+								<Text style={{ color: check.blocking ? "#DC2626" : "var(--ax-colors-fg-secondary)", fontSize: 12, fontWeight: 500 }}>
+									{check.label}
+								</Text>
+								<Text color="fg.tertiary" style={{ fontSize: 11 }}>{check.description}</Text>
+							</Box>
+						</Box>
+					))}
+				</Box>
+			)}
 		</Box>
 	);
 }
 
-export function TestPublishTab({pack}: TestPublishTabProps) {
+export function TestPublishTab({ pack }: TestPublishTabProps) {
 	const [published, setPublished] = useState(false);
 	const [testing, setTesting] = useState(false);
+	const [testResult, setTestResult] = useState<string | null>(null);
+	const [prompt, setPrompt] = useState("");
 
 	const hasColors = pack.colors.length > 0;
 	const hasTypography = !!pack.typography.heading;
@@ -116,23 +148,23 @@ export function TestPublishTab({pack}: TestPublishTabProps) {
 	const checks: CheckItem[] = [
 		{
 			id: "colours",
-			label: "Color palette defined",
-			description: `${pack.colors.length} color${pack.colors.length !== 1 ? "s" : ""} configured`,
+			label: "Colours",
+			description: `${pack.colors.length} colour${pack.colors.length !== 1 ? "s" : ""} configured`,
 			passed: hasColors,
 			blocking: true,
 		},
 		{
 			id: "typography",
-			label: "Typography configured",
+			label: "Typography",
 			description: hasTypography
-				? `Heading: ${pack.typography.heading}, Body: ${pack.typography.body}`
+				? `${pack.typography.heading} · ${pack.typography.body}`
 				: "Add at least one typeface",
 			passed: hasTypography,
 			blocking: true,
 		},
 		{
 			id: "tone",
-			label: "Tone of voice keywords",
+			label: "Tone of Voice",
 			description: hasToneKeywords
 				? pack.toneKeywords.join(", ")
 				: "Add keywords to guide Opal's language",
@@ -141,19 +173,19 @@ export function TestPublishTab({pack}: TestPublishTabProps) {
 		},
 		{
 			id: "logo",
-			label: "Logo asset uploaded",
+			label: "Logo",
 			description: hasLogo
 				? `${pack.assets.filter((a) => a.type === "logo").length} logo file${pack.assets.filter((a) => a.type === "logo").length !== 1 ? "s" : ""}`
-				: "A logo improves branded output quality",
+				: "A logo improves output quality",
 			passed: hasLogo,
 			blocking: false,
 		},
 		{
 			id: "brief",
-			label: "Brand brief written",
+			label: "Brand Brief",
 			description: hasBrandBrief
-				? "Brand narrative is present"
-				: "Write a brief to improve content accuracy",
+				? "Brand narrative present"
+				: "Write a brief to improve accuracy",
 			passed: hasBrandBrief,
 			blocking: false,
 		},
@@ -161,74 +193,31 @@ export function TestPublishTab({pack}: TestPublishTabProps) {
 
 	const blocking = checks.filter((c) => c.blocking && !c.passed);
 	const canPublish = blocking.length === 0;
-	const passed = checks.filter((c) => c.passed).length;
-	const total = checks.length;
 
 	const handleTest = () => {
+		if (!prompt.trim()) return;
 		setTesting(true);
-		setTimeout(() => setTesting(false), 2200);
+		setTestResult(null);
+		setTimeout(() => {
+			setTesting(false);
+			setTestResult(
+				`Acme Corporation is proud to introduce our latest innovation — built on years of precision engineering and deep customer insight. Designed for those who expect more, it delivers exactly that.\n\nClean lines. Purposeful design. Real results.\n\nLearn more at acme.com`
+			);
+		}, 2200);
 	};
 
 	return (
-		<Box display="flex" flexDirection="column" gap="20" style={{maxWidth: 680}}>
+		<Box display="flex" flexDirection="column" gap="20" style={{ maxWidth: 680 }}>
 			{/* Readiness card */}
 			<Box
 				bg="bg.default"
 				border="1"
 				borderColor="border.tertiary"
-				display="flex"
-				flexDirection="column"
-				gap="0"
-				overflow="hidden"
+				p="20"
 				rounded="xl"
 				shadow="sm"
 			>
-				{/* Header */}
-				<Box
-					alignItems="center"
-					display="flex"
-					gap="16"
-					justifyContent="space-between"
-					p="20"
-					style={{borderBottom: "1px solid var(--ax-colors-border-tertiary)"}}
-				>
-					<Box display="flex" flexDirection="column" gap="4">
-						<Text fontWeight="600" style={{fontSize: 14}}>
-							Readiness check
-						</Text>
-						<Text color="fg.tertiary" fontSize="xs">
-							{passed} of {total} items ready
-						</Text>
-					</Box>
-
-					{/* Progress bar */}
-					<Box
-						bg="bg.secondary"
-						rounded="full"
-						style={{height: 6, overflow: "hidden", width: 120}}
-					>
-						<Box
-							rounded="full"
-							style={{
-								background: canPublish
-									? "var(--ax-colors-fg-success)"
-									: "var(--ax-colors-fg-secondary)",
-								height: "100%",
-								transition: "width 0.4s ease",
-								width: `${(passed / total) * 100}%`,
-							}}
-						/>
-					</Box>
-				</Box>
-
-				{/* Check list */}
-				<Box p="20" style={{paddingTop: 8}}>
-					{checks.map((item) => (
-						<CheckRow key={item.id} item={item} />
-					))}
-					{/* Remove bottom border from last item */}
-					<Box style={{marginBottom: -1}} />
-				</Box>
+				<ReadinessBar checks={checks} />
 			</Box>
 
 			{/* Test with Opal */}
@@ -244,32 +233,58 @@ export function TestPublishTab({pack}: TestPublishTabProps) {
 				shadow="sm"
 			>
 				<Box display="flex" flexDirection="column" gap="4">
-					<Text fontWeight="600" style={{fontSize: 14}}>
-						Test with Opal
-					</Text>
+					<Text fontWeight="600" style={{ fontSize: 14 }}>Test with Opal</Text>
 					<Text color="fg.secondary" fontSize="sm">
-						Generate sample content using this brand pack before publishing
+						Write a prompt and generate sample content using this brand pack
 					</Text>
 				</Box>
+
+				<Textarea
+					value={prompt}
+					onChange={(e) => setPrompt(e.target.value)}
+					placeholder="e.g. Write a short LinkedIn post announcing our new product launch, focusing on performance and design…"
+					rows={4}
+					style={{ lineHeight: 1.6 }}
+				/>
+
 				<Box alignItems="center" display="flex" gap="12">
 					<Button
-						appearance="subtle"
+						appearance="primary"
 						size="sm"
 						icon={<IconSparkles />}
 						onClick={handleTest}
-						style={{color: testing ? "var(--ax-colors-fg-default)" : undefined}}
+						style={{ opacity: prompt.trim() ? 1 : 0.5, cursor: prompt.trim() ? "pointer" : "default" }}
 					>
-						{testing ? "Generating sample…" : "Run test generation"}
+						{testing ? "Generating…" : "Run test generation"}
 					</Button>
 					{testing && (
-						<Text color="fg.tertiary" fontSize="xs">
-							This will take a moment…
-						</Text>
+						<Text color="fg.tertiary" fontSize="xs">This will take a moment…</Text>
 					)}
 				</Box>
+
+				{testResult && (
+					<Box
+						display="flex"
+						flexDirection="column"
+						gap="8"
+						rounded="lg"
+						style={{
+							background: "var(--ax-colors-bg-secondary)",
+							border: "1px solid var(--ax-colors-border-tertiary)",
+							padding: "14px 16px",
+						}}
+					>
+						<Text color="fg.tertiary" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+							Generated output
+						</Text>
+						<Text color="fg.secondary" fontSize="sm" style={{ lineHeight: 1.75, whiteSpace: "pre-wrap" }}>
+							{testResult}
+						</Text>
+					</Box>
+				)}
 			</Box>
 
-			{/* Publish / status */}
+			{/* Publish */}
 			<Box
 				bg={canPublish ? "bg.default" : "bg.secondary"}
 				border="1"
@@ -289,15 +304,12 @@ export function TestPublishTab({pack}: TestPublishTabProps) {
 							display="flex"
 							justifyContent="center"
 							rounded="full"
-							style={{flexShrink: 0, height: 32, width: 32}}
+							style={{ flexShrink: 0, height: 32, width: 32 }}
 						>
-							<IconCheck size={14} style={{color: "var(--ax-colors-fg-success)"}} />
+							<IconCheck size={14} style={{ color: "var(--ax-colors-fg-success-strong)" }} />
 						</Box>
 						<Box display="flex" flexDirection="column" gap="2">
-							<Text
-								fontWeight="600"
-								style={{color: "var(--ax-colors-fg-success)", fontSize: 14}}
-							>
+							<Text fontWeight="600" style={{ color: "var(--ax-colors-fg-success)", fontSize: 14 }}>
 								Published
 							</Text>
 							<Text color="fg.tertiary" fontSize="xs">
@@ -308,10 +320,8 @@ export function TestPublishTab({pack}: TestPublishTabProps) {
 				) : (
 					<>
 						<Box display="flex" flexDirection="column" gap="4">
-							<Text fontWeight="600" style={{fontSize: 14}}>
-								{canPublish
-									? "Ready to publish"
-									: "Complete required items to publish"}
+							<Text fontWeight="600" style={{ fontSize: 14 }}>
+								{canPublish ? "Ready to publish" : "Complete required items to publish"}
 							</Text>
 							<Text color="fg.secondary" fontSize="sm">
 								{canPublish
@@ -324,10 +334,7 @@ export function TestPublishTab({pack}: TestPublishTabProps) {
 								appearance={canPublish ? "primary" : "default"}
 								size="md"
 								onClick={() => canPublish && setPublished(true)}
-								style={{
-									opacity: canPublish ? 1 : 0.5,
-									cursor: canPublish ? "pointer" : "default",
-								}}
+								style={{ cursor: canPublish ? "pointer" : "default", opacity: canPublish ? 1 : 0.5 }}
 							>
 								Publish brand pack
 							</Button>

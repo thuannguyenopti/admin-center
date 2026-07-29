@@ -6,6 +6,7 @@ import { Text } from "@/app/components/Text";
 import { IconCircleCheckSolid } from "@optimizely/axiom-icons";
 import { type ReactNode, useState } from "react";
 import { Caption } from "./Caption";
+import { FeedbackComposeView } from "./FeedbackComposeView";
 import { OpalScoreCircle } from "./OpalScoreCircle";
 import { ScoreBar, DupRiskBar } from "./OpalScoreBar";
 import type { AssetItem, Intent, OpalFlag } from "../data";
@@ -17,11 +18,14 @@ export type AssessmentAction = {
 	appearance: "primary" | "danger" | "default";
 	disabled?: boolean;
 	disabledReason?: string;
-	/** When set, clicking opens a text drawer (pre-filled, editable) instead of firing immediately. */
+	/** When set, clicking opens a full-width compose view (pre-filled, editable) instead of firing immediately. */
 	requiresDraft?: boolean;
 	draftDefault?: string;
 	draftLabel?: string;
 	draftHint?: string;
+	/** Eyebrow shown above the asset name in the compose view, e.g. "Rejecting". Falls back to `label`. */
+	draftEyebrow?: string;
+	draftIntent?: "success" | "warning" | "danger";
 };
 
 export type AssessmentCompletedState = {
@@ -56,6 +60,8 @@ function FlagRow({ flag }: { flag: OpalFlag }) {
  * (score, metrics, reasoning/suggestions/flags/clearances, action bar) is shared.
  */
 export function OpalAssessmentPanel({
+	assetImage,
+	assetName,
 	eyebrow,
 	score,
 	scoreLabel,
@@ -72,6 +78,8 @@ export function OpalAssessmentPanel({
 	onAction,
 	completedStates,
 }: {
+	assetImage?: string;
+	assetName?: string;
 	eyebrow: string;
 	score: number;
 	scoreLabel: string;
@@ -135,8 +143,25 @@ export function OpalAssessmentPanel({
 		);
 	}
 
+	if (showDrawer) {
+		return (
+			<FeedbackComposeView
+				actionLabel={showDrawer.draftEyebrow ?? showDrawer.label}
+				assetImage={assetImage}
+				assetName={assetName ?? eyebrow}
+				fieldLabel={showDrawer.draftLabel ?? "Feedback to submitter"}
+				hint={showDrawer.draftHint}
+				intent={showDrawer.draftIntent}
+				onCancel={() => setShowDrawer(null)}
+				onChange={setDraftMsg}
+				onSend={sendDraft}
+				value={draftMsg}
+			/>
+		);
+	}
+
 	return (
-		<Box display="flex" flexDirection="column" style={{ height: "100%", minHeight: 0, position: "relative" }}>
+		<Box display="flex" flexDirection="column" style={{ height: "100%", minHeight: 0 }}>
 
 			{/* Score + status — a subtle intent-tinted wash gives the AI's headline verdict some
 			presence instead of sitting on the same flat white as everything below it. */}
@@ -219,7 +244,7 @@ export function OpalAssessmentPanel({
 									rounded="md"
 									style={{ background: "var(--ax-colors-bg-success-subtle)" }}
 								>
-									<IconCircleCheckSolid size={15} style={{ color: "var(--ax-colors-fg-success)", flexShrink: 0 }} />
+									<IconCircleCheckSolid size={15} style={{ color: "var(--ax-colors-fg-success-strong)", flexShrink: 0 }} />
 									<Text color="fg.default" fontSize="md" fontWeight="500">{c}</Text>
 								</Box>
 							))}
@@ -263,58 +288,6 @@ export function OpalAssessmentPanel({
 					))}
 				</Box>
 			</Box>
-
-			{/* Draft drawer (Request Changes / Reject with reason, etc.) */}
-			{showDrawer && (
-				<Box
-					style={{
-						position: "absolute",
-						bottom: 0,
-						left: 0,
-						right: 0,
-						background: "var(--ax-colors-bg-default)",
-						borderTop: "1px solid var(--ax-colors-border-secondary)",
-						padding: "18px 20px 16px",
-						zIndex: 20,
-						animation: "assessmentDrawerIn 0.2s cubic-bezier(.2,0,.2,1)",
-					}}
-					shadow="lg"
-				>
-					<style>{`@keyframes assessmentDrawerIn { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }`}</style>
-					<Text color="fg.default" fontWeight="600" fontSize="md" style={{ display: "block", marginBottom: 2 }}>
-						{showDrawer.draftLabel ?? "Feedback to submitter"}
-					</Text>
-					<Text color="fg.tertiary" fontSize="sm" style={{ display: "block", marginBottom: 12 }}>
-						{showDrawer.draftHint ?? "OPAL drafted this — edit before sending."}
-					</Text>
-					<textarea
-						value={draftMsg}
-						onChange={(e) => setDraftMsg(e.target.value)}
-						style={{
-							width: "100%",
-							height: 104,
-							border: "1px solid var(--ax-colors-border-secondary)",
-							borderRadius: 6,
-							padding: "10px 12px",
-							fontSize: 14,
-							fontFamily: "inherit",
-							color: "var(--ax-colors-fg-secondary)",
-							lineHeight: 1.6,
-							background: "var(--ax-colors-bg-secondary)",
-							resize: "none",
-							outline: "none",
-						}}
-					/>
-					<Box display="flex" gap="8" mt="12">
-						<Button appearance="primary" size="md" onClick={sendDraft}>
-							Send &amp; continue
-						</Button>
-						<Button appearance="default" size="md" onClick={() => setShowDrawer(null)}>
-							Cancel
-						</Button>
-					</Box>
-				</Box>
-			)}
 		</Box>
 	);
 }

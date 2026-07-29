@@ -1,18 +1,48 @@
+import { Box } from "@optiaxiom/react";
 import {
 	IconPlus,
 	IconHouse,
 	IconList,
-	IconChartLine,
-	IconUserGroup,
-	IconBook,
+	IconChartMixed,
+	IconBookOpen,
 	IconStore,
 	IconSparkles,
 	IconFileLines,
 	IconGear,
 } from "@optiaxiom/icons";
+import IconResourceManagement from "@/app/cmp/assets/resource-management.svg";
+import styles from "./navigation.module.css";
 
-// Order and icon set match Figma "Library — Master" node 4033:31766 (Sidenav):
+// Figma's Sidenav "Add" item is a plus glyph on a circular accent-green badge
+// (node 19270:7115, fill var(--colors/fg/accent/base, #abff44)) — there's no
+// matching semantic token in the currently-installed @optiaxiom/react theme
+// (grepped the compiled CSS for both the token name and this literal hex —
+// neither exists), so the exact Figma value is hardcoded here rather than
+// guessing at a token that might resolve to a different color.
+function CreateIcon() {
+	return (
+		<Box
+			alignItems="center"
+			display="flex"
+			justifyContent="center"
+			style={{ background: "#abff44", borderRadius: "999px", flexShrink: 0, height: 32, width: 32 }}
+		>
+			<IconPlus />
+		</Box>
+	);
+}
+
+// Order and icon set match Figma "Plan View (Master)" node 6507:17285 and the
+// Axiom Design System "Sidenav Products/CMP_LIVE" component (node 19270:7209):
 // +, Home, Plan, Dashboard, Resource management, Library, Store, Work Request.
+// Icon-to-Figma-glyph mapping (Optiaxiom icon names mirror Material Symbol names,
+// so these were verified by matching the package's internal aliases 1:1 against
+// each Figma layer's glyph name): IconHouse=home, IconList=format_list_bulleted,
+// IconChartMixed=monitoring, IconBookOpen=menu_book, IconStore=storefront,
+// IconFileLines=article/"docs". "Resource management" has no Material Symbol
+// equivalent in the package — it's a bespoke Optimizely icon, vendored as
+// app/cmp/assets/resource-management.svg (SVGR import, fill="currentColor" so
+// it themes like every other nav icon).
 //
 // Real CMP has no auto-generated page-title headings — every visible entry below sets
 // hidePageHeader: true (or customLayout: true, which bypasses the whole template wrapper
@@ -21,7 +51,7 @@ import {
 export const cmpNav = [
 	{
 		label: "Create",
-		icon: <IconPlus />,
+		icon: <CreateIcon />,
 		isMenuTrigger: true,
 		menuOptions: [
 			{label: "Campaign", url: "/cmp/create/campaign"},
@@ -58,21 +88,23 @@ export const cmpNav = [
 		label: "Dashboard",
 		url: "/cmp/reports",
 		highlight: "/cmp/reports",
-		icon: <IconChartLine />,
+		icon: <IconChartMixed />,
 		hidePageHeader: true,
 	},
 	{
 		label: "Resource Management",
 		url: "/cmp/resource-management",
 		highlight: "/cmp/resource-management",
-		icon: <IconUserGroup />,
+		// See navigation.module.css for why this needs a real stylesheet class
+		// with !important rather than an inline style.
+		icon: <IconResourceManagement className={styles.resourceManagementIcon} />,
 		hidePageHeader: true,
 	},
 	{
 		label: "Library",
 		url: "/cmp/library",
 		highlight: "/cmp/library",
-		icon: <IconBook />,
+		icon: <IconBookOpen />,
 		hidePageHeader: true,
 	},
 	{

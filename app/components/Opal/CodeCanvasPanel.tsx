@@ -803,7 +803,7 @@ function VersionHistoryPanel({
 												: "transparent",
 									color:
 										line.type === "added"
-											? "var(--ax-colors-fg-success)"
+											? "var(--ax-colors-fg-success-strong)"
 											: line.type === "removed"
 												? "var(--ax-colors-fg-error)"
 												: "var(--ax-colors-fg-secondary)",

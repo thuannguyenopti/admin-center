@@ -15,6 +15,8 @@ export interface DropZoneLink {
 	maxFileSizeMb: number;
 	requiredFields: string[];
 	submissionCount: number;
+	/** Required to view or submit to this Drop Zone's public link — every zone has one. */
+	password: string;
 }
 
 export const DROP_ZONES: DropZoneLink[] = [
@@ -31,6 +33,7 @@ export const DROP_ZONES: DropZoneLink[] = [
 		maxFileSizeMb: 50,
 		requiredFields: ["Photographer credit", "Usage rights", "Shoot location"],
 		submissionCount: 6,
+		password: "stride-summer26",
 	},
 	{
 		id: "dz2",
@@ -45,6 +48,7 @@ export const DROP_ZONES: DropZoneLink[] = [
 		maxFileSizeMb: 200,
 		requiredFields: ["Videographer credit", "Usage rights"],
 		submissionCount: 4,
+		password: "stride-autumn26",
 	},
 ];
 
@@ -65,6 +69,14 @@ export interface DropZoneSubmission {
 	 * demo) — a submission added live via the internal upload tile or the public drop-zone
 	 * page has no curated preview, so DropZoneSubmissionCard falls back to a file-type icon. */
 	image?: string;
+	/** Reviewer's reason when status is "rejected" — shown back to the submitter on the
+	 * public drop-zone page they uploaded through. */
+	reviewerComment?: string;
+	/** Identifies which browser submitted this, so the public page can show "your
+	 * submissions" without any real auth. The internal upload tile (a reviewer adding a
+	 * file directly, not a real external submitter) uses the "internal" sentinel so its
+	 * entries never appear as anyone's own. */
+	visitorId: string;
 }
 
 export const INITIAL_DROP_ZONE_SUBMISSIONS: DropZoneSubmission[] = [
@@ -78,6 +90,7 @@ export const INITIAL_DROP_ZONE_SUBMISSIONS: DropZoneSubmission[] = [
 		submittedAt: "2 hours ago",
 		status: "pending",
 		image: "/brand-packs/templates/tdf-cyclist-mountain-sq.png",
+		visitorId: "seed",
 	},
 	{
 		id: "sub-2",
@@ -89,6 +102,7 @@ export const INITIAL_DROP_ZONE_SUBMISSIONS: DropZoneSubmission[] = [
 		submittedAt: "5 hours ago",
 		status: "approved",
 		image: "/brand-packs/templates/tdf-cyclist-road-wide.png",
+		visitorId: "seed",
 	},
 	{
 		id: "sub-3",
@@ -100,6 +114,7 @@ export const INITIAL_DROP_ZONE_SUBMISSIONS: DropZoneSubmission[] = [
 		submittedAt: "Yesterday",
 		status: "approved",
 		image: "/brand-packs/templates/tdf-engineered-wide.png",
+		visitorId: "seed",
 	},
 	{
 		id: "sub-4",
@@ -111,6 +126,8 @@ export const INITIAL_DROP_ZONE_SUBMISSIONS: DropZoneSubmission[] = [
 		submittedAt: "2 days ago",
 		status: "rejected",
 		image: "/brand-packs/templates/tdf-cyclist-mountain-sq.png",
+		reviewerComment: "RAW file needs color grading before we can use it — please resubmit a graded JPG or PNG export.",
+		visitorId: "seed",
 	},
 	{
 		id: "sub-5",
@@ -122,6 +139,7 @@ export const INITIAL_DROP_ZONE_SUBMISSIONS: DropZoneSubmission[] = [
 		submittedAt: "3 days ago",
 		status: "pending",
 		image: "/brand-packs/templates/tdf-cyclist-road-wide.png",
+		visitorId: "seed",
 	},
 	{
 		id: "sub-6",
@@ -133,6 +151,7 @@ export const INITIAL_DROP_ZONE_SUBMISSIONS: DropZoneSubmission[] = [
 		submittedAt: "4 days ago",
 		status: "approved",
 		image: "/brand-packs/templates/tdf-finish-port.png",
+		visitorId: "seed",
 	},
 	{
 		id: "sub-7",
@@ -144,6 +163,7 @@ export const INITIAL_DROP_ZONE_SUBMISSIONS: DropZoneSubmission[] = [
 		submittedAt: "1 day ago",
 		status: "pending",
 		image: "/brand-packs/templates/tdf-finish-port.png",
+		visitorId: "seed",
 	},
 	{
 		id: "sub-8",
@@ -155,6 +175,7 @@ export const INITIAL_DROP_ZONE_SUBMISSIONS: DropZoneSubmission[] = [
 		submittedAt: "3 days ago",
 		status: "approved",
 		image: "/brand-packs/templates/tdf-stride-race-sq.png",
+		visitorId: "seed",
 	},
 	{
 		id: "sub-9",
@@ -166,6 +187,8 @@ export const INITIAL_DROP_ZONE_SUBMISSIONS: DropZoneSubmission[] = [
 		submittedAt: "5 days ago",
 		status: "rejected",
 		image: "/brand-packs/templates/tdf-finish-port.png",
+		reviewerComment: "Both crops are too similar to sub-6 — let's hold off on using this pair for now.",
+		visitorId: "seed",
 	},
 	{
 		id: "sub-10",
@@ -177,6 +200,7 @@ export const INITIAL_DROP_ZONE_SUBMISSIONS: DropZoneSubmission[] = [
 		submittedAt: "1 week ago",
 		status: "approved",
 		image: "/brand-packs/templates/tdf-engineered-wide.png",
+		visitorId: "seed",
 	},
 ];
 

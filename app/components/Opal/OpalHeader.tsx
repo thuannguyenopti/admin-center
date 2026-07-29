@@ -623,48 +623,11 @@ export function OpalHeader({
 					</div>
 				)}
 			</Box>
-			{showWindowControls ? (
-				<Box display="flex" alignItems="center" gap="8">
-					<Button
-						appearance="subtle"
-						size="md"
-						aria-label="Maximize"
-						onClick={onToggleMode}
-						style={{
-							width: "40px",
-							height: "40px",
-							borderRadius: "6px",
-							padding: 0,
-							minWidth: "auto",
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-						}}
-					>
-						<IconMaximize style={{width: "14px", height: "14px"}} />
-					</Button>
-					<Button
-						appearance="subtle"
-						size="md"
-						aria-label="Close"
-						onClick={onClose}
-						style={{
-							width: "40px",
-							height: "40px",
-							borderRadius: "6px",
-							padding: 0,
-							minWidth: "auto",
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-						}}
-					>
-						<IconXmark size={20} />
-					</Button>
-				</Box>
-			) : (
-				<Box />
-			)}
+			{/* No Maximize/Close here — this is the persistent global Opal panel
+			    (app/components/OpalPanel.tsx), which has no independent close or
+			    fullscreen affordance of its own. Leaving the canvas (its own X)
+			    is what returns you to the chat-only view. */}
+			<Box />
 		</Box>
 	);
 }

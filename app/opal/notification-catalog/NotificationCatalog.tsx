@@ -114,7 +114,7 @@ function SectionHeading({
 						flexShrink: 0,
 					}}
 				>
-					<Text fontSize="xs" fontWeight="700" color="fg.accent">
+					<Text fontSize="xs" fontWeight="700" color="fg.accent.strong">
 						{number}
 					</Text>
 				</Box>
@@ -2379,7 +2379,7 @@ function AccessibilitySection() {
 					border="1"
 					borderColor="border.accent"
 				>
-					<Text fontSize="sm" color="fg.accent">
+					<Text fontSize="sm" color="fg.accent.strong">
 						On flyout open: focus moves to first item or close button. On close: focus
 						returns to the bell icon that triggered the panel.
 					</Text>
@@ -2617,7 +2617,7 @@ export default function NotificationCatalog() {
 								fontWeight: activeSection === s.id ? 600 : 400,
 								color:
 									activeSection === s.id
-										? "var(--ax-colors-fg-accent)"
+										? "var(--ax-colors-fg-accent-strong)"
 										: "var(--ax-colors-fg-secondary)",
 								background:
 									activeSection === s.id

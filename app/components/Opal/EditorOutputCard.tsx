@@ -78,7 +78,7 @@ export function EditorOutputCard({
           bg="bg.information.subtle"
           rounded="md"
         >
-          <IconFileLines size={16} style={{ color: "var(--ax-colors-fg-information)" }} />
+          <IconFileLines size={16} style={{ color: "var(--ax-colors-fg-information-strong)" }} />
         </Box>
         <Box flex="1" display="flex" flexDirection="column" gap="2">
           <Text fontSize="md" fontWeight="600" color="fg.default">

@@ -26,7 +26,7 @@ export function AllClearState({ onBack }: Props) {
 				rounded="full"
 				style={{ width: 72, height: 72 }}
 			>
-				<IconCheck size={36} style={{ color: "var(--ax-colors-fg-accent)" }} />
+				<IconCheck size={36} style={{ color: "var(--ax-colors-fg-accent-strong)" }} />
 			</Box>
 			<Heading level="2" fontSize="xl" style={{ margin: 0 }}>
 				All faces resolved

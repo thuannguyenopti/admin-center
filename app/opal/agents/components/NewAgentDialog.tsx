@@ -1353,7 +1353,7 @@ export function NewAgentDialog({open, onOpenChange}: Props) {
 																	? "var(--ax-colors-bg-information-subtle)"
 																	: "var(--ax-colors-bg-secondary)",
 																color: p.required
-																	? "var(--ax-colors-fg-information)"
+																	? "var(--ax-colors-fg-information-strong)"
 																	: "var(--ax-colors-fg-secondary)",
 																fontSize:
 																	"var(--ax-fontSize-sm-fontSize)",

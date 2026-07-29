@@ -7,7 +7,8 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { Table, Td, Th, Tr } from "@/app/components/Table";
 import { IconArrowUpRightFromSquare as IconExternalLink, IconCheck, IconCopy, IconPlus, IconShareNodes as IconShare } from "@optimizely/axiom-icons";
-import { DROP_ZONES, type DropZoneLink } from "@/app/dam/drop-zone/data";
+import type { DropZoneLink } from "@/app/dam/drop-zone/data";
+import { getAllDropZones, subscribeDropZones } from "@/app/dam/drop-zone/dropZones";
 import { getAllSubmissions, getSubmissionsForZone, subscribeSubmissions } from "@/app/dam/drop-zone/submissions";
 import { DropZoneDetailView } from "./DropZoneDetailView";
 import { ShareLinkSettingsDialog } from "./ShareLinkSettingsDialog";
@@ -24,6 +25,7 @@ function compareRows(a: DropZoneLink, b: DropZoneLink, key: SortKey, counts: Rec
 export function DropZonesView() {
 	const router = useRouter();
 	useSyncExternalStore(subscribeSubmissions, getAllSubmissions, getAllSubmissions);
+	const dropZones = useSyncExternalStore(subscribeDropZones, getAllDropZones, getAllDropZones);
 	const [search, setSearch] = useState("");
 	const [sortKey, setSortKey] = useState<SortKey>("expiresAt");
 	const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -31,11 +33,11 @@ export function DropZonesView() {
 	const [openZone, setOpenZone] = useState<DropZoneLink | null>(null);
 	const [shareZone, setShareZone] = useState<DropZoneLink | null>(null);
 
-	// Recomputed on every render rather than memoized — the useSyncExternalStore subscription
-	// above already re-renders this component whenever a submission changes, and DROP_ZONES
-	// is a two-item mock list, so there's no meaningful cost to just reading it fresh.
+	// Recomputed on every render rather than memoized — the useSyncExternalStore subscriptions
+	// above already re-render this component whenever a zone or submission changes, and this
+	// is a small mock list, so there's no meaningful cost to just reading it fresh.
 	const counts: Record<string, number> = Object.fromEntries(
-		DROP_ZONES.map((zone) => [zone.id, getSubmissionsForZone(zone.id).length]),
+		dropZones.map((zone) => [zone.id, getSubmissionsForZone(zone.id).length]),
 	);
 
 	const handleSort = (key: SortKey) => {
@@ -48,12 +50,12 @@ export function DropZonesView() {
 	};
 
 	const rows = useMemo(() => {
-		const filtered = DROP_ZONES.filter(
+		const filtered = dropZones.filter(
 			(link) => !search.trim() || link.name.toLowerCase().includes(search.trim().toLowerCase()),
 		);
 		const sorted = [...filtered].sort((a, b) => compareRows(a, b, sortKey, counts));
 		return sortDirection === "asc" ? sorted : sorted.reverse();
-	}, [search, sortKey, sortDirection, counts]);
+	}, [dropZones, search, sortKey, sortDirection, counts]);
 
 	function copyLink(link: DropZoneLink) {
 		const url = `${window.location.origin}/dam/drop-zone/${link.token}`;

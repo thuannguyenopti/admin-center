@@ -15,11 +15,13 @@ import {
 	IconLink,
 	IconList,
 } from "@optimizely/axiom-icons";
-import type { DropZoneLink } from "@/app/dam/drop-zone/data";
+import type { DropZoneLink, DropZoneSubmission } from "@/app/dam/drop-zone/data";
 import { getAllSubmissions, getSubmissionsForZone, setSubmissionStatus, subscribeSubmissions } from "@/app/dam/drop-zone/submissions";
+import { addLibraryItem, type AssetKind, type AssetLabel, type LibraryItem } from "@/app/cmp/library/libraryItems";
 import { DropZoneFilterPanel, type DropZoneFilterSection } from "./DropZoneFilterPanel";
 import { DropZoneSubmissionCard, SUBMISSION_STATUS_BADGE } from "./DropZoneSubmissionCard";
 import { DropZoneUploadTile } from "./DropZoneUploadTile";
+import { RejectSubmissionDialog } from "./RejectSubmissionDialog";
 import { ShareLinkSettingsDialog } from "./ShareLinkSettingsDialog";
 
 type ViewMode = "cards" | "grid" | "table";
@@ -34,6 +36,32 @@ const SORT_LABEL: Record<SortKey, string> = {
 
 function fileExtension(name: string) {
 	return (name.split(".").pop() ?? "").toUpperCase();
+}
+
+function inferAssetInfo(filename: string): { label: AssetLabel; type: AssetKind } {
+	const ext = (filename.split(".").pop() ?? "").toLowerCase();
+	if (ext === "jpg" || ext === "jpeg") return { label: "JPG", type: "image" };
+	if (ext === "png") return { label: "PNG", type: "image" };
+	if (ext === "tif" || ext === "tiff") return { label: "TIFF", type: "image" };
+	if (ext === "pdf") return { label: "PDF", type: "document" };
+	return { label: "File", type: "file" };
+}
+
+/** An approved Drop Zone submission becomes a real Review Queue item — otherwise
+ * approving here was a dead end that never surfaced anywhere else in the DAM. */
+function submissionToLibraryItem(submission: DropZoneSubmission): LibraryItem {
+	const primaryFile = submission.files[0]?.name ?? "Untitled";
+	const { label, type } = inferAssetInfo(primaryFile);
+	return {
+		id: `dz-${submission.id}`,
+		title: primaryFile,
+		label,
+		type,
+		image: submission.image,
+		opalStatus: "pending",
+		submittedBy: submission.submitterName,
+		submittedAt: submission.submittedAt,
+	};
 }
 
 /**
@@ -52,6 +80,7 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 	const [filterSelected, setFilterSelected] = useState<Set<string>>(new Set());
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [shareOpen, setShareOpen] = useState(false);
+	const [rejectTarget, setRejectTarget] = useState<{ ids: string[]; submitterName: string } | null>(null);
 
 	const submissions = getSubmissionsForZone(zone.id);
 
@@ -115,9 +144,29 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 		});
 	}
 
-	function bulkSetStatus(status: "approved" | "rejected") {
-		selected.forEach((id) => setSubmissionStatus(id, status));
+	function approveSubmission(submission: DropZoneSubmission) {
+		addLibraryItem(submissionToLibraryItem(submission));
+		setSubmissionStatus(submission.id, "approved");
+		toaster.create(`${submission.files[0]?.name ?? "Submission"} added to the Review Queue`, { intent: "success" });
+	}
+
+	function bulkApprove() {
+		selected.forEach((id) => {
+			const submission = sorted.find((s) => s.id === id);
+			if (submission) approveSubmission(submission);
+		});
 		setSelected(new Set());
+	}
+
+	function requestReject(ids: string[], submitterName: string) {
+		setRejectTarget({ ids, submitterName });
+	}
+
+	function confirmReject(reason: string) {
+		if (!rejectTarget) return;
+		rejectTarget.ids.forEach((id) => setSubmissionStatus(id, "rejected", reason));
+		setSelected(new Set());
+		setRejectTarget(null);
 	}
 
 	function copyLink() {
@@ -223,8 +272,8 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 							<Text color="fg.default" fontSize="sm" fontWeight="500">{selected.size} selected</Text>
 							<Box display="flex" gap="8">
 								<Button appearance="subtle" size="sm" onClick={() => setSelected(new Set())}>Clear</Button>
-								<Button appearance="subtle" size="sm" style={{ color: "var(--ax-colors-fg-error)" }} onClick={() => bulkSetStatus("rejected")}>Reject</Button>
-								<Button appearance="primary" size="sm" onClick={() => bulkSetStatus("approved")}>Approve</Button>
+								<Button appearance="subtle" size="sm" style={{ color: "var(--ax-colors-fg-error)" }} onClick={() => requestReject(Array.from(selected), selected.size === 1 ? sorted.find((s) => selected.has(s.id))?.submitterName ?? "this submitter" : "these submitters")}>Reject</Button>
+								<Button appearance="primary" size="sm" onClick={bulkApprove}>Approve</Button>
 							</Box>
 						</Box>
 					)}
@@ -260,8 +309,8 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 											<Td type="button">
 												{submission.status === "pending" && (
 													<Box display="flex" gap="4" justifyContent="flex-end">
-														<Button appearance="subtle" size="sm" style={{ color: "var(--ax-colors-fg-error)" }} onClick={() => setSubmissionStatus(submission.id, "rejected")}>Reject</Button>
-														<Button appearance="primary" size="sm" onClick={() => setSubmissionStatus(submission.id, "approved")}>Approve</Button>
+														<Button appearance="subtle" size="sm" style={{ color: "var(--ax-colors-fg-error)" }} onClick={() => requestReject([submission.id], submission.submitterName)}>Reject</Button>
+														<Button appearance="primary" size="sm" onClick={() => approveSubmission(submission)}>Approve</Button>
 													</Box>
 												)}
 											</Td>
@@ -278,8 +327,8 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 									key={submission.id}
 									selected={selected.has(submission.id)}
 									submission={submission}
-									onApprove={() => setSubmissionStatus(submission.id, "approved")}
-									onReject={() => setSubmissionStatus(submission.id, "rejected")}
+									onApprove={() => approveSubmission(submission)}
+									onReject={() => requestReject([submission.id], submission.submitterName)}
 									onToggleSelect={() => toggleSelect(submission.id)}
 								/>
 							))}
@@ -289,6 +338,12 @@ export function DropZoneDetailView({ zone, onBack }: { zone: DropZoneLink; onBac
 			</Box>
 
 			<ShareLinkSettingsDialog open={shareOpen} zone={zone} onClose={() => setShareOpen(false)} />
+			<RejectSubmissionDialog
+				open={!!rejectTarget}
+				submitterName={rejectTarget?.submitterName ?? ""}
+				onCancel={() => setRejectTarget(null)}
+				onConfirm={confirmReject}
+			/>
 		</Box>
 	);
 }

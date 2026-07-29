@@ -8,6 +8,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CollabRail } from "../../components/Opal/CollabRail";
 import { ApprovalActionCard } from "../../components/Opal/ApprovalActionCard";
 import { HITLApprovalCard } from "../../components/Opal/HITLApprovalCard";
+import { OpalWorkshopMessageCard, type OpalWorkshopMessageId } from "../components/campaign-workshop/OpalWorkshopMessageCard";
+import { CampaignWorkshopCanvas } from "../components/campaign-workshop/CampaignWorkshopCanvas";
+import type { ContentTab } from "../components/campaign-workshop/CanvasStage";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
   Box,
@@ -167,6 +170,7 @@ const UNREAD_DOT_STYLE: React.CSSProperties = {
 };
 
 const DMS: DMItem[] = [
+  { id: "opal", name: "Opal",                      avatar: "/opal-orb.png", status: "active", preview: "Your Boston Marathon 2026 content suite is ready to review.", time: "9:12 AM" },
   { id: "js",   name: "Jane Smith",                avatar: "https://i.pravatar.cc/150?img=47", status: "active", unread: 2, preview: "Same 😂 see you at 2!", time: "2:22 PM" },
   { id: "hw",   name: "Harry Winston-Brown",        avatar: "https://i.pravatar.cc/150?img=52", status: "busy",   preview: "Happy to help 😄 Let me know if anything else comes up!", time: "Yesterday" },
   { id: "pr",   name: "Priya Rajan",                avatar: "https://i.pravatar.cc/150?img=44", status: "away",  unread: 3, hasDraft: true, preview: "Just flagging in case you hadn't seen the calendar invite!", time: "11:45 AM" },
@@ -640,6 +644,22 @@ const CHANNEL_THREADS: Record<string, Message[]> = {
 };
 
 const THREADS: Record<string, Message[]> = {
+  opal: [
+    {
+      id: "1", from: "user",
+      text: "What do we have set up for the Boston Marathon?",
+    },
+    {
+      id: "2", from: "vau",
+      senderName: "Opal", senderAvatar: "/opal-orb.png",
+      text: "Found it — you're running Boston Marathon 2027 (CPN-42), with one task already in motion: Boston Marathon blog post (TSK-2720). Want me to open the brief and get started on the content?",
+    },
+    {
+      id: "opal-brief", from: "vau", type: "hitl",
+      senderName: "Opal", senderAvatar: "/opal-orb.png",
+      text: "",
+    },
+  ],
   bf: [
     {
       id: "1", from: "user",
@@ -2315,7 +2335,7 @@ function IMSidebar({
             const highlight = (text: string) => {
               const idx = text.toLowerCase().indexOf(query);
               if (idx < 0) return <span>{text}</span>;
-              return <span>{text.slice(0, idx)}<span style={{ background: "var(--ax-colors-bg-success-subtle)", color: "var(--ax-colors-fg-success)", fontWeight: 600 }}>{text.slice(idx, idx + query.length)}</span>{text.slice(idx + query.length)}</span>;
+              return <span>{text.slice(0, idx)}<span style={{ background: "var(--ax-colors-bg-success-subtle)", color: "var(--ax-colors-fg-success-strong)", fontWeight: 600 }}>{text.slice(idx, idx + query.length)}</span>{text.slice(idx + query.length)}</span>;
             };
             return (
               <Box display="flex" flexDirection="column" gap="4">
@@ -3577,6 +3597,20 @@ function IMMain({
   // full document review layout (Stride GEO)
   const [docReviewOpen, setDocReviewOpen] = useState(false);
   const [docReviewExpanded, setDocReviewExpanded] = useState(false);
+  const [workshopCanvasOpen, setWorkshopCanvasOpen] = useState(false);
+  const [workshopCanvasTab, setWorkshopCanvasTab] = useState<ContentTab>("blog");
+  const [workshopCanvasRationale, setWorkshopCanvasRationale] = useState(false);
+  const advanceOpalThread = (userText: string, assistantText?: string, nextCardId?: OpalWorkshopMessageId) => {
+    setThreads((prev) => ({
+      ...prev,
+      opal: [
+        ...(prev.opal ?? []),
+        { id: crypto.randomUUID(), from: "user", text: userText },
+        ...(assistantText ? [{ id: crypto.randomUUID(), from: "vau" as const, senderName: "Opal", senderAvatar: "/opal-orb.png", text: assistantText }] : []),
+        ...(nextCardId ? [{ id: nextCardId, from: "vau" as const, type: "hitl" as const, senderName: "Opal", senderAvatar: "/opal-orb.png", text: "" }] : []),
+      ],
+    }));
+  };
   // notification settings popover
   const [notifGearOpen, setNotifGearOpen] = useState(false);
   const [mentionPref, setMentionPref] = useState<"all" | "mentions-only">("all");
@@ -4427,7 +4461,7 @@ function IMMain({
                                   <Text fontSize="xs" color="fg.tertiary">{"time" in msg ? String(msg.time) : ""}</Text>
                                 </Box>
                                 <Text fontSize="sm" color="fg.tertiary" style={{ lineHeight: 1.5 }}>
-                                  {before}<mark style={{ background: "var(--ax-colors-bg-success-subtle)", color: "var(--ax-colors-fg-success)", fontWeight: 600, padding: "0 2px", borderRadius: 2, fontStyle: "normal" }}>{matchText}</mark>{afterText}
+                                  {before}<mark style={{ background: "var(--ax-colors-bg-success-subtle)", color: "var(--ax-colors-fg-success-strong)", fontWeight: 600, padding: "0 2px", borderRadius: 2, fontStyle: "normal" }}>{matchText}</mark>{afterText}
                                 </Text>
                               </Box>
                             </Box>
@@ -4542,6 +4576,36 @@ function IMMain({
                               persistKey="kara-q4-brief-approval"
                               approvalState="pending"
                               onPreview={() => imRouter.push('/opal?artifacts=1')}
+                            />
+                          ) : selected === "opal" ? (
+                            <OpalWorkshopMessageCard
+                              messageId={msg.id}
+                              onAdvance={advanceOpalThread}
+                              onOpenCanvas={(tab, rationale, closingReply) => {
+                                // Update the real thread (if there's a closing reply to add)
+                                // and open canvas in the SAME batch — CampaignWorkshopCanvas
+                                // only mounts once this re-render lands, so its own seed
+                                // effect always reads threads.opal already caught up, never
+                                // a stale pre-update snapshot from this handler's closure.
+                                //
+                                // The "suite ready" card rides along with the closing reply
+                                // (added to the real thread, not just the ephemeral canvas
+                                // panel) so it's still there — with a working Edit button —
+                                // after you close canvas. That's the only way back in.
+                                if (closingReply) {
+                                  setThreads((prev) => ({
+                                    ...prev,
+                                    opal: [
+                                      ...(prev.opal ?? []),
+                                      { id: crypto.randomUUID(), from: "vau" as const, senderName: "Opal", senderAvatar: "/opal-orb.png", text: closingReply },
+                                      { id: "opal-suite-ready", from: "vau" as const, type: "hitl" as const, senderName: "Opal", senderAvatar: "/opal-orb.png", text: "" },
+                                    ],
+                                  }));
+                                }
+                                setWorkshopCanvasTab(tab);
+                                setWorkshopCanvasRationale(rationale);
+                                setWorkshopCanvasOpen(true);
+                              }}
                             />
                           ) : (
                             <ApprovalActionCard
@@ -5332,6 +5396,23 @@ function IMMain({
           </Box>
         );
       })()}
+
+      {/* ── Campaign canvas overlay (Opal — Boston Marathon workshop) ───
+          Fullscreen portal, same as the Stride GEO expanded-doc view below —
+          the Figma canvas frames show no surrounding app chrome or Messages
+          sidebar, so this needs to escape IMMain's content pane entirely
+          rather than sit inset within it. */}
+      {workshopCanvasOpen && typeof document !== "undefined" && createPortal(
+        <Box style={{ position: "fixed", inset: 0, background: "var(--ax-colors-bg-default)", zIndex: 30 }}>
+          <CampaignWorkshopCanvas
+            initialTab={workshopCanvasTab}
+            initialShowRationale={workshopCanvasRationale}
+            onClose={() => setWorkshopCanvasOpen(false)}
+            opalThreadMessages={threads.opal ?? []}
+          />
+        </Box>,
+        document.body,
+      )}
 
       {/* ── Document Review overlay (Stride GEO) ─────────────────── */}
       {docReviewOpen && (

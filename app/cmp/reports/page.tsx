@@ -1,7 +1,7 @@
 "use client";
 
 import {useState} from "react";
-import {Box, Tabs, TabsList, TabsTrigger, TabsContent, Badge} from "@optiaxiom/react";
+import {Box, Tabs, TabsList, TabsTrigger, Badge} from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
 import {
@@ -370,9 +370,7 @@ export default function CMPReportsPage() {
 			</Box>
 
 			{/* Chart Area */}
-			<TabsContent value={activeTab}>
-				<ChartPlaceholder />
-			</TabsContent>
+			<ChartPlaceholder />
 
 			{/* Chart Data Table (Optional) */}
 			<Box p="16" bg="bg.default" border="1" borderColor="border.tertiary" rounded="md">

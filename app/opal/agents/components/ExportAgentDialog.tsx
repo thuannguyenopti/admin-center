@@ -130,7 +130,7 @@ export function ExportAgentDialog({open, onOpenChange, agent}: ExportAgentDialog
 									flexShrink: 0,
 								}}
 							>
-								<IconCircleUser size={16} color="var(--ax-colors-fg-information)" />
+								<IconCircleUser size={16} color="var(--ax-colors-fg-information-strong)" />
 							</Box>
 							{/* Agent meta */}
 							<Box>

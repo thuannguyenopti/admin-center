@@ -5,12 +5,15 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconCheck, IconCopy, IconLink, IconPlus } from "@optimizely/axiom-icons";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { DamBreadcrumb } from "../components/DamBreadcrumb";
-import { DROP_ZONES } from "./data";
+import type { DropZoneLink } from "./data";
+import { getAllDropZones, subscribeDropZones } from "./dropZones";
+import { getSubmissionsForZone } from "./submissions";
 
-function DropZoneRow({ link }: { link: (typeof DROP_ZONES)[number] }) {
+function DropZoneRow({ link }: { link: DropZoneLink }) {
 	const [copied, setCopied] = useState(false);
+	const submissionCount = getSubmissionsForZone(link.id).length;
 	// Real internal route, not a cosmetic domain — resolves correctly wherever this
 	// prototype is actually deployed (localhost, PR preview, or production).
 	const url = typeof window !== "undefined" ? `${window.location.origin}/dam/drop-zone/${link.token}` : `/dam/drop-zone/${link.token}`;
@@ -25,7 +28,7 @@ function DropZoneRow({ link }: { link: (typeof DROP_ZONES)[number] }) {
 					</Badge>
 				</Box>
 				<Text color="fg.tertiary" fontSize="sm">
-					/dam/drop-zone/{link.token} · {link.submissionCount} submission{link.submissionCount === 1 ? "" : "s"} · expires {link.expiresAt}
+					/dam/drop-zone/{link.token} · {submissionCount} submission{submissionCount === 1 ? "" : "s"} · expires {link.expiresAt}
 				</Text>
 			</Box>
 			<Button
@@ -46,6 +49,7 @@ function DropZoneRow({ link }: { link: (typeof DROP_ZONES)[number] }) {
 
 export default function DropZoneListPage() {
 	const router = useRouter();
+	const dropZones = useSyncExternalStore(subscribeDropZones, getAllDropZones, getAllDropZones);
 
 	return (
 		<Box display="flex" flexDirection="column" style={{ height: "100%" }}>
@@ -64,7 +68,7 @@ export default function DropZoneListPage() {
 			</Box>
 
 			<Box style={{ flex: 1, overflowY: "auto" }}>
-				{DROP_ZONES.length === 0 ? (
+				{dropZones.length === 0 ? (
 					<Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" gap="16" style={{ minHeight: 300 }}>
 						<Box
 							alignItems="center"
@@ -74,13 +78,13 @@ export default function DropZoneListPage() {
 							rounded="full"
 							style={{ width: 64, height: 64 }}
 						>
-							<IconLink size={28} style={{ color: "var(--ax-colors-fg-accent)" }} />
+							<IconLink size={28} style={{ color: "var(--ax-colors-fg-accent-strong)" }} />
 						</Box>
 						<Text color="fg.secondary" fontSize="md">No Drop Zone links yet.</Text>
 					</Box>
 				) : (
-					DROP_ZONES.map((link, i) => (
-						<Box key={link.id} borderB={i < DROP_ZONES.length - 1 ? "1" : undefined} borderColor="border.tertiary">
+					dropZones.map((link, i) => (
+						<Box key={link.id} borderB={i < dropZones.length - 1 ? "1" : undefined} borderColor="border.tertiary">
 							<DropZoneRow link={link} />
 						</Box>
 					))

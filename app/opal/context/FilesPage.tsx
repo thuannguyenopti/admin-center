@@ -131,8 +131,8 @@ export function FilesPage() {
 			return DS_COMPONENT_LIST;
 		}
 	}, [dsRegistryJson]);
-	const activeTab = searchParams.get("tab") === "brand-packs" ? "brand-packs" : activeContextTab;
-	const isBrandPacksTab = activeTab === "brand-packs";
+	const activeTab = searchParams.get("tab") === "brand" ? "brand" : activeContextTab;
+	const isBrandTab = activeTab === "brand";
 	const [isEditing, setIsEditing] = useState(false);
 	const [editorMode, setEditorMode] = useState<"source" | "preview">("preview");
 	const [detailsOpen, setDetailsOpen] = useState(false);
@@ -297,14 +297,14 @@ export function FilesPage() {
 	const selectedMarkdown = FILE_CONTENT[selectedFileId] ?? "";
 
 	return (
-		<Box>
+		<Box display="flex" flexDirection="column" h="full" px="32" style={{minHeight: 0}}>
 			{/* Collapsible header */}
 			{/* Tabs */}
 			<Tabs
 				value={activeTab}
 				onValueChange={(val: string) => {
-					if (val === "brand-packs") {
-						router.push("/opal/context?tab=brand-packs");
+					if (val === "brand") {
+						router.push("/opal/context?tab=brand");
 					} else {
 						setActiveContextTab(val as typeof activeContextTab);
 						router.push("/opal/context");
@@ -315,13 +315,13 @@ export function FilesPage() {
 					<TabsTrigger value="skills">Skills</TabsTrigger>
 					<TabsTrigger value="files">Files</TabsTrigger>
 					<TabsTrigger value="design-system">Design System</TabsTrigger>
-					<TabsTrigger value="brand-packs">Brand Packs</TabsTrigger>
+					<TabsTrigger value="brand">Brand</TabsTrigger>
 					<TabsTrigger value="memory">Memory</TabsTrigger>
 					<TabsTrigger value="rag">RAG</TabsTrigger>
 				</TabsList>
 			</Tabs>
 			{/* Filter bar */}
-			{!isBrandPacksTab && dsRegistryJson && (
+			{!isBrandTab && dsRegistryJson && (
 				<Box display="flex" gap="12" alignItems="center">
 					<Box style={{flex: 1, maxWidth: 264}}>
 						<SearchInput size="lg" placeholder="Search files..." />
@@ -399,8 +399,8 @@ export function FilesPage() {
 				</Box>
 			)}
 			{/* Content body */}
-			{isBrandPacksTab ? (
-				<Box style={{flex: 1, minHeight: 0}}>
+			{isBrandTab ? (
+				<Box style={{flex: 1, minHeight: 0, overflow: "hidden", marginLeft: -32, marginRight: -32}}>
 					<BrandPacksOverview embedded />
 				</Box>
 			) : activeTab === "design-system" ? (

@@ -9,7 +9,7 @@
  */
 
 import { registerAdaptiveBlock, type AdaptiveBlockComponentProps } from "@/app/components/ai/AdaptiveBlockRegistry";
-import { Box, Text } from "@optiaxiom/react";
+import { Badge, Box, Text } from "@optiaxiom/react";
 
 type TemplateCardMeta = {
 	template: {
@@ -80,21 +80,8 @@ function TemplateCardBlock({ metadata }: AdaptiveBlockComponentProps) {
 				>
 					{template.format} · {template.ratio} · {template.channel}
 				</Text>
-				<Box
-					display="inline-flex"
-					alignItems="center"
-					gap="4"
-					style={{
-						background: "linear-gradient(135deg, #ABFF44 0%, #00C9A7 60%, #2979FF 100%)",
-						borderRadius: 999,
-						padding: "1px 8px",
-						marginTop: 2,
-						width: "fit-content",
-					}}
-				>
-					<Text style={{ fontSize: 10, fontWeight: 700, color: "#1a2e1a", letterSpacing: "0.03em" }}>
-						TEMPLATE SELECTED
-					</Text>
+				<Box style={{ marginTop: 2, width: "fit-content" }}>
+					<Badge intent="success">TEMPLATE SELECTED</Badge>
 				</Box>
 			</Box>
 		</Box>

@@ -7,7 +7,8 @@ import { IconCheck, IconCopy, IconSparkles } from "@optimizely/axiom-icons";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DamBreadcrumb } from "../../components/DamBreadcrumb";
-import { getOpalBriefSuggestion, type OpalBriefSuggestion } from "../data";
+import { getOpalBriefSuggestion, type DropZoneLink, type OpalBriefSuggestion } from "../data";
+import { addDropZone } from "../dropZones";
 
 type Phase = "brief" | "review" | "created";
 
@@ -28,7 +29,14 @@ export default function NewDropZonePage() {
 	const [expiresAt, setExpiresAt] = useState("");
 	const [maxFileSizeMb, setMaxFileSizeMb] = useState(50);
 	const [fileTypes, setFileTypes] = useState<string[]>([]);
-	const [copied, setCopied] = useState(false);
+	const [copiedField, setCopiedField] = useState<"link" | "password" | null>(null);
+	const [createdZone, setCreatedZone] = useState<DropZoneLink | null>(null);
+
+	function copyField(field: "link" | "password", value: string) {
+		navigator.clipboard?.writeText(value);
+		setCopiedField(field);
+		setTimeout(() => setCopiedField((current) => (current === field ? null : current)), 1500);
+	}
 
 	function analyzeBrief() {
 		const s = getOpalBriefSuggestion(brief);
@@ -41,7 +49,31 @@ export default function NewDropZonePage() {
 	}
 
 	const token = campaignTag.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-+|-+$)/g, "") || "campaign";
-	const url = `dam.optimizely.com/drop/${token}`;
+	// Real internal route, not a cosmetic domain — resolves correctly wherever this
+	// prototype is actually deployed (localhost, PR preview, or production), matching
+	// the same pattern used for the copy-link action in ../page.tsx.
+	const url = typeof window !== "undefined" ? `${window.location.origin}/dam/drop-zone/${token}` : `/dam/drop-zone/${token}`;
+
+	function createDropZone() {
+		if (!suggestion) return;
+		// Every Drop Zone requires a password (Share Link Settings can't turn this off) —
+		// seed a reasonable default so the link works immediately; the creator can change
+		// it from Share Link Settings before sending it out.
+		const password = `${token}-${Math.floor(1000 + Math.random() * 9000)}`;
+		const zone = addDropZone({
+			token,
+			name: campaignTag,
+			brief,
+			campaign: campaignTag,
+			expiresAt,
+			allowedFileTypes: fileTypes,
+			maxFileSizeMb,
+			requiredFields: suggestion.requiredFields,
+			password,
+		});
+		setCreatedZone(zone);
+		setPhase("created");
+	}
 
 	if (phase === "created") {
 		return (
@@ -49,26 +81,35 @@ export default function NewDropZonePage() {
 				<DamBreadcrumb segments={BREADCRUMB} />
 				<Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" gap="16" style={{ flex: 1, textAlign: "center" }}>
 					<Box alignItems="center" bg="bg.success.subtle" display="flex" justifyContent="center" rounded="full" style={{ width: 56, height: 56 }}>
-						<IconCheck size={26} style={{ color: "var(--ax-colors-fg-success)" }} />
+						<IconCheck size={26} style={{ color: "var(--ax-colors-fg-success-strong)" }} />
 					</Box>
 					<Box display="flex" flexDirection="column" gap="4">
 						<Text color="fg.default" fontWeight="600" fontSize="lg">Drop Zone link created</Text>
-						<Text color="fg.secondary" fontSize="md">Share this link with external contributors.</Text>
+						<Text color="fg.secondary" fontSize="md">Share the link and password with external contributors — separately, so a copied email doesn't hand over both at once.</Text>
 					</Box>
-					<Box bg="bg.secondary" display="flex" alignItems="center" gap="12" px="16" py="10" rounded="md" style={{ marginTop: 8 }}>
-						<Text color="fg.default" fontSize="md" style={{ fontFamily: "monospace" }}>{url}</Text>
-						<Button
-							appearance="subtle"
-							size="sm"
-							icon={copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
-							onClick={() => {
-								navigator.clipboard?.writeText(`https://${url}`);
-								setCopied(true);
-								setTimeout(() => setCopied(false), 1500);
-							}}
-						>
-							{copied ? "Copied" : "Copy"}
-						</Button>
+					<Box display="flex" flexDirection="column" gap="8" style={{ marginTop: 8, width: "100%", maxWidth: 440 }}>
+						<Box bg="bg.secondary" display="flex" alignItems="center" gap="12" px="16" py="10" rounded="md">
+							<Text color="fg.default" fontSize="md" style={{ flex: 1, fontFamily: "monospace", overflow: "hidden", textAlign: "left", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{url}</Text>
+							<Button
+								appearance="subtle"
+								size="sm"
+								icon={copiedField === "link" ? <IconCheck size={14} /> : <IconCopy size={14} />}
+								onClick={() => copyField("link", url)}
+							>
+								{copiedField === "link" ? "Copied" : "Copy"}
+							</Button>
+						</Box>
+						<Box bg="bg.warning.subtle" display="flex" alignItems="center" gap="12" px="16" py="10" rounded="md">
+							<Text color="fg.default" fontSize="md" style={{ flex: 1, fontFamily: "monospace", textAlign: "left" }}>{createdZone?.password}</Text>
+							<Button
+								appearance="subtle"
+								size="sm"
+								icon={copiedField === "password" ? <IconCheck size={14} /> : <IconCopy size={14} />}
+								onClick={() => copyField("password", createdZone?.password ?? "")}
+							>
+								{copiedField === "password" ? "Copied" : "Copy"}
+							</Button>
+						</Box>
 					</Box>
 					<Button appearance="default" size="md" onClick={() => router.push("/dam/drop-zone")} style={{ marginTop: 8 }}>
 						Back to Drop Zone
@@ -117,7 +158,7 @@ export default function NewDropZonePage() {
 					{phase === "review" && suggestion && (
 						<>
 							<Box bg="bg.accent.subtle" display="flex" alignItems="start" gap="8" px="16" py="12" rounded="md">
-								<IconSparkles size={14} style={{ color: "var(--ax-colors-fg-accent)", flexShrink: 0, marginTop: 2 }} />
+								<IconSparkles size={14} style={{ color: "var(--ax-colors-fg-accent-strong)", flexShrink: 0, marginTop: 2 }} />
 								<Text color="fg.default" fontSize="sm">
 									OPAL suggested the configuration below from your brief. Review and adjust before creating the link.
 								</Text>
@@ -174,7 +215,7 @@ export default function NewDropZonePage() {
 							</Field>
 
 							<Box display="flex" gap="8">
-								<Button appearance="primary" size="md" onClick={() => setPhase("created")}>
+								<Button appearance="primary" size="md" onClick={createDropZone}>
 									Create Drop Zone link
 								</Button>
 								<Button appearance="default" size="md" onClick={() => setPhase("brief")}>

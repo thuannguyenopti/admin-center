@@ -1639,7 +1639,7 @@ function AgentExecutionLog({artifact}: {artifact: ArtifactViewerArtifact}) {
 					bg="bg.information.subtle"
 					style={{width: 32, height: 32, flexShrink: 0}}
 				>
-					<IconAgent size={16} color="var(--ax-colors-fg-information)" />
+					<IconAgent size={16} color="var(--ax-colors-fg-information-strong)" />
 				</Box>
 				<Box display="flex" flexDirection="column" gap="2" style={{flex: 1, minWidth: 0}}>
 					<Text fontSize="sm" fontWeight="600">
