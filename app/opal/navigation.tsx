@@ -208,5 +208,12 @@ export function useOpalNav() {
 			chromeless: true,
 			hidden: true,
 		},
+		// Mobile prototype routes — hidden from sidebar, carry customLayout + fullscreen flags
+		{ label: "Mobile Preview", url: "/opal/mobile", highlight: "/opal/mobile", customLayout: true, hidden: true },
+		{ label: "Mobile — Base", url: "/opal/mobile/base", highlight: "/opal/mobile/base", customLayout: true, fullscreen: true, hidden: true },
+		{ label: "Mobile — Option A", url: "/opal/mobile/a", highlight: "/opal/mobile/a", customLayout: true, fullscreen: true, hidden: true },
+		{ label: "Mobile — Option B", url: "/opal/mobile/b", highlight: "/opal/mobile/b", customLayout: true, fullscreen: true, hidden: true },
+		{ label: "Mobile — Option C", url: "/opal/mobile/c", highlight: "/opal/mobile/c", customLayout: true, fullscreen: true, hidden: true },
+		{ label: "Mobile — Type", url: "/opal/mobile/type", highlight: "/opal/mobile/type", hidden: true },
 	];
 }
