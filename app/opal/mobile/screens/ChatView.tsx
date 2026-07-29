@@ -347,7 +347,7 @@ export function ChatView({ conversationId, onBack, onHamburger, onNewChat, onGlo
           padding: "16px 12px 8px",
           display: "flex",
           flexDirection: "column",
-          gap: 2,
+          gap: 4,
           scrollBehavior: "smooth",
         }}
       >
@@ -362,7 +362,7 @@ export function ChatView({ conversationId, onBack, onHamburger, onNewChat, onGlo
 
         {displayedMessages.map((msg, idx) => (
           <Fragment key={msg.id}>
-            <Box style={{ marginBottom: shouldGroup(displayedMessages, idx) ? 2 : 10 }}>
+            <Box style={{ marginBottom: shouldGroup(displayedMessages, idx) ? 6 : 14 }}>
               <MessageBubble
                 msg={msg}
                 time={getMockTime(idx)}

@@ -18,6 +18,7 @@ interface NavDrawerProps {
   activeTab: NavTab;
   showArtifacts?: boolean;
   showPreview?: boolean;
+  foldOpal?: boolean;
 }
 
 function getPreview(id: string): string {
@@ -36,7 +37,7 @@ const IconClose = () => (
 );
 
 export function NavDrawer({
-  open, onClose, onNavigate, onSelectConversation, activeTab, showArtifacts = false, showPreview = true,
+  open, onClose, onNavigate, onSelectConversation, activeTab, showArtifacts = false, showPreview = true, foldOpal = false,
 }: NavDrawerProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchMode, setSearchMode] = useState(false);
@@ -61,16 +62,16 @@ export function NavDrawer({
 
   const navItems: { tab: NavTab; label: string; icon: React.ReactNode }[] = [
     { tab: "home",      label: "Home",      icon: <IconHouse      style={{ width: 24, height: 24 }} /> },
-    { tab: "opal",      label: "Opal",      icon: (
+    ...(!foldOpal ? [{ tab: "opal" as NavTab, label: "Opal", icon: (
         <Box style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <img src="/opal_avatar.png" alt="Opal" style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }} />
         </Box>
-    )},
+    )}] : []),
     { tab: "messages",  label: "Messages",  icon: <IconComments   style={{ width: 24, height: 24 }} /> },
     { tab: "tracker",   label: "Tracker",   icon: <IconSquareCheck style={{ width: 24, height: 24 }} /> },
     { tab: "activity",  label: "Activity",  icon: <IconBell       style={{ width: 24, height: 24 }} /> },
     ...(showArtifacts ? [{ tab: "artifacts" as NavTab, label: "Artifacts", icon: <IconBooks style={{ width: 24, height: 24 }} /> }] : []),
-    { tab: "me",        label: "Me",        icon: <IconSquareUser style={{ width: 24, height: 24 }} /> },
+    { tab: "me",        label: "Profile",   icon: <IconSquareUser style={{ width: 24, height: 24 }} /> },
   ];
 
   return (

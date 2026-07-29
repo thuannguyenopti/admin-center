@@ -338,6 +338,7 @@ export function PhoneB({ standalone = false, showArtifacts = false, showPreview 
           activeTab={tab}
           showArtifacts={showArtifacts}
           showPreview={showPreview}
+          foldOpal={foldOpal}
         />
       </Box>
       {!standalone && <HomeIndicator />}

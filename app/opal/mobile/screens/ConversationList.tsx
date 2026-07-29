@@ -409,9 +409,9 @@ function DMRow({ dm, onSelect, delay, showPreview = true }: { dm: DMItem; onSele
               <Badge intent="information" style={{ flexShrink: 0 }}>AI</Badge>
             )}
           </Box>
-          <Text style={{ ...mobileType.meta, color: "var(--ax-colors-fg-tertiary)", whiteSpace: "nowrap", flexShrink: 0 }}>
-            {lastTime}
-          </Text>
+          {!dm.needsAction && dm.unread ? (
+            <Box style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--ax-colors-fg-information-strong)", flexShrink: 0 }} />
+          ) : null}
         </Box>
         {/* Preview row */}
         <Box display="flex" alignItems="center" gap="8" style={{ marginTop: 2 }}>
@@ -428,9 +428,6 @@ function DMRow({ dm, onSelect, delay, showPreview = true }: { dm: DMItem; onSele
           {dm.needsAction === "approval" && <Badge intent="warning" style={{ flexShrink: 0 }}>Needs approval</Badge>}
           {dm.needsAction === "question" && <Badge intent="information" style={{ flexShrink: 0 }}>Needs input</Badge>}
           {dm.needsAction === "review"   && <Badge intent="success"     style={{ flexShrink: 0 }}>Ready to review</Badge>}
-          {!dm.needsAction && dm.unread ? (
-            <Box style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--ax-colors-fg-information-strong)", flexShrink: 0 }} />
-          ) : null}
         </Box>
       </Box>
     </Box>
@@ -483,9 +480,9 @@ function GroupRow({ group, onSelect, delay, showPreview = true }: { group: Group
           }}>
             {group.name}
           </Text>
-          <Text style={{ ...mobileType.meta, color: "var(--ax-colors-fg-tertiary)", whiteSpace: "nowrap", flexShrink: 0 }}>
-            {lastTime}
-          </Text>
+          {group.unread ? (
+            <Box style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--ax-colors-fg-information-strong)", flexShrink: 0 }} />
+          ) : null}
         </Box>
         <Box display="flex" alignItems="center" gap="8" style={{ marginTop: 2 }}>
           {showPreview && (
