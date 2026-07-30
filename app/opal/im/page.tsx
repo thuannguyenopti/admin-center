@@ -15,6 +15,10 @@ function IMPageInner() {
   const params = useSearchParams();
   const param = params.get("layout");
   const layout: LayoutKey = isLayoutKey(param) ? param : "A";
+<<<<<<< HEAD
+=======
+  const convParam = params.get("conv") ?? undefined;
+>>>>>>> origin/main
 
   return (
     <>

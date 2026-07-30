@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge, Box, Button, Card, CardHeader, CardPreview, Separator, Tooltip } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
+<<<<<<< HEAD
 import { IconBrowser, IconFileText, IconPencil, IconRefresh, IconTrash } from "@tabler/icons-react";
+=======
+import {IconBrowser, IconFileLines, IconPen, IconArrowsRotate, IconTrash} from "@/app/lib/axiom-icons";
+>>>>>>> origin/main
 import type { Page } from "@/app/db/initialData";
 import WebsitePagePreview from "@/app/components/WebsitePagePreview";
 import type { ChannelDefinition } from "./channelDefinitions";
@@ -87,10 +91,17 @@ export function ChannelCard({ channelDef, contentItems, isPublished = false, onE
 				addonAfter={
 					<>
 						<Tooltip content="Sync">
+<<<<<<< HEAD
 							<Button appearance="subtle" size="sm" icon={<IconRefresh size={16} />} aria-label="Sync" />
 						</Tooltip>
 						<Tooltip content="Edit">
 							<Button appearance="subtle" size="sm" icon={<IconPencil size={16} />} aria-label="Edit" onClick={onEdit} />
+=======
+							<Button appearance="subtle" size="sm" icon={<IconArrowsRotate size={16} />} aria-label="Sync" />
+						</Tooltip>
+						<Tooltip content="Edit">
+							<Button appearance="subtle" size="sm" icon={<IconPen size={16} />} aria-label="Edit" onClick={onEdit} />
+>>>>>>> origin/main
 						</Tooltip>
 						<Tooltip content="Remove">
 							<Button appearance="subtle" size="sm" icon={<IconTrash size={16} />} aria-label="Remove" onClick={onRemove} />
@@ -114,7 +125,11 @@ export function ChannelCard({ channelDef, contentItems, isPublished = false, onE
 									</CardPreview>
 								)}
 								<CardHeader
+<<<<<<< HEAD
 									addonBefore={item.type === "page" ? <IconBrowser size={16} /> : <IconFileText size={16} />}
+=======
+									addonBefore={item.type === "page" ? <IconBrowser size={16} /> : <IconFileLines size={16} />}
+>>>>>>> origin/main
 									addonAfter={<Badge>{item.locale || "EN"}</Badge>}
 								>
 									{item.name}

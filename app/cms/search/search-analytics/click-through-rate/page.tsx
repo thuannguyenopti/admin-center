@@ -5,7 +5,7 @@ import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
-import {IconSearch, IconAlertCircle} from "@tabler/icons-react";
+import {IconSearch, IconCircleExclamation} from "@/app/lib/axiom-icons";
 import {useState, useMemo} from "react";
 import {ctrQueries, CTRQuery, scaleValue} from "@/app/db/analyticsData";
 import {Table, Tr, Td, Th} from "@/app/components/Table";

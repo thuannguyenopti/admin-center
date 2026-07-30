@@ -1,0 +1,218 @@
+.editorPage {
+	container-type: inline-size;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	margin: 0 auto;
+	max-width: 1280px;
+	width: 100%;
+}
+
+.editorHeader {
+	align-items: end;
+	display: flex;
+	gap: 20px;
+	justify-content: space-between;
+}
+
+.editorHeaderCopy {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	min-width: 0;
+}
+
+.eyebrow {
+	color: var(--ax-colors-fg-success);
+	font-size: 12px;
+	font-weight: 750;
+	letter-spacing: 0;
+	line-height: 1.2;
+	text-transform: none;
+}
+
+.title {
+	color: var(--ax-colors-fg-default);
+	font-size: 20px;
+	font-weight: 750;
+	letter-spacing: 0;
+	line-height: 1.15;
+}
+
+.description {
+	color: var(--ax-colors-fg-secondary);
+	font-size: 14px;
+	line-height: 1.45;
+	max-width: 680px;
+}
+
+.headerActions {
+	align-items: center;
+	display: flex;
+	flex-shrink: 0;
+	gap: 8px;
+}
+
+.editorGrid {
+	display: grid;
+	gap: 16px;
+	grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+}
+
+.editorGridWide {
+	display: grid;
+	gap: 16px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.panel {
+	background:
+		linear-gradient(180deg, rgb(255 255 255 / 92%), rgb(249 252 248 / 72%)),
+		var(--ax-colors-bg-default);
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: 12px;
+	box-shadow: var(--ax-shadows-sm);
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-width: 0;
+	padding: 20px;
+}
+
+.panelHeader {
+	align-items: start;
+	display: flex;
+	gap: 16px;
+	justify-content: space-between;
+}
+
+.panelTitle {
+	color: var(--ax-colors-fg-default);
+	font-size: 16px;
+	font-weight: 750;
+	letter-spacing: 0;
+	line-height: 1.2;
+}
+
+.panelDescription {
+	color: var(--ax-colors-fg-secondary);
+	font-size: 14px;
+	line-height: 1.45;
+	margin-top: 4px;
+}
+
+.fieldStack {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.fieldRow {
+	align-items: start;
+	display: grid;
+	gap: 16px;
+	grid-template-columns: minmax(128px, 170px) minmax(0, 1fr);
+}
+
+.fieldLabel {
+	color: var(--ax-colors-fg-secondary);
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1.35;
+	padding-top: 8px;
+}
+
+.fieldHelp {
+	color: var(--ax-colors-fg-tertiary);
+	font-size: 12px;
+	line-height: 1.35;
+	margin-top: 4px;
+}
+
+.fieldValue {
+	min-width: 0;
+}
+
+.fieldText {
+	color: var(--ax-colors-fg-secondary);
+	font-size: 14px;
+	line-height: 1.55;
+}
+
+.statGrid {
+	display: grid;
+	gap: 8px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stat {
+	background: var(--ax-colors-bg-secondary);
+	border: 1px solid var(--ax-colors-border-tertiary);
+	border-radius: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	padding: 12px;
+}
+
+.statLabel {
+	color: var(--ax-colors-fg-tertiary);
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+.statValue {
+	color: var(--ax-colors-fg-default);
+	font-size: 16px;
+	font-weight: 750;
+	line-height: 1.2;
+}
+
+.previewPanel {
+	background:
+		linear-gradient(180deg, rgb(171 255 68 / 9%), rgb(255 255 255 / 60%)),
+		var(--ax-colors-bg-secondary);
+	border: 1px solid color-mix(in srgb, #abff44 40%, var(--ax-colors-border-tertiary));
+	border-radius: 12px;
+	padding: 16px;
+}
+
+.divider {
+	background: var(--ax-colors-border-tertiary);
+	height: 1px;
+	width: 100%;
+}
+
+.saveRow {
+	display: flex;
+	justify-content: end;
+}
+
+@container (max-width: 860px) {
+	.editorHeader,
+	.panelHeader {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.headerActions {
+		justify-content: flex-start;
+	}
+
+	.editorGrid,
+	.editorGridWide {
+		grid-template-columns: 1fr;
+	}
+}
+
+@container (max-width: 620px) {
+	.fieldRow,
+	.statGrid {
+		grid-template-columns: 1fr;
+	}
+
+	.fieldLabel {
+		padding-top: 0;
+	}
+}

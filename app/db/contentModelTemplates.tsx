@@ -1,18 +1,5 @@
 import { ContentType, Property } from "./initialData";
-import {
-	IconTemplate,
-	IconArticle,
-	IconPackage,
-	IconPhoto,
-	IconShoppingCart,
-	IconNews,
-	IconCategory,
-	IconSection,
-	IconQuote,
-	IconFileText,
-	IconLayoutGrid,
-	IconBrandProducthunt,
-} from "@tabler/icons-react";
+import {IconTemplate, IconArticle, IconPackage, IconImage, IconShoppingCart, IconNews, IconCategory, IconSection, IconQuote, IconFileLines, IconLayoutGrid, IconBrandProducthunt} from "@/app/lib/axiom-icons";
 
 export type ContentModelTemplate = {
 	id: string;
@@ -295,7 +282,7 @@ export const contentModelTemplates: ContentModelTemplate[] = [
 		name: "Article",
 		description: "Long-form article with sections, table of contents, and related content",
 		category: "Blog",
-		icon: <IconFileText size={24} />,
+		icon: <IconFileLines size={24} />,
 		baseType: "Page",
 		properties: [
 			{
@@ -664,7 +651,7 @@ export const contentModelTemplates: ContentModelTemplate[] = [
 		name: "Generic Page",
 		description: "Simple page template with title and flexible content area",
 		category: "General",
-		icon: <IconFileText size={24} />,
+		icon: <IconFileLines size={24} />,
 		baseType: "Page",
 		properties: [
 			{
@@ -692,7 +679,7 @@ export const contentModelTemplates: ContentModelTemplate[] = [
 		name: "Image Gallery Block",
 		description: "Reusable image gallery with caption support",
 		category: "General",
-		icon: <IconPhoto size={24} />,
+		icon: <IconImage size={24} />,
 		baseType: "Block",
 		properties: [
 			{

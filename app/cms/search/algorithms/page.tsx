@@ -17,17 +17,7 @@ import {
 import {Button} from "@/app/components/Button";
 import {Flex} from "@/app/components/Flex";
 import {Input} from "@/app/components/Input";
-import {
-	IconPlus,
-	IconReportSearch,
-	IconSearch,
-	IconDots,
-	IconPencil,
-	IconTrash,
-	IconReport,
-	IconList,
-	IconListDetails,
-} from "@tabler/icons-react";
+import {IconPlus, IconReportSearch, IconSearch, IconEllipsisSolid, IconPen, IconTrash, IconReport, IconList, IconListDetails} from "@/app/lib/axiom-icons";
 import {useState, useMemo, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
@@ -239,7 +229,7 @@ export default function OptimizeSearchPage() {
 										options={[
 											{
 												label: "Edit",
-												addon: <IconPencil size={16} />,
+												addon: <IconPen size={16} />,
 												execute: () =>
 													router.push(
 														algorithm.type === "Custom"
@@ -257,7 +247,7 @@ export default function OptimizeSearchPage() {
 									>
 										<MenuTrigger
 											aria-label="Actions"
-											icon={<IconDots size={16} />}
+											icon={<IconEllipsisSolid size={16} />}
 											appearance="subtle"
 											size="md"
 										/>

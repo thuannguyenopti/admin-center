@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Field, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, Button, Text } from "@optiaxiom/react";
-import { IconSparkles } from "@tabler/icons-react";
+import { Field, Menu, MenuTrigger, MenuContent, Button, type MenuOption } from "@optiaxiom/react";
+import {IconSparkles} from "@/app/lib/axiom-icons";
 
 interface AIAction {
 	label: string;
@@ -31,6 +31,26 @@ export const FieldWithAIActions: React.FC<FieldWithAIActionsProps> = ({
 		return <Field label={label}>{children}</Field>;
 	}
 
+	// Map AIAction[] to MenuOption[]. Actions marked with `group.hidden` belong
+	// to the previous action's group (label shown once per group, separator
+	// before each new labelled group after the first item).
+	let currentGroup: MenuOption["group"];
+	const menuOptions: MenuOption[] = aiActions.map((action, index) => {
+		if (action.group) {
+			if (!action.group.hidden || !currentGroup) {
+				currentGroup = { label: action.group.label, separator: index > 0 };
+			}
+		} else {
+			currentGroup = undefined;
+		}
+		return {
+			key: `${index}-${action.label}`,
+			label: action.label,
+			group: currentGroup,
+			execute: () => action.onClick(),
+		};
+	});
+
 	return (
 		<div style={{ position: "relative" }}>
 			<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
@@ -40,8 +60,8 @@ export const FieldWithAIActions: React.FC<FieldWithAIActionsProps> = ({
 					lineHeight: "1.25rem",
 					color: "var(--ax-colors-fg-default)"
 				}}>{label}</label>
-				<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-					<DropdownMenuTrigger asChild>
+				<Menu open={isOpen} onOpenChange={setIsOpen} options={menuOptions}>
+					<MenuTrigger asChild>
 						<Button
 							appearance="subtle"
 							size="sm"
@@ -53,28 +73,9 @@ export const FieldWithAIActions: React.FC<FieldWithAIActionsProps> = ({
 							}}
 							aria-label="AI Actions"
 						/>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						{aiActions.map((action, index) => {
-							const needsSeparator = index > 0 && action.group && !action.group.hidden;
-							return (
-								<React.Fragment key={index}>
-									{needsSeparator && <DropdownMenuSeparator />}
-									{action.group && !action.group.hidden && (
-										<DropdownMenuLabel>{action.group.label}</DropdownMenuLabel>
-									)}
-									<DropdownMenuItem
-										onSelect={() => {
-											action.onClick();
-										}}
-									>
-										{action.label}
-									</DropdownMenuItem>
-								</React.Fragment>
-							);
-						})}
-					</DropdownMenuContent>
-				</DropdownMenu>
+					</MenuTrigger>
+					<MenuContent align="end" />
+				</Menu>
 			</div>
 			{children}
 		</div>

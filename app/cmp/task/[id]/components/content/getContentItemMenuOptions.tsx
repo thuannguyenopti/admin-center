@@ -3,7 +3,11 @@
 import { toaster } from "@optiaxiom/react";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
 import type { Page } from "@/app/db/initialData";
+<<<<<<< HEAD
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
+=======
+import {IconEye, IconPen, IconTrash} from "@/app/lib/axiom-icons";
+>>>>>>> origin/main
 
 import type { AssetItem, TaskArticle } from "../../types";
 import { selectFirstRemainingTaskItem } from "./selectFirstRemainingTaskItem";
@@ -60,7 +64,7 @@ export function getContentItemMenuOptions({
 		return [
 			{
 				label: "Edit in CMS",
-				addon: <IconPencil size={16} />,
+				addon: <IconPen size={16} />,
 				description: "Open page in Visual Builder",
 				execute: () => openPageEditor(selectedPage.id),
 			},

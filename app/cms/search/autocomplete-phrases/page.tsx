@@ -4,7 +4,7 @@ import {Box, SearchInput} from "@optiaxiom/react";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
-import {IconPlus, IconSearch} from "@tabler/icons-react";
+import {IconPlus, IconSearch} from "@/app/lib/axiom-icons";
 import {useState, useMemo, useEffect} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {AutocompletePhrase, initialAutocompletePhrases} from "@/app/db/initialData";

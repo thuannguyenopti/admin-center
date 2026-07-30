@@ -1,5 +1,6 @@
 "use client";
 
+<<<<<<< HEAD
 import { useEditor, EditorContent } from "@tiptap/react";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { renderMermaid } from "./mermaid-renderer";
@@ -23,6 +24,31 @@ import { Markdown } from "@tiptap/markdown";
 import { createLowlight, common } from "lowlight";
 import { MermaidCodeBlock } from "./mermaid-codeblock-extension";
 import type { CollabDoc } from "./useCollabDoc";
+=======
+import {useEditor, EditorContent} from "@tiptap/react";
+import {useEffect, useRef, useState, useCallback, useMemo} from "react";
+import {renderMermaid} from "./mermaid-renderer";
+import type {RenderOutcome} from "./mermaid-renderer";
+import type {MermaidEditRequestDetail} from "./mermaid-codeblock-extension";
+import {
+	Box,
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogBody,
+	DialogFooter,
+	DialogClose,
+	Text,
+} from "@optiaxiom/react";
+import {Button} from "@/app/components/Button";
+import StarterKit from "@tiptap/starter-kit";
+import Collaboration from "@tiptap/extension-collaboration";
+import Placeholder from "@tiptap/extension-placeholder";
+import {Markdown} from "@tiptap/markdown";
+import {createLowlight, common} from "lowlight";
+import {MermaidCodeBlock} from "./mermaid-codeblock-extension";
+import type {CollabDoc} from "./useCollabDoc";
+>>>>>>> origin/main
 
 const lowlight = createLowlight(common);
 
@@ -44,7 +70,11 @@ const TIPTAP_STYLES = `
 .tiptap-editor .tiptap ol { padding-left: 1.4em; }
 .tiptap-editor .tiptap li { margin-bottom: 2px; }
 .tiptap-editor .tiptap blockquote {
+<<<<<<< HEAD
   border-left: 3px solid var(--ax-colors-border-accent);
+=======
+  border-left: 3px solid var(--ax-colors-border-default);
+>>>>>>> origin/main
   padding-left: 12px;
   color: var(--ax-colors-fg-secondary);
   font-style: italic;
@@ -121,7 +151,11 @@ const TIPTAP_STYLES = `
   outline: none;
 }
 .tiptap-mermaid-source:focus {
+<<<<<<< HEAD
   border-color: var(--ax-colors-border-accent);
+=======
+  border-color: var(--ax-colors-border-focus);
+>>>>>>> origin/main
 }
 /* Mermaid diagram blocks */
 .tiptap-editor .me-mermaid-block {
@@ -134,7 +168,11 @@ const TIPTAP_STYLES = `
   overflow: hidden;
 }
 .tiptap-editor .me-mermaid-block.me-mermaid-selected {
+<<<<<<< HEAD
   outline: 2px solid var(--ax-colors-border-accent);
+=======
+  outline: 2px solid var(--ax-colors-border-focus);
+>>>>>>> origin/main
   outline-offset: 1px;
 }
 .tiptap-editor .me-mermaid-render {
@@ -185,6 +223,7 @@ const TIPTAP_STYLES = `
 `;
 
 type TiptapEditorProps = {
+<<<<<<< HEAD
   collabDoc?: CollabDoc | null;
   editable?: boolean;
   initialHtml?: string;
@@ -339,3 +378,183 @@ export function TiptapEditor({ collabDoc, editable = true, initialHtml, initialM
 
 export type { TiptapEditorProps };
 export { useEditor };
+=======
+	collabDoc?: CollabDoc | null;
+	editable?: boolean;
+	initialHtml?: string;
+	initialMarkdown?: string;
+};
+
+export function TiptapEditor({
+	collabDoc,
+	editable = true,
+	initialHtml,
+	initialMarkdown,
+}: TiptapEditorProps) {
+	const isSeeded = !!(initialHtml || initialMarkdown);
+	const containerRef = useRef<HTMLDivElement>(null);
+	const [mermaidEdit, setMermaidEdit] = useState<MermaidEditRequestDetail | null>(null);
+	const [editSource, setEditSource] = useState("");
+	const [previewOutcome, setPreviewOutcome] = useState<RenderOutcome | null>(null);
+	const previewRef = useRef<HTMLDivElement>(null);
+
+	const editor = useEditor({
+		extensions: [
+			StarterKit.configure({
+				codeBlock: false, // replaced by MermaidCodeBlock (extends CodeBlockLowlight)
+			}),
+			MermaidCodeBlock.configure({lowlight}),
+			Markdown,
+			// Skip Collaboration when seeding with static content or when no collab doc provided
+			...(isSeeded || !collabDoc
+				? []
+				: [Collaboration.configure({fragment: collabDoc.xmlFragment})]),
+			Placeholder.configure({placeholder: "Start writing…"}),
+		],
+		content: initialHtml ?? undefined,
+		editable,
+		immediatelyRender: false,
+	});
+
+	// Seed markdown content after editor + Markdown extension are ready
+	useEffect(() => {
+		if (!editor || !initialMarkdown) return;
+		const manager = editor.storage.markdown?.manager;
+		if (manager?.parse) {
+			editor.commands.setContent(manager.parse(initialMarkdown));
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [editor]);
+
+	// Listen for mermaid edit requests fired by the node view
+	useEffect(() => {
+		const el = containerRef.current;
+		if (!el) return;
+		const handler = (e: Event) => {
+			const detail = (e as CustomEvent<MermaidEditRequestDetail>).detail;
+			setEditSource(detail.source);
+			setMermaidEdit(detail);
+		};
+		el.addEventListener("mermaid-edit-request", handler);
+		return () => el.removeEventListener("mermaid-edit-request", handler);
+	}, []);
+
+	// Debounced live preview rendering
+	useEffect(() => {
+		if (!mermaidEdit) return;
+		const timer = setTimeout(async () => {
+			if (!editSource.trim()) {
+				setPreviewOutcome(null);
+				return;
+			}
+			const outcome = await renderMermaid(editSource);
+			setPreviewOutcome(outcome);
+		}, 400);
+		return () => clearTimeout(timer);
+	}, [editSource, mermaidEdit]);
+
+	// Inject SVG into preview container
+	useEffect(() => {
+		const el = previewRef.current;
+		if (!el) return;
+		el.innerHTML = "";
+		if (previewOutcome?.ok) {
+			el.appendChild(previewOutcome.svg);
+		}
+	}, [previewOutcome]);
+
+	const handleSaveMermaid = useCallback(() => {
+		if (!editor || !mermaidEdit) return;
+		const {from, to} = mermaidEdit;
+		const {state} = editor;
+		const node = state.doc.nodeAt(from);
+		if (node) {
+			const newNode = node.type.create(
+				node.attrs,
+				editSource.trim() ? state.schema.text(editSource) : undefined
+			);
+			editor.view.dispatch(state.tr.replaceWith(from, to, newNode));
+		}
+		setMermaidEdit(null);
+	}, [editor, mermaidEdit, editSource]);
+
+	return (
+		<div ref={containerRef} className="tiptap-editor" style={{height: "100%", minHeight: 0}}>
+			<style>{TIPTAP_STYLES}</style>
+			<EditorContent editor={editor} style={{height: "100%", minHeight: 0, cursor: "text"}} />
+
+			<Dialog
+				open={!!mermaidEdit}
+				onOpenChange={(open) => {
+					if (!open) setMermaidEdit(null);
+				}}
+			>
+				<DialogContent size="lg">
+					<DialogHeader>Edit Mermaid diagram</DialogHeader>
+					<DialogBody>
+						<Box display="flex" gap="12" alignItems="stretch">
+							{/* Keep as raw textarea: needs ref + className for Mermaid source editing */}
+							<textarea
+								className="tiptap-mermaid-source"
+								style={{flex: 1}}
+								value={editSource}
+								onChange={(e) => setEditSource(e.target.value)}
+								autoFocus
+								spellCheck={false}
+							/>
+							<Box
+								border="1"
+								borderColor="border.secondary"
+								rounded="md"
+								bg="bg.default"
+								display="flex"
+								flexDirection="column"
+								alignItems="center"
+								p="16"
+								style={{
+									flex: 1,
+									minHeight: "60vh",
+									overflow: "auto",
+									justifyContent: previewOutcome?.ok ? "flex-start" : "center",
+								}}
+							>
+								{!editSource.trim() && (
+									<Text fontSize="sm" color="fg.tertiary">
+										Preview will appear here
+									</Text>
+								)}
+								{previewOutcome && !previewOutcome.ok && (
+									<pre
+										style={{
+											fontSize: 12,
+											color: "var(--ax-colors-fg-danger)",
+											fontFamily: "var(--ax-fonts-mono, monospace)",
+											whiteSpace: "pre-wrap",
+											margin: 0,
+										}}
+									>
+										{previewOutcome.message}
+									</pre>
+								)}
+								{/* Raw div required: mermaid SVG is injected via innerHTML into a real DOM node */}
+								<div ref={previewRef} style={{width: "100%", maxWidth: "100%"}} />
+							</Box>
+						</Box>
+					</DialogBody>
+					<DialogFooter>
+						<DialogClose asChild>
+							<Button appearance="subtle">Cancel</Button>
+						</DialogClose>
+						<Button appearance="primary" onClick={handleSaveMermaid}>
+							Save
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+		</div>
+	);
+}
+
+export type {TiptapEditorProps};
+export {useEditor};
+>>>>>>> origin/main

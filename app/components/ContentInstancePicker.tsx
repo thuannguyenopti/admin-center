@@ -1,13 +1,19 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Box, Input, Card, CardPreview, CardImage, CardHeader, Checkbox } from "@optiaxiom/react";
-import { Text } from "@/app/components/Text";
-import { Button } from "@/app/components/Button";
-import { Table, Tr, Th, Td } from "@/app/components/Table";
+import {useState, useMemo} from "react";
+import {Box, Input, Card, CardPreview, CardImage, CardHeader, Checkbox} from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
+import {Button} from "@/app/components/Button";
+import {Table, Tr, Th, Td} from "@/app/components/Table";
 import AbstractDialog from "@/app/components/AbstractDialog";
-import { ContentInstance } from "@/app/db/cmpInitialData";
-import { IconSearch, IconLayoutGrid, IconLayoutList, IconFilter, IconCheck } from "@tabler/icons-react";
+import {ContentInstance} from "@/app/db/cmpInitialData";
+import {
+	IconSearch,
+	IconLayoutGrid,
+	IconLayoutList,
+	IconFilter,
+	IconCheck,
+} from "@/app/lib/axiom-icons";
 import Image from "next/image";
 
 type ViewMode = "list" | "grid";
@@ -40,7 +46,7 @@ export default function ContentInstancePicker({
 
 	// Get unique content types for filtering
 	const contentTypes = useMemo(() => {
-		const types = new Set(instances.map(i => i.modelDisplayName));
+		const types = new Set(instances.map((i) => i.modelDisplayName));
 		return Array.from(types).sort();
 	}, [instances]);
 
@@ -50,7 +56,7 @@ export default function ContentInstancePicker({
 
 		// Filter by type
 		if (typeFilter) {
-			filtered = filtered.filter(i => i.modelDisplayName === typeFilter);
+			filtered = filtered.filter((i) => i.modelDisplayName === typeFilter);
 		}
 
 		// Filter by search
@@ -82,10 +88,10 @@ export default function ContentInstancePicker({
 		if (selectedIds.size === 0) return;
 
 		if (multiSelect) {
-			const selected = instances.filter(i => selectedIds.has(i.id));
+			const selected = instances.filter((i) => selectedIds.has(i.id));
 			onSelect(selected);
 		} else {
-			const instance = instances.find(i => selectedIds.has(i.id));
+			const instance = instances.find((i) => selectedIds.has(i.id));
 			if (instance) {
 				onSelect(instance);
 			}
@@ -129,10 +135,20 @@ export default function ContentInstancePicker({
 
 	// Get thumbnail URL from instance fields
 	const getThumbnailUrl = (instance: ContentInstance): string | null => {
-		const imageFields = ["featured_image", "hero_image", "background_image", "thumbnail", "image"];
+		const imageFields = [
+			"featured_image",
+			"hero_image",
+			"background_image",
+			"thumbnail",
+			"image",
+		];
 		for (const field of imageFields) {
 			const value = instance.fields[field];
-			if (value && typeof value === "string" && (value.startsWith("http") || value.startsWith("/"))) {
+			if (
+				value &&
+				typeof value === "string" &&
+				(value.startsWith("http") || value.startsWith("/"))
+			) {
 				return value;
 			}
 		}
@@ -166,7 +182,7 @@ export default function ContentInstancePicker({
 
 					{/* Type Filter */}
 					{contentTypes.length > 1 && (
-						<Box style={{ minWidth: "180px" }}>
+						<Box style={{minWidth: "180px"}}>
 							<select
 								value={typeFilter}
 								onChange={(e) => setTypeFilter(e.target.value)}
@@ -182,15 +198,24 @@ export default function ContentInstancePicker({
 								}}
 							>
 								<option value="">All Types</option>
-								{contentTypes.map(type => (
-									<option key={type} value={type}>{type}</option>
+								{contentTypes.map((type) => (
+									<option key={type} value={type}>
+										{type}
+									</option>
 								))}
 							</select>
 						</Box>
 					)}
 
 					{/* View Toggle */}
-					<Box display="flex" gap="4" border="1" borderColor="border.tertiary" rounded="md" p="4">
+					<Box
+						display="flex"
+						gap="4"
+						border="1"
+						borderColor="border.tertiary"
+						rounded="md"
+						p="4"
+					>
 						<Button
 							appearance={viewMode === "list" ? "default" : "subtle"}
 							size="sm"
@@ -212,7 +237,14 @@ export default function ContentInstancePicker({
 
 				{/* Selection Count */}
 				{selectedIds.size > 0 && (
-					<Box display="flex" alignItems="center" gap="8" p="8" bg="bg.accent.subtle" rounded="md">
+					<Box
+						display="flex"
+						alignItems="center"
+						gap="8"
+						p="8"
+						bg="bg.information.subtle"
+						rounded="md"
+					>
 						<IconCheck size={16} />
 						<Text fontSize="sm" fontWeight="500">
 							{selectedIds.size} {selectedIds.size === 1 ? "item" : "items"} selected
@@ -224,15 +256,17 @@ export default function ContentInstancePicker({
 				{filteredInstances.length === 0 ? (
 					<Box p="32" textAlign="center" bg="bg.secondary" rounded="md">
 						<Text color="fg.secondary">
-							{search || typeFilter ? "No content found matching your criteria." : "No content instances available."}
+							{search || typeFilter
+								? "No content found matching your criteria."
+								: "No content instances available."}
 						</Text>
 					</Box>
 				) : viewMode === "list" ? (
-					<Box style={{ maxHeight: "500px" }} overflow="auto">
+					<Box style={{maxHeight: "500px"}} overflow="auto">
 						<Table>
 							<thead>
 								<Tr>
-									<Th style={{ width: "50px" }}></Th>
+									<Th style={{width: "50px"}}></Th>
 									<Th>Content</Th>
 									<Th>Type</Th>
 									<Th>Created</Th>
@@ -242,14 +276,18 @@ export default function ContentInstancePicker({
 								{filteredInstances.map((instance) => {
 									const isSelected = selectedIds.has(instance.id);
 									const title = getInstanceTitle(instance);
-									const createdDate = new Date(instance.createdAt).toLocaleDateString();
+									const createdDate = new Date(
+										instance.createdAt
+									).toLocaleDateString();
 
 									return (
 										<Tr
 											key={instance.id}
 											style={{
 												cursor: "pointer",
-												backgroundColor: isSelected ? "var(--colors-bg-accent-subtle)" : undefined,
+												backgroundColor: isSelected
+													? "var(--colors-bg-accent-subtle)"
+													: undefined,
 											}}
 											onClick={() => toggleSelection(instance.id)}
 										>
@@ -258,16 +296,20 @@ export default function ContentInstancePicker({
 													<input
 														type="checkbox"
 														checked={isSelected}
-														onChange={() => toggleSelection(instance.id)}
-														style={{ cursor: "pointer" }}
+														onChange={() =>
+															toggleSelection(instance.id)
+														}
+														style={{cursor: "pointer"}}
 														onClick={(e) => e.stopPropagation()}
 													/>
 												) : (
 													<input
 														type="radio"
 														checked={isSelected}
-														onChange={() => toggleSelection(instance.id)}
-														style={{ cursor: "pointer" }}
+														onChange={() =>
+															toggleSelection(instance.id)
+														}
+														style={{cursor: "pointer"}}
 														onClick={(e) => e.stopPropagation()}
 													/>
 												)}
@@ -307,11 +349,17 @@ export default function ContentInstancePicker({
 								>
 									<Card
 										style={{
-											border: isSelected ? "2px solid var(--colors-border-accent)" : undefined,
-											backgroundColor: isSelected ? "var(--colors-bg-accent-subtle)" : undefined,
+											border: isSelected
+												? "2px solid var(--colors-border-accent)"
+												: undefined,
+											backgroundColor: isSelected
+												? "var(--colors-bg-accent-subtle)"
+												: undefined,
 										}}
 									>
-										<CardPreview style={{ position: "relative", height: "160px" }}>
+										<CardPreview
+											style={{position: "relative", height: "160px"}}
+										>
 											{thumbnailUrl ? (
 												<CardImage asChild>
 													<Image
@@ -319,7 +367,7 @@ export default function ContentInstancePicker({
 														alt={title}
 														fill
 														unoptimized
-														style={{ objectFit: "cover" }}
+														style={{objectFit: "cover"}}
 													/>
 												</CardImage>
 											) : (
@@ -333,7 +381,9 @@ export default function ContentInstancePicker({
 														color: "var(--colors-fg-tertiary)",
 													}}
 												>
-													<Text fontSize="xs">{instance.modelDisplayName}</Text>
+													<Text fontSize="xs">
+														{instance.modelDisplayName}
+													</Text>
 												</Box>
 											)}
 

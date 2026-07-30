@@ -1,8 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Badge, Box, Button as AxiomButton, SearchInput, Text, Textarea, Tabs, TabsList, TabsTrigger, TabsContent } from "@optiaxiom/react";
+import {useEffect, useMemo, useRef, useState, type ReactNode} from "react";
+import {useRouter, useSearchParams} from "next/navigation";
+import {
+	Badge,
+	Box,
+	Button as AxiomButton,
+	SearchInput,
+	Switch,
+	Text,
+	Textarea,
+	ToggleButton,
+	Tabs,
+	TabsList,
+	TabsTrigger,
+	TabsContent,
+} from "@optiaxiom/react";
 import {
 	IconArrowBackUp,
 	IconArrowForwardUp,
@@ -14,12 +27,12 @@ import {
 	IconSparkles,
 	IconUpload,
 	IconWand,
-	IconX,
+	IconXmark,
 	IconPlus,
-} from "@tabler/icons-react";
-import { useLayout } from "@/app/context/LayoutContext";
-import { useOpalContext } from "@/app/context/OpalContext";
-import type { ChatMessage } from "@/app/hooks/useOpalState";
+} from "@/app/lib/axiom-icons";
+import {useLayout} from "@/app/context/LayoutContext";
+import {useOpalContext} from "@/app/context/OpalContext";
+import type {ChatMessage} from "@/app/hooks/useOpalState";
 
 type FlowMode = "create" | "edit";
 type AssetMode = "image" | "video";
@@ -49,40 +62,28 @@ type OutputVariant = {
 };
 
 const modeOptions = [
-	{ label: "Create", value: "create" },
-	{ label: "Edit", value: "edit" },
+	{label: "Create", value: "create"},
+	{label: "Edit", value: "edit"},
 ] as const;
 
 const mediumOptions = [
-	{ label: "Image", value: "image" },
-	{ label: "Video", value: "video" },
+	{label: "Image", value: "image"},
+	{label: "Video", value: "video"},
 ] as const;
 
-const createIntentOptions = [
-	"Social campaign",
-	"Poster",
-	"Product placement",
-	"Trade booth",
-];
+const createIntentOptions = ["Social campaign", "Poster", "Product placement", "Trade booth"];
 
-const intentOptions = [
-	"Logo",
-	"Photo",
-	"Video",
-	"Poster",
-	"Illustrations",
-	"Icons",
-];
+const intentOptions = ["Logo", "Photo", "Video", "Poster", "Illustrations", "Icons"];
 
-const editToolOptions = [
-	"Resize",
-	"Reframe",
-	"Upscale",
-	"Variation pack",
-];
+const editToolOptions = ["Resize", "Reframe", "Upscale", "Variation pack"];
 
 const aspectRatios = ["Auto", "1:1", "4:5", "16:9", "9:16"] as const;
-const channelPacks = ["Social starter pack", "Paid social flight", "Event campaign pack", "Email + web hero"];
+const channelPacks = [
+	"Social starter pack",
+	"Paid social flight",
+	"Event campaign pack",
+	"Email + web hero",
+];
 const themePacks = [
 	"Stride endurance launch",
 	"Spring race season",
@@ -154,33 +155,36 @@ const videoDrafts: DraftResult[] = [
 	},
 ];
 
-const ratioDimensions: Record<(typeof aspectRatios)[number], { width: number; height: number } | null> = {
+const ratioDimensions: Record<
+	(typeof aspectRatios)[number],
+	{width: number; height: number} | null
+> = {
 	Auto: null,
-	"1:1": { width: 1080, height: 1080 },
-	"4:5": { width: 1080, height: 1350 },
-	"16:9": { width: 1920, height: 1080 },
-	"9:16": { width: 1080, height: 1920 },
+	"1:1": {width: 1080, height: 1080},
+	"4:5": {width: 1080, height: 1350},
+	"16:9": {width: 1920, height: 1080},
+	"9:16": {width: 1080, height: 1920},
 };
 
 const channelPackOutputs: Record<string, OutputVariant[]> = {
 	"Social starter pack": [
-		{ label: "Instagram square", width: 1080, height: 1080, ratio: "1:1" },
-		{ label: "Instagram portrait", width: 1080, height: 1350, ratio: "4:5" },
-		{ label: "Stories", width: 1080, height: 1920, ratio: "9:16" },
+		{label: "Instagram square", width: 1080, height: 1080, ratio: "1:1"},
+		{label: "Instagram portrait", width: 1080, height: 1350, ratio: "4:5"},
+		{label: "Stories", width: 1080, height: 1920, ratio: "9:16"},
 	],
 	"Paid social flight": [
-		{ label: "Feed portrait", width: 1080, height: 1350, ratio: "4:5" },
-		{ label: "Landscape display", width: 1200, height: 628, ratio: "16:9" },
-		{ label: "Reels / Shorts", width: 1080, height: 1920, ratio: "9:16" },
+		{label: "Feed portrait", width: 1080, height: 1350, ratio: "4:5"},
+		{label: "Landscape display", width: 1200, height: 628, ratio: "16:9"},
+		{label: "Reels / Shorts", width: 1080, height: 1920, ratio: "9:16"},
 	],
 	"Event campaign pack": [
-		{ label: "Poster key art", width: 1440, height: 1800, ratio: "4:5" },
-		{ label: "Hero landscape", width: 1920, height: 1080, ratio: "16:9" },
-		{ label: "Lobby screen", width: 1080, height: 1920, ratio: "9:16" },
+		{label: "Poster key art", width: 1440, height: 1800, ratio: "4:5"},
+		{label: "Hero landscape", width: 1920, height: 1080, ratio: "16:9"},
+		{label: "Lobby screen", width: 1080, height: 1920, ratio: "9:16"},
 	],
 	"Email + web hero": [
-		{ label: "Email hero", width: 1200, height: 900, ratio: "4:5" },
-		{ label: "Homepage hero", width: 1920, height: 1080, ratio: "16:9" },
+		{label: "Email hero", width: 1200, height: 900, ratio: "4:5"},
+		{label: "Homepage hero", width: 1920, height: 1080, ratio: "16:9"},
 	],
 };
 
@@ -244,10 +248,10 @@ function extractLatestImageFromMessages(messages: ChatMessage[]) {
 		return {
 			prompt: promptMatch?.[1] ?? userMessage?.content ?? "",
 			draft: {
-			image: imageMatch[1],
-			title: "Quick draft",
-			score: 96,
-			ratio: "4:5",
+				image: imageMatch[1],
+				title: "Quick draft",
+				score: 96,
+				ratio: "4:5",
 			},
 		};
 	}
@@ -265,27 +269,14 @@ function ModeChip({
 	onClick?: () => void;
 }) {
 	return (
-		<button
-			type="button"
-			onClick={onClick}
-			style={{
-				alignItems: "center",
-				background: active ? "var(--ax-colors-bg-accent-subtle)" : "var(--ax-colors-bg-default)",
-				border: `1px solid ${active ? "var(--ax-colors-border-accent)" : "var(--ax-colors-border-secondary)"}`,
-				borderRadius: 12,
-				color: active ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-default)",
-				cursor: "pointer",
-				display: "inline-flex",
-				fontSize: 14,
-				fontWeight: 500,
-				gap: 8,
-				height: 38,
-				padding: "0 16px",
-				transition: "border-color 0.16s ease, background-color 0.16s ease",
-			}}
+		<ToggleButton
+			appearance="default"
+			size="md"
+			pressed={active}
+			onPressedChange={() => onClick?.()}
 		>
 			{children}
-		</button>
+		</ToggleButton>
 	);
 }
 
@@ -327,7 +318,11 @@ function SettingsSection({
 					}}
 				/>
 			</button>
-			{open ? <Box px="16" pb="16">{children}</Box> : null}
+			{open ? (
+				<Box px="16" pb="16">
+					{children}
+				</Box>
+			) : null}
 		</Box>
 	);
 }
@@ -345,7 +340,12 @@ function SelectRow({
 }) {
 	return (
 		<Box display="flex" flexDirection="column" gap="8">
-			<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+			<Text
+				color="fg.secondary"
+				fontSize="xs"
+				fontWeight="600"
+				style={{letterSpacing: "0.02em", textTransform: "uppercase"}}
+			>
 				{label}
 			</Text>
 			<select
@@ -387,7 +387,7 @@ function ReferenceCard({
 			onClick={onSelect}
 			style={{
 				background: "var(--ax-colors-bg-default)",
-				border: `1px solid ${selected ? "var(--ax-colors-border-accent)" : "var(--ax-colors-border-tertiary)"}`,
+				border: `1px solid ${selected ? "var(--ax-colors-border-default)" : "var(--ax-colors-border-tertiary)"}`,
 				borderRadius: 18,
 				cursor: "pointer",
 				overflow: "hidden",
@@ -396,7 +396,11 @@ function ReferenceCard({
 				width: "100%",
 			}}
 		>
-			<img alt={asset.title} src={asset.image} style={{ display: "block", height: 132, objectFit: "cover", width: "100%" }} />
+			<img
+				alt={asset.title}
+				src={asset.image}
+				style={{display: "block", height: 132, objectFit: "cover", width: "100%"}}
+			/>
 			<Box p="12">
 				<Text fontSize="sm" fontWeight="600">
 					{asset.title}
@@ -424,7 +428,7 @@ function DraftCard({
 			onClick={onSelect}
 			style={{
 				background: "var(--ax-colors-bg-default)",
-				border: `1px solid ${selected ? "var(--ax-colors-border-accent)" : "var(--ax-colors-border-tertiary)"}`,
+				border: `1px solid ${selected ? "var(--ax-colors-border-default)" : "var(--ax-colors-border-tertiary)"}`,
 				borderRadius: 18,
 				cursor: "pointer",
 				overflow: "hidden",
@@ -433,8 +437,17 @@ function DraftCard({
 				width: "100%",
 			}}
 		>
-			<Box style={{ aspectRatio: draft.ratio === "9:16" ? "9 / 16" : "4 / 5", overflow: "hidden" }}>
-				<img alt={draft.title} src={draft.image} style={{ display: "block", height: "100%", objectFit: "cover", width: "100%" }} />
+			<Box
+				style={{
+					aspectRatio: draft.ratio === "9:16" ? "9 / 16" : "4 / 5",
+					overflow: "hidden",
+				}}
+			>
+				<img
+					alt={draft.title}
+					src={draft.image}
+					style={{display: "block", height: "100%", objectFit: "cover", width: "100%"}}
+				/>
 			</Box>
 			<Box display="flex" flexDirection="column" gap="8" p="12">
 				<Box alignItems="center" display="flex" justifyContent="space-between">
@@ -466,7 +479,7 @@ function DraftOptionCard({
 			onClick={onSelect}
 			style={{
 				background: "var(--ax-colors-bg-default)",
-				border: `1px solid ${selected ? "var(--ax-colors-border-accent)" : "var(--ax-colors-border-tertiary)"}`,
+				border: `1px solid ${selected ? "var(--ax-colors-border-default)" : "var(--ax-colors-border-tertiary)"}`,
 				borderRadius: 16,
 				cursor: "pointer",
 				overflow: "hidden",
@@ -475,9 +488,18 @@ function DraftOptionCard({
 				width: "100%",
 			}}
 		>
-			<Box display="grid" style={{ gridTemplateColumns: "120px minmax(0, 1fr)" }}>
-				<Box style={{ height: 96, overflow: "hidden" }}>
-					<img alt={draft.title} src={draft.image} style={{ display: "block", height: "100%", objectFit: "cover", width: "100%" }} />
+			<Box display="grid" style={{gridTemplateColumns: "120px minmax(0, 1fr)"}}>
+				<Box style={{height: 96, overflow: "hidden"}}>
+					<img
+						alt={draft.title}
+						src={draft.image}
+						style={{
+							display: "block",
+							height: "100%",
+							objectFit: "cover",
+							width: "100%",
+						}}
+					/>
 				</Box>
 				<Box display="flex" flexDirection="column" gap="8" justifyContent="center" p="12">
 					<Box alignItems="center" display="flex" justifyContent="space-between">
@@ -498,7 +520,7 @@ function DraftOptionCard({
 	);
 }
 
-function OutputVariantCard({ variant }: { variant: OutputVariant }) {
+function OutputVariantCard({variant}: {variant: OutputVariant}) {
 	return (
 		<Box bg="bg.secondary" border="1" borderColor="border.tertiary" p="12" rounded="xl">
 			<Box alignItems="center" display="flex" justifyContent="space-between">
@@ -507,20 +529,14 @@ function OutputVariantCard({ variant }: { variant: OutputVariant }) {
 				</Text>
 				<Badge intent="neutral">{variant.ratio}</Badge>
 			</Box>
-			<Text color="fg.secondary" fontSize="xs" style={{ marginTop: 6 }}>
+			<Text color="fg.secondary" fontSize="xs" style={{marginTop: 6}}>
 				{variant.width} x {variant.height}
 			</Text>
 		</Box>
 	);
 }
 
-function RatioChips({
-	value,
-	onChange,
-}: {
-	value: string;
-	onChange: (value: string) => void;
-}) {
+function RatioChips({value, onChange}: {value: string; onChange: (value: string) => void}) {
 	return (
 		<Box
 			alignItems="center"
@@ -529,7 +545,7 @@ function RatioChips({
 			gap="4"
 			p="4"
 			rounded="full"
-			style={{ width: "fit-content" }}
+			style={{width: "fit-content"}}
 		>
 			{aspectRatios.map((ratio) => (
 				<button
@@ -540,7 +556,10 @@ function RatioChips({
 						background: value === ratio ? "var(--ax-colors-bg-default)" : "transparent",
 						border: 0,
 						borderRadius: 999,
-						color: value === ratio ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)",
+						color:
+							value === ratio
+								? "var(--ax-colors-fg-default)"
+								: "var(--ax-colors-fg-secondary)",
 						cursor: "pointer",
 						fontSize: 14,
 						fontWeight: value === ratio ? 600 : 500,
@@ -556,12 +575,7 @@ function RatioChips({
 }
 
 function CreatePanelOnlyState() {
-	return (
-		<Box
-			flex="1"
-			style={{ minHeight: "calc(100vh - 57px)" }}
-		/>
-	);
+	return <Box flex="1" style={{minHeight: "calc(100vh - 57px)"}} />;
 }
 
 function CanvasToolbarIconButton({
@@ -573,7 +587,15 @@ function CanvasToolbarIconButton({
 	icon: ReactNode;
 	onClick?: () => void;
 }) {
-	return <AxiomButton aria-label={ariaLabel} appearance="default" size="sm" icon={icon} onClick={onClick} />;
+	return (
+		<AxiomButton
+			aria-label={ariaLabel}
+			appearance="default"
+			size="sm"
+			icon={icon}
+			onClick={onClick}
+		/>
+	);
 }
 
 function CanvasTopBar({
@@ -599,7 +621,7 @@ function CanvasTopBar({
 			justifyContent="space-between"
 			px="24"
 			py="12"
-			style={{ minHeight: 64 }}
+			style={{minHeight: 64}}
 		>
 			{/* Left side: Mode toggle */}
 			<Box alignItems="center" display="flex" gap="8">
@@ -610,16 +632,22 @@ function CanvasTopBar({
 					gap="4"
 					p="4"
 					rounded="full"
-					style={{ width: "fit-content" }}
+					style={{width: "fit-content"}}
 				>
 					<button
 						type="button"
 						onClick={() => onCanvasModeChange("generate")}
 						style={{
-							background: canvasMode === "generate" ? "var(--ax-colors-bg-default)" : "transparent",
+							background:
+								canvasMode === "generate"
+									? "var(--ax-colors-bg-default)"
+									: "transparent",
 							border: 0,
 							borderRadius: 999,
-							color: canvasMode === "generate" ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)",
+							color:
+								canvasMode === "generate"
+									? "var(--ax-colors-fg-default)"
+									: "var(--ax-colors-fg-secondary)",
 							cursor: "pointer",
 							fontSize: 14,
 							fontWeight: canvasMode === "generate" ? 600 : 500,
@@ -634,10 +662,16 @@ function CanvasTopBar({
 						type="button"
 						onClick={() => onCanvasModeChange("edit")}
 						style={{
-							background: canvasMode === "edit" ? "var(--ax-colors-bg-default)" : "transparent",
+							background:
+								canvasMode === "edit"
+									? "var(--ax-colors-bg-default)"
+									: "transparent",
 							border: 0,
 							borderRadius: 999,
-							color: canvasMode === "edit" ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)",
+							color:
+								canvasMode === "edit"
+									? "var(--ax-colors-fg-default)"
+									: "var(--ax-colors-fg-secondary)",
 							cursor: "pointer",
 							fontSize: 14,
 							fontWeight: canvasMode === "edit" ? 600 : 500,
@@ -654,14 +688,18 @@ function CanvasTopBar({
 			{/* Right side: Actions */}
 			<Box alignItems="center" display="flex" gap="8">
 				<Text color="fg.secondary" fontSize="xs">
-					{saveState === "saved" ? "Changes saved" : saveState === "saving" ? "Saving..." : "Unsaved changes"}
+					{saveState === "saved"
+						? "Changes saved"
+						: saveState === "saving"
+							? "Saving..."
+							: "Unsaved changes"}
 				</Text>
 				<CanvasToolbarIconButton ariaLabel="Undo" icon={<IconArrowBackUp size={16} />} />
 				<CanvasToolbarIconButton ariaLabel="Redo" icon={<IconArrowForwardUp size={16} />} />
 				<CanvasToolbarIconButton ariaLabel="Copy" icon={<IconCopy size={16} />} />
 
 				{/* Add to dropdown */}
-				<Box style={{ position: "relative" }}>
+				<Box style={{position: "relative"}}>
 					<AxiomButton
 						appearance="primary"
 						size="sm"
@@ -687,9 +725,9 @@ function CanvasTopBar({
 						>
 							<Box display="flex" flexDirection="column" p="4">
 								{[
-									{ label: "Add to Task", icon: <IconPlus size={16} /> },
-									{ label: "Add to Library", icon: <IconDownload size={16} /> },
-									{ label: "Download", icon: <IconDownload size={16} /> },
+									{label: "Add to Task", icon: <IconPlus size={16} />},
+									{label: "Add to Library", icon: <IconDownload size={16} />},
+									{label: "Download", icon: <IconDownload size={16} />},
 								].map((item) => (
 									<button
 										key={item.label}
@@ -714,7 +752,8 @@ function CanvasTopBar({
 											width: "100%",
 										}}
 										onMouseEnter={(e) => {
-											e.currentTarget.style.background = "var(--ax-colors-bg-secondary)";
+											e.currentTarget.style.background =
+												"var(--ax-colors-bg-secondary)";
 										}}
 										onMouseLeave={(e) => {
 											e.currentTarget.style.background = "transparent";
@@ -729,7 +768,11 @@ function CanvasTopBar({
 					) : null}
 				</Box>
 
-				<CanvasToolbarIconButton ariaLabel="Close canvas" icon={<IconX size={16} />} onClick={onClose} />
+				<CanvasToolbarIconButton
+					ariaLabel="Close canvas"
+					icon={<IconXmark size={16} />}
+					onClick={onClose}
+				/>
 			</Box>
 		</Box>
 	);
@@ -786,7 +829,7 @@ function CanvasSettingsSidebar({
 			borderColor="border.tertiary"
 			display="flex"
 			flexDirection="column"
-			style={{ width: 400, minHeight: "100%", overflowY: "auto" }}
+			style={{width: 400, minHeight: "100%", overflowY: "auto"}}
 		>
 			<Box borderB="1" borderColor="border.tertiary" p="24" pb="20">
 				<Text fontSize="lg" fontWeight="700">
@@ -807,7 +850,12 @@ function CanvasSettingsSidebar({
 						<Box display="flex" flexDirection="column" gap="24" pt="20">
 							{/* Intent - Always visible */}
 							<Box display="flex" flexDirection="column" gap="12">
-								<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+								<Text
+									color="fg.secondary"
+									fontSize="xs"
+									fontWeight="600"
+									style={{letterSpacing: "0.02em", textTransform: "uppercase"}}
+								>
 									Intent
 								</Text>
 								<select
@@ -831,28 +879,50 @@ function CanvasSettingsSidebar({
 									))}
 								</select>
 								<Text color="fg.secondary" fontSize="xs">
-									{intent === "Logo" && "AI will optimize for clean vectors and brand marks"}
-									{intent === "Photo" && "AI will load photorealistic rendering skills"}
-									{intent === "Video" && "AI will prepare motion and timing controls"}
-									{intent === "Poster" && "AI will focus on bold composition and copy space"}
-									{intent === "Illustrations" && "AI will use illustrative styles and treatments"}
-									{intent === "Icons" && "AI will create minimal, recognizable symbols"}
+									{intent === "Logo" &&
+										"AI will optimize for clean vectors and brand marks"}
+									{intent === "Photo" &&
+										"AI will load photorealistic rendering skills"}
+									{intent === "Video" &&
+										"AI will prepare motion and timing controls"}
+									{intent === "Poster" &&
+										"AI will focus on bold composition and copy space"}
+									{intent === "Illustrations" &&
+										"AI will use illustrative styles and treatments"}
+									{intent === "Icons" &&
+										"AI will create minimal, recognizable symbols"}
 								</Text>
 							</Box>
 
 							{/* Aspect Ratio - Conditional */}
 							{showAspectRatio && (
 								<Box display="flex" flexDirection="column" gap="12">
-									<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+									<Text
+										color="fg.secondary"
+										fontSize="xs"
+										fontWeight="600"
+										style={{
+											letterSpacing: "0.02em",
+											textTransform: "uppercase",
+										}}
+									>
 										Aspect Ratio
 									</Text>
-									<RatioChips value={aspectRatio} onChange={onAspectRatioChange} />
+									<RatioChips
+										value={aspectRatio}
+										onChange={onAspectRatioChange}
+									/>
 									<Text color="fg.secondary" fontSize="xs">
-										{aspectRatio === "Auto" && "Opal will choose the best ratio for your channel pack"}
-										{aspectRatio === "1:1" && "Square format • Instagram posts, profile images"}
-										{aspectRatio === "4:5" && "Portrait • Instagram feed, Facebook posts"}
-										{aspectRatio === "16:9" && "Landscape • YouTube, presentations, web heroes"}
-										{aspectRatio === "9:16" && "Vertical • Instagram stories, TikTok, Reels"}
+										{aspectRatio === "Auto" &&
+											"Opal will choose the best ratio for your channel pack"}
+										{aspectRatio === "1:1" &&
+											"Square format • Instagram posts, profile images"}
+										{aspectRatio === "4:5" &&
+											"Portrait • Instagram feed, Facebook posts"}
+										{aspectRatio === "16:9" &&
+											"Landscape • YouTube, presentations, web heroes"}
+										{aspectRatio === "9:16" &&
+											"Vertical • Instagram stories, TikTok, Reels"}
 									</Text>
 								</Box>
 							)}
@@ -860,7 +930,15 @@ function CanvasSettingsSidebar({
 							{/* Channel Pack - Conditional */}
 							{showChannelPack && (
 								<Box display="flex" flexDirection="column" gap="12">
-									<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+									<Text
+										color="fg.secondary"
+										fontSize="xs"
+										fontWeight="600"
+										style={{
+											letterSpacing: "0.02em",
+											textTransform: "uppercase",
+										}}
+									>
 										Channel Pack
 									</Text>
 									<select
@@ -886,13 +964,24 @@ function CanvasSettingsSidebar({
 
 									{/* Output Preview */}
 									{outputVariants.length > 0 && (
-										<Box bg="bg.secondary" border="1" borderColor="border.tertiary" p="12" rounded="xl">
+										<Box
+											bg="bg.secondary"
+											border="1"
+											borderColor="border.tertiary"
+											p="12"
+											rounded="xl"
+										>
 											<Text fontSize="xs" fontWeight="600" mb="8">
 												Will generate {outputVariants.length} outputs:
 											</Text>
 											<Box display="flex" flexDirection="column" gap="6">
 												{outputVariants.map((variant) => (
-													<Box key={`${variant.label}-${variant.width}`} display="flex" alignItems="center" justifyContent="space-between">
+													<Box
+														key={`${variant.label}-${variant.width}`}
+														display="flex"
+														alignItems="center"
+														justifyContent="space-between"
+													>
 														<Text fontSize="xs" color="fg.secondary">
 															{variant.label}
 														</Text>
@@ -914,7 +1003,12 @@ function CanvasSettingsSidebar({
 						<Box display="flex" flexDirection="column" gap="24" pt="20">
 							{/* Theme Package */}
 							<Box display="flex" flexDirection="column" gap="12">
-								<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+								<Text
+									color="fg.secondary"
+									fontSize="xs"
+									fontWeight="600"
+									style={{letterSpacing: "0.02em", textTransform: "uppercase"}}
+								>
 									Theme Package
 								</Text>
 								<select
@@ -944,7 +1038,12 @@ function CanvasSettingsSidebar({
 
 							{/* Brand Pack */}
 							<Box display="flex" flexDirection="column" gap="12">
-								<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+								<Text
+									color="fg.secondary"
+									fontSize="xs"
+									fontWeight="600"
+									style={{letterSpacing: "0.02em", textTransform: "uppercase"}}
+								>
 									Brand Pack
 								</Text>
 								<select
@@ -974,15 +1073,35 @@ function CanvasSettingsSidebar({
 
 							{/* Reference Images */}
 							<Box display="flex" flexDirection="column" gap="12">
-								<Box alignItems="center" display="flex" justifyContent="space-between">
-									<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+								<Box
+									alignItems="center"
+									display="flex"
+									justifyContent="space-between"
+								>
+									<Text
+										color="fg.secondary"
+										fontSize="xs"
+										fontWeight="600"
+										style={{
+											letterSpacing: "0.02em",
+											textTransform: "uppercase",
+										}}
+									>
 										Reference Images
 									</Text>
-									<AxiomButton appearance="default" size="sm" icon={<IconUpload size={14} />}>
+									<AxiomButton
+										appearance="default"
+										size="sm"
+										icon={<IconUpload size={14} />}
+									>
 										Upload
 									</AxiomButton>
 								</Box>
-								<Box display="grid" gap="12" style={{ gridTemplateColumns: "1fr 1fr" }}>
+								<Box
+									display="grid"
+									gap="12"
+									style={{gridTemplateColumns: "1fr 1fr"}}
+								>
 									{referenceAssets.slice(0, 4).map((asset) => (
 										<button
 											key={asset.id}
@@ -990,7 +1109,7 @@ function CanvasSettingsSidebar({
 											onClick={() => onSelectReference(asset.id)}
 											style={{
 												background: "var(--ax-colors-bg-default)",
-												border: `2px solid ${asset.id === selectedReferenceId ? "var(--ax-colors-border-accent)" : "var(--ax-colors-border-tertiary)"}`,
+												border: `2px solid ${asset.id === selectedReferenceId ? "var(--ax-colors-border-default)" : "var(--ax-colors-border-tertiary)"}`,
 												borderRadius: 12,
 												cursor: "pointer",
 												overflow: "hidden",
@@ -1024,8 +1143,20 @@ function CanvasSettingsSidebar({
 								{/* Reference Strength Slider */}
 								{selectedReferenceId && (
 									<Box display="flex" flexDirection="column" gap="8" mt="8">
-										<Box alignItems="center" display="flex" justifyContent="space-between">
-											<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+										<Box
+											alignItems="center"
+											display="flex"
+											justifyContent="space-between"
+										>
+											<Text
+												color="fg.secondary"
+												fontSize="xs"
+												fontWeight="600"
+												style={{
+													letterSpacing: "0.02em",
+													textTransform: "uppercase",
+												}}
+											>
 												Reference Influence
 											</Text>
 											<Text color="fg.default" fontSize="xs" fontWeight="600">
@@ -1037,15 +1168,19 @@ function CanvasSettingsSidebar({
 											min="0"
 											max="100"
 											value={referenceStrength}
-											onChange={(e) => onReferenceStrengthChange(Number(e.target.value))}
+											onChange={(e) =>
+												onReferenceStrengthChange(Number(e.target.value))
+											}
 											style={{
 												width: "100%",
-												accentColor: "var(--ax-colors-bg-accent)",
+												accentColor: "var(--ax-colors-fg-default)",
 											}}
 										/>
 										<Text color="fg.secondary" fontSize="xs">
 											{referenceStrength < 30 && "Subtle inspiration only"}
-											{referenceStrength >= 30 && referenceStrength < 70 && "Balanced influence"}
+											{referenceStrength >= 30 &&
+												referenceStrength < 70 &&
+												"Balanced influence"}
 											{referenceStrength >= 70 && "Strong style transfer"}
 										</Text>
 									</Box>
@@ -1059,7 +1194,11 @@ function CanvasSettingsSidebar({
 						<Box display="flex" flexDirection="column" gap="24" pt="20">
 							{/* Text Overlay */}
 							<Box display="flex" flexDirection="column" gap="12">
-								<Box display="flex" alignItems="center" justifyContent="space-between">
+								<Box
+									display="flex"
+									alignItems="center"
+									justifyContent="space-between"
+								>
 									<Box flex="1">
 										<Text fontSize="sm" fontWeight="600">
 											Text Overlay
@@ -1068,41 +1207,23 @@ function CanvasSettingsSidebar({
 											Add text elements to the canvas
 										</Text>
 									</Box>
-									<button
-										type="button"
-										onClick={() => onTextOverlayChange(!textOverlayEnabled)}
-										style={{
-											background: textOverlayEnabled ? "var(--ax-colors-bg-accent)" : "var(--ax-colors-bg-secondary)",
-											border: 0,
-											borderRadius: 12,
-											cursor: "pointer",
-											height: 24,
-											position: "relative",
-											transition: "background 0.2s ease",
-											width: 44,
-											flexShrink: 0,
-										}}
-									>
-										<span
-											style={{
-												background: "var(--ax-colors-bg-default)",
-												borderRadius: 10,
-												display: "block",
-												height: 20,
-												left: textOverlayEnabled ? 22 : 2,
-												position: "absolute",
-												top: 2,
-												transition: "left 0.2s ease",
-												width: 20,
-											}}
-										/>
-									</button>
+									<Switch
+										checked={textOverlayEnabled}
+										onCheckedChange={onTextOverlayChange}
+										aria-label="Text Overlay"
+									/>
 								</Box>
 							</Box>
 
 							{/* Edit Mode Tools */}
 							{canvasMode === "edit" && (
-								<Box bg="bg.secondary" border="1" borderColor="border.tertiary" p="16" rounded="xl">
+								<Box
+									bg="bg.secondary"
+									border="1"
+									borderColor="border.tertiary"
+									p="16"
+									rounded="xl"
+								>
 									<Text fontSize="sm" fontWeight="600" mb="8">
 										Transform Tools
 									</Text>
@@ -1120,12 +1241,20 @@ function CanvasSettingsSidebar({
 								</Box>
 							)}
 
-							<Box bg="bg.secondary" border="1" borderColor="border.tertiary" p="16" rounded="xl">
+							<Box
+								bg="bg.secondary"
+								border="1"
+								borderColor="border.tertiary"
+								p="16"
+								rounded="xl"
+							>
 								<Text fontSize="sm" fontWeight="600" mb="8">
 									Quality Settings
 								</Text>
 								<Text color="fg.secondary" fontSize="xs">
-									Generation uses {canvasMode === "generate" ? "standard" : "production"} quality. Higher quality uses more credits.
+									Generation uses{" "}
+									{canvasMode === "generate" ? "standard" : "production"} quality.
+									Higher quality uses more credits.
 								</Text>
 							</Box>
 						</Box>
@@ -1159,7 +1288,7 @@ function AdvancedCanvasWorkspace({
 
 	const outputVariants = useMemo(
 		() => getOutputVariants(channelPack, "image", aspectRatio),
-		[aspectRatio, channelPack],
+		[aspectRatio, channelPack]
 	);
 	const imageSrc = selectedDraft?.image || referenceAssets[0].image;
 	const title = selectedDraft?.title || "Quick draft";
@@ -1185,13 +1314,16 @@ function AdvancedCanvasWorkspace({
 					flexShrink: 0,
 				}}
 			>
-				<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+				<div style={{display: "flex", alignItems: "center", gap: 8}}>
 					<button
 						type="button"
 						onClick={() => setCanvasMode("generate")}
 						style={{
 							border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
-							background: canvasMode === "generate" ? "var(--ax-colors-bg-secondary, #eef2ff)" : "var(--ax-colors-bg-default, #fff)",
+							background:
+								canvasMode === "generate"
+									? "var(--ax-colors-bg-secondary, #eef2ff)"
+									: "var(--ax-colors-bg-default, #fff)",
 							borderRadius: 999,
 							padding: "8px 16px",
 							fontSize: 14,
@@ -1206,7 +1338,10 @@ function AdvancedCanvasWorkspace({
 						onClick={() => setCanvasMode("edit")}
 						style={{
 							border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
-							background: canvasMode === "edit" ? "var(--ax-colors-bg-secondary, #eef2ff)" : "var(--ax-colors-bg-default, #fff)",
+							background:
+								canvasMode === "edit"
+									? "var(--ax-colors-bg-secondary, #eef2ff)"
+									: "var(--ax-colors-bg-default, #fff)",
 							borderRadius: 999,
 							padding: "8px 16px",
 							fontSize: 14,
@@ -1217,38 +1352,20 @@ function AdvancedCanvasWorkspace({
 						Edit
 					</button>
 				</div>
-				<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-					<span style={{ color: "var(--ax-colors-fg-secondary, #667085)", fontSize: 14 }}>
-						{saveState === "saved" ? "Changes saved." : saveState === "saving" ? "Saving..." : "Unsaved changes"}
+				<div style={{display: "flex", alignItems: "center", gap: 12}}>
+					<span style={{color: "var(--ax-colors-fg-secondary, #667085)", fontSize: 14}}>
+						{saveState === "saved"
+							? "Changes saved."
+							: saveState === "saving"
+								? "Saving..."
+								: "Unsaved changes"}
 					</span>
-					<button
-						type="button"
-						style={{
-							border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
-							background: "var(--ax-colors-bg-default, #fff)",
-							borderRadius: 10,
-							padding: "8px 14px",
-							fontSize: 14,
-							cursor: "pointer",
-						}}
-					>
+					<AxiomButton appearance="default" size="md">
 						Preview
-					</button>
-					<button
-						type="button"
-						style={{
-							border: "1px solid var(--ax-colors-border-accent, #2457ff)",
-							background: "var(--ax-colors-bg-accent, #2457ff)",
-							color: "white",
-							borderRadius: 10,
-							padding: "8px 14px",
-							fontSize: 14,
-							fontWeight: 600,
-							cursor: "pointer",
-						}}
-					>
+					</AxiomButton>
+					<AxiomButton appearance="primary" size="md">
 						Add to
-					</button>
+					</AxiomButton>
 					<button
 						type="button"
 						onClick={onCloseAdvanced}
@@ -1267,8 +1384,8 @@ function AdvancedCanvasWorkspace({
 				</div>
 			</div>
 
-			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-				<div style={{ flex: 1, minWidth: 0, overflow: "auto", padding: 24 }}>
+			<div style={{display: "flex", flex: 1, minHeight: 0}}>
+				<div style={{flex: 1, minWidth: 0, overflow: "auto", padding: 24}}>
 					<div
 						style={{
 							display: "grid",
@@ -1289,45 +1406,51 @@ function AdvancedCanvasWorkspace({
 								flexDirection: "column",
 							}}
 						>
-							<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+							<div
+								style={{
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "space-between",
+									marginBottom: 20,
+								}}
+							>
 								<div>
-									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)", marginBottom: 8 }}>
+									<div
+										style={{
+											fontSize: 13,
+											color: "var(--ax-colors-fg-secondary, #667085)",
+											marginBottom: 8,
+										}}
+									>
 										Image generation
 									</div>
-									<h2 style={{ fontSize: 28, lineHeight: 1.2, margin: 0, fontWeight: 700 }}>{title}</h2>
-									<p style={{ fontSize: 14, color: "var(--ax-colors-fg-secondary, #667085)", margin: "8px 0 0" }}>
+									<h2
+										style={{
+											fontSize: 28,
+											lineHeight: 1.2,
+											margin: 0,
+											fontWeight: 700,
+										}}
+									>
+										{title}
+									</h2>
+									<p
+										style={{
+											fontSize: 14,
+											color: "var(--ax-colors-fg-secondary, #667085)",
+											margin: "8px 0 0",
+										}}
+									>
 										{prompt}
 									</p>
 								</div>
-								<div style={{ display: "flex", gap: 8 }}>
-									<button
-										type="button"
-										style={{
-											border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
-											background: "var(--ax-colors-bg-default, #fff)",
-											borderRadius: 10,
-											padding: "8px 12px",
-											fontSize: 14,
-											cursor: "pointer",
-										}}
-									>
+								<div style={{display: "flex", gap: 8}}>
+									<AxiomButton appearance="default" size="md">
 										Regenerate
-									</button>
-									<button
-										type="button"
-										style={{
-											border: "1px solid var(--ax-colors-border-accent, #2457ff)",
-											background: "var(--ax-colors-bg-accent, #2457ff)",
-											color: "white",
-											borderRadius: 10,
-											padding: "8px 12px",
-											fontSize: 14,
-											fontWeight: 600,
-											cursor: "pointer",
-										}}
-									>
+									</AxiomButton>
+									<AxiomButton appearance="primary" size="md">
 										Generate Pack
-									</button>
+									</AxiomButton>
 								</div>
 							</div>
 
@@ -1361,7 +1484,7 @@ function AdvancedCanvasWorkspace({
 							</div>
 						</div>
 
-						<div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+						<div style={{display: "flex", flexDirection: "column", gap: 16}}>
 							<div
 								style={{
 									background: "var(--ax-colors-bg-default, #fff)",
@@ -1370,17 +1493,52 @@ function AdvancedCanvasWorkspace({
 									padding: 20,
 								}}
 							>
-								<div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Output</div>
-								<div style={{ display: "grid", gap: 14 }}>
+								<div style={{fontSize: 16, fontWeight: 700, marginBottom: 16}}>
+									Output
+								</div>
+								<div style={{display: "grid", gap: 14}}>
 									<div>
-										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Intent</div>
-										<select value={intent} onChange={(event) => setIntent(event.target.value)} style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)", padding: "0 12px", fontSize: 14 }}>
-											{intentOptions.map((option) => <option key={option}>{option}</option>)}
+										<div
+											style={{
+												fontSize: 12,
+												fontWeight: 700,
+												color: "var(--ax-colors-fg-secondary, #667085)",
+												textTransform: "uppercase",
+												marginBottom: 8,
+											}}
+										>
+											Intent
+										</div>
+										<select
+											value={intent}
+											onChange={(event) => setIntent(event.target.value)}
+											style={{
+												width: "100%",
+												height: 40,
+												borderRadius: 10,
+												border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+												padding: "0 12px",
+												fontSize: 14,
+											}}
+										>
+											{intentOptions.map((option) => (
+												<option key={option}>{option}</option>
+											))}
 										</select>
 									</div>
 									<div>
-										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Aspect ratio</div>
-										<div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+										<div
+											style={{
+												fontSize: 12,
+												fontWeight: 700,
+												color: "var(--ax-colors-fg-secondary, #667085)",
+												textTransform: "uppercase",
+												marginBottom: 8,
+											}}
+										>
+											Aspect ratio
+										</div>
+										<div style={{display: "flex", flexWrap: "wrap", gap: 8}}>
 											{aspectRatios.map((ratio) => (
 												<button
 													key={ratio}
@@ -1388,7 +1546,10 @@ function AdvancedCanvasWorkspace({
 													onClick={() => setAspectRatio(ratio)}
 													style={{
 														border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
-														background: ratio === aspectRatio ? "var(--ax-colors-bg-secondary, #eef2ff)" : "var(--ax-colors-bg-default, #fff)",
+														background:
+															ratio === aspectRatio
+																? "var(--ax-colors-bg-secondary, #eef2ff)"
+																: "var(--ax-colors-bg-default, #fff)",
 														borderRadius: 999,
 														padding: "6px 12px",
 														fontSize: 13,
@@ -1401,9 +1562,32 @@ function AdvancedCanvasWorkspace({
 										</div>
 									</div>
 									<div>
-										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Channel pack</div>
-										<select value={channelPack} onChange={(event) => setChannelPack(event.target.value)} style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)", padding: "0 12px", fontSize: 14 }}>
-											{channelPacks.map((option) => <option key={option}>{option}</option>)}
+										<div
+											style={{
+												fontSize: 12,
+												fontWeight: 700,
+												color: "var(--ax-colors-fg-secondary, #667085)",
+												textTransform: "uppercase",
+												marginBottom: 8,
+											}}
+										>
+											Channel pack
+										</div>
+										<select
+											value={channelPack}
+											onChange={(event) => setChannelPack(event.target.value)}
+											style={{
+												width: "100%",
+												height: 40,
+												borderRadius: 10,
+												border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+												padding: "0 12px",
+												fontSize: 14,
+											}}
+										>
+											{channelPacks.map((option) => (
+												<option key={option}>{option}</option>
+											))}
 										</select>
 									</div>
 								</div>
@@ -1417,18 +1601,66 @@ function AdvancedCanvasWorkspace({
 									padding: 20,
 								}}
 							>
-								<div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Brand</div>
-								<div style={{ display: "grid", gap: 14 }}>
+								<div style={{fontSize: 16, fontWeight: 700, marginBottom: 16}}>
+									Brand
+								</div>
+								<div style={{display: "grid", gap: 14}}>
 									<div>
-										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Theme pack</div>
-										<select value={themePack} onChange={(event) => setThemePack(event.target.value)} style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)", padding: "0 12px", fontSize: 14 }}>
-											{themePacks.map((option) => <option key={option}>{option}</option>)}
+										<div
+											style={{
+												fontSize: 12,
+												fontWeight: 700,
+												color: "var(--ax-colors-fg-secondary, #667085)",
+												textTransform: "uppercase",
+												marginBottom: 8,
+											}}
+										>
+											Theme pack
+										</div>
+										<select
+											value={themePack}
+											onChange={(event) => setThemePack(event.target.value)}
+											style={{
+												width: "100%",
+												height: 40,
+												borderRadius: 10,
+												border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+												padding: "0 12px",
+												fontSize: 14,
+											}}
+										>
+											{themePacks.map((option) => (
+												<option key={option}>{option}</option>
+											))}
 										</select>
 									</div>
 									<div>
-										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Brand pack</div>
-										<select value={brandPack} onChange={(event) => setBrandPack(event.target.value)} style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)", padding: "0 12px", fontSize: 14 }}>
-											{brandPacks.map((option) => <option key={option}>{option}</option>)}
+										<div
+											style={{
+												fontSize: 12,
+												fontWeight: 700,
+												color: "var(--ax-colors-fg-secondary, #667085)",
+												textTransform: "uppercase",
+												marginBottom: 8,
+											}}
+										>
+											Brand pack
+										</div>
+										<select
+											value={brandPack}
+											onChange={(event) => setBrandPack(event.target.value)}
+											style={{
+												width: "100%",
+												height: 40,
+												borderRadius: 10,
+												border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+												padding: "0 12px",
+												fontSize: 14,
+											}}
+										>
+											{brandPacks.map((option) => (
+												<option key={option}>{option}</option>
+											))}
 										</select>
 									</div>
 								</div>
@@ -1442,19 +1674,45 @@ function AdvancedCanvasWorkspace({
 									padding: 20,
 								}}
 							>
-								<div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Advanced</div>
-								<div style={{ display: "grid", gap: 12 }}>
-									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)" }}>
-										Selected reference: {referenceAssets.find((asset) => asset.id === selectedReferenceId)?.title ?? referenceAssets[0].title}
+								<div style={{fontSize: 16, fontWeight: 700, marginBottom: 16}}>
+									Advanced
+								</div>
+								<div style={{display: "grid", gap: 12}}>
+									<div
+										style={{
+											fontSize: 13,
+											color: "var(--ax-colors-fg-secondary, #667085)",
+										}}
+									>
+										Selected reference:{" "}
+										{referenceAssets.find(
+											(asset) => asset.id === selectedReferenceId
+										)?.title ?? referenceAssets[0].title}
 									</div>
-									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)" }}>
+									<div
+										style={{
+											fontSize: 13,
+											color: "var(--ax-colors-fg-secondary, #667085)",
+										}}
+									>
 										Text overlay: {textOverlayEnabled ? "Enabled" : "Disabled"}
 									</div>
-									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)" }}>
+									<div
+										style={{
+											fontSize: 13,
+											color: "var(--ax-colors-fg-secondary, #667085)",
+										}}
+									>
 										Reference strength: {referenceStrength}%
 									</div>
-									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)" }}>
-										Output variants: {outputVariants.map((variant) => variant.label).join(", ")}
+									<div
+										style={{
+											fontSize: 13,
+											color: "var(--ax-colors-fg-secondary, #667085)",
+										}}
+									>
+										Output variants:{" "}
+										{outputVariants.map((variant) => variant.label).join(", ")}
 									</div>
 								</div>
 							</div>
@@ -1495,7 +1753,7 @@ function CreateEntryPanel({
 				flexDirection="column"
 				rounded="xl"
 				shadow="lg"
-				style={{ maxWidth: 430, minHeight: 760, width: "100%" }}
+				style={{maxWidth: 430, minHeight: 760, width: "100%"}}
 			>
 				<Box
 					alignItems="center"
@@ -1509,81 +1767,87 @@ function CreateEntryPanel({
 					<Box alignItems="center" display="flex" gap="8">
 						<Box
 							alignItems="center"
-							bg="bg.accent.subtle"
+							bg="bg.information.subtle"
+							color="fg.information.strong"
 							display="flex"
 							justifyContent="center"
 							rounded="full"
-							style={{ height: 28, width: 28 }}
+							style={{height: 28, width: 28}}
 						>
 							<IconSparkles size={16} />
 						</Box>
-							<Text fontSize="lg" fontWeight="600">
-								Opal
-							</Text>
-						</Box>
-						<Box alignItems="center" display="flex" gap="8">
-							<Text color="fg.secondary" fontSize="xs">
-								{saveState === "saved" ? "Changes saved." : saveState === "saving" ? "Saving..." : "Unsaved changes"}
-							</Text>
-							<AxiomButton appearance="default" size="sm">
-								Close
-							</AxiomButton>
-						</Box>
+						<Text fontSize="lg" fontWeight="600">
+							Opal
+						</Text>
 					</Box>
+					<Box alignItems="center" display="flex" gap="8">
+						<Text color="fg.secondary" fontSize="xs">
+							{saveState === "saved"
+								? "Changes saved."
+								: saveState === "saving"
+									? "Saving..."
+									: "Unsaved changes"}
+						</Text>
+						<AxiomButton appearance="default" size="sm">
+							Close
+						</AxiomButton>
+					</Box>
+				</Box>
 
 				<Box display="flex" flex="1" flexDirection="column" gap="16" p="20">
 					<Box display="flex" gap="10">
 						<Box
 							alignItems="center"
-							bg="bg.accent.subtle"
+							bg="bg.information.subtle"
+							color="fg.information.strong"
 							display="flex"
 							justifyContent="center"
 							rounded="full"
-							style={{ flexShrink: 0, height: 28, width: 28 }}
+							style={{flexShrink: 0, height: 28, width: 28}}
 						>
 							<IconSparkles size={16} />
-							</Box>
-							<Box display="flex" flexDirection="column" gap="8">
-								<Text fontSize="sm">
-									{generated
-										? `I generated a ${assetMode === "image" ? "visual" : "concept clip"} for your prompt.${assetMode === "image" ? " You can keep it lightweight or open the advanced editor for full canvas controls." : ""}`
-										: "Hi, I'm Opal, Optimizely's AI. I can help create brand-safe visuals for campaigns, social, and event content."}
-								</Text>
-								{generated ? null : (
-									<>
-										<Text fontSize="sm">What can I help you with?</Text>
-										<Box display="grid" gap="8" style={{ maxWidth: 320 }}>
-											{[
-												"Create a spring triathlon campaign image",
-												"Generate a paid social hero for race day",
-												"Make a premium event poster visual",
-												"Create a launch image for Stride endurance",
-											].map((suggestion) => (
-												<button
-													key={suggestion}
-													type="button"
-													onClick={() => onPromptChange(suggestion)}
-													style={{
-														background: "var(--ax-colors-bg-primary)",
-														border: "1px solid var(--ax-colors-border-primary)",
-														borderRadius: 10,
-														color: "var(--ax-colors-fg-default-inverse)",
-														cursor: "pointer",
-														fontSize: 14,
-														lineHeight: 1.4,
-														padding: "12px 14px",
-														textAlign: "left",
-													}}
-												>
-													{suggestion}
-												</button>
-											))}
-										</Box>
-									</>
-								)}
-								{generated ? (
-									<Box
-										bg="bg.secondary"
+						</Box>
+						<Box display="flex" flexDirection="column" gap="8">
+							<Text fontSize="sm">
+								{generated
+									? `I generated a ${assetMode === "image" ? "visual" : "concept clip"} for your prompt.${assetMode === "image" ? " You can keep it lightweight or open the advanced editor for full canvas controls." : ""}`
+									: "Hi, I'm Opal, Optimizely's AI. I can help create brand-safe visuals for campaigns, social, and event content."}
+							</Text>
+							{generated ? null : (
+								<>
+									<Text fontSize="sm">What can I help you with?</Text>
+									<Box display="grid" gap="8" style={{maxWidth: 320}}>
+										{[
+											"Create a spring triathlon campaign image",
+											"Generate a paid social hero for race day",
+											"Make a premium event poster visual",
+											"Create a launch image for Stride endurance",
+										].map((suggestion) => (
+											<button
+												key={suggestion}
+												type="button"
+												onClick={() => onPromptChange(suggestion)}
+												style={{
+													background: "var(--ax-colors-bg-primary)",
+													border: "1px solid var(--ax-colors-border-primary)",
+													borderRadius: 10,
+													color: "var(--ax-colors-fg-default-inverse)",
+													cursor: "pointer",
+													fontSize: 14,
+													lineHeight: 1.4,
+													padding: "12px 14px",
+													textAlign: "left",
+												}}
+											>
+												{suggestion}
+											</button>
+										))}
+									</Box>
+								</>
+							)}
+							{generated ? (
+								<Box
+									bg="bg.secondary"
 									border="1"
 									borderColor="border.tertiary"
 									display="flex"
@@ -1592,51 +1856,78 @@ function CreateEntryPanel({
 									p="12"
 									rounded="xl"
 								>
-									<Box style={{ aspectRatio: "4 / 5", borderRadius: 12, overflow: "hidden" }}>
+									<Box
+										style={{
+											aspectRatio: "4 / 5",
+											borderRadius: 12,
+											overflow: "hidden",
+										}}
+									>
 										<img
 											alt={selectedDraft.title}
 											src={selectedDraft.image}
-											style={{ display: "block", height: "100%", objectFit: "cover", width: "100%" }}
+											style={{
+												display: "block",
+												height: "100%",
+												objectFit: "cover",
+												width: "100%",
+											}}
 										/>
 									</Box>
-										<Box alignItems="center" display="flex" justifyContent="space-between">
-											<Text fontSize="sm" fontWeight="600">
-												{selectedDraft.title}
-											</Text>
-											<Badge intent="success">{selectedDraft.score}% match</Badge>
-										</Box>
-										{assetMode === "image" ? (
-											<>
-												<Text color="fg.secondary" fontSize="xs">
-													Use advanced editor
-												</Text>
-												<AxiomButton appearance="default" size="md" onClick={onOpenAdvanced}>
-													Use advanced editor
-												</AxiomButton>
-											</>
-										) : (
-											<Text color="fg.secondary" fontSize="xs">
-												Keep iterating here. Advanced canvas is available for image creation.
-											</Text>
-										)}
+									<Box
+										alignItems="center"
+										display="flex"
+										justifyContent="space-between"
+									>
+										<Text fontSize="sm" fontWeight="600">
+											{selectedDraft.title}
+										</Text>
+										<Badge intent="success">{selectedDraft.score}% match</Badge>
 									</Box>
-								) : null}
-							</Box>
+									{assetMode === "image" ? (
+										<>
+											<Text color="fg.secondary" fontSize="xs">
+												Use advanced editor
+											</Text>
+											<AxiomButton
+												appearance="default"
+												size="md"
+												onClick={onOpenAdvanced}
+											>
+												Use advanced editor
+											</AxiomButton>
+										</>
+									) : (
+										<Text color="fg.secondary" fontSize="xs">
+											Keep iterating here. Advanced canvas is available for
+											image creation.
+										</Text>
+									)}
+								</Box>
+							) : null}
 						</Box>
+					</Box>
 
-						<Box display="grid" gap="10" style={{ marginTop: "auto" }}>
-							<Textarea
-								value={prompt}
-								onChange={(event) => onPromptChange(event.target.value)}
-								placeholder={`Ask Opal to create a ${assetMode}`}
-								style={{ minHeight: 96 }}
-							/>
-							<Box alignItems="center" display="flex" justifyContent="space-between">
-								<Box alignItems="center" display="flex" gap="8">
-									<Badge intent="neutral">{assetMode === "image" ? "Image" : "Video"}</Badge>
-									<Badge intent="neutral">Quick draft</Badge>
+					<Box display="grid" gap="10" style={{marginTop: "auto"}}>
+						<Textarea
+							value={prompt}
+							onChange={(event) => onPromptChange(event.target.value)}
+							placeholder={`Ask Opal to create a ${assetMode}`}
+							style={{minHeight: 96}}
+						/>
+						<Box alignItems="center" display="flex" justifyContent="space-between">
+							<Box alignItems="center" display="flex" gap="8">
+								<Badge intent="neutral">
+									{assetMode === "image" ? "Image" : "Video"}
+								</Badge>
+								<Badge intent="neutral">Quick draft</Badge>
 							</Box>
-							<AxiomButton appearance="primary" size="lg" icon={<IconSparkles size={16} />} onClick={onGenerate}>
+							<AxiomButton
+								appearance="primary"
+								size="lg"
+								icon={<IconSparkles size={16} />}
+								onClick={onGenerate}
+							>
 								Generate {assetMode}
 							</AxiomButton>
 						</Box>
@@ -1713,20 +2004,20 @@ function CreateAdvancedWorkspace({
 			borderColor="border.tertiary"
 			rounded="xl"
 			shadow="md"
-			style={{ overflow: "hidden" }}
+			style={{overflow: "hidden"}}
 		>
-			<Box display="grid" style={{ gridTemplateColumns: "minmax(0, 1fr) 420px" }}>
-				<Box bg="bg.default" display="flex" flexDirection="column" style={{ minWidth: 0 }}>
-						<Box
-							alignItems="center"
-							borderB="1"
-							borderColor="border.tertiary"
-							display="flex"
-							justifyContent="space-between"
-							px="24"
-							py="12"
-							style={{ minHeight: 56 }}
-						>
+			<Box display="grid" style={{gridTemplateColumns: "minmax(0, 1fr) 420px"}}>
+				<Box bg="bg.default" display="flex" flexDirection="column" style={{minWidth: 0}}>
+					<Box
+						alignItems="center"
+						borderB="1"
+						borderColor="border.tertiary"
+						display="flex"
+						justifyContent="space-between"
+						px="24"
+						py="12"
+						style={{minHeight: 56}}
+					>
 						<Box alignItems="center" display="flex" gap="8">
 							<Badge intent="neutral">{generated ? "Canvas ready" : "Canvas"}</Badge>
 							<Badge intent="neutral">{channelPack}</Badge>
@@ -1734,12 +2025,20 @@ function CreateAdvancedWorkspace({
 						</Box>
 						<Box alignItems="center" display="flex" gap="8">
 							<Text color="fg.secondary" fontSize="xs">
-								{saveState === "saved" ? "Changes saved." : saveState === "saving" ? "Saving..." : "Unsaved changes"}
+								{saveState === "saved"
+									? "Changes saved."
+									: saveState === "saving"
+										? "Saving..."
+										: "Unsaved changes"}
 							</Text>
 							<AxiomButton appearance="default" size="sm">
 								Download
 							</AxiomButton>
-							<AxiomButton appearance="primary" size="sm" icon={<IconChevronDown size={14} />}>
+							<AxiomButton
+								appearance="primary"
+								size="sm"
+								icon={<IconChevronDown size={14} />}
+							>
 								Add to
 							</AxiomButton>
 						</Box>
@@ -1766,7 +2065,7 @@ function CreateAdvancedWorkspace({
 							justifyContent="center"
 							p="20"
 							rounded="xl"
-							style={{ minHeight: 640, overflow: "hidden" }}
+							style={{minHeight: 640, overflow: "hidden"}}
 						>
 							<Box
 								style={{
@@ -1781,7 +2080,12 @@ function CreateAdvancedWorkspace({
 									<img
 										alt={selectedDraft.title}
 										src={selectedDraft.image}
-										style={{ display: "block", height: "100%", objectFit: "cover", width: "100%" }}
+										style={{
+											display: "block",
+											height: "100%",
+											objectFit: "cover",
+											width: "100%",
+										}}
 									/>
 								) : (
 									<Box
@@ -1791,7 +2095,7 @@ function CreateAdvancedWorkspace({
 										flexDirection="column"
 										gap="16"
 										justifyContent="center"
-										style={{ height: "100%" }}
+										style={{height: "100%"}}
 									>
 										<Box
 											alignItems="center"
@@ -1799,7 +2103,7 @@ function CreateAdvancedWorkspace({
 											display="flex"
 											justifyContent="center"
 											rounded="full"
-											style={{ height: 64, width: 64 }}
+											style={{height: 64, width: 64}}
 										>
 											<IconSparkles size={24} />
 										</Box>
@@ -1812,16 +2116,34 @@ function CreateAdvancedWorkspace({
 						</Box>
 
 						{produced ? (
-							<Box bg="bg.default" border="1" borderColor="border.tertiary" p="16" rounded="xl">
-								<Box alignItems="center" display="flex" justifyContent="space-between" mb="12">
+							<Box
+								bg="bg.default"
+								border="1"
+								borderColor="border.tertiary"
+								p="16"
+								rounded="xl"
+							>
+								<Box
+									alignItems="center"
+									display="flex"
+									justifyContent="space-between"
+									mb="12"
+								>
 									<Text fontSize="sm" fontWeight="700">
 										Output pack
 									</Text>
 									<Badge intent="success">Ready for DAM</Badge>
 								</Box>
-								<Box display="grid" gap="12" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+								<Box
+									display="grid"
+									gap="12"
+									style={{gridTemplateColumns: "repeat(2, minmax(0, 1fr))"}}
+								>
 									{outputVariants.map((variant) => (
-										<OutputVariantCard key={`${variant.label}-${variant.width}`} variant={variant} />
+										<OutputVariantCard
+											key={`${variant.label}-${variant.width}`}
+											variant={variant}
+										/>
 									))}
 								</Box>
 							</Box>
@@ -1835,7 +2157,7 @@ function CreateAdvancedWorkspace({
 					borderColor="border.tertiary"
 					display="flex"
 					flexDirection="column"
-					style={{ minHeight: 900 }}
+					style={{minHeight: 900}}
 				>
 					<Box
 						alignItems="center"
@@ -1849,11 +2171,12 @@ function CreateAdvancedWorkspace({
 						<Box alignItems="center" display="flex" gap="8">
 							<Box
 								alignItems="center"
-								bg="bg.accent.subtle"
+								bg="bg.information.subtle"
+								color="fg.information.strong"
 								display="flex"
 								justifyContent="center"
 								rounded="full"
-								style={{ height: 28, width: 28 }}
+								style={{height: 28, width: 28}}
 							>
 								<IconSparkles size={16} />
 							</Box>
@@ -1875,11 +2198,12 @@ function CreateAdvancedWorkspace({
 						<Box display="flex" gap="10">
 							<Box
 								alignItems="center"
-								bg="bg.accent.subtle"
+								bg="bg.information.subtle"
+								color="fg.information.strong"
 								display="flex"
 								justifyContent="center"
 								rounded="full"
-								style={{ flexShrink: 0, height: 28, width: 28 }}
+								style={{flexShrink: 0, height: 28, width: 28}}
 							>
 								<IconSparkles size={16} />
 							</Box>
@@ -1899,11 +2223,22 @@ function CreateAdvancedWorkspace({
 										p="12"
 										rounded="xl"
 									>
-										<Box style={{ aspectRatio: "4 / 5", borderRadius: 12, overflow: "hidden" }}>
+										<Box
+											style={{
+												aspectRatio: "4 / 5",
+												borderRadius: 12,
+												overflow: "hidden",
+											}}
+										>
 											<img
 												alt={selectedDraft.title}
 												src={selectedDraft.image}
-												style={{ display: "block", height: "100%", objectFit: "cover", width: "100%" }}
+												style={{
+													display: "block",
+													height: "100%",
+													objectFit: "cover",
+													width: "100%",
+												}}
 											/>
 										</Box>
 										<Text fontSize="sm" fontWeight="600">
@@ -1930,20 +2265,51 @@ function CreateAdvancedWorkspace({
 						<Box display="flex" flexDirection="column" gap="12">
 							<SettingsSection title="General settings">
 								<Box display="grid" gap="12">
-									<SelectRow label="Intent" value={intent} options={createIntentOptions} onChange={onIntentChange} />
-									<SelectRow label="Channel pack" value={channelPack} options={channelPacks} onChange={onChannelPackChange} />
+									<SelectRow
+										label="Intent"
+										value={intent}
+										options={createIntentOptions}
+										onChange={onIntentChange}
+									/>
+									<SelectRow
+										label="Channel pack"
+										value={channelPack}
+										options={channelPacks}
+										onChange={onChannelPackChange}
+									/>
 									<Box display="flex" flexDirection="column" gap="8">
-										<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+										<Text
+											color="fg.secondary"
+											fontSize="xs"
+											fontWeight="600"
+											style={{
+												letterSpacing: "0.02em",
+												textTransform: "uppercase",
+											}}
+										>
 											Aspect ratio
 										</Text>
-										<RatioChips value={aspectRatio} onChange={onAspectRatioChange} />
+										<RatioChips
+											value={aspectRatio}
+											onChange={onAspectRatioChange}
+										/>
 									</Box>
 								</Box>
 							</SettingsSection>
 							<SettingsSection title="Brand and packs">
 								<Box display="grid" gap="12">
-									<SelectRow label="Theme pack" value={themePack} options={themePacks} onChange={onThemePackChange} />
-									<SelectRow label="Brand pack" value={brandPack} options={brandPacks} onChange={onBrandPackChange} />
+									<SelectRow
+										label="Theme pack"
+										value={themePack}
+										options={themePacks}
+										onChange={onThemePackChange}
+									/>
+									<SelectRow
+										label="Brand pack"
+										value={brandPack}
+										options={brandPacks}
+										onChange={onBrandPackChange}
+									/>
 								</Box>
 							</SettingsSection>
 							<SettingsSection title="References and uploads" defaultOpen={false}>
@@ -1974,11 +2340,17 @@ function CreateAdvancedWorkspace({
 							<Text fontSize="sm" fontWeight="700">
 								Ask Opal
 							</Text>
-							<Textarea value={prompt} onChange={(event) => onPromptChange(event.target.value)} style={{ minHeight: 100 }} />
+							<Textarea
+								value={prompt}
+								onChange={(event) => onPromptChange(event.target.value)}
+								style={{minHeight: 100}}
+							/>
 							<Box alignItems="center" display="flex" justifyContent="space-between">
 								<Box alignItems="center" display="flex" gap="8">
 									<Badge intent="neutral">{brandPack}</Badge>
-									{needsRefresh ? <Badge intent="warning">Preview out of sync</Badge> : null}
+									{needsRefresh ? (
+										<Badge intent="warning">Preview out of sync</Badge>
+									) : null}
 								</Box>
 								<Box alignItems="center" display="flex" gap="10">
 									<AxiomButton appearance="default" size="md">
@@ -1987,7 +2359,13 @@ function CreateAdvancedWorkspace({
 									<AxiomButton
 										appearance="primary"
 										size="md"
-										icon={generated ? <IconCheck size={16} /> : <IconSparkles size={16} />}
+										icon={
+											generated ? (
+												<IconCheck size={16} />
+											) : (
+												<IconSparkles size={16} />
+											)
+										}
 										onClick={generated ? onProduce : onGenerate}
 									>
 										{generated ? "Produce pack" : "Generate drafts"}
@@ -2068,10 +2446,23 @@ function CreateWorkspace({
 	const selectedDraft = drafts.find((draft) => draft.id === selectedDraftId) ?? drafts[0];
 
 	return (
-		<Box display="grid" gap="20" style={{ gridTemplateColumns: "minmax(0, 1fr) 320px" }}>
-			<Box display="flex" flexDirection="column" gap="20" style={{ minWidth: 0 }}>
-				<Box bg="bg.default" border="1" borderColor="border.tertiary" rounded="xl" shadow="md">
-					<Box borderB="1" borderColor="border.tertiary" display="flex" justifyContent="space-between" px="20" py="16">
+		<Box display="grid" gap="20" style={{gridTemplateColumns: "minmax(0, 1fr) 320px"}}>
+			<Box display="flex" flexDirection="column" gap="20" style={{minWidth: 0}}>
+				<Box
+					bg="bg.default"
+					border="1"
+					borderColor="border.tertiary"
+					rounded="xl"
+					shadow="md"
+				>
+					<Box
+						borderB="1"
+						borderColor="border.tertiary"
+						display="flex"
+						justifyContent="space-between"
+						px="20"
+						py="16"
+					>
 						<Box alignItems="center" display="flex" gap="8">
 							<Badge intent="neutral">{intent}</Badge>
 							<Badge intent="neutral">{aspectRatio}</Badge>
@@ -2081,7 +2472,9 @@ function CreateWorkspace({
 							<ModeChip active={referencesOpen} onClick={onToggleReferences}>
 								References
 							</ModeChip>
-							<Badge intent="success">{draftMode ? "Draft mode" : "Production mode"}</Badge>
+							<Badge intent="success">
+								{draftMode ? "Draft mode" : "Production mode"}
+							</Badge>
 						</Box>
 					</Box>
 
@@ -2089,7 +2482,11 @@ function CreateWorkspace({
 						display="grid"
 						gap="20"
 						p="20"
-						style={{ gridTemplateColumns: referencesOpen ? "260px minmax(0, 1fr)" : "minmax(0, 1fr)" }}
+						style={{
+							gridTemplateColumns: referencesOpen
+								? "260px minmax(0, 1fr)"
+								: "minmax(0, 1fr)",
+						}}
 					>
 						{referencesOpen ? (
 							<Box
@@ -2101,18 +2498,26 @@ function CreateWorkspace({
 								gap="12"
 								p="16"
 								rounded="xl"
-								style={{ minHeight: 0 }}
+								style={{minHeight: 0}}
 							>
-								<Box alignItems="center" display="flex" justifyContent="space-between">
+								<Box
+									alignItems="center"
+									display="flex"
+									justifyContent="space-between"
+								>
 									<Text fontSize="sm" fontWeight="700">
 										Reference set
 									</Text>
-									<AxiomButton appearance="default" size="sm" icon={<IconUpload size={14} />}>
+									<AxiomButton
+										appearance="default"
+										size="sm"
+										icon={<IconUpload size={14} />}
+									>
 										Upload
 									</AxiomButton>
 								</Box>
 								<SearchInput placeholder="Search images" size="md" />
-								<Box display="grid" gap="12" style={{ overflowY: "auto" }}>
+								<Box display="grid" gap="12" style={{overflowY: "auto"}}>
 									{referenceAssets.map((asset) => (
 										<ReferenceCard
 											key={asset.id}
@@ -2144,12 +2549,18 @@ function CreateWorkspace({
 								alignItems="center"
 								display="flex"
 								justifyContent="space-between"
-								style={{ minHeight: 20 }}
+								style={{minHeight: 20}}
 							>
 								<Text color="fg.secondary" fontSize="sm">
-									{assetMode === "image" ? "Image generation" : "Video generation"}
+									{assetMode === "image"
+										? "Image generation"
+										: "Video generation"}
 								</Text>
-								<AxiomButton appearance="default" size="sm" icon={<IconAdjustmentsHorizontal size={14} />}>
+								<AxiomButton
+									appearance="default"
+									size="sm"
+									icon={<IconAdjustmentsHorizontal size={14} />}
+								>
 									Settings
 								</AxiomButton>
 							</Box>
@@ -2179,65 +2590,84 @@ function CreateWorkspace({
 										width: "100%",
 									}}
 								>
-								{generated ? (
-									<>
-										<img
-											alt={selectedDraft.title}
-											src={selectedDraft.image}
-											style={{ display: "block", height: "100%", objectFit: "cover", width: "100%" }}
-										/>
-										<Box
-											bg="bg.default"
-											border="1"
-											borderColor="border.tertiary"
-											display="flex"
-											flexDirection="column"
-											gap="8"
-											p="12"
-											rounded="xl"
-											shadow="sm"
-											style={{ left: 16, position: "absolute", top: 16, width: 220 }}
-										>
-											<Text fontSize="sm" fontWeight="700">
-												Selected draft
-											</Text>
-											<Text color="fg.secondary" fontSize="xs">
-												{selectedDraft.title} scored {selectedDraft.score}% against brand and channel rules.
-											</Text>
-											<Box alignItems="center" display="flex" gap="8">
-												<Badge intent="success">Brand safe</Badge>
-												<Badge intent="neutral">{selectedDraft.ratio}</Badge>
-											</Box>
+									{generated ? (
+										<>
+											<img
+												alt={selectedDraft.title}
+												src={selectedDraft.image}
+												style={{
+													display: "block",
+													height: "100%",
+													objectFit: "cover",
+													width: "100%",
+												}}
+											/>
+											<Box
+												bg="bg.default"
+												border="1"
+												borderColor="border.tertiary"
+												display="flex"
+												flexDirection="column"
+												gap="8"
+												p="12"
+												rounded="xl"
+												shadow="sm"
+												style={{
+													left: 16,
+													position: "absolute",
+													top: 16,
+													width: 220,
+												}}
+											>
+												<Text fontSize="sm" fontWeight="700">
+													Selected draft
+												</Text>
+												<Text color="fg.secondary" fontSize="xs">
+													{selectedDraft.title} scored{" "}
+													{selectedDraft.score}% against brand and channel
+													rules.
+												</Text>
+												<Box alignItems="center" display="flex" gap="8">
+													<Badge intent="success">Brand safe</Badge>
+													<Badge intent="neutral">
+														{selectedDraft.ratio}
+													</Badge>
+												</Box>
 											</Box>
 										</>
 									) : (
-									<Box
-										alignItems="center"
-										display="flex"
-										flexDirection="column"
-										gap="16"
-										justifyContent="center"
-										px="24"
-										style={{ maxWidth: 520, textAlign: "center" }}
-									>
 										<Box
 											alignItems="center"
-											bg="bg.default"
-											border="1"
-											borderColor="border.tertiary"
 											display="flex"
+											flexDirection="column"
+											gap="16"
 											justifyContent="center"
-											rounded="full"
-											style={{ height: 72, width: 72 }}
+											px="24"
+											style={{maxWidth: 520, textAlign: "center"}}
 										>
-											<IconSparkles size={28} />
-										</Box>
-										<Text fontSize="xl" fontWeight="700">
-											Start generating {assetMode === "image" ? "images" : "video concepts"}
-										</Text>
-										<Text color="fg.secondary" fontSize="sm">
-											Write a prompt, add a reference if useful, and generate two fast directions before producing the final output pack.
-										</Text>
+											<Box
+												alignItems="center"
+												bg="bg.default"
+												border="1"
+												borderColor="border.tertiary"
+												display="flex"
+												justifyContent="center"
+												rounded="full"
+												style={{height: 72, width: 72}}
+											>
+												<IconSparkles size={28} />
+											</Box>
+											<Text fontSize="xl" fontWeight="700">
+												Start generating{" "}
+												{assetMode === "image"
+													? "images"
+													: "video concepts"}
+											</Text>
+											<Text color="fg.secondary" fontSize="sm">
+												Write a prompt, add a reference if useful, and
+												generate two fast directions before producing the
+												final output pack.
+											</Text>
 										</Box>
 									)}
 								</Box>
@@ -2255,7 +2685,11 @@ function CreateWorkspace({
 								rounded="xl"
 								shadow="sm"
 							>
-								<Box alignItems="center" display="flex" justifyContent="space-between">
+								<Box
+									alignItems="center"
+									display="flex"
+									justifyContent="space-between"
+								>
 									<Text fontSize="sm" fontWeight="700">
 										Prompt
 									</Text>
@@ -2264,29 +2698,70 @@ function CreateWorkspace({
 											<IconWand size={14} />
 											Enhance
 										</ModeChip>
-										<ModeChip active={draftMode}>{draftMode ? "Draft" : "Production"}</ModeChip>
-										<Badge intent={saveState === "saved" ? "success" : saveState === "saving" ? "warning" : "neutral"}>
-											{saveState === "saved" ? "Autosaved" : saveState === "saving" ? "Saving..." : "Unsaved changes"}
+										<ModeChip active={draftMode}>
+											{draftMode ? "Draft" : "Production"}
+										</ModeChip>
+										<Badge
+											intent={
+												saveState === "saved"
+													? "success"
+													: saveState === "saving"
+														? "warning"
+														: "neutral"
+											}
+										>
+											{saveState === "saved"
+												? "Autosaved"
+												: saveState === "saving"
+													? "Saving..."
+													: "Unsaved changes"}
 										</Badge>
 									</Box>
 								</Box>
-								<Textarea value={prompt} onChange={(event) => onPromptChange(event.target.value)} style={{ minHeight: 100 }} />
-								<Box alignItems="center" display="flex" justifyContent="space-between">
-									<Box alignItems="center" display="flex" gap="8" style={{ flexWrap: "wrap" }}>
+								<Textarea
+									value={prompt}
+									onChange={(event) => onPromptChange(event.target.value)}
+									style={{minHeight: 100}}
+								/>
+								<Box
+									alignItems="center"
+									display="flex"
+									justifyContent="space-between"
+								>
+									<Box
+										alignItems="center"
+										display="flex"
+										gap="8"
+										style={{flexWrap: "wrap"}}
+									>
 										<Badge intent="neutral">{brandPack}</Badge>
 										<Badge intent="neutral">{themePack}</Badge>
 										<Badge intent="neutral">Plan required</Badge>
-										{needsRefresh ? <Badge intent="warning">Preview out of sync</Badge> : null}
-										{produced ? <Badge intent="success">Pack ready</Badge> : null}
+										{needsRefresh ? (
+											<Badge intent="warning">Preview out of sync</Badge>
+										) : null}
+										{produced ? (
+											<Badge intent="success">Pack ready</Badge>
+										) : null}
 									</Box>
 									<Box alignItems="center" display="flex" gap="10">
-										<AxiomButton appearance="default" size="lg" onClick={onShowPlan}>
+										<AxiomButton
+											appearance="default"
+											size="lg"
+											onClick={onShowPlan}
+										>
 											Show plan
 										</AxiomButton>
 										<AxiomButton
 											appearance="primary"
 											size="lg"
-											icon={generated ? <IconCheck size={16} /> : <IconSparkles size={16} />}
+											icon={
+												generated ? (
+													<IconCheck size={16} />
+												) : (
+													<IconSparkles size={16} />
+												)
+											}
 											onClick={generated ? onProduce : onGenerate}
 										>
 											{generated ? "Produce pack" : "Generate drafts"}
@@ -2299,14 +2774,30 @@ function CreateWorkspace({
 				</Box>
 
 				{generated ? (
-					<Box bg="bg.default" border="1" borderColor="border.tertiary" p="20" rounded="xl" shadow="sm">
-						<Box alignItems="center" display="flex" justifyContent="space-between" mb="16">
+					<Box
+						bg="bg.default"
+						border="1"
+						borderColor="border.tertiary"
+						p="20"
+						rounded="xl"
+						shadow="sm"
+					>
+						<Box
+							alignItems="center"
+							display="flex"
+							justifyContent="space-between"
+							mb="16"
+						>
 							<Text fontSize="lg" fontWeight="700">
 								Draft directions
 							</Text>
 							<Badge intent="neutral">Choose one to continue</Badge>
 						</Box>
-						<Box display="grid" gap="12" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+						<Box
+							display="grid"
+							gap="12"
+							style={{gridTemplateColumns: "repeat(2, minmax(0, 1fr))"}}
+						>
 							{drafts.map((draft) => (
 								<DraftOptionCard
 									key={draft.id}
@@ -2320,16 +2811,35 @@ function CreateWorkspace({
 				) : null}
 
 				{produced ? (
-					<Box bg="bg.default" border="1" borderColor="border.tertiary" p="20" rounded="xl" shadow="sm">
-						<Box alignItems="center" display="flex" justifyContent="space-between" mb="16">
+					<Box
+						bg="bg.default"
+						border="1"
+						borderColor="border.tertiary"
+						p="20"
+						rounded="xl"
+						shadow="sm"
+					>
+						<Box
+							alignItems="center"
+							display="flex"
+							justifyContent="space-between"
+							mb="16"
+						>
 							<Text fontSize="lg" fontWeight="700">
 								Output pack
 							</Text>
 							<Badge intent="success">Ready for DAM</Badge>
 						</Box>
-						<Box display="grid" gap="12" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+						<Box
+							display="grid"
+							gap="12"
+							style={{gridTemplateColumns: "repeat(2, minmax(0, 1fr))"}}
+						>
 							{outputVariants.map((variant) => (
-								<OutputVariantCard key={`${variant.label}-${variant.width}`} variant={variant} />
+								<OutputVariantCard
+									key={`${variant.label}-${variant.width}`}
+									variant={variant}
+								/>
 							))}
 						</Box>
 					</Box>
@@ -2339,10 +2849,25 @@ function CreateWorkspace({
 			<Box display="flex" flexDirection="column" gap="12">
 				<SettingsSection title="General settings">
 					<Box display="grid" gap="12">
-						<SelectRow label="Intent" value={intent} options={createIntentOptions} onChange={onIntentChange} />
-						<SelectRow label="Channel pack" value={channelPack} options={channelPacks} onChange={onChannelPackChange} />
+						<SelectRow
+							label="Intent"
+							value={intent}
+							options={createIntentOptions}
+							onChange={onIntentChange}
+						/>
+						<SelectRow
+							label="Channel pack"
+							value={channelPack}
+							options={channelPacks}
+							onChange={onChannelPackChange}
+						/>
 						<Box display="flex" flexDirection="column" gap="8">
-							<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+							<Text
+								color="fg.secondary"
+								fontSize="xs"
+								fontWeight="600"
+								style={{letterSpacing: "0.02em", textTransform: "uppercase"}}
+							>
 								Aspect ratio
 							</Text>
 							<RatioChips value={aspectRatio} onChange={onAspectRatioChange} />
@@ -2351,14 +2876,31 @@ function CreateWorkspace({
 				</SettingsSection>
 				<SettingsSection title="Brand and packs">
 					<Box display="grid" gap="12">
-						<SelectRow label="Theme pack" value={themePack} options={themePacks} onChange={onThemePackChange} />
-						<SelectRow label="Brand pack" value={brandPack} options={brandPacks} onChange={onBrandPackChange} />
-						<Box bg="bg.secondary" border="1" borderColor="border.tertiary" p="12" rounded="xl">
+						<SelectRow
+							label="Theme pack"
+							value={themePack}
+							options={themePacks}
+							onChange={onThemePackChange}
+						/>
+						<SelectRow
+							label="Brand pack"
+							value={brandPack}
+							options={brandPacks}
+							onChange={onBrandPackChange}
+						/>
+						<Box
+							bg="bg.secondary"
+							border="1"
+							borderColor="border.tertiary"
+							p="12"
+							rounded="xl"
+						>
 							<Text fontSize="sm" fontWeight="600">
 								Hard negative rules
 							</Text>
-							<Text color="fg.secondary" fontSize="sm" style={{ marginTop: 6 }}>
-								No competitor logos, no off-brand neon palettes, no generic stock-office imagery.
+							<Text color="fg.secondary" fontSize="sm" style={{marginTop: 6}}>
+								No competitor logos, no off-brand neon palettes, no generic
+								stock-office imagery.
 							</Text>
 						</Box>
 					</Box>
@@ -2380,12 +2922,19 @@ function CreateWorkspace({
 				</SettingsSection>
 				<SettingsSection title="Advanced settings" defaultOpen={false}>
 					<Box display="grid" gap="12">
-						<Box bg="bg.secondary" border="1" borderColor="border.tertiary" p="12" rounded="xl">
+						<Box
+							bg="bg.secondary"
+							border="1"
+							borderColor="border.tertiary"
+							p="12"
+							rounded="xl"
+						>
 							<Text fontSize="sm" fontWeight="600">
 								Plan approval
 							</Text>
-							<Text color="fg.secondary" fontSize="sm" style={{ marginTop: 6 }}>
-								Opal enhances the prompt, applies brand and pack rules, then waits for approval before production.
+							<Text color="fg.secondary" fontSize="sm" style={{marginTop: 6}}>
+								Opal enhances the prompt, applies brand and pack rules, then waits
+								for approval before production.
 							</Text>
 						</Box>
 					</Box>
@@ -2449,17 +2998,32 @@ function EditWorkspace({
 	const selectedDraft = drafts.find((draft) => draft.id === selectedDraftId) ?? drafts[0];
 
 	return (
-		<Box display="grid" gap="20" style={{ gridTemplateColumns: "minmax(0, 1fr) 320px" }}>
-			<Box display="flex" flexDirection="column" gap="20" style={{ minWidth: 0 }}>
-				<Box bg="bg.default" border="1" borderColor="border.tertiary" rounded="xl" shadow="md">
-					<Box borderB="1" borderColor="border.tertiary" display="flex" justifyContent="space-between" px="20" py="16">
+		<Box display="grid" gap="20" style={{gridTemplateColumns: "minmax(0, 1fr) 320px"}}>
+			<Box display="flex" flexDirection="column" gap="20" style={{minWidth: 0}}>
+				<Box
+					bg="bg.default"
+					border="1"
+					borderColor="border.tertiary"
+					rounded="xl"
+					shadow="md"
+				>
+					<Box
+						borderB="1"
+						borderColor="border.tertiary"
+						display="flex"
+						justifyContent="space-between"
+						px="20"
+						py="16"
+					>
 						<Box alignItems="center" display="flex" gap="8">
 							<Badge intent="neutral">{editTool}</Badge>
 							<Badge intent="neutral">{aspectRatio}</Badge>
 							<Badge intent="neutral">{channelPack}</Badge>
 						</Box>
 						<Box alignItems="center" display="flex" gap="8">
-							<Badge intent="neutral">{assetMode === "image" ? "Editing image" : "Editing video"}</Badge>
+							<Badge intent="neutral">
+								{assetMode === "image" ? "Editing image" : "Editing video"}
+							</Badge>
 							<Badge intent="success">Asset loaded</Badge>
 						</Box>
 					</Box>
@@ -2484,7 +3048,11 @@ function EditWorkspace({
 								<Text color="fg.secondary" fontSize="sm">
 									{editTool} workflow
 								</Text>
-								<AxiomButton appearance="default" size="sm" icon={<IconAdjustmentsHorizontal size={14} />}>
+								<AxiomButton
+									appearance="default"
+									size="sm"
+									icon={<IconAdjustmentsHorizontal size={14} />}
+								>
 									Transform settings
 								</AxiomButton>
 							</Box>
@@ -2495,7 +3063,9 @@ function EditWorkspace({
 								flex="1"
 								gap="20"
 								style={{
-									gridTemplateColumns: generated ? "minmax(0, 1fr) 220px" : "minmax(0, 1fr)",
+									gridTemplateColumns: generated
+										? "minmax(0, 1fr) 220px"
+										: "minmax(0, 1fr)",
 									minHeight: 420,
 								}}
 							>
@@ -2513,7 +3083,10 @@ function EditWorkspace({
 								>
 									<Box
 										style={{
-											aspectRatio: getCanvasAspectRatio(assetMode, aspectRatio),
+											aspectRatio: getCanvasAspectRatio(
+												assetMode,
+												aspectRatio
+											),
 											height: "100%",
 											maxHeight: 520,
 											maxWidth: "100%",
@@ -2524,7 +3097,12 @@ function EditWorkspace({
 										<img
 											alt="Selected asset"
 											src={selectedDraft.image}
-											style={{ display: "block", height: "100%", objectFit: "cover", width: "100%" }}
+											style={{
+												display: "block",
+												height: "100%",
+												objectFit: "cover",
+												width: "100%",
+											}}
 										/>
 									</Box>
 									<Box
@@ -2537,13 +3115,19 @@ function EditWorkspace({
 										p="12"
 										rounded="xl"
 										shadow="sm"
-										style={{ left: 16, position: "absolute", top: 16, width: 220 }}
+										style={{
+											left: 16,
+											position: "absolute",
+											top: 16,
+											width: 220,
+										}}
 									>
 										<Text fontSize="sm" fontWeight="700">
 											Source asset
 										</Text>
 										<Text color="fg.secondary" fontSize="xs">
-											Editing starts from the selected DAM asset and keeps brand-safe composition in view.
+											Editing starts from the selected DAM asset and keeps
+											brand-safe composition in view.
 										</Text>
 									</Box>
 								</Box>
@@ -2573,7 +3157,11 @@ function EditWorkspace({
 								rounded="xl"
 								shadow="sm"
 							>
-								<Box alignItems="center" display="flex" justifyContent="space-between">
+								<Box
+									alignItems="center"
+									display="flex"
+									justifyContent="space-between"
+								>
 									<Text fontSize="sm" fontWeight="700">
 										Describe the change
 									</Text>
@@ -2582,28 +3170,67 @@ function EditWorkspace({
 											<IconWand size={14} />
 											Enhance
 										</ModeChip>
-										<Badge intent={saveState === "saved" ? "success" : saveState === "saving" ? "warning" : "neutral"}>
-											{saveState === "saved" ? "Autosaved" : saveState === "saving" ? "Saving..." : "Unsaved changes"}
+										<Badge
+											intent={
+												saveState === "saved"
+													? "success"
+													: saveState === "saving"
+														? "warning"
+														: "neutral"
+											}
+										>
+											{saveState === "saved"
+												? "Autosaved"
+												: saveState === "saving"
+													? "Saving..."
+													: "Unsaved changes"}
 										</Badge>
 									</Box>
 								</Box>
-								<Textarea value={prompt} onChange={(event) => onPromptChange(event.target.value)} style={{ minHeight: 96 }} />
-								<Box alignItems="center" display="flex" justifyContent="space-between">
-									<Box alignItems="center" display="flex" gap="8" style={{ flexWrap: "wrap" }}>
+								<Textarea
+									value={prompt}
+									onChange={(event) => onPromptChange(event.target.value)}
+									style={{minHeight: 96}}
+								/>
+								<Box
+									alignItems="center"
+									display="flex"
+									justifyContent="space-between"
+								>
+									<Box
+										alignItems="center"
+										display="flex"
+										gap="8"
+										style={{flexWrap: "wrap"}}
+									>
 										<Badge intent="neutral">{brandPack}</Badge>
 										<Badge intent="neutral">{themePack}</Badge>
 										<Badge intent="neutral">Preview before apply</Badge>
-										{needsRefresh ? <Badge intent="warning">Preview out of sync</Badge> : null}
-										{produced ? <Badge intent="success">Changes ready</Badge> : null}
+										{needsRefresh ? (
+											<Badge intent="warning">Preview out of sync</Badge>
+										) : null}
+										{produced ? (
+											<Badge intent="success">Changes ready</Badge>
+										) : null}
 									</Box>
 									<Box alignItems="center" display="flex" gap="10">
-										<AxiomButton appearance="default" size="lg" onClick={onShowPlan}>
+										<AxiomButton
+											appearance="default"
+											size="lg"
+											onClick={onShowPlan}
+										>
 											Show plan
 										</AxiomButton>
 										<AxiomButton
 											appearance="primary"
 											size="lg"
-											icon={generated ? <IconCheck size={16} /> : <IconSparkles size={16} />}
+											icon={
+												generated ? (
+													<IconCheck size={16} />
+												) : (
+													<IconSparkles size={16} />
+												)
+											}
 											onClick={generated ? onProduce : onGenerate}
 										>
 											{generated ? "Apply changes" : "Generate variations"}
@@ -2616,16 +3243,35 @@ function EditWorkspace({
 				</Box>
 
 				{produced ? (
-					<Box bg="bg.default" border="1" borderColor="border.tertiary" p="20" rounded="xl" shadow="sm">
-						<Box alignItems="center" display="flex" justifyContent="space-between" mb="16">
+					<Box
+						bg="bg.default"
+						border="1"
+						borderColor="border.tertiary"
+						p="20"
+						rounded="xl"
+						shadow="sm"
+					>
+						<Box
+							alignItems="center"
+							display="flex"
+							justifyContent="space-between"
+							mb="16"
+						>
 							<Text fontSize="lg" fontWeight="700">
 								Applied outputs
 							</Text>
 							<Badge intent="success">Ready to map back</Badge>
 						</Box>
-						<Box display="grid" gap="12" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+						<Box
+							display="grid"
+							gap="12"
+							style={{gridTemplateColumns: "repeat(2, minmax(0, 1fr))"}}
+						>
 							{outputVariants.map((variant) => (
-								<OutputVariantCard key={`${variant.label}-${variant.width}`} variant={variant} />
+								<OutputVariantCard
+									key={`${variant.label}-${variant.width}`}
+									variant={variant}
+								/>
 							))}
 						</Box>
 					</Box>
@@ -2635,46 +3281,92 @@ function EditWorkspace({
 			<Box display="flex" flexDirection="column" gap="12">
 				<SettingsSection title="Transform settings">
 					<Box display="grid" gap="12">
-						<SelectRow label="Edit tool" value={editTool} options={editToolOptions} onChange={onEditToolChange} />
+						<SelectRow
+							label="Edit tool"
+							value={editTool}
+							options={editToolOptions}
+							onChange={onEditToolChange}
+						/>
 						<Box display="flex" flexDirection="column" gap="8">
-							<Text color="fg.secondary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.02em", textTransform: "uppercase" }}>
+							<Text
+								color="fg.secondary"
+								fontSize="xs"
+								fontWeight="600"
+								style={{letterSpacing: "0.02em", textTransform: "uppercase"}}
+							>
 								Output ratio
 							</Text>
 							<RatioChips value={aspectRatio} onChange={onAspectRatioChange} />
 						</Box>
-						<Box bg="bg.secondary" border="1" borderColor="border.tertiary" p="12" rounded="xl">
+						<Box
+							bg="bg.secondary"
+							border="1"
+							borderColor="border.tertiary"
+							p="12"
+							rounded="xl"
+						>
 							<Text fontSize="sm" fontWeight="600">
 								Preview math
 							</Text>
-							<Text color="fg.secondary" fontSize="sm" style={{ marginTop: 6 }}>
-								Changing the ratio immediately updates the canvas crop frame. Generation is still explicit.
+							<Text color="fg.secondary" fontSize="sm" style={{marginTop: 6}}>
+								Changing the ratio immediately updates the canvas crop frame.
+								Generation is still explicit.
 							</Text>
 						</Box>
 					</Box>
 				</SettingsSection>
 				<SettingsSection title="Output and destinations">
 					<Box display="grid" gap="12">
-						<SelectRow label="Channel pack" value={channelPack} options={channelPacks} onChange={onChannelPackChange} />
-						<SelectRow label="Theme pack" value={themePack} options={themePacks} onChange={onThemePackChange} />
-						<SelectRow label="Brand pack" value={brandPack} options={brandPacks} onChange={onBrandPackChange} />
-						<Box bg="bg.secondary" border="1" borderColor="border.tertiary" p="12" rounded="xl">
+						<SelectRow
+							label="Channel pack"
+							value={channelPack}
+							options={channelPacks}
+							onChange={onChannelPackChange}
+						/>
+						<SelectRow
+							label="Theme pack"
+							value={themePack}
+							options={themePacks}
+							onChange={onThemePackChange}
+						/>
+						<SelectRow
+							label="Brand pack"
+							value={brandPack}
+							options={brandPacks}
+							onChange={onBrandPackChange}
+						/>
+						<Box
+							bg="bg.secondary"
+							border="1"
+							borderColor="border.tertiary"
+							p="12"
+							rounded="xl"
+						>
 							<Text fontSize="sm" fontWeight="600">
 								After approval
 							</Text>
-							<Text color="fg.secondary" fontSize="sm" style={{ marginTop: 6 }}>
-								Apply the approved variation, generate requested ratios, and map metadata back into DAM fields.
+							<Text color="fg.secondary" fontSize="sm" style={{marginTop: 6}}>
+								Apply the approved variation, generate requested ratios, and map
+								metadata back into DAM fields.
 							</Text>
 						</Box>
 					</Box>
 				</SettingsSection>
 				<SettingsSection title="Brand checks" defaultOpen={false}>
 					<Box display="grid" gap="12">
-						<Box bg="bg.secondary" border="1" borderColor="border.tertiary" p="12" rounded="xl">
+						<Box
+							bg="bg.secondary"
+							border="1"
+							borderColor="border.tertiary"
+							p="12"
+							rounded="xl"
+						>
 							<Text fontSize="sm" fontWeight="600">
 								Compliance gate
 							</Text>
-							<Text color="fg.secondary" fontSize="sm" style={{ marginTop: 6 }}>
-								Protect the hero athlete, keep clean copy zones, and block non-brand-safe edits.
+							<Text color="fg.secondary" fontSize="sm" style={{marginTop: 6}}>
+								Protect the hero athlete, keep clean copy zones, and block
+								non-brand-safe edits.
 							</Text>
 						</Box>
 					</Box>
@@ -2718,17 +3410,17 @@ export default function OpalStudioPrototypePage() {
 			router.replace(`/cmp/opal-studio/canvas?${params.toString()}`);
 		}
 	}, [resolvedRouteAsset, resolvedRouteParams, resolvedRouteStage, router]);
-	const { opalPanelControls, opalPanelWidth, setHidePageHeader } = useLayout();
+	const {opalPanelControls, opalPanelWidth, setHidePageHeader} = useLayout();
 	const opalContext = useOpalContext();
 	const seededPanelKeyRef = useRef<string | null>(null);
 	const [flowMode, setFlowMode] = useState<FlowMode>("create");
 	const [assetMode, setAssetMode] = useState<AssetMode>("image");
 	const [createStage, setCreateStage] = useState<CreateStage>("panel");
 	const [createPrompt, setCreatePrompt] = useState(
-		"Create a premium Stride campaign image for spring race season with clean headline space, high-end athletic photography, and brand-safe composition.",
+		"Create a premium Stride campaign image for spring race season with clean headline space, high-end athletic photography, and brand-safe composition."
 	);
 	const [editPrompt, setEditPrompt] = useState(
-		"Reframe this asset for paid social, preserve the athlete, and create two cleaner variants with stronger product focus.",
+		"Reframe this asset for paid social, preserve the athlete, and create two cleaner variants with stronger product focus."
 	);
 	const [intent, setIntent] = useState(createIntentOptions[0]);
 	const [editTool, setEditTool] = useState(editToolOptions[0]);
@@ -2745,13 +3437,16 @@ export default function OpalStudioPrototypePage() {
 	const [saveState, setSaveState] = useState<SaveState>("saved");
 	const [planOpen, setPlanOpen] = useState(false);
 	const panelMessages = opalContext.chatState.messages;
-	const chatDraftPayload = useMemo(() => extractLatestImageFromMessages(panelMessages), [panelMessages]);
+	const chatDraftPayload = useMemo(
+		() => extractLatestImageFromMessages(panelMessages),
+		[panelMessages]
+	);
 	const chatDraft = chatDraftPayload?.draft ?? null;
 	const [storedQuickDraft, setStoredQuickDraft] = useState<{
 		prompt: string;
 		image: string;
 		returnTo?: string;
-		messages?: Array<{ role: "user" | "assistant"; content: string }>;
+		messages?: Array<{role: "user" | "assistant"; content: string}>;
 	} | null>(null);
 	const [forceAdvancedImageEditor, setForceAdvancedImageEditor] = useState(false);
 
@@ -2767,7 +3462,7 @@ export default function OpalStudioPrototypePage() {
 
 		const params = new URLSearchParams(window.location.search);
 		setForceAdvancedImageEditor(
-			params.get("stage") === "advanced" && params.get("asset") === "image",
+			params.get("stage") === "advanced" && params.get("asset") === "image"
 		);
 	}, [searchParams]);
 
@@ -2798,7 +3493,7 @@ export default function OpalStudioPrototypePage() {
 				prompt?: string;
 				image?: string;
 				returnTo?: string;
-				messages?: Array<{ role: "user" | "assistant"; content: string }>;
+				messages?: Array<{role: "user" | "assistant"; content: string}>;
 			};
 			if (parsed.prompt && parsed.image) {
 				setStoredQuickDraft({
@@ -2835,39 +3530,57 @@ export default function OpalStudioPrototypePage() {
 		} else if (resolvedRouteFlow !== "edit") {
 			setCreateStage("panel");
 		}
-	}, [resolvedRouteAsset, resolvedRouteDraft, resolvedRouteFlow, resolvedRoutePrompt, resolvedRouteStage]);
+	}, [
+		resolvedRouteAsset,
+		resolvedRouteDraft,
+		resolvedRouteFlow,
+		resolvedRoutePrompt,
+		resolvedRouteStage,
+	]);
 
-	const isAdvancedImageRoute = forceAdvancedImageEditor || (resolvedRouteStage === "advanced" && resolvedRouteAsset === "image");
+	const isAdvancedImageRoute =
+		forceAdvancedImageEditor ||
+		(resolvedRouteStage === "advanced" && resolvedRouteAsset === "image");
 	const drafts = useMemo(() => (assetMode === "image" ? imageDrafts : videoDrafts), [assetMode]);
 	const effectiveDrafts = useMemo(() => {
-		const sourceDraft = chatDraft ?? (storedQuickDraft
-			? {
-				image: storedQuickDraft.image,
-				title: "Quick draft",
-				score: 96,
-				ratio: "4:5",
-			}
-			: null);
+		const sourceDraft =
+			chatDraft ??
+			(storedQuickDraft
+				? {
+						image: storedQuickDraft.image,
+						title: "Quick draft",
+						score: 96,
+						ratio: "4:5",
+					}
+				: null);
 
 		// If we're in advanced mode and have a source draft, prioritize it
-		if (assetMode === "image" && sourceDraft && createStage === "advanced" && flowMode === "create") {
+		if (
+			assetMode === "image" &&
+			sourceDraft &&
+			createStage === "advanced" &&
+			flowMode === "create"
+		) {
 			const chatDraftObj = {
 				...sourceDraft,
 				id: "chat-draft",
 				title: sourceDraft.title || "Quick draft",
 			};
-			console.log('[Opal Studio] Creating chat draft:', chatDraftObj);
-			return [
-				chatDraftObj,
-				...imageDrafts.filter((draft) => draft.id !== "chat-draft"),
-			];
+			console.log("[Opal Studio] Creating chat draft:", chatDraftObj);
+			return [chatDraftObj, ...imageDrafts.filter((draft) => draft.id !== "chat-draft")];
 		}
 
 		// Default to standard drafts
 		return drafts;
 	}, [assetMode, chatDraft, createStage, drafts, flowMode, storedQuickDraft]);
-	const handoffPrompt = resolvedRoutePrompt || routePrompt || chatDraftPayload?.prompt || storedQuickDraft?.prompt || createPrompt;
-	const handoffDraftImage = resolvedRouteDraft || routeDraft || chatDraft?.image || storedQuickDraft?.image || "";
+	const handoffPrompt =
+		resolvedRoutePrompt ||
+		routePrompt ||
+		chatDraftPayload?.prompt ||
+		storedQuickDraft?.prompt ||
+		createPrompt;
+	const handoffDraftImage =
+		resolvedRouteDraft || routeDraft || chatDraft?.image || storedQuickDraft?.image || "";
 	const handoffDraft = useMemo<DraftResult | null>(() => {
 		if (!handoffDraftImage) {
 			return null;
@@ -2911,14 +3624,14 @@ export default function OpalStudioPrototypePage() {
 			selectedReferenceId,
 			showReferences,
 			themePack,
-		],
+		]
 	);
 	const configSignature = useMemo(() => JSON.stringify(draftConfig), [draftConfig]);
 	const [lastGeneratedSignature, setLastGeneratedSignature] = useState<string | null>(null);
 	const needsRefresh = generated && lastGeneratedSignature !== configSignature;
 	const outputVariants = useMemo(
 		() => getOutputVariants(channelPack, assetMode, aspectRatio),
-		[assetMode, aspectRatio, channelPack],
+		[assetMode, aspectRatio, channelPack]
 	);
 
 	useEffect(() => {
@@ -2929,22 +3642,32 @@ export default function OpalStudioPrototypePage() {
 			}
 
 			const parsed = JSON.parse(saved) as Partial<typeof draftConfig>;
-			if (!resolvedRouteFlow && (parsed.flowMode === "create" || parsed.flowMode === "edit")) {
+			if (
+				!resolvedRouteFlow &&
+				(parsed.flowMode === "create" || parsed.flowMode === "edit")
+			) {
 				setFlowMode(parsed.flowMode);
 			}
-			if (!resolvedRouteAsset && (parsed.assetMode === "image" || parsed.assetMode === "video")) {
+			if (
+				!resolvedRouteAsset &&
+				(parsed.assetMode === "image" || parsed.assetMode === "video")
+			) {
 				setAssetMode(parsed.assetMode);
 			}
-			if (!resolvedRoutePrompt && typeof parsed.createPrompt === "string") setCreatePrompt(parsed.createPrompt);
+			if (!resolvedRoutePrompt && typeof parsed.createPrompt === "string")
+				setCreatePrompt(parsed.createPrompt);
 			if (typeof parsed.editPrompt === "string") setEditPrompt(parsed.editPrompt);
 			if (typeof parsed.intent === "string") setIntent(parsed.intent);
 			if (typeof parsed.editTool === "string") setEditTool(parsed.editTool);
-			if (typeof parsed.aspectRatio === "string") setAspectRatio(parsed.aspectRatio as (typeof aspectRatios)[number]);
+			if (typeof parsed.aspectRatio === "string")
+				setAspectRatio(parsed.aspectRatio as (typeof aspectRatios)[number]);
 			if (typeof parsed.channelPack === "string") setChannelPack(parsed.channelPack);
 			if (typeof parsed.themePack === "string") setThemePack(parsed.themePack);
 			if (typeof parsed.brandPack === "string") setBrandPack(parsed.brandPack);
-			if (typeof parsed.showReferences === "boolean") setShowReferences(parsed.showReferences);
-			if (typeof parsed.selectedReferenceId === "string") setSelectedReferenceId(parsed.selectedReferenceId);
+			if (typeof parsed.showReferences === "boolean")
+				setShowReferences(parsed.showReferences);
+			if (typeof parsed.selectedReferenceId === "string")
+				setSelectedReferenceId(parsed.selectedReferenceId);
 			if (parsed.flowMode === "create" && resolvedRouteStage !== "advanced") {
 				setCreateStage("panel");
 			}
@@ -2954,7 +3677,13 @@ export default function OpalStudioPrototypePage() {
 		} catch {
 			// Ignore invalid saved drafts in prototype mode.
 		}
-	}, [resolvedRouteAsset, resolvedRouteDraft, resolvedRouteFlow, resolvedRoutePrompt, resolvedRouteStage]);
+	}, [
+		resolvedRouteAsset,
+		resolvedRouteDraft,
+		resolvedRouteFlow,
+		resolvedRoutePrompt,
+		resolvedRouteStage,
+	]);
 
 	useEffect(() => {
 		setSaveState("saving");
@@ -2982,7 +3711,12 @@ export default function OpalStudioPrototypePage() {
 	}, [assetMode, configSignature, flowMode, resolvedRouteStage]);
 
 	useEffect(() => {
-		if (flowMode === "create" && createStage === "advanced" && assetMode === "image" && handoffPrompt) {
+		if (
+			flowMode === "create" &&
+			createStage === "advanced" &&
+			assetMode === "image" &&
+			handoffPrompt
+		) {
 			setCreatePrompt(handoffPrompt);
 		}
 	}, [assetMode, createStage, flowMode, handoffPrompt]);
@@ -3001,7 +3735,7 @@ export default function OpalStudioPrototypePage() {
 			(message) =>
 				message.role === "assistant" &&
 				(message.content.includes("I created a quick image draft for") ||
-					(handoffDraftImage ? message.content.includes(handoffDraftImage) : false)),
+					(handoffDraftImage ? message.content.includes(handoffDraftImage) : false))
 		);
 
 		if (alreadyHasDraftThread) {
@@ -3037,7 +3771,16 @@ export default function OpalStudioPrototypePage() {
 		}
 		opalPanelControls.setInputValue("");
 		opalPanelControls.openPanel();
-	}, [handoffDraftImage, handoffPrompt, isAdvancedImageRoute, opalPanelControls, panelMessages, resolvedRouteAsset, resolvedRouteStage, storedQuickDraft]);
+	}, [
+		handoffDraftImage,
+		handoffPrompt,
+		isAdvancedImageRoute,
+		opalPanelControls,
+		panelMessages,
+		resolvedRouteAsset,
+		resolvedRouteStage,
+		storedQuickDraft,
+	]);
 
 	useEffect(() => {
 		if (flowMode !== "create" || createStage !== "panel") {
@@ -3055,7 +3798,7 @@ export default function OpalStudioPrototypePage() {
 		opalPanelControls.setInputValue(
 			assetMode === "image"
 				? "Create a new dynamic image for a triathlon poster"
-				: "Create a launch teaser video for Stride spring race season",
+				: "Create a launch teaser video for Stride spring race season"
 		);
 		seededPanelKeyRef.current = seedKey;
 	}, [assetMode, createStage, flowMode, opalPanelControls]);
@@ -3083,8 +3826,13 @@ export default function OpalStudioPrototypePage() {
 	};
 
 	const canvasDraft = isAdvancedImageRoute
-		? handoffDraft ?? effectiveDrafts.find((d) => d.id === selectedDraftId) ?? effectiveDrafts[0] ?? imageDrafts[0]
-		: effectiveDrafts.find((d) => d.id === selectedDraftId) ?? effectiveDrafts[0] ?? imageDrafts[0];
+		? (handoffDraft ??
+			effectiveDrafts.find((d) => d.id === selectedDraftId) ??
+			effectiveDrafts[0] ??
+			imageDrafts[0])
+		: (effectiveDrafts.find((d) => d.id === selectedDraftId) ??
+			effectiveDrafts[0] ??
+			imageDrafts[0]);
 	const canvasPrompt = handoffPrompt;
 
 	if (!resolvedRouteParams && !forceAdvancedImageEditor) {
@@ -3123,154 +3871,433 @@ export default function OpalStudioPrototypePage() {
 	}
 
 	return (
-		<div style={{
-			position: "absolute",
-			top: 0,
-			left: 0,
-			bottom: 0,
-			right: opalPanelWidth > 0 ? opalPanelWidth : 0,
-			display: "flex",
-			flexDirection: "column",
-			background: "var(--ax-colors-bg-page, #f8f9fb)",
-		}}>
-			{/* Top Bar */}
-			<div style={{
+		<div
+			style={{
+				position: "absolute",
+				top: 0,
+				left: 0,
+				bottom: 0,
+				right: opalPanelWidth > 0 ? opalPanelWidth : 0,
 				display: "flex",
-				alignItems: "center",
-				justifyContent: "space-between",
-				padding: "12px 24px",
-				borderBottom: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
-				background: "var(--ax-colors-bg-default, #fff)",
-				minHeight: 56,
-				flexShrink: 0,
-			}}>
-				<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-					<div style={{
-						display: "inline-flex",
-						gap: 4,
-						padding: 4,
-						background: "var(--ax-colors-bg-secondary, #f3f4f6)",
-						borderRadius: 999,
-					}}>
-						<button type="button" style={{
-							background: "var(--ax-colors-bg-default, #fff)",
-							border: 0, borderRadius: 999, cursor: "pointer",
-							fontSize: 14, fontWeight: 600, height: 36, padding: "0 16px",
-							color: "var(--ax-colors-fg-default, #111)",
-						}}>Generate</button>
-						<button type="button" style={{
-							background: "transparent",
-							border: 0, borderRadius: 999, cursor: "pointer",
-							fontSize: 14, fontWeight: 500, height: 36, padding: "0 16px",
-							color: "var(--ax-colors-fg-secondary, #6b7280)",
-						}}>Edit</button>
+				flexDirection: "column",
+				background: "var(--ax-colors-bg-page, #f8f9fb)",
+			}}
+		>
+			{/* Top Bar */}
+			<div
+				style={{
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+					padding: "12px 24px",
+					borderBottom: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+					background: "var(--ax-colors-bg-default, #fff)",
+					minHeight: 56,
+					flexShrink: 0,
+				}}
+			>
+				<div style={{display: "flex", alignItems: "center", gap: 8}}>
+					<div
+						style={{
+							display: "inline-flex",
+							gap: 4,
+							padding: 4,
+							background: "var(--ax-colors-bg-secondary, #f3f4f6)",
+							borderRadius: 999,
+						}}
+					>
+						<button
+							type="button"
+							style={{
+								background: "var(--ax-colors-bg-default, #fff)",
+								border: 0,
+								borderRadius: 999,
+								cursor: "pointer",
+								fontSize: 14,
+								fontWeight: 600,
+								height: 36,
+								padding: "0 16px",
+								color: "var(--ax-colors-fg-default, #111)",
+							}}
+						>
+							Generate
+						</button>
+						<button
+							type="button"
+							style={{
+								background: "transparent",
+								border: 0,
+								borderRadius: 999,
+								cursor: "pointer",
+								fontSize: 14,
+								fontWeight: 500,
+								height: 36,
+								padding: "0 16px",
+								color: "var(--ax-colors-fg-secondary, #6b7280)",
+							}}
+						>
+							Edit
+						</button>
 					</div>
 				</div>
-				<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-					<span style={{ fontSize: 12, color: "var(--ax-colors-fg-secondary, #6b7280)" }}>
+				<div style={{display: "flex", alignItems: "center", gap: 8}}>
+					<span style={{fontSize: 12, color: "var(--ax-colors-fg-secondary, #6b7280)"}}>
 						{saveState === "saved" ? "Changes saved" : "Saving..."}
 					</span>
-					<AxiomButton appearance="default" size="sm" icon={<IconCopy size={16} />} aria-label="Copy" />
-					<AxiomButton appearance="primary" size="sm" icon={<IconChevronDown size={14} />}>Add to</AxiomButton>
+					<AxiomButton
+						appearance="default"
+						size="sm"
+						icon={<IconCopy size={16} />}
+						aria-label="Copy"
+					/>
+					<AxiomButton
+						appearance="primary"
+						size="sm"
+						icon={<IconChevronDown size={14} />}
+					>
+						Add to
+					</AxiomButton>
 				</div>
 			</div>
 
 			{/* Main Content Area */}
-			<div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
+			<div style={{display: "flex", flex: 1, minHeight: 0, overflow: "hidden"}}>
 				{/* Canvas */}
-				<div style={{ flex: 1, padding: 32, overflow: "auto", background: "var(--ax-colors-bg-page, #f8f9fb)" }}>
+				<div
+					style={{
+						flex: 1,
+						padding: 32,
+						overflow: "auto",
+						background: "var(--ax-colors-bg-page, #f8f9fb)",
+					}}
+				>
 					{canvasDraft?.image ? (
 						<>
-							<div style={{ marginBottom: 20 }}>
-								<h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 8px" }}>{canvasDraft.title}</h2>
-								<p style={{ fontSize: 14, color: "var(--ax-colors-fg-secondary, #6b7280)", margin: 0 }}>{canvasPrompt}</p>
+							<div style={{marginBottom: 20}}>
+								<h2 style={{fontSize: 24, fontWeight: 700, margin: "0 0 8px"}}>
+									{canvasDraft.title}
+								</h2>
+								<p
+									style={{
+										fontSize: 14,
+										color: "var(--ax-colors-fg-secondary, #6b7280)",
+										margin: 0,
+									}}
+								>
+									{canvasPrompt}
+								</p>
 							</div>
-							<div style={{
-								background: "var(--ax-colors-bg-default, #fff)",
-								border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
-								borderRadius: 16, padding: 24, textAlign: "center" as const,
-							}}>
-								<img src={canvasDraft.image} alt={canvasDraft.title} style={{
-									maxWidth: "100%", maxHeight: "calc(100vh - 300px)",
-									borderRadius: 12, objectFit: "contain" as const,
-								}} />
+							<div
+								style={{
+									background: "var(--ax-colors-bg-default, #fff)",
+									border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+									borderRadius: 16,
+									padding: 24,
+									textAlign: "center" as const,
+								}}
+							>
+								<img
+									src={canvasDraft.image}
+									alt={canvasDraft.title}
+									style={{
+										maxWidth: "100%",
+										maxHeight: "calc(100vh - 300px)",
+										borderRadius: 12,
+										objectFit: "contain" as const,
+									}}
+								/>
 							</div>
-							<div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
-								<AxiomButton appearance="default" size="sm" icon={<IconWand size={16} />}>Regenerate</AxiomButton>
-								<AxiomButton appearance="primary" size="sm" icon={<IconCheck size={16} />}>Generate Pack</AxiomButton>
+							<div
+								style={{
+									display: "flex",
+									justifyContent: "flex-end",
+									gap: 8,
+									marginTop: 16,
+								}}
+							>
+								<AxiomButton
+									appearance="default"
+									size="sm"
+									icon={<IconWand size={16} />}
+								>
+									Regenerate
+								</AxiomButton>
+								<AxiomButton
+									appearance="primary"
+									size="sm"
+									icon={<IconCheck size={16} />}
+								>
+									Generate Pack
+								</AxiomButton>
 							</div>
 						</>
 					) : (
-						<div style={{
-							display: "flex", flexDirection: "column" as const, alignItems: "center",
-							justifyContent: "center", height: "100%", textAlign: "center" as const,
-							border: "2px dashed var(--ax-colors-border-tertiary, #e5e7eb)", borderRadius: 16,
-						}}>
-							<IconSparkles size={48} style={{ color: "var(--ax-colors-fg-accent, #7c3aed)", marginBottom: 16 }} />
-							<h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 8px" }}>Start Generating with Opal</h2>
-							<p style={{ fontSize: 14, color: "var(--ax-colors-fg-secondary, #6b7280)", maxWidth: 400 }}>
-								Use the Opal chat to describe what you want to create, then open the advanced editor.
+						<div
+							style={{
+								display: "flex",
+								flexDirection: "column" as const,
+								alignItems: "center",
+								justifyContent: "center",
+								height: "100%",
+								textAlign: "center" as const,
+								border: "2px dashed var(--ax-colors-border-tertiary, #e5e7eb)",
+								borderRadius: 16,
+							}}
+						>
+							<IconSparkles
+								size={48}
+								style={{
+									color: "var(--ax-colors-fg-secondary, #7c3aed)",
+									marginBottom: 16,
+								}}
+							/>
+							<h2 style={{fontSize: 20, fontWeight: 700, margin: "0 0 8px"}}>
+								Start Generating with Opal
+							</h2>
+							<p
+								style={{
+									fontSize: 14,
+									color: "var(--ax-colors-fg-secondary, #6b7280)",
+									maxWidth: 400,
+								}}
+							>
+								Use the Opal chat to describe what you want to create, then open the
+								advanced editor.
 							</p>
 						</div>
 					)}
 				</div>
 
 				{/* Settings Sidebar */}
-				<div style={{
-					width: 340, flexShrink: 0, borderLeft: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
-					background: "var(--ax-colors-bg-default, #fff)", overflow: "auto", padding: 20,
-				}}>
-					<h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 20px" }}>Settings</h3>
+				<div
+					style={{
+						width: 340,
+						flexShrink: 0,
+						borderLeft: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+						background: "var(--ax-colors-bg-default, #fff)",
+						overflow: "auto",
+						padding: 20,
+					}}
+				>
+					<h3 style={{fontSize: 16, fontWeight: 700, margin: "0 0 20px"}}>Settings</h3>
 
-					<div style={{ marginBottom: 20 }}>
-						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Intent</label>
-						<select style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #d1d5db)", padding: "0 12px", fontSize: 14 }}>
-							{intentOptions.map(o => <option key={o}>{o}</option>)}
+					<div style={{marginBottom: 20}}>
+						<label
+							style={{
+								fontSize: 11,
+								fontWeight: 600,
+								textTransform: "uppercase" as const,
+								letterSpacing: "0.05em",
+								color: "var(--ax-colors-fg-secondary, #6b7280)",
+								display: "block",
+								marginBottom: 8,
+							}}
+						>
+							Intent
+						</label>
+						<select
+							style={{
+								width: "100%",
+								height: 40,
+								borderRadius: 10,
+								border: "1px solid var(--ax-colors-border-secondary, #d1d5db)",
+								padding: "0 12px",
+								fontSize: 14,
+							}}
+						>
+							{intentOptions.map((o) => (
+								<option key={o}>{o}</option>
+							))}
 						</select>
-						<p style={{ fontSize: 12, color: "var(--ax-colors-fg-secondary, #6b7280)", marginTop: 6 }}>Determines AI skills and output style</p>
+						<p
+							style={{
+								fontSize: 12,
+								color: "var(--ax-colors-fg-secondary, #6b7280)",
+								marginTop: 6,
+							}}
+						>
+							Determines AI skills and output style
+						</p>
 					</div>
 
-					<div style={{ marginBottom: 20 }}>
-						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Aspect Ratio</label>
-						<div style={{ display: "flex", gap: 4, background: "var(--ax-colors-bg-secondary, #f3f4f6)", borderRadius: 999, padding: 4, width: "fit-content" }}>
-							{aspectRatios.map(r => (
-								<button key={r} type="button" style={{
-									background: r === aspectRatio ? "var(--ax-colors-bg-default, #fff)" : "transparent",
-									border: 0, borderRadius: 999, cursor: "pointer", fontSize: 13,
-									fontWeight: r === aspectRatio ? 600 : 400, height: 32, padding: "0 12px",
-								}} onClick={() => setAspectRatio(r)}>{r}</button>
+					<div style={{marginBottom: 20}}>
+						<label
+							style={{
+								fontSize: 11,
+								fontWeight: 600,
+								textTransform: "uppercase" as const,
+								letterSpacing: "0.05em",
+								color: "var(--ax-colors-fg-secondary, #6b7280)",
+								display: "block",
+								marginBottom: 8,
+							}}
+						>
+							Aspect Ratio
+						</label>
+						<div
+							style={{
+								display: "flex",
+								gap: 4,
+								background: "var(--ax-colors-bg-secondary, #f3f4f6)",
+								borderRadius: 999,
+								padding: 4,
+								width: "fit-content",
+							}}
+						>
+							{aspectRatios.map((r) => (
+								<button
+									key={r}
+									type="button"
+									style={{
+										background:
+											r === aspectRatio
+												? "var(--ax-colors-bg-default, #fff)"
+												: "transparent",
+										border: 0,
+										borderRadius: 999,
+										cursor: "pointer",
+										fontSize: 13,
+										fontWeight: r === aspectRatio ? 600 : 400,
+										height: 32,
+										padding: "0 12px",
+									}}
+									onClick={() => setAspectRatio(r)}
+								>
+									{r}
+								</button>
 							))}
 						</div>
 					</div>
 
-					<div style={{ marginBottom: 20 }}>
-						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Channel Pack</label>
-						<select style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #d1d5db)", padding: "0 12px", fontSize: 14 }}>
-							{channelPacks.map(o => <option key={o}>{o}</option>)}
+					<div style={{marginBottom: 20}}>
+						<label
+							style={{
+								fontSize: 11,
+								fontWeight: 600,
+								textTransform: "uppercase" as const,
+								letterSpacing: "0.05em",
+								color: "var(--ax-colors-fg-secondary, #6b7280)",
+								display: "block",
+								marginBottom: 8,
+							}}
+						>
+							Channel Pack
+						</label>
+						<select
+							style={{
+								width: "100%",
+								height: 40,
+								borderRadius: 10,
+								border: "1px solid var(--ax-colors-border-secondary, #d1d5db)",
+								padding: "0 12px",
+								fontSize: 14,
+							}}
+						>
+							{channelPacks.map((o) => (
+								<option key={o}>{o}</option>
+							))}
 						</select>
 					</div>
 
-					<div style={{ marginBottom: 20 }}>
-						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Theme Package</label>
-						<select style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #d1d5db)", padding: "0 12px", fontSize: 14 }}>
-							{themePacks.map(o => <option key={o}>{o}</option>)}
+					<div style={{marginBottom: 20}}>
+						<label
+							style={{
+								fontSize: 11,
+								fontWeight: 600,
+								textTransform: "uppercase" as const,
+								letterSpacing: "0.05em",
+								color: "var(--ax-colors-fg-secondary, #6b7280)",
+								display: "block",
+								marginBottom: 8,
+							}}
+						>
+							Theme Package
+						</label>
+						<select
+							style={{
+								width: "100%",
+								height: 40,
+								borderRadius: 10,
+								border: "1px solid var(--ax-colors-border-secondary, #d1d5db)",
+								padding: "0 12px",
+								fontSize: 14,
+							}}
+						>
+							{themePacks.map((o) => (
+								<option key={o}>{o}</option>
+							))}
 						</select>
 					</div>
 
-					<div style={{ marginBottom: 20 }}>
-						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Brand Pack</label>
-						<select style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #d1d5db)", padding: "0 12px", fontSize: 14 }}>
-							{brandPacks.map(o => <option key={o}>{o}</option>)}
+					<div style={{marginBottom: 20}}>
+						<label
+							style={{
+								fontSize: 11,
+								fontWeight: 600,
+								textTransform: "uppercase" as const,
+								letterSpacing: "0.05em",
+								color: "var(--ax-colors-fg-secondary, #6b7280)",
+								display: "block",
+								marginBottom: 8,
+							}}
+						>
+							Brand Pack
+						</label>
+						<select
+							style={{
+								width: "100%",
+								height: 40,
+								borderRadius: 10,
+								border: "1px solid var(--ax-colors-border-secondary, #d1d5db)",
+								padding: "0 12px",
+								fontSize: 14,
+							}}
+						>
+							{brandPacks.map((o) => (
+								<option key={o}>{o}</option>
+							))}
 						</select>
 					</div>
 
 					<div>
-						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Reference Images</label>
-						<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-							{referenceAssets.slice(0, 4).map(a => (
-								<div key={a.id} style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)" }}>
-									<img src={a.image} alt={a.title} style={{ width: "100%", height: 72, objectFit: "cover" as const, display: "block" }} />
-									<div style={{ padding: "6px 8px", fontSize: 11, fontWeight: 600 }}>{a.title}</div>
+						<label
+							style={{
+								fontSize: 11,
+								fontWeight: 600,
+								textTransform: "uppercase" as const,
+								letterSpacing: "0.05em",
+								color: "var(--ax-colors-fg-secondary, #6b7280)",
+								display: "block",
+								marginBottom: 8,
+							}}
+						>
+							Reference Images
+						</label>
+						<div style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8}}>
+							{referenceAssets.slice(0, 4).map((a) => (
+								<div
+									key={a.id}
+									style={{
+										borderRadius: 10,
+										overflow: "hidden",
+										border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+									}}
+								>
+									<img
+										src={a.image}
+										alt={a.title}
+										style={{
+											width: "100%",
+											height: 72,
+											objectFit: "cover" as const,
+											display: "block",
+										}}
+									/>
+									<div
+										style={{padding: "6px 8px", fontSize: 11, fontWeight: 600}}
+									>
+										{a.title}
+									</div>
 								</div>
 							))}
 						</div>

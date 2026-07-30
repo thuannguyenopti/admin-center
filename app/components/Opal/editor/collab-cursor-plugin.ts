@@ -10,6 +10,12 @@ export type CollabCursor = {
 
 export const collabCursorKey = new PluginKey<{ cursors: CollabCursor[]; decorations: DecorationSet }>('collab-cursor');
 
+<<<<<<< HEAD
+=======
+// Tracks which cursor IDs have their label faded — survives decoration rebuilds.
+const fadedCursors = new Set<string>();
+
+>>>>>>> origin/main
 function createCursorDOM(cursor: CollabCursor): HTMLElement {
   const wrapper = document.createElement('span');
   wrapper.style.cssText = 'position: relative; display: inline; pointer-events: none; user-select: none;';
@@ -26,6 +32,11 @@ function createCursorDOM(cursor: CollabCursor): HTMLElement {
     transform: translateX(-1px);
     animation: collab-blink 1.1s ease-in-out infinite;
     border-radius: 1px;
+<<<<<<< HEAD
+=======
+    pointer-events: auto;
+    cursor: default;
+>>>>>>> origin/main
   `;
 
   const label = document.createElement('span');
@@ -44,8 +55,38 @@ function createCursorDOM(cursor: CollabCursor): HTMLElement {
     line-height: 1.6;
     letter-spacing: 0.01em;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+<<<<<<< HEAD
   `;
 
+=======
+    opacity: ${fadedCursors.has(cursor.id) ? '0' : '1'};
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  `;
+
+  // Start the fade timer unless already faded
+  let fadeTimer: ReturnType<typeof setTimeout> | null = null;
+  if (!fadedCursors.has(cursor.id)) {
+    fadeTimer = setTimeout(() => {
+      label.style.opacity = '0';
+      fadedCursors.add(cursor.id);
+    }, 2000);
+  }
+
+  caret.addEventListener('mouseenter', () => {
+    if (fadeTimer) clearTimeout(fadeTimer);
+    fadeTimer = null;
+    fadedCursors.delete(cursor.id);
+    label.style.opacity = '1';
+  });
+  caret.addEventListener('mouseleave', () => {
+    fadeTimer = setTimeout(() => {
+      label.style.opacity = '0';
+      fadedCursors.add(cursor.id);
+    }, 2000);
+  });
+
+>>>>>>> origin/main
   wrapper.appendChild(caret);
   wrapper.appendChild(label);
   return wrapper;

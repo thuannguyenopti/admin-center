@@ -1,0 +1,130 @@
+"use client";
+
+import { Box, Button, Switch, Tabs, TabsList, TabsTrigger, Tooltip, ToggleButton } from "@optiaxiom/react";
+import {
+	IconCode,
+	IconCommentPlus,
+	IconEllipsisStroke,
+	IconEye,
+	IconXmark,
+} from "@optiaxiom/icons";
+import { Text } from "@/app/components/Text";
+import { useLayout } from "@/app/context/LayoutContext";
+import type { ContentTab } from "./CanvasStage";
+
+// Canvas header chrome — matches Figma "Image Gen II - 10 Channel Pack Items"
+// (node 6708:90368/89886): code/preview toggle, content tabs, rationale switch,
+// workflow trigger, and version/copy/fullscreen/close icon buttons.
+//
+// "Run Now" lives here instead of a canvas-owned chat panel — the real Opal
+// conversation (app/components/OpalPanel.tsx) is a persistent overlay that's
+// always visible already, so there's no separate "ask Opal" entry point here.
+export function Toolbar({
+	activeTab,
+	commentMode,
+	onClose,
+	onOpenWorkflow,
+	onRunQueuedEdits,
+	onTabChange,
+	onToggleCommentMode,
+	onToggleRationale,
+	queuedEditsCount,
+	showRationale,
+	showWorkflow,
+}: {
+	activeTab: ContentTab;
+	commentMode: boolean;
+	onClose: () => void;
+	onOpenWorkflow: () => void;
+	onRunQueuedEdits: () => void;
+	onTabChange: (tab: ContentTab) => void;
+	onToggleCommentMode: () => void;
+	onToggleRationale: () => void;
+	queuedEditsCount: number;
+	showRationale: boolean;
+	showWorkflow: boolean;
+}) {
+	// The real Opal panel is a fixed, always-on-top overlay (see
+	// app/components/OpalPanel.tsx) — it never reflows to make room for page
+	// content, page content reflows (or insets) to stay clear of it. The
+	// canvas body below already does this via opalPanelWidth; this toolbar
+	// row didn't, so its rightmost icons (Fullscreen/Close, or "More" in
+	// workflow mode) could render underneath Opal and be unreachable. Skipped
+	// in workflow mode because CampaignWorkshopCanvas's outer row already
+	// reserves the same width there (see CanvasStage's own matching skip).
+	const { opalPanelWidth } = useLayout();
+	return (
+		<Box
+			bg="bg.default"
+			borderB="1"
+			borderColor="border.tertiary"
+			display="grid"
+			alignItems="center"
+			px="24"
+			// 57px matches the real Opal panel's hardcoded `top: 57px` offset
+			// (app/components/OpalPanel.tsx) — it's fixed to sit just below the
+			// GlobalBar, which this fullscreen canvas's own toolbar visually
+			// replaces. Any other height leaves a gap or an overlapping seam
+			// where the panel cuts into this toolbar.
+			style={{
+				gridTemplateColumns: "auto minmax(320px, 1fr) auto",
+				minHeight: 57,
+				paddingRight: 24 + (showWorkflow ? 0 : opalPanelWidth),
+			}}
+		>
+			<Box display="flex" alignItems="center" gap="8">
+				<ToggleButton size="sm" appearance="subtle" pressed={false} icon={<IconCode size={17} />} aria-label="Code" />
+				<ToggleButton size="sm" appearance="subtle" pressed={false} icon={<IconEye size={17} />} aria-label="Preview" />
+			</Box>
+
+			<Box aria-label="Content type" display="flex" alignItems="center" justifyContent="center" style={{ height: 64, minWidth: 0, overflow: "hidden" }}>
+				<Tabs value={activeTab} onValueChange={(next) => onTabChange(next as ContentTab)}>
+					<TabsList>
+						<TabsTrigger value="blog">Blog Post</TabsTrigger>
+						<TabsTrigger value="social">Social Posts</TabsTrigger>
+						<TabsTrigger value="email">Email</TabsTrigger>
+					</TabsList>
+				</Tabs>
+			</Box>
+
+			<Box className="cmp-canvas-toolbar-right" display="flex" alignItems="center" gap="16" justifyContent="flex-end">
+				{queuedEditsCount > 0 && (
+					<Button appearance="primary" size="sm" onClick={onRunQueuedEdits}>
+						Run Now ({queuedEditsCount})
+					</Button>
+				)}
+				<Tooltip content="Comment on anything">
+					<ToggleButton size="sm" appearance="subtle" pressed={commentMode} icon={<IconCommentPlus size={17} />} aria-label="Comment" onPressedChange={onToggleCommentMode} />
+				</Tooltip>
+				{showWorkflow ? (
+					<Tooltip content="More">
+						<Button appearance="subtle" size="sm" icon={<IconEllipsisStroke size={18} />} aria-label="More" />
+					</Tooltip>
+				) : (
+					<>
+						<Box display="flex" alignItems="center" gap="8">
+							<Switch checked={showRationale} onCheckedChange={onToggleRationale} />
+							<Text fontSize="sm" fontWeight="700">
+								Rationale
+							</Text>
+						</Box>
+						<Button appearance="subtle" size="sm" onClick={onOpenWorkflow}>
+							Workflow
+						</Button>
+						<Tooltip content="Close chat window">
+							<Button appearance="subtle" size="sm" icon={<IconXmark size={17} />} aria-label="Close" onClick={onClose} />
+						</Tooltip>
+					</>
+				)}
+			</Box>
+			<Box className="cmp-canvas-toolbar-short" display="none" alignItems="center" gap="16" justifyContent="flex-end">
+				{!showWorkflow && (
+					<Tooltip content="Close chat window">
+						<Button appearance="subtle" size="sm" icon={<IconXmark size={17} />} aria-label="Close" onClick={onClose} />
+					</Tooltip>
+				)}
+				<Button appearance="subtle" size="sm" icon={<IconEllipsisStroke size={18} />} aria-label="More" />
+			</Box>
+		</Box>
+	);
+}

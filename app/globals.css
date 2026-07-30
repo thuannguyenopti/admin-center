@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @import "./styles/opalStyles.css";
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
 
@@ -436,3 +437,251 @@ html[data-theme="dark"] [data-brand="v3"] {
 	box-shadow: var(--ax-shadows-lg);
 	border-color: var(--ax-colors-border-accent);
 }
+=======
+@import "./styles/opalStyles.css";
+@import "./cms/styles.css";
+@import "./cmp/styles.css";
+@import "./opal/styles.css";
+@import "./connect-platform/styles.css";
+@import "./fe-hosting/styles.css";
+@import "./web-experimentation/styles.css";
+@import '@fontsource-variable/roboto-mono';
+@import "./stride.css";
+@import "lenis/dist/lenis.css";
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
+
+/* Nudge SemiNormal — Optimizely brand heading font */
+@font-face {
+  font-family: "Nudge SemiNormal";
+  src: url("/fonts/NudgeSemiNormal-SemiNormalRegular.woff2") format("woff2"),
+       url("/fonts/NudgeSemiNormal-SemiNormalRegular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Nudge SemiNormal";
+  src: url("/fonts/NudgeSemiNormal-SemiNormalSemiBold.woff2") format("woff2"),
+       url("/fonts/NudgeSemiNormal-SemiNormalSemiBold.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Nudge SemiNormal";
+  src: url("/fonts/NudgeSemiNormal-SemiNormalExtraBold.woff2") format("woff2"),
+       url("/fonts/NudgeSemiNormal-SemiNormalExtraBold.woff") format("woff");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Die Grotesk B — Axiom V3 brand UI font */
+@font-face {
+  font-family: "DI Grotesk B";
+  src: url("/fonts/die-grotesk-b-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DI Grotesk B";
+  src: url("/fonts/die-grotesk-b-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DI Grotesk B";
+  src: url("/fonts/die-grotesk-b-medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DI Grotesk B";
+  src: url("/fonts/die-grotesk-b-medium-italic.woff2") format("woff2");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DI Grotesk B";
+  src: url("/fonts/die-grotesk-b-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DI Grotesk B";
+  src: url("/fonts/die-grotesk-b-bold-italic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@layer optiaxiom.base {
+	@tailwind base;
+	@tailwind components;
+	@tailwind utilities;
+}
+
+/* Light mode as default, but defer to OS preference */
+:root {
+	color-scheme: light;
+}
+
+/* Dark mode via data-theme/class attribute - controlled by useTheme hook */
+[data-theme="dark"],
+html.dark {
+	color-scheme: dark;
+}
+
+html[data-theme="dark"],
+html.dark {
+	color-scheme: dark;
+}
+
+body.dark {
+	color-scheme: dark;
+}
+
+/* Ensure AxiomProvider gets the correct color scheme */
+html[data-theme="dark"] body,
+html.dark body,
+body.dark {
+	color-scheme: dark;
+}
+
+html:not([data-theme="dark"]):not(.dark) body,
+body:not(.dark) {
+	color-scheme: light;
+}
+html {
+	height: 100%;
+}
+body {
+	font-family: "DI Grotesk B", Arial, Helvetica, sans-serif;
+	margin: 0;
+	height: 100%;
+	/* fix body text readability */
+	letter-spacing: 0.015em;
+}
+
+/* Prevent page scroll when a modal is open (single scrollbar inside modal only) */
+body[data-modal-open] {
+	overflow: hidden !important;
+}
+body[data-modal-open] .main-scroll-area {
+	overflow: hidden !important;
+}
+
+/* Hide scrollbar while keeping scroll (e.g. Opportunities carousel) */
+.scrollbar-hide {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}
+
+@keyframes slide {
+	0% {
+		transform: translateX(0px);
+	}
+
+	100% {
+		transform: translateX(224px);
+	}
+}
+
+.appear {
+	animation: appear 0.3s;
+}
+
+@keyframes appear {
+	0% {
+		opacity: 0;
+	}
+
+	100% {
+		opacity: 1;
+	}
+}
+
+/* Custom scrollbar styles - Light mode */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #dadfeb;
+	/* axiom light gray */
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #cacfdc;
+}
+
+.axiom-scrollbar::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+.axiom-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.axiom-scrollbar::-webkit-scrollbar-thumb {
+	background: #dadfeb;
+	border-radius: 10px;
+}
+
+.axiom-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: #cacfdc;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track,
+html.dark ::-webkit-scrollbar-track,
+body.dark ::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb,
+html.dark ::-webkit-scrollbar-thumb,
+body.dark ::-webkit-scrollbar-thumb {
+	background: #404557;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
+html.dark ::-webkit-scrollbar-thumb:hover,
+body.dark ::-webkit-scrollbar-thumb:hover {
+	background: #5a6578;
+}
+
+.menu-label-button {
+	height: auto !important;
+	padding-top: 4px !important;
+	padding-bottom: 4px !important;
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: 200% 0;
+	}
+	100% {
+		background-position: -200% 0;
+	}
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; transform: translateY(4px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+>>>>>>> origin/main

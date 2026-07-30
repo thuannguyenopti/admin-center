@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 
 import {
@@ -318,3 +319,311 @@ function VersionCard({
         </Box>
     );
 }
+=======
+"use client";
+
+import {
+	Box,
+	Text,
+	Button,
+	Avatar,
+	Badge,
+	Menu,
+	MenuTrigger,
+	MenuContent,
+	type MenuOption,
+} from "@optiaxiom/react";
+import {IconEllipsisStroke, IconXmark} from "@optiaxiom/icons";
+import {
+	IconPen,
+	IconEye,
+	IconClockRotateLeft,
+	IconCopy,
+	IconEyeSlash,
+	IconArrowsLeftRight,
+} from "@optimizely/axiom-icons";
+
+export interface Version {
+	id: string;
+	version: string;
+	mode: string;
+	timestamp: string;
+	author: string;
+	authorInitials: string;
+	isCurrent?: boolean;
+}
+
+interface VersionHistoryProps {
+	isOpen: boolean;
+	onClose: () => void;
+	onViewVersion: (versionId: string) => void;
+	onRestoreVersion: (versionId: string) => void;
+	onDuplicateVersion: (versionId: string) => void;
+	onHideVersion: (versionId: string) => void;
+	onNameVersion: (versionId: string) => void;
+	onCompareVersion: (versionId: string) => void;
+	onExitVersionView?: () => void;
+	viewingVersionId?: string | null;
+	isComparing?: boolean;
+	comparisonVersionId?: string | null;
+	versions: Version[];
+}
+
+export function VersionHistory({
+	isOpen,
+	onClose,
+	onViewVersion,
+	onRestoreVersion,
+	onDuplicateVersion,
+	onHideVersion,
+	onNameVersion,
+	onCompareVersion,
+	onExitVersionView,
+	viewingVersionId,
+	isComparing = false,
+	comparisonVersionId,
+	versions,
+}: VersionHistoryProps) {
+	const currentVersion = versions.find((v) => v.isCurrent);
+	const previousVersions = versions.filter((v) => !v.isCurrent);
+
+	return (
+		<Box
+			style={{
+				width: isOpen ? "360px" : "0px",
+				transition: "width 0.3s ease-in-out",
+				overflow: "hidden",
+				borderLeft: isOpen ? "1px solid var(--ax-colors-border-secondary)" : "none",
+				backgroundColor: "var(--ax-colors-bg-default)",
+				display: "flex",
+				flexDirection: "column",
+				flexShrink: 0,
+			}}
+		>
+			{isOpen && (
+				<>
+					{/* Header */}
+					<Box
+						px="16"
+						py="12"
+						display="flex"
+						justifyContent="space-between"
+						alignItems="center"
+						style={{
+							borderBottom: "1px solid var(--ax-colors-border-secondary)",
+						}}
+					>
+						<Text fontWeight="600" fontSize="md">
+							Version History
+						</Text>
+						<Button
+							appearance="subtle"
+							size="sm"
+							icon={<IconXmark size={16} />}
+							aria-label="Close"
+							onClick={onClose}
+						/>
+					</Box>
+
+					{/* Content */}
+					<Box
+						flex="1"
+						overflowY="auto"
+						px="16"
+						py="16"
+						display="flex"
+						flexDirection="column"
+						gap="24"
+					>
+						{/* Current Version Section */}
+						{currentVersion && (
+							<Box display="flex" flexDirection="column" gap="8">
+								<Text fontSize="sm" fontWeight="600" color="fg.secondary">
+									Current Version
+								</Text>
+								<VersionCard
+									version={currentVersion}
+									onViewVersion={onViewVersion}
+									onRestoreVersion={onRestoreVersion}
+									onDuplicateVersion={onDuplicateVersion}
+									onHideVersion={onHideVersion}
+									onNameVersion={onNameVersion}
+									onCompareVersion={onCompareVersion}
+									onExitVersionView={onExitVersionView}
+									isCurrent
+									isViewing={!viewingVersionId}
+									isComparing={isComparing}
+									isCompared={false}
+								/>
+							</Box>
+						)}
+
+						{/* Previous Versions Section */}
+						{previousVersions.length > 0 && (
+							<Box display="flex" flexDirection="column" gap="8">
+								<Text fontSize="sm" fontWeight="600" color="fg.secondary">
+									Previous Versions
+								</Text>
+								<Box display="flex" flexDirection="column" gap="12">
+									{previousVersions.map((version) => (
+										<VersionCard
+											key={version.id}
+											version={version}
+											onViewVersion={onViewVersion}
+											onRestoreVersion={onRestoreVersion}
+											onDuplicateVersion={onDuplicateVersion}
+											onHideVersion={onHideVersion}
+											onNameVersion={onNameVersion}
+											onCompareVersion={onCompareVersion}
+											isViewing={viewingVersionId === version.id}
+											isComparing={isComparing}
+											isCompared={comparisonVersionId === version.id}
+										/>
+									))}
+								</Box>
+							</Box>
+						)}
+					</Box>
+				</>
+			)}
+		</Box>
+	);
+}
+
+interface VersionCardProps {
+	version: Version;
+	onViewVersion: (versionId: string) => void;
+	onRestoreVersion: (versionId: string) => void;
+	onDuplicateVersion: (versionId: string) => void;
+	onHideVersion: (versionId: string) => void;
+	onNameVersion: (versionId: string) => void;
+	onCompareVersion: (versionId: string) => void;
+	onExitVersionView?: () => void;
+	isCurrent?: boolean;
+	isViewing?: boolean;
+	isComparing?: boolean;
+	isCompared?: boolean;
+}
+
+function VersionCard({
+	version,
+	onViewVersion,
+	onRestoreVersion,
+	onDuplicateVersion,
+	onHideVersion,
+	onNameVersion,
+	onCompareVersion,
+	onExitVersionView,
+	isCurrent = false,
+	isViewing = false,
+	isComparing = false,
+	isCompared = false,
+}: VersionCardProps) {
+	const menuOptions: MenuOption[] = [
+		...(!isCurrent
+			? [
+					{
+						label: "View this version",
+						addon: <IconEye size={16} />,
+						execute: () => onViewVersion(version.id),
+					} satisfies MenuOption,
+				]
+			: []),
+		{
+			label: "Name this version",
+			addon: <IconPen size={16} />,
+			execute: () => onNameVersion(version.id),
+		},
+		...(!isCurrent
+			? [
+					{
+						label: "Restore this version",
+						addon: <IconClockRotateLeft size={16} />,
+						execute: () => onRestoreVersion(version.id),
+					} satisfies MenuOption,
+					{
+						label: "Compare with current",
+						addon: <IconArrowsLeftRight size={16} />,
+						execute: () => onCompareVersion(version.id),
+					} satisfies MenuOption,
+				]
+			: []),
+		{
+			label: "Duplicate as a new agent",
+			addon: <IconCopy size={16} />,
+			execute: () => onDuplicateVersion(version.id),
+		},
+		...(!isCurrent
+			? [
+					{
+						label: "Hide this version",
+						addon: <IconEyeSlash size={16} />,
+						intent: "danger",
+						execute: () => onHideVersion(version.id),
+					} satisfies MenuOption,
+				]
+			: []),
+	];
+
+	return (
+		<Box
+			p="12"
+			display="flex"
+			gap="8"
+			alignItems="center"
+			rounded="md"
+			border={isViewing ? "2" : "1"}
+			borderColor={isViewing ? "border.default" : "border.secondary"}
+			bg={isCompared ? "bg.default.pressed" : "bg.default"}
+			style={{
+				cursor: "pointer",
+			}}
+			onClick={() => {
+				if (isCurrent && onExitVersionView) {
+					onExitVersionView();
+				} else if (isComparing) {
+					// In comparison mode, clicking a version switches the comparison
+					onCompareVersion(version.id);
+				} else if (!isCurrent) {
+					onViewVersion(version.id);
+				}
+			}}
+		>
+			{/* Avatar */}
+			<Avatar name={version.author} size="sm" />
+
+			{/* Content */}
+			<Box flex="1" display="flex" flexDirection="column" gap="4">
+				<Box display="flex" alignItems="center" gap="8">
+					<Text fontWeight="500" fontSize="sm">
+						{version.version}
+					</Text>
+					<Badge variant="subtle">{version.mode}</Badge>
+				</Box>
+				<Box display="flex" flexDirection="column">
+					<Text fontSize="xs" color="fg.secondary">
+						{version.timestamp}
+					</Text>
+					<Text fontSize="xs" color="fg.secondary">
+						By {version.author}
+					</Text>
+				</Box>
+			</Box>
+
+			{/* Actions Menu */}
+			<Menu options={menuOptions}>
+				<MenuTrigger asChild>
+					<Button
+						appearance="subtle"
+						size="sm"
+						icon={<IconEllipsisStroke size={16} />}
+						aria-label="More options"
+						onClick={(e) => e.stopPropagation()}
+					/>
+				</MenuTrigger>
+				<MenuContent onClick={(e) => e.stopPropagation()} />
+			</Menu>
+		</Box>
+	);
+}
+>>>>>>> origin/main

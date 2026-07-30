@@ -1,6 +1,10 @@
 "use client";
 
+<<<<<<< HEAD
 import { Box, Disclosure, DisclosureContent, DisclosureTrigger, Text as AxiomText, Tooltip } from "@optiaxiom/react";
+=======
+import { Box, Disclosure, DisclosureContent, DisclosureTrigger, Link as AxiomLink, Text as AxiomText, Tooltip } from "@optiaxiom/react";
+>>>>>>> origin/main
 import { IconSparkles } from "@optimizely/axiom-icons";
 import {
   IconPen,
@@ -20,6 +24,11 @@ import {
   IconShareNodes,
   IconThumbtack,
   IconLink,
+<<<<<<< HEAD
+=======
+  IconBolt,
+  IconSparkles as IconWand,
+>>>>>>> origin/main
 } from "@optiaxiom/icons";
 import { Text } from "../Text";
 import { ChatMessage } from "@/app/hooks/useOpalState";
@@ -42,6 +51,27 @@ import { OpalLoaderV3 } from "@/app/opal/components/OpalLoaderV3";
 import { OpalLoaderV4 } from "@/app/opal/components/OpalLoaderV4";
 import { useLoaderDev } from "@/app/opal/components/useLoaderDev";
 import type { LoaderSequenceOption } from "@/app/opal/components/useLoaderDev";
+<<<<<<< HEAD
+=======
+import { ActivityStreamBlock, type ActivityPhase } from "@/app/opal/im/components/ActivityStreamBlock";
+
+/** Static collapsed view of all phases — used when the stream has already completed to prevent re-animation on remount */
+function StaticActivitySummary({ script }: { script: ActivityPhase[] }) {
+  return (
+    <Box display="flex" flexDirection="column" gap="4">
+      {script.map((phase, i) => (
+        <Box key={i} display="flex" alignItems="center" gap="6" style={{ padding: "2px 0" }}>
+          <AxiomText fontSize="md" color="fg.tertiary">{phase.summary}</AxiomText>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: "var(--ax-colors-fg-tertiary)" }}>
+            <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+import { CanvasOutputCard } from "@/app/opal/im/components/CanvasOutputCard";
+>>>>>>> origin/main
 
 /** Borders / strokes — Opal greys (no product blue accent). */
 const OPAL_STEP_BORDER = "var(--opal-border-secondary)";
@@ -241,6 +271,10 @@ type OpalMessageProps = {
   onStreamingExpandedChange?: (open: boolean) => void;
   isOpalLoading?: boolean;
   onEdit?: (id: string, newContent: string) => void;
+<<<<<<< HEAD
+=======
+  onActivityComplete?: (messageId: string) => void;
+>>>>>>> origin/main
   onRegenerate?: (id: string) => void;
   onVersionChange?: (id: string, versionIndex: number, content: string) => void;
   agentContext?: { emoji: string; name: string; avatar?: string } | null;
@@ -262,6 +296,7 @@ type OpalMessageProps = {
 };
 
 // Helper component for action buttons
+<<<<<<< HEAD
 const ActionButton = ({ icon: Icon, onClick, tooltip }: { icon: any, onClick?: () => void, tooltip?: string }) => (
   <button
     onClick={onClick}
@@ -290,6 +325,39 @@ const ActionButton = ({ icon: Icon, onClick, tooltip }: { icon: any, onClick?: (
     <Icon size={16} />
   </button>
 );
+=======
+const ActionButton = ({ icon: Icon, onClick, tooltip }: { icon: any, onClick?: () => void, tooltip?: string }) => {
+  const btn = (
+    <button
+      onClick={onClick}
+      style={{
+        background: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '4px',
+        color: 'var(--opal-text-tertiary)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: '4px',
+        transition: 'color 0.2s, background-color 0.2s',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = 'var(--opal-text-body)';
+        e.currentTarget.style.backgroundColor = 'var(--opal-bg-sidebar)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = 'var(--opal-text-tertiary)';
+        e.currentTarget.style.backgroundColor = 'transparent';
+      }}
+    >
+      <Icon size={16} />
+    </button>
+  );
+  if (!tooltip) return btn;
+  return <Tooltip content={tooltip} delayDuration={400}><span style={{ display: 'inline-flex' }}>{btn}</span></Tooltip>;
+};
+>>>>>>> origin/main
 
 // IM mode quick-action bar: 3 MRU emoji shortcuts + full picker + (edit, own only) + copy.
 // MRU is persisted in localStorage and updates whenever the user reacts.
@@ -677,6 +745,7 @@ const MarkdownContent = ({ content }: { content: string }) => {
             ),
           strong: ({ node, ...props }) => <strong style={{ fontWeight: 600 }} {...props} />,
           em: ({ node, ...props }) => <em style={{ fontStyle: 'italic' }} {...props} />,
+<<<<<<< HEAD
           a: ({ node, href, ...props }) => {
             const isInternal = typeof href === 'string' && href.startsWith('/');
             return (
@@ -686,6 +755,17 @@ const MarkdownContent = ({ content }: { content: string }) => {
                 {...(isInternal ? {} : { target: "_blank", rel: "noopener noreferrer" })}
                 {...props}
               />
+=======
+          a: ({ node, href, children }) => {
+            const isInternal = typeof href === 'string' && href.startsWith('/');
+            return (
+              <AxiomLink
+                href={href ?? '#'}
+                {...(!isInternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              >
+                {children}
+              </AxiomLink>
+>>>>>>> origin/main
             );
           },
         }}
@@ -807,6 +887,10 @@ export function OpalMessage({
   onStreamingExpandedChange,
   isOpalLoading,
   onEdit,
+<<<<<<< HEAD
+=======
+  onActivityComplete,
+>>>>>>> origin/main
   onRegenerate,
   onVersionChange,
   agentContext,
@@ -935,10 +1019,37 @@ export function OpalMessage({
         pointerEvents: 'none',
       }} />
     ) : null;
+<<<<<<< HEAD
     const avatarWithPresence = presenceDot ? (
       <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
         {avatarEl}
         {presenceDot}
+=======
+    const vauBadge = isVAU ? (
+      <span style={{
+        position: 'absolute',
+        bottom: -1,
+        right: -1,
+        width: 14,
+        height: 14,
+        borderRadius: '50%',
+        background: 'var(--ax-colors-bg-accent)',
+        border: '1.5px solid var(--ax-colors-bg-default)',
+        boxSizing: 'border-box',
+        pointerEvents: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <IconBolt style={{ width: 9, height: 9, color: 'var(--ax-colors-fg-accent)', flexShrink: 0 }} />
+      </span>
+    ) : null;
+    const avatarWithPresence = (presenceDot || vauBadge) ? (
+      <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
+        {avatarEl}
+        {presenceDot}
+        {vauBadge}
+>>>>>>> origin/main
       </span>
     ) : avatarEl;
     // Humans → accent-subtle (pale lime in V3); VAUs → subtle gray.
@@ -1011,6 +1122,10 @@ export function OpalMessage({
         {/* Name + time row, inset to clear avatar+gap */}
         <Box display="flex" alignItems="center" gap="8" style={{ paddingLeft: 44, marginBottom: 4 }}>
           <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--ax-colors-fg-default)' }}>{authorName}</span>
+<<<<<<< HEAD
+=======
+          {isVAU && <IconWand size={13} style={{ color: 'var(--ax-colors-fg-secondary)', flexShrink: 0 }} />}
+>>>>>>> origin/main
           <span style={{ fontSize: 11, color: 'var(--ax-colors-fg-tertiary)' }}>{time}</span>
         </Box>
         {/* Avatar + bubble row — avatar top-aligns with the bubble */}
@@ -1274,6 +1389,27 @@ export function OpalMessage({
                 </Box>
               </Box>
             ) : (
+<<<<<<< HEAD
+=======
+              message.activityScript ? (
+                <Box display="flex" flexDirection="column" gap="12" w="full">
+                  {/* When stream is done, render a static summary to avoid re-animation on remount */}
+                  {!isLoading && !message.isLoading && (message as any).showCanvasCard ? (
+                    <StaticActivitySummary script={message.activityScript} />
+                  ) : (
+                    <ActivityStreamBlock key={`${message.id}-${message.timestamp}`} script={message.activityScript} onComplete={() => onActivityComplete?.(message.id)} />
+                  )}
+                  {!isLoading && message.content && (
+                    <MarkdownContent content={message.content} />
+                  )}
+                  {!isLoading && (message as any).showCanvasCard && (
+                    <Box mt="8" mb="8">
+                      <CanvasOutputCard />
+                    </Box>
+                  )}
+                </Box>
+              ) : (
+>>>>>>> origin/main
               isLoading ? (
                 isProcessingStepsLoading && streamingMode === "expanded" ? (
                   <Disclosure open={isStreamingExpanded} onOpenChange={onStreamingExpandedChange} w="full">
@@ -1378,6 +1514,10 @@ export function OpalMessage({
                   <MarkdownContent content={message.content} />
                 )
               )
+<<<<<<< HEAD
+=======
+              )
+>>>>>>> origin/main
             )}
           </Box>
 

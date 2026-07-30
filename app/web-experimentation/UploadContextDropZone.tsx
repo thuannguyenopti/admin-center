@@ -9,7 +9,11 @@ import {
 	Text as AxiomText,
 } from "@optiaxiom/react";
 import {useRef, useCallback, useMemo} from "react";
+<<<<<<< HEAD
 import {IconFileImport} from "@tabler/icons-react";
+=======
+import {IconFileImport} from "@/app/lib/axiom-icons";
+>>>>>>> origin/main
 
 export function UploadContextDropZone({label}: {label: string}) {
 	const inputRef = useRef<HTMLInputElement>(null);

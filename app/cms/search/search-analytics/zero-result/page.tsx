@@ -6,15 +6,7 @@ import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
-import {
-	IconSearch,
-	IconAlertCircle,
-	IconDots,
-	IconAnalyze,
-	IconRocket,
-	IconBook,
-	IconReportSearch,
-} from "@tabler/icons-react";
+import {IconSearch, IconCircleExclamation, IconEllipsisSolid, IconAnalyze, IconRocket, IconBook, IconReportSearch} from "@/app/lib/axiom-icons";
 import {useState, useMemo} from "react";
 import {useRouter} from "next/navigation";
 import {
@@ -241,7 +233,7 @@ export default function ZeroResultPage() {
 										]}
 									>
 										<MenuTrigger
-											icon={<IconDots />}
+											icon={<IconEllipsisSolid />}
 											aria-label="add ele"
 											appearance="subtle"
 											size="sm"

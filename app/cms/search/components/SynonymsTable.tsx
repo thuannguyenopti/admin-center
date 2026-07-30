@@ -1,13 +1,6 @@
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import Item from "@/app/components/Item";
-import {
-	IconTrash,
-	IconPencil,
-	IconDots,
-	IconPlus,
-	IconArrowsExchange,
-	IconArrowRight,
-} from "@tabler/icons-react";
+import {IconTrash, IconPen, IconEllipsisSolid, IconPlus, IconArrowsExchange, IconArrowRight} from "@/app/lib/axiom-icons";
 import {Menu, MenuTrigger, MenuContent, Box, Pagination} from "@optiaxiom/react";
 import {Synonym} from "@/app/db/initialData";
 
@@ -72,7 +65,7 @@ export default function SynonymsTable({
 										options={[
 											{
 												label: "Edit",
-												addon: <IconPencil size={16} />,
+												addon: <IconPen size={16} />,
 												execute: () => onEdit(synonym),
 											},
 											{
@@ -85,7 +78,7 @@ export default function SynonymsTable({
 									>
 										<MenuTrigger
 											aria-label="Actions"
-											icon={<IconDots size={16} />}
+											icon={<IconEllipsisSolid size={16} />}
 											appearance="subtle"
 											size="md"
 										/>

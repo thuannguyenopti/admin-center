@@ -1,0 +1,468 @@
+/* Opal-specific styles. Imported by app/globals.css. */
+
+/* Message highlight pulse — used when navigating to a search result */
+@keyframes msgHighlight {
+  0%   { background: transparent; }
+  15%  { background: var(--ax-colors-bg-success-subtle); }
+  70%  { background: var(--ax-colors-bg-success-subtle); }
+  100% { background: transparent; }
+}
+.msg-highlight {
+  animation: msgHighlight 1.8s ease forwards;
+  border-radius: 8px;
+}
+
+/* Opal Generate button: sparkle icon turns brand green on hover (details panel + modals) */
+.opalGenerateButton:hover svg {
+	color: var(--ax-colors-fg-accent);
+}
+
+/* VAU card hover — shadow + accent border */
+.vau-card {
+	transition:
+		box-shadow 0.15s ease,
+		border-color 0.15s ease;
+}
+.vau-card:hover {
+	box-shadow: var(--ax-shadows-lg);
+	border-color: var(--ax-colors-border-default);
+}
+
+/* Pinned artifact cards — hover reveals actions + extras footer */
+.pinned-card .pinned-actions {
+	opacity: 0;
+	transition: opacity 150ms ease;
+	pointer-events: none;
+}
+.pinned-card .pinned-extras {
+	max-height: 0;
+	opacity: 0;
+	overflow: hidden;
+	transition:
+		max-height 220ms ease,
+		opacity 150ms ease,
+		margin-top 220ms ease;
+	margin-top: 0;
+}
+.pinned-card:hover .pinned-actions,
+.pinned-card:focus-within .pinned-actions {
+	opacity: 1;
+	pointer-events: auto;
+}
+.pinned-card:hover .pinned-extras,
+.pinned-card:focus-within .pinned-extras {
+	max-height: 56px;
+	opacity: 1;
+	margin-top: 8px;
+	pointer-events: auto;
+}
+.pinned-card .pinned-pin-inactive {
+	opacity: 0;
+	transition: opacity 150ms ease;
+	pointer-events: none;
+}
+.pinned-card:hover .pinned-pin-inactive,
+.pinned-card:focus-within .pinned-pin-inactive {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* VAT detail secondary sidebar nav items */
+.vat-nav-item {
+	transition: background 0.1s;
+}
+.vat-nav-item:not([data-active]):hover {
+	background: var(--ax-colors-bg-secondary);
+}
+
+/* VAT work — hover states for cards and table rows */
+.vat-work-card {
+	transition: box-shadow 0.15s, background 0.15s;
+}
+.vat-work-card:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	background: var(--ax-colors-bg-secondary);
+}
+
+.vat-work-row {
+	transition: background 0.1s;
+}
+.vat-work-row:hover {
+	background: var(--ax-colors-bg-secondary);
+}
+
+/* VAT needs-review rows */
+.vat-review-row {
+	transition: background 0.1s ease;
+}
+.vat-review-row:hover {
+	background: var(--ax-colors-bg-secondary);
+}
+
+/* VAT approvals — fade-in for newly expanded items */
+@keyframes vat-approval-in {
+	from { opacity: 0; transform: translateY(6px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+.vat-approval-appear {
+	animation: vat-approval-in 0.2s ease forwards;
+}
+
+/* Personality preset pills — hover + selected states */
+.personality-pill {
+	transition: background 0.1s ease;
+}
+.personality-pill:not(.personality-pill--selected):hover {
+	background: var(--ax-colors-bg-secondary) !important;
+}
+
+/* Archetype template cards */
+.archetype-card {
+	transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.archetype-card:hover {
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+	border-color: var(--ax-colors-border-secondary) !important;
+}
+.archetype-card--selected:hover {
+	border-color: var(--ax-colors-border-default) !important;
+}
+
+/* Trait pills (active — with X) */
+.trait-pill-active {
+	transition: background 0.1s ease, border-color 0.1s ease;
+}
+.trait-pill-active:hover {
+	background: var(--ax-colors-bg-tertiary) !important;
+	border-color: var(--ax-colors-border-secondary) !important;
+}
+
+/* Trait / value suggestion pills (+ add) */
+.trait-pill-suggest {
+	transition: background 0.1s ease, border-color 0.1s ease, color 0.1s ease;
+}
+.trait-pill-suggest:hover {
+	background: var(--ax-colors-bg-secondary) !important;
+	border-color: var(--ax-colors-border-secondary) !important;
+	color: var(--ax-colors-fg-default) !important;
+}
+.trait-pill-suggest.preview-prompt--active:hover {
+	background: var(--ax-colors-bg-secondary) !important;
+}
+
+/* Tone of voice option buttons */
+.tone-option {
+	transition: background 0.1s ease, border-color 0.1s ease;
+}
+.tone-option:not([data-selected="true"]):hover {
+	background: var(--ax-colors-bg-secondary) !important;
+	border-color: var(--ax-colors-border-secondary) !important;
+}
+
+/* Personality tab — range slider */
+.opal-personality-slider {
+	-webkit-appearance: none;
+	appearance: none;
+	height: 4px;
+	border-radius: 2px;
+	outline: none;
+	cursor: pointer;
+	display: block;
+	border: none;
+}
+.opal-personality-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--ax-colors-fg-default);
+	cursor: pointer;
+	margin-top: -5px;
+}
+.opal-personality-slider::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: var(--ax-colors-fg-default);
+	cursor: pointer;
+	border: none;
+}
+
+/* Deactivate dialog — warm gray overlay */
+[data-state="open"][data-aria-hidden="true"][data-axiom] {
+	background: rgba(160, 158, 148, 0.75) !important;
+}
+
+/* Completed tasks — artifact link hover */
+.vat-artifact-link {
+	transition: color 0.1s ease;
+}
+.vat-artifact-link:hover {
+	text-decoration: underline;
+	text-decoration-color: var(--ax-colors-border-default);
+}
+
+/* VAU detail — personality quote typing animation */
+@keyframes vau-dot-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+  40%           { transform: translateY(-4px); opacity: 1; }
+}
+.vau-typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ax-colors-fg-tertiary);
+  animation: vau-dot-bounce 1.1s infinite ease-in-out;
+}
+.vau-typing-dot:nth-child(2) { animation-delay: 0.18s; }
+.vau-typing-dot:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes vau-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.vau-cursor {
+  display: inline-block;
+  width: 1.5px;
+  height: 0.9em;
+  background: var(--ax-colors-fg-secondary);
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  animation: vau-cursor-blink 0.7s step-end infinite;
+}
+
+/* File card hover — pin button reveal */
+.file-card .file-hover-pin {
+	opacity: 0;
+	transition: opacity 150ms ease;
+	pointer-events: none;
+}
+.file-card:hover .file-hover-pin,
+.file-card:focus-within .file-hover-pin {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* Tracker — list/board/calendar row hover */
+.tracker-row {
+	transition: background 120ms ease;
+}
+.tracker-row:hover {
+	background: var(--ax-colors-bg-secondary);
+}
+/* Tracker — detail header: truncate a long title instead of wrapping the
+   pin/close buttons to a second line (Axiom DetailsPanelHeader wraps by
+   default and its title Heading is min-width:auto). */
+.planner-detail-header {
+	flex-wrap: nowrap;
+	align-items: center;
+}
+.planner-detail-header > h2 {
+	min-width: 0;
+}
+
+/* Tracker — quick pin: reveal on row hover, stay visible while pinned */
+.row-pin {
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+.tracker-row:hover .row-pin,
+.row-pin.pinned {
+	opacity: 1;
+}
+
+/* Planner rich cards — leading avatar flips (3D rotateY) into a completion
+   checkbox on row hover, and stays a checkbox once the card is checked. */
+.planner-lead {
+	perspective: 300px;
+}
+.planner-lead-avatar,
+.planner-lead-check {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform 240ms ease, opacity 240ms ease;
+	backface-visibility: hidden;
+}
+.planner-lead-avatar {
+	transform: rotateY(0deg);
+	opacity: 1;
+}
+.planner-lead-check {
+	transform: rotateY(-180deg);
+	opacity: 0;
+	pointer-events: none;
+}
+.tracker-row:hover .planner-lead .planner-lead-avatar,
+.planner-lead.is-done .planner-lead-avatar {
+	transform: rotateY(180deg);
+	opacity: 0;
+}
+.tracker-row:hover .planner-lead .planner-lead-check,
+.planner-lead.is-done .planner-lead-check {
+	transform: rotateY(0deg);
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* Planner rich cards — hover lift: page background + md drop shadow. */
+.planner-card {
+	background: var(--ax-colors-bg-default);
+	transition: background 120ms ease, box-shadow 120ms ease;
+}
+.planner-card:hover {
+	background: #f9fcf8;
+	box-shadow: var(--ax-shadows-md);
+}
+/* Nudge the footer trash-can Indicator badge out to the top-right corner. */
+.trash-bin-indicator > :last-child {
+	transform: translate(4px, -4px);
+}
+
+/* "Good to go" cards playfully tilt on hover (rich divider-rows do not). */
+.planner-card-toss {
+	transition: transform 160ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+.planner-card-toss:hover {
+	transform: rotate(-0.8deg);
+}
+/* "Good to go" tray — rich cards reveal a Toss button on hover (crumple-to-bin,
+   reusing .fun-doc-actions / .fun-crumpling). Base opacity:0 is set on
+   .fun-doc-actions below. */
+.planner-card:hover .fun-doc-actions {
+	opacity: 1;
+}
+/* Hovering the Toss button previews removal by striking the card title. */
+.planner-card:has(.fun-done-btn:hover) .planner-card-title {
+	text-decoration: line-through;
+	text-decoration-color: var(--ax-colors-fg-error);
+	text-decoration-thickness: 2px;
+}
+
+/* Fun tray design — sticky notes straighten and lift on hover. */
+.fun-note {
+	transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.fun-note:hover {
+	transform: rotate(0deg) scale(1.03) !important;
+	box-shadow: var(--ax-shadows-lg);
+	z-index: 1;
+}
+
+/* Fun editorial board — paper cards, hover straighten/lift, crumple-to-bin */
+.fun-doc {
+	transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.fun-doc:hover {
+	transform: rotate(0deg) translateY(-2px) !important;
+	box-shadow: var(--ax-shadows-lg);
+	z-index: 2;
+}
+.fun-doc-actions {
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+.fun-doc:hover .fun-doc-actions {
+	opacity: 1;
+}
+/* Hovering the lime Done button previews completion by striking the title. */
+.fun-doc-title {
+	text-decoration-color: #3ab533;
+	text-decoration-thickness: 2px;
+}
+.fun-doc:has(.fun-done-btn:hover) .fun-doc-title {
+	text-decoration: line-through;
+}
+
+/* Recently-tossed list — strike by default; hover un-strikes and swaps the
+   trash icon for an arrow (click to send back). */
+.trash-title {
+	text-decoration: line-through;
+	text-decoration-color: var(--ax-colors-fg-tertiary);
+}
+.trash-item:hover .trash-title {
+	text-decoration: none;
+}
+.trash-ico-hover {
+	display: none !important;
+}
+.trash-item:hover .trash-ico-default {
+	display: none !important;
+}
+.trash-item:hover .trash-ico-hover {
+	display: inline-flex !important;
+}
+@keyframes fun-crumple {
+	0%   { transform: rotate(0deg) scale(1); opacity: 1; }
+	35%  { transform: rotate(-10deg) scale(0.5); opacity: 1; }
+	100% { transform: translate(120px, 260px) rotate(560deg) scale(0.04); opacity: 0; }
+}
+.fun-crumpling {
+	animation: fun-crumple 650ms cubic-bezier(0.5, -0.2, 0.75, 1) forwards;
+	pointer-events: none;
+	position: relative;
+	z-index: 5;
+}
+@keyframes fun-bin-wiggle {
+	0%, 100% { transform: rotate(0deg) scale(1); }
+	25% { transform: rotate(-14deg) scale(1.08); }
+	55% { transform: rotate(11deg) scale(1.05); }
+	80% { transform: rotate(-5deg) scale(1); }
+}
+.fun-bin.tossing {
+	animation: fun-bin-wiggle 450ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+	.fun-crumpling { animation: none; opacity: 0; transform: scale(0.9); transition: opacity 150ms ease; }
+	.fun-doc, .fun-note, .fun-bin.tossing { transition: none; animation: none; }
+	.planner-card-toss:hover { transform: none; }
+}
+
+/* Tracker — note editor (rich-text surface) */
+.note-title-input {
+	width: 100%;
+	border: none;
+	outline: none;
+	background: transparent;
+	font-family: inherit;
+	font-size: 18px;
+	font-weight: 500;
+	color: var(--ax-colors-fg-default);
+}
+.note-title-input::placeholder {
+	color: var(--ax-colors-fg-tertiary);
+}
+.note-editor:empty:before {
+	content: attr(data-placeholder);
+	color: var(--ax-colors-fg-tertiary);
+	pointer-events: none;
+}
+.note-editor ul {
+	padding-left: 20px;
+	list-style: disc;
+}
+.note-editor ol {
+	padding-left: 20px;
+	list-style: decimal;
+}
+.note-editor h3 {
+	font-size: 15px;
+	font-weight: 700;
+	margin: 8px 0 4px;
+}
+.note-editor .note-todo {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+.note-editor .note-todo input {
+	margin-top: 4px;
+	accent-color: var(--ax-colors-fg-accent-strong);
+}
+.note-editor .note-ai {
+	color: var(--ax-colors-fg-accent-strong);
+	font-weight: 600;
+}

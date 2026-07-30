@@ -1,8 +1,14 @@
 "use client";
 
+<<<<<<< HEAD
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useOpalVariationBuild } from "@/app/context/OpalVariationBuildContext";
+=======
+import type {ReactNode} from "react";
+import {useEffect, useMemo, useState} from "react";
+import {useOpalVariationBuild} from "@/app/context/OpalVariationBuildContext";
+>>>>>>> origin/main
 import {
 	consumePendingVariationBuild,
 	getDynamicOptimizationById,
@@ -13,7 +19,11 @@ import {
 	getStoredExtraVariations,
 } from "@/app/web-experimentation/optimizations/optimizationVariationsStorage";
 import Link from "next/link";
+<<<<<<< HEAD
 import { useParams, useRouter } from "next/navigation";
+=======
+import {useParams, useRouter} from "next/navigation";
+>>>>>>> origin/main
 import {
 	Box,
 	Heading,
@@ -26,11 +36,19 @@ import {
 	DisclosureContent,
 	DisclosureTrigger,
 } from "@optiaxiom/react";
+<<<<<<< HEAD
 import { Button } from "@/app/components/Button";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
 	IconChevronDown,
 	IconDots,
+=======
+import {Button} from "@/app/components/Button";
+import {Table, Tr, Th, Td} from "@/app/components/Table";
+import {
+	IconChevronDown,
+	IconEllipsisSolid,
+>>>>>>> origin/main
 	IconLayout,
 	IconUsers,
 	IconAdjustmentsHorizontal,
@@ -42,6 +60,7 @@ import {
 	IconCalendar,
 	IconList,
 	IconTag,
+<<<<<<< HEAD
 	IconHistory,
 	IconPlus,
 } from "@tabler/icons-react";
@@ -50,6 +69,20 @@ import { getOptimizationById } from "../mockData";
 import type { OptimizationStatus } from "../mockData";
 import { evenTrafficPercents, resolveExperimentVariations, type VariationRow } from "../variationSets";
 import { VariationPreviewThumb } from "../VariationPreviewThumb";
+=======
+	IconClockRotateLeft,
+	IconPlus,
+} from "@/app/lib/axiom-icons";
+import {IconEye, IconChartColumn} from "@optimizely/axiom-icons";
+import {getOptimizationById} from "../mockData";
+import type {OptimizationStatus} from "../mockData";
+import {
+	evenTrafficPercents,
+	resolveExperimentVariations,
+	type VariationRow,
+} from "../variationSets";
+import {VariationPreviewThumb} from "../VariationPreviewThumb";
+>>>>>>> origin/main
 
 const ICON_STROKE = 1.5;
 const ICON_NAV = 18;
@@ -69,7 +102,11 @@ function SidebarNavItem({
 	indicator?: "attention";
 	onClick?: () => void;
 }) {
+<<<<<<< HEAD
 	const accent = "var(--ax-colors-fg-accent)";
+=======
+	const accent = "var(--ax-colors-fg-default)";
+>>>>>>> origin/main
 	const muted = "var(--ax-colors-fg-secondary)";
 	return (
 		<Button
@@ -84,11 +121,19 @@ function SidebarNavItem({
 				padding: "6px 8px",
 				borderRadius: "6px",
 				fontWeight: active ? 600 : 400,
+<<<<<<< HEAD
 				backgroundColor: active ? "var(--ax-colors-bg-accent-subtle)" : undefined,
 				color: active ? accent : "var(--ax-colors-fg-default)",
 			}}
 		>
 			<Box display="flex" alignItems="center" gap="10" w="full" style={{ minWidth: 0 }}>
+=======
+				backgroundColor: active ? "var(--ax-colors-bg-default-pressed)" : undefined,
+				color: active ? accent : "var(--ax-colors-fg-default)",
+			}}
+		>
+			<Box display="flex" alignItems="center" gap="10" w="full" style={{minWidth: 0}}>
+>>>>>>> origin/main
 				<Box
 					display="flex"
 					alignItems="center"
@@ -131,12 +176,26 @@ function SidebarNavItem({
 	);
 }
 
+<<<<<<< HEAD
 function SidebarAccordionSection({ title, children }: { title: string; children: React.ReactNode }) {
+=======
+function SidebarAccordionSection({title, children}: {title: string; children: React.ReactNode}) {
+>>>>>>> origin/main
 	return (
 		<Box borderT="1" borderColor="border.tertiary" pt="12" mt="12" w="full">
 			<Disclosure defaultOpen>
 				<DisclosureTrigger chevronPosition="start">
+<<<<<<< HEAD
 					<Box display="flex" alignItems="center" w="full" py="4" style={{ paddingLeft: 2 }}>
+=======
+					<Box
+						display="flex"
+						alignItems="center"
+						w="full"
+						py="4"
+						style={{paddingLeft: 2}}
+					>
+>>>>>>> origin/main
 						<AxiomText fontSize="sm" fontWeight="600" color="fg.default">
 							{title}
 						</AxiomText>
@@ -149,7 +208,11 @@ function SidebarAccordionSection({ title, children }: { title: string; children:
 						gap="2"
 						mt="4"
 						w="full"
+<<<<<<< HEAD
 						style={{ paddingLeft: "20px" }}
+=======
+						style={{paddingLeft: "20px"}}
+>>>>>>> origin/main
 					>
 						{children}
 					</Box>
@@ -171,7 +234,11 @@ export default function OptimizationExperimentPage() {
 	const [persistedExtraVariations, setPersistedExtraVariations] = useState<VariationRow[]>([]);
 	const [removedVariationKeys, setRemovedVariationKeys] = useState<string[]>([]);
 	const [variationBuilding, setVariationBuilding] = useState(false);
+<<<<<<< HEAD
 	const { runVariationBuild } = useOpalVariationBuild();
+=======
+	const {runVariationBuild} = useOpalVariationBuild();
+>>>>>>> origin/main
 
 	useEffect(() => {
 		setStatus(null);
@@ -206,6 +273,7 @@ export default function OptimizationExperimentPage() {
 	const effectiveStatus = status ?? optimization?.status ?? "Not Started";
 	const variations = useMemo(
 		() => resolveExperimentVariations(id ?? "", persistedExtraVariations, removedVariationKeys),
+<<<<<<< HEAD
 		[id, persistedExtraVariations, removedVariationKeys],
 	);
 	const trafficPercents = useMemo(() => evenTrafficPercents(variations.length), [variations.length]);
@@ -216,6 +284,24 @@ export default function OptimizationExperimentPage() {
 				<Heading level="3">Experiment not found</Heading>
 				<AxiomText color="fg.secondary">No optimization matches this link.</AxiomText>
 				<Link href="/web-experimentation/optimizations" style={{ color: "var(--ax-colors-fg-accent)" }}>
+=======
+		[id, persistedExtraVariations, removedVariationKeys]
+	);
+	const trafficPercents = useMemo(
+		() => evenTrafficPercents(variations.length),
+		[variations.length]
+	);
+
+	if (!id || !optimization) {
+		return (
+			<Box display="flex" flexDirection="column" gap="16" p="24" style={{maxWidth: "480px"}}>
+				<Heading level="3">Experiment not found</Heading>
+				<AxiomText color="fg.secondary">No optimization matches this link.</AxiomText>
+				<Link
+					href="/web-experimentation/optimizations"
+					style={{color: "var(--ax-colors-fg-default)"}}
+				>
+>>>>>>> origin/main
 					← Back to Optimizations
 				</Link>
 			</Box>
@@ -234,12 +320,20 @@ export default function OptimizationExperimentPage() {
 			w="full"
 			flex="1"
 			h="full"
+<<<<<<< HEAD
 			style={{ minHeight: 0, alignSelf: "stretch" }}
+=======
+			style={{minHeight: 0, alignSelf: "stretch"}}
+>>>>>>> origin/main
 		>
 			{/* Experiment context sidebar — flush to primary nav (left) and below GlobalBar (top); padding is internal only */}
 			<Box
 				className="scrollbar-hide"
+<<<<<<< HEAD
 				style={{ flex: "0 0 288px", width: "288px", minHeight: 0 }}
+=======
+				style={{flex: "0 0 288px", width: "288px", minHeight: 0}}
+>>>>>>> origin/main
 				borderR="1"
 				borderColor="border.tertiary"
 				bg="bg.default"
@@ -255,7 +349,11 @@ export default function OptimizationExperimentPage() {
 					<Link
 						href="/web-experimentation/optimizations"
 						style={{
+<<<<<<< HEAD
 							color: "var(--ax-colors-fg-accent)",
+=======
+							color: "var(--ax-colors-fg-default)",
+>>>>>>> origin/main
 							textDecoration: "none",
 							fontSize: "14px",
 							fontWeight: 500,
@@ -268,6 +366,7 @@ export default function OptimizationExperimentPage() {
 					</Link>
 				</Box>
 
+<<<<<<< HEAD
 				<AxiomText fontSize="xs" color="fg.secondary" mb="8" style={{ letterSpacing: "0.02em" }}>
 					{optimization.type}
 				</AxiomText>
@@ -276,11 +375,35 @@ export default function OptimizationExperimentPage() {
 					{optimization.name}
 				</Heading>
 				<AxiomText fontSize="sm" color="fg.secondary" style={{ lineHeight: 1.5 }}>
+=======
+				<AxiomText
+					fontSize="xs"
+					color="fg.secondary"
+					mb="8"
+					style={{letterSpacing: "0.02em"}}
+				>
+					{optimization.type}
+				</AxiomText>
+
+				<Heading
+					level="2"
+					style={{
+						fontSize: "1.125rem",
+						lineHeight: 1.35,
+						marginBottom: "10px",
+						fontWeight: 600,
+					}}
+				>
+					{optimization.name}
+				</Heading>
+				<AxiomText fontSize="sm" color="fg.secondary" style={{lineHeight: 1.5}}>
+>>>>>>> origin/main
 					{optimization.description}
 				</AxiomText>
 
 				<Box mt="20">
 					<Box display="flex" flexDirection="column" gap="10">
+<<<<<<< HEAD
 						<Box style={{ maxWidth: "100%" }}>
 							<Menu
 								options={[
@@ -293,19 +416,48 @@ export default function OptimizationExperimentPage() {
 							>
 								<MenuTrigger asChild>
 									<LabelMenuButton label="Status" style={{ width: "100%" }}>
+=======
+						<Box style={{maxWidth: "100%"}}>
+							<Menu
+								options={[
+									{label: "Not Started", execute: () => setStatus("Not Started")},
+									{label: "Running", execute: () => setStatus("Running")},
+									{label: "Paused", execute: () => setStatus("Paused")},
+									{label: "Concluded", execute: () => setStatus("Concluded")},
+									{label: "Archived", execute: () => setStatus("Archived")},
+								]}
+							>
+								<MenuTrigger asChild>
+									<LabelMenuButton label="Status" style={{width: "100%"}}>
+>>>>>>> origin/main
 										{effectiveStatus}
 									</LabelMenuButton>
 								</MenuTrigger>
 								<MenuContent />
 							</Menu>
 						</Box>
+<<<<<<< HEAD
 						<Box display="flex" gap="8" alignItems="center" w="full" style={{ minWidth: 0 }}>
 							<Box flex="1" style={{ minWidth: 0 }}>
+=======
+						<Box
+							display="flex"
+							gap="8"
+							alignItems="center"
+							w="full"
+							style={{minWidth: 0}}
+						>
+							<Box flex="1" style={{minWidth: 0}}>
+>>>>>>> origin/main
 								<Button
 									appearance="primary"
 									size="lg"
 									disabled={!canStart}
+<<<<<<< HEAD
 									style={{ width: "100%", justifyContent: "center" }}
+=======
+									style={{width: "100%", justifyContent: "center"}}
+>>>>>>> origin/main
 								>
 									Start Experiment
 								</Button>
@@ -324,7 +476,15 @@ export default function OptimizationExperimentPage() {
 									padding: 0,
 								}}
 							/>
+<<<<<<< HEAD
 							<Link href={resultsHref} style={{ display: "inline-flex", flexShrink: 0 }} title="View results">
+=======
+							<Link
+								href={resultsHref}
+								style={{display: "inline-flex", flexShrink: 0}}
+								title="View results"
+							>
+>>>>>>> origin/main
 								<Button
 									appearance="subtle"
 									size="lg"
@@ -413,7 +573,11 @@ export default function OptimizationExperimentPage() {
 						disabled
 					/>
 					<SidebarNavItem
+<<<<<<< HEAD
 						icon={<IconHistory size={ICON_NAV} stroke={ICON_STROKE} />}
+=======
+						icon={<IconClockRotateLeft size={ICON_NAV} stroke={ICON_STROKE} />}
+>>>>>>> origin/main
 						label="History"
 						disabled
 					/>
@@ -431,12 +595,17 @@ export default function OptimizationExperimentPage() {
 				pt="24"
 				pb="32"
 				overflow="auto"
+<<<<<<< HEAD
 				style={{ minHeight: 0, minWidth: 0 }}
+=======
+				style={{minHeight: 0, minWidth: 0}}
+>>>>>>> origin/main
 			>
 				<Heading level="3" mb="16">
 					Variations
 				</Heading>
 
+<<<<<<< HEAD
 				<Table style={{ width: "100%" }}>
 					<thead>
 						<Tr>
@@ -444,6 +613,15 @@ export default function OptimizationExperimentPage() {
 							<Th style={{ width: "12%" }}>Traffic</Th>
 							<Th style={{ width: "26%" }}>Preview</Th>
 							<Th style={{ width: "30%" }}>Actions</Th>
+=======
+				<Table style={{width: "100%"}}>
+					<thead>
+						<Tr>
+							<Th style={{width: "32%"}}>Name</Th>
+							<Th style={{width: "12%"}}>Traffic</Th>
+							<Th style={{width: "26%"}}>Preview</Th>
+							<Th style={{width: "30%"}}>Actions</Th>
+>>>>>>> origin/main
 						</Tr>
 					</thead>
 					<tbody>
@@ -453,12 +631,23 @@ export default function OptimizationExperimentPage() {
 								url={visualEditorHrefForKey(row.key)}
 								suppressActiveStyle
 							>
+<<<<<<< HEAD
 								<Td style={{ borderRight: "none" }}>
 									<Box display="flex" flexDirection="row" gap="8" alignItems="start">
+=======
+								<Td style={{borderRight: "none"}}>
+									<Box
+										display="flex"
+										flexDirection="row"
+										gap="8"
+										alignItems="start"
+									>
+>>>>>>> origin/main
 										<AxiomText
 											fontSize="sm"
 											fontWeight="600"
 											color="fg.default"
+<<<<<<< HEAD
 											style={{ flexShrink: 0, minWidth: "1.25rem", textAlign: "center" }}
 										>
 											{row.letter}
@@ -468,6 +657,34 @@ export default function OptimizationExperimentPage() {
 												{row.title}
 											</AxiomText>
 											<AxiomText fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.45 }}>
+=======
+											style={{
+												flexShrink: 0,
+												minWidth: "1.25rem",
+												textAlign: "center",
+											}}
+										>
+											{row.letter}
+										</AxiomText>
+										<Box
+											display="flex"
+											flexDirection="column"
+											gap="6"
+											style={{flex: 1, minWidth: 0}}
+										>
+											<AxiomText
+												fontSize="sm"
+												fontWeight="600"
+												color="fg.default"
+											>
+												{row.title}
+											</AxiomText>
+											<AxiomText
+												fontSize="xs"
+												color="fg.secondary"
+												style={{lineHeight: 1.45}}
+											>
+>>>>>>> origin/main
 												{row.description}
 											</AxiomText>
 										</Box>
@@ -512,15 +729,37 @@ export default function OptimizationExperimentPage() {
 										</Box>
 									</Box>
 								</Td>
+<<<<<<< HEAD
 								<Td style={{ borderLeft: "none" }}>
 									<Box display="flex" gap="8" alignItems="center" onClick={(e) => e.stopPropagation()}>
+=======
+								<Td style={{borderLeft: "none"}}>
+									<Box
+										display="flex"
+										gap="8"
+										alignItems="center"
+										onClick={(e) => e.stopPropagation()}
+									>
+>>>>>>> origin/main
 										<Menu
 											options={[
 												{
 													label: "Edit with New Editor",
+<<<<<<< HEAD
 													execute: () => router.push(visualEditorHrefForKey(row.key)),
 												},
 												{ label: "Edit with Legacy Editor", execute: () => {} },
+=======
+													execute: () =>
+														router.push(
+															visualEditorHrefForKey(row.key)
+														),
+												},
+												{
+													label: "Edit with Legacy Editor",
+													execute: () => {},
+												},
+>>>>>>> origin/main
 											]}
 										>
 											<MenuTrigger asChild>
@@ -537,16 +776,26 @@ export default function OptimizationExperimentPage() {
 										</Menu>
 										<Menu
 											options={[
+<<<<<<< HEAD
 												{ label: "Rename", execute: () => {} },
 												{ label: "Duplicate", execute: () => {} },
 												{ label: "Delete", execute: () => {} },
+=======
+												{label: "Rename", execute: () => {}},
+												{label: "Duplicate", execute: () => {}},
+												{label: "Delete", execute: () => {}},
+>>>>>>> origin/main
 											]}
 										>
 											<MenuTrigger asChild>
 												<Button
 													appearance="subtle"
 													size="md"
+<<<<<<< HEAD
 													icon={<IconDots size={16} />}
+=======
+													icon={<IconEllipsisSolid size={16} />}
+>>>>>>> origin/main
 													aria-label="More actions"
 												/>
 											</MenuTrigger>
@@ -575,7 +824,12 @@ export default function OptimizationExperimentPage() {
 												height: "18px",
 												flexShrink: 0,
 												border: "2px solid var(--opal-spinner-border, var(--ax-colors-border-secondary))",
+<<<<<<< HEAD
 												borderTopColor: "var(--opal-spinner-top, var(--ax-colors-fg-default))",
+=======
+												borderTopColor:
+													"var(--opal-spinner-top, var(--ax-colors-fg-default))",
+>>>>>>> origin/main
 												borderRadius: "50%",
 											}}
 										/>
@@ -590,7 +844,16 @@ export default function OptimizationExperimentPage() {
 				</Table>
 
 				<Box mt="16">
+<<<<<<< HEAD
 					<Button appearance="default" size="md" icon={<IconPlus size={20} stroke={2} />} iconPosition="start">
+=======
+					<Button
+						appearance="default"
+						size="md"
+						icon={<IconPlus size={20} stroke={2} />}
+						iconPosition="start"
+					>
+>>>>>>> origin/main
 						Add Variation
 					</Button>
 				</Box>

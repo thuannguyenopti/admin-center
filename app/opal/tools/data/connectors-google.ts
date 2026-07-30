@@ -78,6 +78,7 @@ export const GOOGLE_CONNECTORS: Connector[] = [
     },
     {
         id: "google-analytics", name: "Google Analytics", category: "Analytics",
+<<<<<<< HEAD
         description: "Query Google Analytics 4 reports and event data.",
         about: "The Google Analytics Data API allows agents to run reports, retrieve real-time data, and access audience metrics. Use it to pull site performance data directly into your agent workflows.",
         type: "auth_provider", authType: "OAuth 2.0", initials: "GA", color: "#E37400", textColor: "#ffffff", usesOCP: true,
@@ -85,6 +86,18 @@ export const GOOGLE_CONNECTORS: Connector[] = [
             { id: "ga_run_report", name: "runReport", description: "Returns a customized report of your Google Analytics event data.", action: "Read" },
             { id: "ga_run_realtime", name: "runRealtimeReport", description: "Returns a real-time report of active users on your site.", action: "Read" },
             { id: "ga_batch_report", name: "batchRunReports", description: "Returns multiple reports in a single batch request.", action: "Read" },
+=======
+        description: "Query GA4 reports, real-time data, and audience metrics for your properties.",
+        about: "The Google Analytics Data API gives agents direct access to your GA4 property data — traffic, conversions, user behavior, and funnel performance. Run flexible reports with any combination of dimensions and metrics, pull real-time active user counts, and retrieve the full list of available fields for a property. Use it to surface site performance insights, build automated dashboards, or enrich agent context with live audience data.",
+        type: "auth_provider", authType: "OAuth 2.0", initials: "GA", color: "#E37400", textColor: "#ffffff", usesOCP: true,
+        tools: [
+            { id: "ga_run_report", name: "runReport", description: "Returns a customized report with any combination of dimensions, metrics, and date ranges.", action: "Read" },
+            { id: "ga_run_realtime", name: "runRealtimeReport", description: "Returns real-time data showing active users on your site in the last 30 minutes.", action: "Read" },
+            { id: "ga_batch_report", name: "batchRunReports", description: "Runs up to 5 reports in a single request, reducing API calls for dashboard workloads.", action: "Read" },
+            { id: "ga_run_pivot", name: "runPivotReport", description: "Returns a report pivoted on one dimension, useful for cross-tab breakdowns.", action: "Read" },
+            { id: "ga_run_funnel", name: "runFunnelReport", description: "Returns a funnel exploration report tracking user progression through defined steps.", action: "Read" },
+            { id: "ga_get_metadata", name: "getMetadata", description: "Lists all dimensions and metrics available for a GA4 property, including custom definitions.", action: "Read" },
+>>>>>>> origin/main
         ],
     },
 ];

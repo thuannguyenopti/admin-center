@@ -12,7 +12,11 @@ import type {
 } from "@/app/opal/im/lib/types";
 
 const DATA_FILE = path.join(process.cwd(), ".messaging-data.json");
+<<<<<<< HEAD
 // seed v2 — Jamie as DM participant for proactive VAU demos
+=======
+// seed v14 — frank DM: single welcome message only
+>>>>>>> origin/main
 
 type StoreShape = {
   conversations: Conversation[];
@@ -35,7 +39,11 @@ const VAU_USERS: UserProfile[] = VAUS.map((v) => ({
 const SEED: StoreShape = {
   users: [
     { user_id: "pei", display_name: "Emily Park", email: "emily.park@optimizely.com" },
+<<<<<<< HEAD
     { user_id: "frank", display_name: "Frank Lin", email: "frank@optimizely.com" },
+=======
+    { user_id: "frank", display_name: "Daniel Park", email: "daniel.park@optimizely.com" },
+>>>>>>> origin/main
     { user_id: "jamie", display_name: "Jamie Chen", email: "jamie@optimizely.com" },
     { user_id: "mary-anne", display_name: "Mary Anne Torres", email: "maryanne@optimizely.com" },
     { user_id: "opal-bot", display_name: "Opal", email: "opal@optimizely.com" },
@@ -186,6 +194,39 @@ const SEED: StoreShape = {
       member_count: 2,
     },
     {
+<<<<<<< HEAD
+=======
+      id: "conv-demo-frank-dm",
+      instance_id: "im-prototype",
+      type: "dm",
+      created_by: "vau-frank",
+      created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+      updated_at: new Date(Date.now() - 3600000).toISOString(),
+      archived: false,
+      participants: [
+        participant("jamie", "owner"),
+        participant("vau-frank", "member"),
+      ],
+      member_count: 2,
+    },
+    {
+      id: "conv-demo-geo-qa",
+      instance_id: "im-prototype",
+      type: "group",
+      name: "Stride GEO — Q&A review",
+      created_by: "vau-frank",
+      created_at: new Date(Date.now() - 5400000).toISOString(),
+      updated_at: new Date(Date.now() - 600000).toISOString(),
+      archived: false,
+      participants: [
+        unreadParticipant("jamie", "owner"),
+        participant("vau-frank", "member"),
+        participant("mary-anne", "member"),
+      ],
+      member_count: 3,
+    },
+    {
+>>>>>>> origin/main
       id: "conv-launch-room",
       instance_id: "im-prototype",
       type: "group",
@@ -225,7 +266,11 @@ const SEED: StoreShape = {
       updated_at: new Date().toISOString(),
       archived: false,
       participants: [
+<<<<<<< HEAD
         unreadParticipant("jamie", "owner"),
+=======
+        participant("jamie", "owner"),
+>>>>>>> origin/main
         participant("vau-poppy", "member"),
       ],
       member_count: 2,
@@ -280,6 +325,18 @@ const SEED: StoreShape = {
     "conv-gtm": [
       message("msg-gtm1", "conv-gtm", "jamie", "Reminder: GTM sync next Tuesday 10am — competitive section is on the agenda."),
     ],
+<<<<<<< HEAD
+=======
+    "conv-demo-frank-dm": [
+      message("msg-fd1", "conv-demo-frank-dm", "vau-frank", "👋 Hey, I'm so excited to start working together! Here is your first daily brief. I will send this out every morning at 8 AM, if you ever want to change that time let me know."),
+    ],
+    "conv-demo-geo-qa": [
+      message("msg-dg1", "conv-demo-geo-qa", "vau-frank", "I've started drafting the GEO Q&A article for Stride's Discover the Unknown. First pass is ready — 7 Q&A pairs covering the core product questions. Sharing for review."),
+      message("msg-dg2", "conv-demo-geo-qa", "jamie", "Nice start. A few things: can we make the first answer less spec-y and more story-driven? Also needs a team use case — right now it reads very individual-athlete."),
+      message("msg-dg3", "conv-demo-geo-qa", "mary-anne", "Agree on the tone. Opening tone should feel more explorer-first. Also — are we covering AI overview queries specifically? That's the GEO angle."),
+      message("msg-dg4", "conv-demo-geo-qa", "vau-frank", "Done — all three rounds of feedback incorporated:\n✓ **Activities** — Explicitly listed trail running, climbing, diving, skydiving, and multi-terrain endurance challenges\n✓ **Team use cases** — Rewired around competitive multi-sport group challenges, not generic team building\n✓ **Opening tone** — Rewrote the first 3 Q&As in Stride's adventurous, explorer-first voice\n\nThe updated article is ready for final review. See the revised artifact below."),
+    ],
+>>>>>>> origin/main
     "conv-launch-room": [
       message("msg-lr1", "conv-launch-room", "pei", "@Henry @Poppy — let's spin up the spring launch room. What's the rough timeline looking like?"),
       message("msg-lr2", "conv-launch-room", "vau-poppy", "Tracking. Rough plan: kickoff Mon, dependency map by Wed, exec preview Fri. Want me to draft a launch timeline?"),
@@ -343,7 +400,11 @@ function message(id: string, convId: string, sender: string, content: string): I
 }
 
 // Bump this when SEED participants change so old persisted cache is discarded.
+<<<<<<< HEAD
 const SEED_VERSION = "v8-human-dms";
+=======
+const SEED_VERSION = "v14-frank-dm-welcome-only";
+>>>>>>> origin/main
 
 async function load(): Promise<StoreShape> {
   if (cache) return cache;
@@ -375,6 +436,22 @@ async function persist(): Promise<void> {
 type IdentitySource = Request | Headers | { headers: Headers } | string | null | undefined;
 
 /**
+<<<<<<< HEAD
+=======
+ * Reset all demo data — wipes the persisted cache so the next load re-seeds
+ * from SEED, including participant read state (unread dots reappear).
+ */
+export async function resetAll(): Promise<void> {
+  cache = null;
+  try {
+    await fs.unlink(DATA_FILE);
+  } catch {
+    // File may not exist in serverless environments — ignore.
+  }
+}
+
+/**
+>>>>>>> origin/main
  * Reset a single conversation's messages back to the SEED's version. Useful
  * for replaying demo flows without nuking the whole cache.
  */
@@ -558,6 +635,16 @@ export async function markRead(convId: string, userId: string): Promise<void> {
   }
 }
 
+<<<<<<< HEAD
+=======
+export async function updateUserDisplayName(userId: string, displayName: string): Promise<void> {
+  const store = await load();
+  const user = store.users.find((u) => u.user_id === userId);
+  if (user) user.display_name = displayName;
+  await persist();
+}
+
+>>>>>>> origin/main
 export async function searchUsers(query?: string): Promise<UserProfile[]> {
   const store = await load();
   if (!query) return store.users;

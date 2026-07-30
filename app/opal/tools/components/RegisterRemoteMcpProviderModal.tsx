@@ -372,7 +372,11 @@ export function RegisterRemoteMcpProviderModal({
                                             background: "var(--ax-colors-bg-success-subtle)",
                                         }}
                                     >
+<<<<<<< HEAD
                                         <IconCheck size={24} style={{ color: "var(--ax-colors-fg-success)" }} />
+=======
+                                        <IconCheck size={24} style={{ color: "var(--ax-colors-fg-success-strong)" }} />
+>>>>>>> origin/main
                                     </Box>
                                     <Box display="flex" flexDirection="column" alignItems="center" gap="8">
                                         <Text fontSize="lg" fontWeight="600">Provider Registered Successfully</Text>

@@ -1,7 +1,7 @@
 "use client";
 
 import SparklesIcon from "@/app/cmp/assets/sparkles 16.svg";
-import { IconCalendar, IconCheck, IconCopy, IconTag } from "@tabler/icons-react";
+import {IconCalendar, IconCheck, IconCopy, IconTag} from "@/app/lib/axiom-icons";
 import type { WorkflowTemplateIconKind } from "../../types";
 
 export function WorkflowTemplateIcon({ icon }: { icon: WorkflowTemplateIconKind }) {

@@ -2,7 +2,7 @@ import { Checkbox } from '@optiaxiom/react';
 import { Tag } from '../types';
 import { Table, Tr, Th } from '@/app/components/Table';
 import { TagRow } from './TagRow';
-import { IconChevronUp, IconChevronDown } from '@tabler/icons-react';
+import {IconChevronUp, IconChevronDown} from "@/app/lib/axiom-icons";
 
 interface TagsTableProps {
   tags: Tag[];

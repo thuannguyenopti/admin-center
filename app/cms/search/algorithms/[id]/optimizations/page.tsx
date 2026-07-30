@@ -25,7 +25,7 @@ import {
 	Algorithm,
 	initialAlgorithms,
 } from "@/app/db/initialData";
-import {IconPlus} from "@tabler/icons-react";
+import {IconPlus} from "@/app/lib/axiom-icons";
 import Preview from "../order/Preview";
 import PinnedResultsTable from "../../../components/PinnedResultsTable";
 import PinnedResultDialog from "../../../components/PinnedResultDialog";

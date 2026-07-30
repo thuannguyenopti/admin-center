@@ -41,6 +41,7 @@
   ],
   "exclude": [
     "node_modules",
+<<<<<<< HEAD
     "app/components/Opal/editor/multi-editor.ts",
     "app/components/Opal/editor/toolbar/editor-toolbar.ts",
     "app/components/Opal/editor/toolbar/editor-status-bar.ts",
@@ -48,5 +49,30 @@
     "app/components/Opal/editor/toolbar/comment-list-panel.ts",
     "app/components/Opal/editor/toolbar/suggest-status.ts",
     "app/components/Opal/editor/toolbar/version-panel.ts"
+=======
+    "temp-stride-source",
+    "app/components/Opal/editor/multi-editor.ts",
+    "app/components/Opal/editor/toolbar",
+    "app/components/Opal/editor/collab",
+    "app/components/Opal/editor/bindings",
+    "app/components/Opal/editor/handlers",
+    "app/components/Opal/editor/blame-coordinator.ts",
+    "app/components/Opal/editor/blame-cm-extension.ts",
+    "app/components/Opal/editor/blame-engine.ts",
+    "app/components/Opal/editor/blame-tiptap-plugin.ts",
+    "app/components/Opal/editor/collab-provider.ts",
+    "app/components/Opal/editor/comment-cm-extension.ts",
+    "app/components/Opal/editor/comment-coordinator.ts",
+    "app/components/Opal/editor/comment-engine.ts",
+    "app/components/Opal/editor/comment-tiptap-plugin.ts",
+    "app/components/Opal/editor/suggest-engine.ts",
+    "app/components/Opal/editor/text-binding.ts",
+    "app/components/Opal/editor/version-coordinator.ts",
+    "app/components/Opal/editor/doc-replicator.ts",
+    "app/components/Opal/editor/diff-engine.ts",
+    "app/components/Opal/editor/local-version-manager.ts",
+    "app/components/Opal/editor/debug-log.ts",
+    "app/components/Opal/editor/collab-cursor-plugin.ts"
+>>>>>>> origin/main
   ]
 }

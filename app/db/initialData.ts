@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+import { MARATHON_EVENT_OUTLINE } from "./marathonEventOutline";
+
+>>>>>>> origin/main
 // --- SEO Block Type ---
 export type SEOBlockLocale = {
 	title: string;
@@ -386,6 +391,10 @@ export type ContentType = {
 	isAvailable?: boolean;
 	availableForComposition?: boolean;
 	compositionDisplayAs?: CompositionDisplayAs[];
+<<<<<<< HEAD
+=======
+	componentDocsUrl?: string;
+>>>>>>> origin/main
 	// AvailableContentTypesAttribute (parent-side control)
 	availableContentTypes?: {
 		availability?: "All" | "None"; // Default behavior: All means all types allowed, None means no types allowed
@@ -467,9 +476,24 @@ export const initialContentTypes: ContentType[] = [
 		properties: [
 			{ id: "title", name: "Title", displayName: "Title", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "String", groupName: "Content", order: 2 },
+<<<<<<< HEAD
 			{ id: "featuredImage", name: "Featured Image", displayName: "Featured Image", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 3 },
 			{ id: "body", name: "Body", displayName: "Body", type: "XhtmlString", required: true, groupName: "Content", order: 4 },
 			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", allowedTypes: ["ct-author"], required: true, groupName: "Content", order: 5 },
+=======
+			{ id: "category", name: "Category", displayName: "Category", type: "String", groupName: "Content", order: 3 },
+			{ id: "readingTime", name: "Reading Time", displayName: "Reading Time", type: "String", groupName: "Content", order: 4 },
+			{ id: "publishDate", name: "Publish Date", displayName: "Publish Date", type: "String", groupName: "Content", order: 5 },
+			{ id: "featuredImage", name: "Featured Image", displayName: "Featured Image", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 6 },
+			{ id: "heroLogo", name: "Hero Logo", displayName: "Hero Logo", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 7 },
+			{ id: "body", name: "Body", displayName: "Body", type: "XhtmlString", required: true, groupName: "Content", order: 7 },
+			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", allowedTypes: ["ct-author"], required: true, groupName: "Content", order: 8 },
+			{ id: "ctaHeading", name: "CTA Heading", displayName: "CTA Heading", type: "String", groupName: "Actions", order: 1 },
+			{ id: "ctaPrimaryText", name: "CTA Primary Text", displayName: "CTA Primary Button", type: "String", groupName: "Actions", order: 2 },
+			{ id: "ctaPrimaryLink", name: "CTA Primary Link", displayName: "CTA Primary Link", type: "String", groupName: "Actions", order: 3 },
+			{ id: "ctaSecondaryText", name: "CTA Secondary Text", displayName: "CTA Secondary Button", type: "String", groupName: "Actions", order: 4 },
+			{ id: "ctaSecondaryLink", name: "CTA Secondary Link", displayName: "CTA Secondary Link", type: "String", groupName: "Actions", order: 5 },
+>>>>>>> origin/main
 			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
 		],
 	},
@@ -571,6 +595,30 @@ export const initialContentTypes: ContentType[] = [
 		],
 	},
 	{
+<<<<<<< HEAD
+=======
+		id: "exp-about-page",
+		name: "About Page",
+		displayName: "About Page",
+		baseType: "Experience",
+		description: "About section page with left sidebar navigation",
+		properties: [
+			{ id: "mainOutline", name: "Main", type: "outline" },
+			{ id: "sidenavOutline", name: "Sidenav", type: "outline" },
+		],
+	},
+	{
+		id: "exp-event-page",
+		name: "Event Page",
+		displayName: "Event Page",
+		baseType: "Experience",
+		description: "Event landing page with hero, registration form, and content sections",
+		properties: [
+			{ id: "mainOutline", name: "Main", type: "outline" },
+		],
+	},
+	{
+>>>>>>> origin/main
 		id: "ct-product",
 		name: "Product",
 		displayName: "Product",
@@ -618,6 +666,11 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Image",
 		baseType: "Block",
 		description: "An image block for page layouts",
+<<<<<<< HEAD
+=======
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
+>>>>>>> origin/main
 		properties: [
 			{
 				id: "image",
@@ -656,8 +709,16 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Heading",
 		baseType: "Block",
 		description: "A heading block",
+<<<<<<< HEAD
 		properties: [
 			{ id: "text", name: "Text", displayName: "Text", type: "String", required: true, groupName: "Content", order: 1 },
+=======
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
+		properties: [
+			{ id: "text", name: "Text", displayName: "Text", type: "String", required: true, groupName: "Content", order: 1 },
+			{ id: "accent", name: "Accent", displayName: "Accent Text", type: "String", required: false, groupName: "Content", order: 2, description: "Optional rotated accent text displayed above the heading" },
+>>>>>>> origin/main
 			{
 				id: "level",
 				name: "Level",
@@ -681,6 +742,7 @@ export const initialContentTypes: ContentType[] = [
 				type: "SelectOne",
 				groupName: "Appearance",
 				options: [
+<<<<<<< HEAD
 					{ label: "Default", value: "default" },
 					{ label: "Prominent", value: "prominent" },
 					{ label: "Subtle", value: "subtle" },
@@ -688,17 +750,47 @@ export const initialContentTypes: ContentType[] = [
 					{ label: "Blue Accent", value: "accent-blue" }
 				],
 				defaultValue: "default"
+=======
+					{ label: "H1", value: "h-1" },
+					{ label: "H2", value: "h-2" },
+					{ label: "H3", value: "h-3" },
+					{ label: "H4", value: "h-4" }
+				],
+				defaultValue: "h-1"
+>>>>>>> origin/main
 			}
 		],
 	},
 	{
+<<<<<<< HEAD
+=======
+		id: "ct-number-line",
+		name: "NumberLine",
+		displayName: "Number Line",
+		baseType: "Block",
+		description: "A number badge with horizontal line separator",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
+		properties: [
+			{ id: "number", name: "Number", displayName: "Number", type: "String", required: false, groupName: "Content", order: 1, description: "Number to display (e.g., '01', '02'). Leave empty for line only." }
+		],
+	},
+	{
+>>>>>>> origin/main
 		id: "ct-text",
 		name: "Text",
 		displayName: "Text",
 		baseType: "Block",
 		description: "A text block",
+<<<<<<< HEAD
 		properties: [
 			{ id: "text", name: "Text", displayName: "Text", type: "String", required: true, groupName: "Content", order: 1 },
+=======
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
+		properties: [
+			{ id: "text", name: "Text", displayName: "Text", type: "LongString", required: true, groupName: "Content", order: 1 },
+>>>>>>> origin/main
 			{
 				id: "template",
 				name: "Template",
@@ -720,6 +812,11 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Rich Text",
 		baseType: "Block",
 		description: "A rich text block supporting simple markup",
+<<<<<<< HEAD
+=======
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
+>>>>>>> origin/main
 		properties: [{ id: "richtext", name: "Rich Text", displayName: "Rich Text", type: "XhtmlString", required: true, groupName: "Content", order: 1 }],
 	},
 	{
@@ -728,6 +825,11 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Button",
 		baseType: "Block",
 		description: "A button block",
+<<<<<<< HEAD
+=======
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
+>>>>>>> origin/main
 		properties: [
 			{ id: "label", name: "Label", displayName: "Label", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "url", name: "URL", displayName: "URL", type: "Url", groupName: "Content", order: 2 },
@@ -739,7 +841,11 @@ export const initialContentTypes: ContentType[] = [
 				groupName: "Appearance",
 				options: [
 					{ label: "Primary", value: "primary" },
+<<<<<<< HEAD
 					{ label: "Secondary", value: "secondary" },
+=======
+					{ label: "Outline", value: "outline" },
+>>>>>>> origin/main
 					{ label: "Subtle", value: "subtle" }
 				],
 				defaultValue: "primary"
@@ -747,6 +853,336 @@ export const initialContentTypes: ContentType[] = [
 		],
 	},
 	{
+<<<<<<< HEAD
+=======
+		id: "ct-section-header",
+		name: "Section Header",
+		displayName: "Section Header",
+		baseType: "Block",
+		description: "A section header block with vertical accent label, heading, and body text",
+		properties: [
+			{
+				id: "number",
+				name: "Number",
+				displayName: "Section Number",
+				type: "String",
+				groupName: "Content",
+				order: 1,
+				description: "Optional section number badge (e.g., '01', '02')"
+			},
+			{
+				id: "accent",
+				name: "Accent Text",
+				displayName: "Accent Label",
+				type: "String",
+				groupName: "Content",
+				order: 2,
+				description: "Vertical accent text label (e.g., 'JOIN US - NEW VIEW')",
+				defaultValue: "JOIN US - NEW VIEW"
+			},
+			{
+				id: "heading",
+				name: "Heading",
+				displayName: "Heading",
+				type: "LongString",
+				required: true,
+				groupName: "Content",
+				order: 3,
+				description: "Main heading text"
+			},
+			{
+				id: "body",
+				name: "Body Text",
+				displayName: "Body Text",
+				type: "LongString",
+				groupName: "Content",
+				order: 4,
+				description: "Optional body paragraph text",
+				displayAs: "textarea"
+			}
+		],
+	},
+	{
+		id: "ct-hero",
+		name: "Hero",
+		displayName: "Hero Section",
+		baseType: "Block",
+		description: "A full-width hero section with heading, subheading, buttons, and optional app mockup",
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
+		properties: [
+			{
+				id: "badge",
+				name: "Badge Text",
+				displayName: "Badge Text",
+				type: "String",
+				groupName: "Content",
+				order: 0,
+				description: "Optional badge text above heading (e.g., 'STRIDE PLATFORM')",
+				defaultValue: ""
+			},
+			{
+				id: "heading",
+				name: "Heading",
+				displayName: "Heading",
+				type: "LongString",
+				required: true,
+				groupName: "Content",
+				order: 1,
+				description: "Main hero heading",
+				defaultValue: "Set it. Sweat it. Send it."
+			},
+			{
+				id: "subheading",
+				name: "Subheading",
+				displayName: "Subheading",
+				type: "String",
+				groupName: "Content",
+				order: 2,
+				description: "Hero subheading text",
+				defaultValue: "Let the streets, and the world know."
+			},
+			{
+				id: "primaryButton",
+				name: "Primary Button",
+				displayName: "Primary Button Text",
+				type: "String",
+				groupName: "Content",
+				order: 3,
+				description: "Text for the primary CTA button",
+				defaultValue: "GET STARTED"
+			},
+			{
+				id: "secondaryButton",
+				name: "Secondary Button",
+				displayName: "Secondary Button Text",
+				type: "String",
+				groupName: "Content",
+				order: 4,
+				description: "Text for the secondary button",
+				defaultValue: "BOOK A DEMO"
+			},
+			{
+				id: "backgroundImage",
+				name: "Background Image",
+				displayName: "Background Image",
+				type: "String",
+				groupName: "Appearance",
+				order: 5,
+				description: "URL or path to the background image",
+				defaultValue: "/stride-hero/hero.png"
+			},
+			{
+				id: "showAppMockup",
+				name: "Show App Mockup",
+				displayName: "Show App Mockup",
+				type: "SelectOne",
+				groupName: "Appearance",
+				order: 6,
+				description: "Show or hide the app mockup on the right side",
+				options: [
+					{ label: "Show", value: "true" },
+					{ label: "Hide", value: "false" }
+				],
+				defaultValue: "true"
+			},
+			{
+				id: "appMockupImage",
+				name: "App Mockup Image",
+				displayName: "App Mockup Image",
+				type: "String",
+				required: false,
+				groupName: "Appearance",
+				order: 7,
+				description: "URL or path to custom app mockup image (optional - uses default if empty)",
+				defaultValue: ""
+			},
+			{
+				id: "template",
+				name: "Template",
+				displayName: "Layout Style",
+				type: "String",
+				groupName: "Appearance",
+				order: 8,
+				description: "Hero layout template",
+				defaultValue: "default"
+			}
+		],
+	},
+	{
+		id: "ct-card",
+		name: "Card",
+		displayName: "Feature Card",
+		baseType: "Block",
+		description: "A feature card with icon, label, description, and optional background image",
+		properties: [
+			{
+				id: "icon",
+				name: "Icon",
+				displayName: "Icon",
+				type: "String",
+				groupName: "Content",
+				order: 1,
+				description: "Icon SVG path or emoji to display",
+				defaultValue: "/stride-icons/sticky-note.svg"
+			},
+			{
+				id: "label",
+				name: "Label",
+				displayName: "Label",
+				type: "String",
+				required: true,
+				groupName: "Content",
+				order: 2,
+				description: "Card label text (uppercase)",
+				defaultValue: "CHALLENGES"
+			},
+			{
+				id: "description",
+				name: "Description",
+				displayName: "Description",
+				type: "String",
+				required: true,
+				groupName: "Content",
+				order: 3,
+				description: "Card description text",
+				defaultValue: "Plan work without the back-and-forth"
+			},
+			{
+				id: "backgroundImage",
+				name: "Background Image",
+				displayName: "Background Image",
+				type: "ImageReference",
+				required: false,
+				groupName: "Appearance",
+				order: 4,
+				description: "Optional background image",
+				defaultValue: ""
+			},
+			{
+				id: "template",
+				name: "Template",
+				displayName: "Style",
+				type: "String",
+				groupName: "Appearance",
+				order: 5,
+				description: "Card style template",
+				defaultValue: "default"
+			}
+		],
+	},
+	{
+		id: "ct-feature-card",
+		name: "FeatureCard",
+		displayName: "Stride Feature Card",
+		baseType: "Block",
+		description: "A simple feature card with icon, label, and description (no background image)",
+		properties: [
+			{
+				id: "icon",
+				name: "Icon",
+				displayName: "Icon",
+				type: "String",
+				groupName: "Content",
+				order: 1,
+				description: "Icon SVG path or emoji to display",
+				defaultValue: "/stride-icons/sticky-note.svg"
+			},
+			{
+				id: "label",
+				name: "Label",
+				displayName: "Label",
+				type: "String",
+				required: true,
+				groupName: "Content",
+				order: 2,
+				description: "Card label text",
+				defaultValue: "Feature"
+			},
+			{
+				id: "description",
+				name: "Description",
+				displayName: "Description",
+				type: "String",
+				required: true,
+				groupName: "Content",
+				order: 3,
+				description: "Card description text",
+				defaultValue: "Feature description"
+			},
+			{
+				id: "style",
+				name: "Style",
+				displayName: "Card Style",
+				type: "String",
+				groupName: "Appearance",
+				order: 4,
+				description: "Card style variant: 'regular' (frosted glass background) or 'compact' (no background, smaller text)",
+				defaultValue: "regular"
+			}
+		],
+	},
+	{
+		id: "ct-app-preview",
+		name: "AppPreview",
+		displayName: "App Preview",
+		baseType: "Block",
+		description: "A mobile app mockup preview with configurable height and opacity",
+		properties: [
+			{
+				id: "appImage",
+				name: "App Image",
+				displayName: "App Image",
+				type: "String",
+				required: true,
+				groupName: "Content",
+				order: 1,
+				description: "Path to app mockup image",
+				defaultValue: "/stride-hero/app1.png"
+			},
+			{
+				id: "containerMarginTop",
+				name: "Container Margin Top",
+				displayName: "Container Margin Top",
+				type: "String",
+				groupName: "Appearance",
+				order: 2,
+				description: "Percentage margin-top for container staggering (e.g., '20' for 20%)",
+				defaultValue: "0"
+			}
+		],
+	},
+	{
+		id: "ct-sidebar-item",
+		name: "Sidebar Item",
+		displayName: "Sidebar Item",
+		baseType: "Block",
+		description: "A sidebar item for EVENTS/NEWS sections with title and description",
+		properties: [
+			{
+				id: "title",
+				name: "Title",
+				displayName: "Title",
+				type: "String",
+				required: true,
+				groupName: "Content",
+				order: 1,
+				description: "Item title (18px)",
+			},
+			{
+				id: "description",
+				name: "Description",
+				displayName: "Description",
+				type: "String",
+				required: true,
+				groupName: "Content",
+				order: 2,
+				description: "Item description (14px)",
+			}
+		],
+	},
+	{
+>>>>>>> origin/main
 		id: "ct-author",
 		name: "Author",
 		displayName: "Author",
@@ -808,6 +1244,11 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Input",
 		baseType: "Block",
 		description: "An input block",
+<<<<<<< HEAD
+=======
+		availableForComposition: true,
+		compositionDisplayAs: ["Element"],
+>>>>>>> origin/main
 		properties: [
 			{ id: "label", name: "Label", displayName: "Label", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "placeholder", name: "Placeholder", displayName: "Placeholder", type: "String", groupName: "Content", order: 2 },
@@ -873,6 +1314,10 @@ export const initialContentTypes: ContentType[] = [
 					{ id: "pm-bp-title", sourcePropertyId: "field-bp-title", targetPropertyId: "title", transformation: "direct", required: true, description: "Title → Title" },
 					{ id: "pm-bp-excerpt", sourcePropertyId: "field-bp-excerpt", targetPropertyId: "subtitle", transformation: "direct", description: "Excerpt → Subtitle" },
 					{ id: "pm-bp-featured-image", sourcePropertyId: "field-bp-featured-image", targetPropertyId: "featuredImage", transformation: "direct", description: "Featured Image → Featured Image" },
+<<<<<<< HEAD
+=======
+					{ id: "pm-bp-hero-logo", sourcePropertyId: "field-bp-hero-logo", targetPropertyId: "heroLogo", transformation: "direct", description: "Hero Logo → Hero Logo" },
+>>>>>>> origin/main
 					{ id: "pm-bp-content", sourcePropertyId: "field-bp-content", targetPropertyId: "body", transformation: "direct", required: true, description: "Content → Body" },
 					{ id: "pm-bp-author", sourcePropertyId: "field-bp-author", targetPropertyId: "author", transformation: "direct", required: true, description: "Author → Author" },
 				],
@@ -992,10 +1437,23 @@ export type EleDef = {
 	| "ct-rich-text"
 	| "ct-input"
 	| "ct-button"
+<<<<<<< HEAD
 	| "ct-image"
 	| "ct-product"
 	| string;
 	properties: Record<string, { value: any }>;
+=======
+	| "ct-section-header"
+	| "ct-hero"
+	| "ct-card"
+	| "ct-feature-card"
+	| "ct-app-preview"
+	| "ct-sidebar-item"
+	| "ct-image"
+	| "ct-product"
+	| string;
+	properties: Record<string, any>;
+>>>>>>> origin/main
 };
 
 export type EleMap = Record<string, EleDef>;
@@ -1025,7 +1483,12 @@ export type Page = {
 	id: string;
 	name: string;
 	parentId: string | null;
+<<<<<<< HEAD
 	status: "Published" | "Draft" | "Review" | "Changed" | "In Trash";
+=======
+	status: "Published" | "Draft" | "Review" | "Changed" | "In Trash" | "Scheduled";
+	scheduledDate?: string;
+>>>>>>> origin/main
 	lastModified: string;
 	contentTypeId: string;
 	slug?: string;
@@ -1042,6 +1505,12 @@ export type Page = {
 	tags?: string[];
 	/** When set, used by getAllContentItems instead of getPageTagsAndCategories for this page */
 	categories?: string[];
+<<<<<<< HEAD
+=======
+	/** Display template system (Optimizely pattern) */
+	displayTemplateKey?: string;
+	displaySettings?: Array<{key: string; value: string}>;
+>>>>>>> origin/main
 	/** CMP connection metadata - tracks connection to CMP content instance */
 	cmpConnection?: {
 		instanceId: string; // ID of connected CMP content instance
@@ -1066,6 +1535,10 @@ export type Application = {
 	name: string;
 	appId: string;
 	url?: string;
+<<<<<<< HEAD
+=======
+	componentDocsUrl?: string;
+>>>>>>> origin/main
 	startPageId?: string;
 	modifiedAt?: string;
 	modifiedBy?: string;
@@ -1079,10 +1552,19 @@ export const initialPages: Page[] = [
 		status: "Published",
 		lastModified: "2023-10-27",
 		contentTypeId: "ct-page",
+<<<<<<< HEAD
+=======
+		displayTemplateKey: "defaultExperience",
+		displaySettings: [
+			{ key: "backgroundColor", value: "light-blue" },
+			{ key: "spacing", value: "default" }
+		],
+>>>>>>> origin/main
 		data: {
 			seo: {
 				en: {
 					original: {
+<<<<<<< HEAD
 						title: "Homepage | Stride",
 						description: "Unleash your potential with Stride. Up to 50% off everything.",
 						canonicalUrl: "https://stride.com/",
@@ -1093,6 +1575,18 @@ export const initialPages: Page[] = [
 						ogImage: "https://stride.com/og-home.jpg",
 						twitterTitle: "Unleash Your Potential | Stride",
 						twitterDescription: "Up to 50% off everything.",
+=======
+						title: "Stride - Personal Training App | Set it. Sweat it. Send it.",
+						description: "Level up your game with Stride, your go-to personal training app that boosts workout efficiency with essential tools. Join the community today.",
+						canonicalUrl: "https://stride.com/",
+						robots: "index,follow",
+						image: "https://stride.com/og-home.jpg",
+						ogTitle: "Stride - Personal Training App",
+						ogDescription: "Level up your game with Stride personal training app.",
+						ogImage: "https://stride.com/og-home.jpg",
+						twitterTitle: "Stride - Personal Training App",
+						twitterDescription: "Level up your game with Stride personal training app.",
+>>>>>>> origin/main
 						twitterImage: "https://stride.com/og-home.jpg",
 					},
 				},
@@ -1108,27 +1602,50 @@ export const initialPages: Page[] = [
 						id: "ol-home-main",
 						title: "Main",
 						tree: [
+<<<<<<< HEAD
 							{
 								id: "sec-home-hero",
 								name: "Hero",
 								open: true,
+=======
+							// Hero Section
+							{
+								id: "sec-home-hero",
+								name: "Hero",
+								type: "ct-section",
+								open: true,
+								noPadding: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [
+									{ key: "colorScheme", value: "default" },
+									{ key: "spacing", value: "default" }
+								],
+>>>>>>> origin/main
 								children: [
 									{
 										id: "row-home-hero",
 										open: true,
 										children: [
 											{
+<<<<<<< HEAD
 												id: "col-home-hero",
 												open: true,
 												elements: [
 													{ id: "ele-home-hero-heading" },
 													{ id: "ele-home-hero-subtext" },
+=======
+												id: "col-home-hero-content",
+												open: true,
+												elements: [
+													{ id: "ele-hero-block" },
+>>>>>>> origin/main
 												],
 											},
 										],
 									},
 								],
 							},
+<<<<<<< HEAD
 						],
 						elements: {
 							"ele-home-hero-heading": {
@@ -1167,12 +1684,44 @@ export const initialPages: Page[] = [
 												elements: [
 													{ id: "ele-home-hero-heading" },
 													{ id: "ele-home-hero-subtext" },
+=======
+							// Section 1.5: What is Stride? - Two-column intro (New Figma Design)
+							{
+								id: "sec-stride-intro",
+								name: "What is Stride?",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [
+									{ key: "colorScheme", value: "default" },
+									{ key: "spacing", value: "default" },
+								],
+								children: [
+									{
+										id: "row-stride-intro",
+										open: true,
+										children: [
+											{
+												id: "col-intro-left",
+												open: true,
+												elements: [
+													{ id: "ele-intro-number-line" },
+													{ id: "ele-intro-heading" },
+												],
+											},
+											{
+												id: "col-intro-right",
+												open: true,
+												elements: [
+													{ id: "ele-intro-line" },
+													{ id: "ele-intro-body" },
+>>>>>>> origin/main
 												],
 											},
 										],
 									},
 								],
 							},
+<<<<<<< HEAD
 						],
 						elements: {
 							"ele-home-hero-heading": {
@@ -1209,16 +1758,569 @@ export const initialPages: Page[] = [
 												id: "col-home-hero",
 												open: true,
 												elements: [{ id: "ele-home-hero-heading" }],
+=======
+							// Section 1.75: Three-column feature cards (New Figma Design)
+							{
+								id: "sec-challenges",
+								name: "Challenges",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [
+									{ key: "colorScheme", value: "default" },
+									{ key: "spacing", value: "default" },
+								],
+								children: [
+									{
+										id: "row-challenges",
+										open: true,
+										children: [
+											{
+												id: "col-challenge-1",
+												open: true,
+												elements: [
+													{ id: "ele-challenge-card-1" },
+												],
+											},
+											{
+												id: "col-challenge-2",
+												open: true,
+												elements: [
+													{ id: "ele-challenge-card-2" },
+												],
+											},
+											{
+												id: "col-challenge-3",
+												open: true,
+												elements: [
+													{ id: "ele-challenge-card-3" },
+												],
+>>>>>>> origin/main
 											},
 										],
 									},
 								],
 							},
+<<<<<<< HEAD
 						],
 						elements: {
 							"ele-home-hero-heading": {
 								type: "ct-heading",
 								properties: { text: { value: "Welcome Back, VIP!" } },
+=======
+							// Section 2: Level up your game - Cards variant
+							{
+								id: "sec-home-levelup-1",
+								name: "Level Up - Challenges",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [
+									{ key: "colorScheme", value: "default" },
+									{ key: "spacing", value: "top-only" }
+								],
+								children: [
+									{
+										id: "row-levelup-1",
+										open: true,
+										children: [
+											{
+												id: "col-levelup-1-text",
+												open: true,
+												elements: [
+												{ id: "ele-levelup-1-number-line" },
+												{ id: "ele-levelup-1-heading" },
+												{ id: "ele-levelup-1-body" },
+												],
+											},
+											{
+												id: "col-levelup-1-cards",
+												open: true,
+												elements: [],
+											},
+										],
+									},
+								],
+							},
+								// App Showcase - Three app previews with fade effect
+								{
+									id: "sec-app-showcase",
+									name: "App Showcase",
+									open: true,
+									displayTemplateKey: "defaultSection",
+									displaySettings: [
+										{ key: "colorScheme", value: "default" },
+										{ key: "spacing", value: "none" },
+									],
+									children: [
+										{
+											id: "row-app-showcase",
+											open: true,
+											children: [
+												{
+													id: "col-app-preview-1",
+													open: true,
+													elements: [
+														{ id: "ele-app-preview-1" },
+													],
+												},
+												{
+													id: "col-app-preview-2",
+													open: true,
+													elements: [
+														{ id: "ele-app-preview-2" },
+													],
+												},
+												{
+													id: "col-app-preview-3",
+													open: true,
+													elements: [
+														{ id: "ele-app-preview-3" },
+													],
+												},
+											],
+										},
+									],
+								},
+							// Section 3: Level up your game - Buddies variant
+							{
+								id: "sec-home-levelup-2",
+								name: "Level Up - Community",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [
+									{ key: "colorScheme", value: "default" },
+									{ key: "spacing", value: "default" }
+								],
+								children: [
+									{
+										id: "row-levelup-2",
+										open: true,
+										children: [
+											{
+												id: "col-levelup-2-text",
+												open: true,
+												elements: [
+												{ id: "ele-levelup-2-number-line" },
+												{ id: "ele-levelup-2-heading" },
+												{ id: "ele-levelup-2-body" },
+												],
+											},
+											{
+												id: "col-levelup-2-image",
+												open: true,
+												elements: [
+													{ id: "ele-levelup-2-app-image" },
+												],
+											},
+										],
+									},
+									{
+										id: "row-feature-cards",
+										open: true,
+										children: [
+											{
+												id: "col-feature-card-1",
+												open: true,
+												elements: [
+													{ id: "ele-feature-card-1" },
+												],
+											},
+											{
+												id: "col-feature-card-2",
+												open: true,
+												elements: [
+													{ id: "ele-feature-card-2" },
+												],
+											},
+											{
+												id: "col-feature-card-3",
+												open: true,
+												elements: [
+													{ id: "ele-feature-card-3" },
+												],
+											},
+										],
+									},
+								],
+							},
+						// Section 4: Join Stride Today - Community variant
+						{
+							id: "sec-home-community",
+							name: "Join Stride - Community",
+							type: "ct-section",
+							open: true,
+							displayTemplateKey: "defaultSection",
+							displaySettings: [
+								{ key: "colorScheme", value: "default" },
+								{ key: "spacing", value: "community" }
+							],
+							children: [
+								{
+									id: "row-community",
+									open: true,
+									children: [
+										{
+											id: "col-community-text",
+											open: true,
+											elements: [
+												{ id: "ele-community-number-line" },
+												{ id: "ele-community-heading" },
+												{ id: "ele-community-body" },
+											],
+										},
+										{
+											id: "col-community-image",
+											open: true,
+											elements: [
+												{ id: "ele-community-app-image" },
+											],
+										},
+									],
+								},
+							],
+						},
+						{
+							id: "sec-home-compact-features",
+							name: "Compact Features",
+							type: "ct-section",
+							open: true,
+							displayTemplateKey: "defaultSection",
+							displaySettings: [
+								{ key: "colorScheme", value: "default" },
+								{ key: "spacing", value: "default" }
+							],
+							children: [
+								{
+									id: "row-features-grid",
+									open: true,
+									children: [
+										{
+											id: "col-feature-grid-1",
+											open: true,
+											elements: [
+												{ id: "ele-feature-grid-1" },
+											],
+										},
+										{
+											id: "col-feature-grid-2",
+											open: true,
+											elements: [
+												{ id: "ele-feature-grid-2" },
+											],
+										},
+										{
+											id: "col-feature-grid-3",
+											open: true,
+											elements: [
+												{ id: "ele-feature-grid-3" },
+											],
+										},
+										{
+											id: "col-feature-grid-4",
+											open: true,
+											elements: [
+												{ id: "ele-feature-grid-4" },
+											],
+										},
+									],
+								},
+							],
+						},
+						],
+						elements: {
+							// Hero Elements
+							"ele-hero-block": {
+								type: "ct-hero",
+								properties: {
+									heading: "Set it. Sweat it.\nSend it.",
+									subheading: "Let the streets, and the world know.",
+									primaryButton: "GET STARTED",
+									secondaryButton: "BOOK A DEMO",
+									backgroundImage: "/stride-hero/hero.png",
+									backgroundVideo: "https://cdn.midjourney.com/video/12166248-0ad6-4ab9-a545-022e30eef2ee/3.mp4",
+									appMockupImage: "/stride-hero/app1.png",
+									showAppMockup: "true",
+								},
+							},
+
+							// Section 1.5 Elements (What is Stride? - New Figma Design)
+							"ele-intro-number-line": {
+								type: "ct-number-line",
+								properties: {
+									number: "01",
+								},
+							},
+							"ele-intro-heading": {
+								type: "ct-heading",
+								properties: {
+									text: "One home for every training block",
+									accent: "01Why Stride",
+									level: "h2",
+									displayTemplateKey: "h2Heading",
+					displaySettings: [
+						{ key: "size", value: "large" },
+						{ key: "emphasis", value: "bold" },
+					],
+								},
+							},
+							"ele-intro-line": {
+								type: "ct-number-line",
+								properties: {
+									number: "",
+								},
+							},
+							"ele-intro-body": {
+								type: "ct-text",
+								properties: {
+									text: "The platform serves as an always-on training headquarters where users can build shared season plans, stream biometric data, and keep workout-related conversations organized for quick decision-making.",
+									displayTemplateKey: "defaultText",
+					displaySettings: [
+						{ key: "size", value: "default" },
+						{ key: "emphasis", value: "normal" },
+					],
+								},
+							},
+
+							// Section 1.75 Elements (Three-column feature cards - New Figma Design)
+							"ele-challenge-card-1": {
+								type: "ct-card",
+								properties: {
+									title: "Command the platform",
+									productType: "features",
+									href: "#",
+									backgroundImage: "/stride-hero/app1.png",
+									displaySettings: [
+										{ key: "style", value: "product" },
+									],
+								},
+							},
+							"ele-challenge-card-2": {
+								type: "ct-card",
+								properties: {
+									title: "Ignite every challenge",
+									productType: "challenges",
+									href: "#",
+									backgroundImage: "/stride-hero/app2.png",
+									displaySettings: [
+										{ key: "style", value: "product" },
+									],
+								},
+							},
+							"ele-challenge-card-3": {
+								type: "ct-card",
+								properties: {
+									title: "Scale subscriptions",
+									productType: "subscriptions",
+									href: "#",
+									backgroundImage: "/stride-hero/app3.png",
+									displaySettings: [
+										{ key: "style", value: "product" },
+									],
+								},
+							},
+
+							// Section 1.8 Elements (App Showcase)
+							"ele-app-preview-1": {
+								type: "ct-app-preview",
+								properties: {
+									appImage: "/stride-hero/app1.png",
+									containerMarginTop: "20",
+									style: "showcase",
+									lenisSpeed: "1",
+								},
+							},
+							"ele-app-preview-2": {
+								type: "ct-app-preview",
+								properties: {
+									appImage: "/stride-hero/app2.png",
+									containerMarginTop: "10",
+									style: "showcase",
+									lenisSpeed: "0.9",
+								},
+							},
+							"ele-app-preview-3": {
+								type: "ct-app-preview",
+								properties: {
+									appImage: "/stride-hero/app3.png",
+									containerMarginTop: "0",
+									style: "showcase",
+									lenisSpeed: "0.8",
+								},
+							},
+
+							// Section 1.9 Elements (Feature Cards)
+							"ele-feature-card-1": {
+								type: "ct-feature-card",
+								properties: {
+									icon: "/stride-icons/globe.svg",
+									label: "A motivated community",
+									description: "Engage in community challenges to motivate yourself and others.",
+								},
+							},
+							"ele-feature-card-2": {
+								type: "ct-feature-card",
+								properties: {
+									icon: "/stride-icons/sticky-note.svg",
+									label: "Set Goals",
+									description: "Track your fitness goals and monitor progress with real-time analytics.",
+								},
+							},
+							"ele-feature-card-3": {
+								type: "ct-feature-card",
+								properties: {
+									icon: "/stride-icons/sticky-note.svg",
+									label: "Workout Library",
+									description: "Access a library of guided workouts and nutrition plans tailored to individual needs.",
+								},
+							},
+
+							// Section 2 Elements
+							"ele-levelup-1-number-line": {
+								type: "ct-number-line",
+								properties: {
+									number: "02",
+								},
+							},
+							"ele-levelup-1-heading": {
+								type: "ct-heading",
+								properties: {
+									text: "Coaches get clarity fast",
+									accent: "02Live context",
+									level: "h2",
+									displayTemplateKey: "h2Heading",
+									displaySettings: [
+										{ key: "size", value: "large" },
+										{ key: "emphasis", value: "bold" },
+									],
+								},
+							},
+							"ele-levelup-1-body": {
+								type: "ct-text",
+								properties: {
+									text: "The system combines live session notes with film, uploads, and AI-generated summaries to provide coaches with context before they begin working.",
+									displayTemplateKey: "defaultText",
+					displaySettings: [
+						{ key: "size", value: "default" },
+						{ key: "emphasis", value: "normal" },
+					],
+								},
+							},
+
+							// Section 3 Elements
+							"ele-levelup-2-number-line": {
+								type: "ct-number-line",
+								properties: {
+									number: "03",
+								},
+							},
+							"ele-levelup-2-heading": {
+								type: "ct-heading",
+								properties: {
+									text: "Features that keep crews aligned",
+									accent: "03Crew rituals",
+									level: "h2",
+									displayTemplateKey: "h2Heading",
+									displaySettings: [
+										{ key: "size", value: "large" },
+										{ key: "emphasis", value: "bold" },
+									],
+								},
+							},
+							"ele-levelup-2-body": {
+								type: "ct-text",
+								properties: {
+									text: "Teams can broadcast goals, rituals, and readiness cues in a shared workspace, ensuring athletes understand the plan while preserving decision context.",
+									displayTemplateKey: "defaultText",
+					displaySettings: [
+						{ key: "size", value: "default" },
+						{ key: "emphasis", value: "normal" },
+					],
+								},
+							},
+							"ele-levelup-2-app-image": {
+								type: "ct-image",
+								properties: {
+									image: "https://via.placeholder.com/400x600/F2F8FC/1C1C1C?text=My+Buddies",
+								},
+							},
+
+							// Section 4 Elements
+							"ele-community-number-line": {
+								type: "ct-number-line",
+								properties: {
+									number: "04",
+								},
+							},
+							"ele-community-heading": {
+								type: "ct-heading",
+								properties: {
+									text: "Let athletes stay in flow",
+									accent: "04Flow state",
+									level: "h2",
+									displayTemplateKey: "h2Heading",
+									displaySettings: [
+										{ key: "size", value: "large" },
+										{ key: "emphasis", value: "bold" },
+									],
+								},
+							},
+							"ele-community-body": {
+								type: "ct-text",
+								properties: {
+									text: "The platform maintains athlete rhythm using context-aware reminders, spatial audio notes, and schedules that adapt when disruptions occur.",
+									displayTemplateKey: "defaultText",
+					displaySettings: [
+						{ key: "size", value: "default" },
+						{ key: "emphasis", value: "normal" },
+					],
+								},
+							},
+							"ele-community-app-image": {
+								type: "ct-app-preview",
+								properties: {
+									appImage: "/stride-hero/app3.png",
+									style: "community",
+								},
+							},
+
+							// Section 5 Elements (Features Grid)
+							"ele-feature-grid-1": {
+								type: "ct-feature-card",
+								properties: {
+									icon: "/stride-icons/globe.svg",
+									label: "Local intel",
+									description: "Share route tweaks, weather calls, and meetup pins without leaving the thread.",
+									style: "compact",
+								},
+							},
+							"ele-feature-grid-2": {
+								type: "ct-feature-card",
+								properties: {
+									icon: "/stride-icons/check.svg",
+									label: "Session receipts",
+									description: "Drop RPE, mood, or kit status in a tap so coaches see more than numbers.",
+									style: "compact",
+								},
+							},
+							"ele-feature-grid-3": {
+								type: "ct-feature-card",
+								properties: {
+									icon: "/stride-icons/book.svg",
+									label: "Playbook notes",
+									description: "Attach cues, fueling tweaks, or rehab guardrails directly to each block.",
+									style: "compact",
+								},
+							},
+							"ele-feature-grid-4": {
+								type: "ct-feature-card",
+								properties: {
+									icon: "/stride-icons/check-check.svg",
+									label: "Auto follow-ups",
+									description: "Stride pings the right person when recovery lags or a milestone unlocks.",
+									style: "compact",
+								},
+>>>>>>> origin/main
 							},
 						},
 					},
@@ -1226,11 +2328,15 @@ export const initialPages: Page[] = [
 			},
 		],
 	},
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 	{
 		id: "page-site-about",
 		name: "About Us",
 		parentId: "page-site-home",
+<<<<<<< HEAD
 		status: "Draft",
 		lastModified: "2023-10-26",
 		contentTypeId: "ct-page",
@@ -1253,6 +2359,18 @@ export const initialPages: Page[] = [
 				},
 			},
 		},
+=======
+		status: "Published",
+		lastModified: "2026-05-28",
+		contentTypeId: "exp-about-page",
+		displayTemplateKey: "defaultExperience",
+		displaySettings: [
+			{ key: "backgroundColor", value: "light-blue" },
+			{ key: "spacing", value: "default" }
+		],
+		slug: "about",
+		data: {},
+>>>>>>> origin/main
 		variations: [
 			{
 				id: "original",
@@ -1264,6 +2382,7 @@ export const initialPages: Page[] = [
 						title: "Main",
 						tree: [
 							{
+<<<<<<< HEAD
 								id: "sec-about-story",
 								name: "Our Story",
 								open: true,
@@ -1348,10 +2467,86 @@ export const initialPages: Page[] = [
 						},
 					},
 				},
+=======
+								id: "sec-about-intro",
+								name: "Introduction",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [{ key: "spacing", value: "compact" }],
+								children: [{ id: "row-about-intro", open: true, children: [{ id: "col-about-intro", open: true, elements: [
+									{ id: "ele-about-h1" },
+									{ id: "ele-about-intro-text" },
+								] }] }],
+							},
+							{
+								id: "sec-about-mission",
+								name: "Our Mission",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [{ key: "spacing", value: "compact" }],
+								children: [{ id: "row-about-mission", open: true, children: [{ id: "col-about-mission", open: true, elements: [
+									{ id: "ele-about-mission-h2" },
+									{ id: "ele-about-mission-text" },
+								] }] }],
+							},
+							{
+								id: "sec-about-cards",
+								name: "CTA Cards",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [{ key: "spacing", value: "compact" }],
+								children: [{ id: "row-about-cards", open: true, children: [
+									{ id: "col-about-join", open: true, elements: [{ id: "ele-about-join-card" }] },
+									{ id: "col-about-coach", open: true, elements: [{ id: "ele-about-coach-card" }] },
+								] }],
+							},
+						],
+						elements: {
+							"ele-about-h1": { type: "ct-heading", properties: { text: "About us", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+							"ele-about-intro-text": { type: "ct-text", properties: { text: "Stride was founded on a simple belief: that everyone has an athlete inside them, waiting to break free. We build tools that help you visualize your progress, connect with others, and reach your full potential.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "large" }] } },
+							"ele-about-mission-h2": { type: "ct-heading", properties: { text: "Our Mission", level: "h2" } },
+							"ele-about-mission-text": { type: "ct-text", properties: { text: "We're dedicated to making professional-grade training tools accessible to everyone. Whether you're training for your first 5k or your fiftieth marathon, Stride is with you every step of the way.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+							"ele-about-join-card": { type: "ct-card", properties: { backgroundImage: "/features-card-1.jpg", label: "Join the Community", description: "Ride with thousands of others.", displaySettings: [{ key: "style", value: "simple" }] } },
+							"ele-about-coach-card": { type: "ct-card", properties: { backgroundImage: "/features-card-2.jpg", label: "Find a Coach", description: "Get a personalized training plan.", displaySettings: [{ key: "style", value: "simple" }] } },
+						},
+					},
+					{
+						id: "ol-about-sidebar",
+						title: "Sidebar",
+						tree: [
+							{
+								id: "sec-about-nav",
+								name: "About Navigation",
+								open: true,
+								children: [{ id: "row-about-nav", open: true, children: [{ id: "col-about-nav", open: true, elements: [
+									{ id: "ele-nav-news-events" },
+									{ id: "ele-nav-events-sub" },
+									{ id: "ele-nav-news-sub" },
+									{ id: "ele-nav-management" },
+									{ id: "ele-nav-contact" },
+									{ id: "ele-nav-coaches" },
+								] }] }],
+							},
+						],
+						elements: {
+							"ele-nav-news-events": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
+							"ele-nav-events-sub": { type: "ct-nav-item", properties: { label: "Events", href: "/about/news-events/events", sub: "true" } },
+							"ele-nav-news-sub": { type: "ct-nav-item", properties: { label: "News", href: "/about/news-events/news", sub: "true" } },
+							"ele-nav-management": { type: "ct-nav-item", properties: { label: "Management", href: "/about/management" } },
+							"ele-nav-contact": { type: "ct-nav-item", properties: { label: "Contact us", href: "/about/contact" } },
+							"ele-nav-coaches": { type: "ct-nav-item", properties: { label: "Become a Coach", href: "/about/coaches" } },
+						},
+					},
+				],
+>>>>>>> origin/main
 			},
 		],
 	},
 
+<<<<<<< HEAD
 	{
 		id: "page-site-contact",
 		name: "Contact",
@@ -1519,6 +2714,238 @@ export const initialPages: Page[] = [
 				},
 			},
 		],
+=======
+	// --- About Sub-Pages (all use exp-about-page with left sidenav) ---
+
+	{
+		id: "page-site-news-events",
+		name: "News & Events",
+		parentId: "page-site-about",
+		status: "Published",
+		lastModified: "2026-05-28",
+		contentTypeId: "exp-about-page",
+		slug: "about/news-events",
+		data: {},
+		variations: [{ id: "original", name: "Original", status: "Published", outlines: [
+			{ id: "ol-ne-main", title: "Main", tree: [
+				{ id: "sec-ne-intro", name: "News & Events", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-ne-intro", open: true, children: [{ id: "col-ne-intro", open: true, elements: [{ id: "ele-ne-h1" }] }] }] },
+				{ id: "sec-ne-news", name: "Latest News", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-ne-news", open: true, children: [{ id: "col-ne-news", open: true, elements: [{ id: "ele-ne-news-h2" }, { id: "ele-ne-news-1" }, { id: "ele-ne-news-2" }, { id: "ele-ne-news-3" }, { id: "ele-ne-all-news-btn" }] }] }] },
+				{ id: "sec-ne-events-heading", name: "Events Heading", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-ne-events-h", open: true, children: [{ id: "col-ne-events-h", open: true, elements: [{ id: "ele-ne-events-h2" }] }] }] },
+				{ id: "sec-ne-events-grid", name: "Events Grid", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-ne-events-grid", open: true, children: [
+					{ id: "col-ne-ev-1", open: true, elements: [{ id: "ele-ne-event-1" }] },
+					{ id: "col-ne-ev-2", open: true, elements: [{ id: "ele-ne-event-2" }] },
+				] }] },
+				{ id: "sec-ne-events-btn", name: "Events Button", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-ne-events-btn", open: true, children: [{ id: "col-ne-events-btn", open: true, elements: [{ id: "ele-ne-all-events-btn" }] }] }] },
+			], elements: {
+				"ele-ne-h1": { type: "ct-heading", properties: { text: "News & Events", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-ne-news-h2": { type: "ct-heading", properties: { text: "Latest News", level: "h2" } },
+				"ele-ne-news-1": { type: "ct-news-item", properties: { title: "Stride raises Series B to expand global fitness community", date: "2026-02-01", image: "/sports-1.jpg", summary: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more." } },
+				"ele-ne-news-2": { type: "ct-news-item", properties: { title: "Introducing Stride Stats 2.0 with AI coaching", date: "2026-01-15", image: "/sports-2.jpg", summary: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing." } },
+				"ele-ne-news-3": { type: "ct-news-item", properties: { title: "Stride named Top 10 Fitness App of 2025", date: "2025-12-10", image: "/sports-3.jpg", summary: "FitTech Magazine has recognized Stride as a leading solution for endurance athletes in their annual awards." } },
+				"ele-ne-all-news-btn": { type: "ct-button", properties: { label: "ALL NEWS", displayTemplateKey: "outlineButton" } },
+				"ele-ne-events-h2": { type: "ct-heading", properties: { text: "Upcoming Events", level: "h2" } },
+				"ele-ne-event-1": { type: "ct-event-card", properties: { title: "Global Running Summit 2026", date: "2026-04-20", location: "San Francisco, CA", description: "Join us for a day of keynotes and workshops on the future of endurance sports and wearable technology." } },
+				"ele-ne-event-2": { type: "ct-event-card", properties: { title: "Stride Community Marathon", date: "2026-06-15", location: "London, UK", description: "Connect with other Stride athletes, break your personal bests, and celebrate with the community." } },
+				"ele-ne-all-events-btn": { type: "ct-button", properties: { label: "ALL EVENTS", displayTemplateKey: "outlineButton" } },
+			}},
+			{ id: "ol-ne-sidebar", title: "Sidebar", tree: [{ id: "sec-ne-nav", name: "Nav", open: true, children: [{ id: "row-ne-nav", open: true, children: [{ id: "col-ne-nav", open: true, elements: [{ id: "ele-ne-nav-1" }, { id: "ele-ne-nav-1a" }, { id: "ele-ne-nav-1b" }, { id: "ele-ne-nav-2" }, { id: "ele-ne-nav-3" }, { id: "ele-ne-nav-4" }] }] }] }], elements: {
+				"ele-ne-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
+				"ele-ne-nav-1a": { type: "ct-nav-item", properties: { label: "Events", href: "/about/news-events/events", sub: "true" } },
+				"ele-ne-nav-1b": { type: "ct-nav-item", properties: { label: "News", href: "/about/news-events/news", sub: "true" } },
+				"ele-ne-nav-2": { type: "ct-nav-item", properties: { label: "Management", href: "/about/management" } },
+				"ele-ne-nav-3": { type: "ct-nav-item", properties: { label: "Contact us", href: "/about/contact" } },
+				"ele-ne-nav-4": { type: "ct-nav-item", properties: { label: "Become a Coach", href: "/about/coaches" } },
+			}},
+		]}],
+	},
+
+	{
+		id: "page-site-news",
+		name: "News",
+		parentId: "page-site-news-events",
+		status: "Published",
+		lastModified: "2026-05-28",
+		contentTypeId: "exp-about-page",
+		slug: "about/news-events/news",
+		data: {},
+		variations: [{ id: "original", name: "Original", status: "Published", outlines: [
+			{ id: "ol-news-main", title: "Main", tree: [
+				{ id: "sec-news-list", name: "News", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-news-list", open: true, children: [{ id: "col-news-list", open: true, elements: [{ id: "ele-news-h1" }, { id: "ele-news-item-1" }, { id: "ele-news-item-2" }, { id: "ele-news-item-3" }] }] }] },
+			], elements: {
+				"ele-news-h1": { type: "ct-heading", properties: { text: "News", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-news-item-1": { type: "ct-news-item", properties: { title: "Stride raises Series B to expand global fitness community", date: "2026-02-01", image: "/sports-1.jpg", summary: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more." } },
+				"ele-news-item-2": { type: "ct-news-item", properties: { title: "Introducing Stride Stats 2.0 with AI coaching", date: "2026-01-15", image: "/sports-2.jpg", summary: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing." } },
+				"ele-news-item-3": { type: "ct-news-item", properties: { title: "Stride named Top 10 Fitness App of 2025", date: "2025-12-10", image: "/sports-3.jpg", summary: "FitTech Magazine has recognized Stride as a leading solution for endurance athletes in their annual awards." } },
+			}},
+			{ id: "ol-news-sidebar", title: "Sidebar", tree: [{ id: "sec-news-nav", name: "Nav", open: true, children: [{ id: "row-news-nav", open: true, children: [{ id: "col-news-nav", open: true, elements: [{ id: "ele-nn-nav-1" }, { id: "ele-nn-nav-1a" }, { id: "ele-nn-nav-1b" }, { id: "ele-nn-nav-2" }, { id: "ele-nn-nav-3" }, { id: "ele-nn-nav-4" }] }] }] }], elements: {
+				"ele-nn-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
+				"ele-nn-nav-1a": { type: "ct-nav-item", properties: { label: "Events", href: "/about/news-events/events", sub: "true" } },
+				"ele-nn-nav-1b": { type: "ct-nav-item", properties: { label: "News", href: "/about/news-events/news", sub: "true" } },
+				"ele-nn-nav-2": { type: "ct-nav-item", properties: { label: "Management", href: "/about/management" } },
+				"ele-nn-nav-3": { type: "ct-nav-item", properties: { label: "Contact us", href: "/about/contact" } },
+				"ele-nn-nav-4": { type: "ct-nav-item", properties: { label: "Become a Coach", href: "/about/coaches" } },
+			}},
+		]}],
+	},
+
+	{
+		id: "page-site-events-about",
+		name: "Events",
+		parentId: "page-site-news-events",
+		status: "Published",
+		lastModified: "2026-05-28",
+		contentTypeId: "exp-about-page",
+		slug: "about/news-events/events",
+		data: {},
+		variations: [{ id: "original", name: "Original", status: "Published", outlines: [
+			{ id: "ol-ev-main", title: "Main", tree: [
+				{ id: "sec-ev-heading", name: "Events Heading", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-ev-heading", open: true, children: [{ id: "col-ev-heading", open: true, elements: [{ id: "ele-ev-h1" }] }] }] },
+				{ id: "sec-ev-grid", name: "Events Grid", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-ev-grid", open: true, children: [
+					{ id: "col-ev-1", open: true, elements: [{ id: "ele-ev-item-1" }] },
+					{ id: "col-ev-2", open: true, elements: [{ id: "ele-ev-item-2" }] },
+				] }] },
+			], elements: {
+				"ele-ev-h1": { type: "ct-heading", properties: { text: "Events", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-ev-item-1": { type: "ct-event-card", properties: { title: "Global Running Summit 2026", date: "2026-04-20", location: "San Francisco, CA", description: "Join us for a day of keynotes and workshops on the future of endurance sports and wearable technology." } },
+				"ele-ev-item-2": { type: "ct-event-card", properties: { title: "Stride Community Marathon", date: "2026-06-15", location: "London, UK", description: "Connect with other Stride athletes, break your personal bests, and celebrate with the community." } },
+			}},
+			{ id: "ol-ev-sidebar", title: "Sidebar", tree: [{ id: "sec-ev-nav", name: "Nav", open: true, children: [{ id: "row-ev-nav", open: true, children: [{ id: "col-ev-nav", open: true, elements: [{ id: "ele-ev-nav-1" }, { id: "ele-ev-nav-1a" }, { id: "ele-ev-nav-1b" }, { id: "ele-ev-nav-2" }, { id: "ele-ev-nav-3" }, { id: "ele-ev-nav-4" }] }] }] }], elements: {
+				"ele-ev-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
+				"ele-ev-nav-1a": { type: "ct-nav-item", properties: { label: "Events", href: "/about/news-events/events", sub: "true" } },
+				"ele-ev-nav-1b": { type: "ct-nav-item", properties: { label: "News", href: "/about/news-events/news", sub: "true" } },
+				"ele-ev-nav-2": { type: "ct-nav-item", properties: { label: "Management", href: "/about/management" } },
+				"ele-ev-nav-3": { type: "ct-nav-item", properties: { label: "Contact us", href: "/about/contact" } },
+				"ele-ev-nav-4": { type: "ct-nav-item", properties: { label: "Become a Coach", href: "/about/coaches" } },
+			}},
+		]}],
+	},
+
+	{
+		id: "page-site-management",
+		name: "Management",
+		parentId: "page-site-about",
+		status: "Published",
+		lastModified: "2026-05-28",
+		contentTypeId: "exp-about-page",
+		slug: "about/management",
+		data: {},
+		variations: [{ id: "original", name: "Original", status: "Published", outlines: [
+			{ id: "ol-mgmt-main", title: "Main", tree: [
+				{ id: "sec-mgmt-intro", name: "Management", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-mgmt-intro", open: true, children: [{ id: "col-mgmt-intro", open: true, elements: [{ id: "ele-mgmt-h1" }, { id: "ele-mgmt-intro" }] }] }] },
+				{ id: "sec-mgmt-cards", name: "Team", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-mgmt-cards", open: true, children: [
+					{ id: "col-mgmt-1", open: true, elements: [{ id: "ele-mgmt-card-1" }] },
+					{ id: "col-mgmt-2", open: true, elements: [{ id: "ele-mgmt-card-2" }] },
+				] }, { id: "row-mgmt-cards-2", open: true, children: [
+					{ id: "col-mgmt-3", open: true, elements: [{ id: "ele-mgmt-card-3" }] },
+					{ id: "col-mgmt-4", open: true, elements: [{ id: "ele-mgmt-card-4" }] },
+				] }] },
+			], elements: {
+				"ele-mgmt-h1": { type: "ct-heading", properties: { text: "Management", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-mgmt-intro": { type: "ct-text", properties: { text: "Our experienced and dedicated managers are committed to improving the effectiveness of project teams everywhere. Meet them here:", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+				"ele-mgmt-card-1": { type: "ct-card", properties: { backgroundImage: "/sports-1.jpg", label: "Robert Carlsson — CEO", description: "Robert is Stride's CEO and visionary leader. Robert has led product development for major sports brands for over 20 years. robert.carlsson@stride.com | +46 8 123 456", displaySettings: [{ key: "style", value: "simple" }] } },
+				"ele-mgmt-card-2": { type: "ct-card", properties: { backgroundImage: "/sports-2.jpg", label: "Michelle Hernandez — CFO", description: "Michelle brings more than 10 years of finance and operational management experience to Stride. michelle.hernandez@stride.com | +46 8 123 458", displaySettings: [{ key: "style", value: "simple" }] } },
+				"ele-mgmt-card-3": { type: "ct-card", properties: { backgroundImage: "/sports-3.jpg", label: "Amar Gupta — CTO", description: "Amar is our CTO and manages Stride's engineering team, delivering millions of data points per second to athletes worldwide. amar.gupta@stride.com | +46 8 123 459", displaySettings: [{ key: "style", value: "simple" }] } },
+				"ele-mgmt-card-4": { type: "ct-card", properties: { backgroundImage: "/features-card-1.jpg", label: "Todd Slayton — Community Builder", description: "Todd is Stride's community builder, responsible for partnerships, events and athlete engagement. todd.slayton@stride.com | +46 8 123 457", displaySettings: [{ key: "style", value: "simple" }] } },
+			}},
+			{ id: "ol-mgmt-sidebar", title: "Sidebar", tree: [{ id: "sec-mgmt-nav", name: "Nav", open: true, children: [{ id: "row-mgmt-nav", open: true, children: [{ id: "col-mgmt-nav", open: true, elements: [{ id: "ele-mg-nav-1" }, { id: "ele-mg-nav-1a" }, { id: "ele-mg-nav-1b" }, { id: "ele-mg-nav-2" }, { id: "ele-mg-nav-3" }, { id: "ele-mg-nav-4" }] }] }] }], elements: {
+				"ele-mg-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
+				"ele-mg-nav-1a": { type: "ct-nav-item", properties: { label: "Events", href: "/about/news-events/events", sub: "true" } },
+				"ele-mg-nav-1b": { type: "ct-nav-item", properties: { label: "News", href: "/about/news-events/news", sub: "true" } },
+				"ele-mg-nav-2": { type: "ct-nav-item", properties: { label: "Management", href: "/about/management" } },
+				"ele-mg-nav-3": { type: "ct-nav-item", properties: { label: "Contact us", href: "/about/contact" } },
+				"ele-mg-nav-4": { type: "ct-nav-item", properties: { label: "Become a Coach", href: "/about/coaches" } },
+			}},
+		]}],
+	},
+
+	{
+		id: "page-site-contact",
+		name: "Contact Us",
+		parentId: "page-site-about",
+		status: "Published",
+		lastModified: "2026-05-28",
+		contentTypeId: "exp-about-page",
+		slug: "about/contact",
+		data: {},
+		variations: [{ id: "original", name: "Original", status: "Published", outlines: [
+			{ id: "ol-ct-main", title: "Main", tree: [
+				{ id: "sec-ct-content", name: "Contact", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-ct-content", open: true, children: [{ id: "col-ct-content", open: true, elements: [{ id: "ele-ct-h1" }, { id: "ele-ct-intro" }, { id: "ele-ct-body" }, { id: "ele-ct-support" }, { id: "ele-ct-press" }, { id: "ele-ct-phone" }] }] }] },
+			], elements: {
+				"ele-ct-h1": { type: "ct-heading", properties: { text: "Contact Us", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-ct-intro": { type: "ct-text", properties: { text: "We'd love to hear from you.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "large" }] } },
+				"ele-ct-body": { type: "ct-text", properties: { text: "Get in touch with our team for support, partnership inquiries, or general questions.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+				"ele-ct-support": { type: "ct-text", properties: { text: "Support: support@stride.com", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+				"ele-ct-press": { type: "ct-text", properties: { text: "Press: press@stride.com", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+				"ele-ct-phone": { type: "ct-text", properties: { text: "Phone: +1 415 555 0123", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+			}},
+			{ id: "ol-ct-sidebar", title: "Sidebar", tree: [{ id: "sec-ct-nav", name: "Nav", open: true, children: [{ id: "row-ct-nav", open: true, children: [{ id: "col-ct-nav", open: true, elements: [{ id: "ele-ct-nav-1" }, { id: "ele-ct-nav-1a" }, { id: "ele-ct-nav-1b" }, { id: "ele-ct-nav-2" }, { id: "ele-ct-nav-3" }, { id: "ele-ct-nav-4" }] }] }] }], elements: {
+				"ele-ct-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
+				"ele-ct-nav-1a": { type: "ct-nav-item", properties: { label: "Events", href: "/about/news-events/events", sub: "true" } },
+				"ele-ct-nav-1b": { type: "ct-nav-item", properties: { label: "News", href: "/about/news-events/news", sub: "true" } },
+				"ele-ct-nav-2": { type: "ct-nav-item", properties: { label: "Management", href: "/about/management" } },
+				"ele-ct-nav-3": { type: "ct-nav-item", properties: { label: "Contact us", href: "/about/contact" } },
+				"ele-ct-nav-4": { type: "ct-nav-item", properties: { label: "Become a Coach", href: "/about/coaches" } },
+			}},
+		]}],
+	},
+
+	{
+		id: "page-site-coaches",
+		name: "Become a Coach",
+		parentId: "page-site-about",
+		status: "Published",
+		lastModified: "2026-05-28",
+		contentTypeId: "exp-about-page",
+		slug: "about/coaches",
+		data: {},
+		variations: [{ id: "original", name: "Original", status: "Published", outlines: [
+			{ id: "ol-coach-main", title: "Main", tree: [
+				{ id: "sec-coach-content", name: "Coaches", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-coach-content", open: true, children: [{ id: "col-coach-content", open: true, elements: [{ id: "ele-coach-h1" }, { id: "ele-coach-intro" }, { id: "ele-coach-body" }, { id: "ele-coach-apply-btn" }] }] }] },
+			], elements: {
+				"ele-coach-h1": { type: "ct-heading", properties: { text: "Become a Coach", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-coach-intro": { type: "ct-text", properties: { text: "Partner with us to bring professional training to everyone.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "large" }] } },
+				"ele-coach-body": { type: "ct-text", properties: { text: "Join our network of certified coaches and help athletes across the globe reach their peak performance.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+				"ele-coach-apply-btn": { type: "ct-button", properties: { label: "APPLY NOW", displayTemplateKey: "outlineButton" } },
+			}},
+			{ id: "ol-coach-sidebar", title: "Sidebar", tree: [{ id: "sec-coach-nav", name: "Nav", open: true, children: [{ id: "row-coach-nav", open: true, children: [{ id: "col-coach-nav", open: true, elements: [{ id: "ele-co-nav-1" }, { id: "ele-co-nav-1a" }, { id: "ele-co-nav-1b" }, { id: "ele-co-nav-2" }, { id: "ele-co-nav-3" }, { id: "ele-co-nav-4" }] }] }] }], elements: {
+				"ele-co-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
+				"ele-co-nav-1a": { type: "ct-nav-item", properties: { label: "Events", href: "/about/news-events/events", sub: "true" } },
+				"ele-co-nav-1b": { type: "ct-nav-item", properties: { label: "News", href: "/about/news-events/news", sub: "true" } },
+				"ele-co-nav-2": { type: "ct-nav-item", properties: { label: "Management", href: "/about/management" } },
+				"ele-co-nav-3": { type: "ct-nav-item", properties: { label: "Contact us", href: "/about/contact" } },
+				"ele-co-nav-4": { type: "ct-nav-item", properties: { label: "Become a Coach", href: "/about/coaches" } },
+			}},
+		]}],
+	},
+
+	{
+		id: "page-site-reseller",
+		name: "Become a Reseller",
+		parentId: "page-site-about",
+		status: "Published",
+		lastModified: "2026-05-28",
+		contentTypeId: "exp-about-page",
+		slug: "about/reseller",
+		data: {},
+		variations: [{ id: "original", name: "Original", status: "Published", outlines: [
+			{ id: "ol-reseller-main", title: "Main", tree: [
+				{ id: "sec-reseller-content", name: "Reseller", type: "ct-section", open: true, displayTemplateKey: "defaultSection", displaySettings: [{ key: "spacing", value: "compact" }], children: [{ id: "row-reseller-content", open: true, children: [{ id: "col-reseller-content", open: true, elements: [{ id: "ele-reseller-h1" }, { id: "ele-reseller-intro" }, { id: "ele-reseller-body" }, { id: "ele-reseller-apply-btn" }] }] }] },
+			], elements: {
+				"ele-reseller-h1": { type: "ct-heading", properties: { text: "Become a Reseller", level: "h1", displayTemplateKey: "h2Heading", displaySettings: [{ key: "size", value: "extra-large" }] } },
+				"ele-reseller-intro": { type: "ct-text", properties: { text: "Stock Stride hardware, apparel, and subscriptions at your retail location or online shop.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "large" }] } },
+				"ele-reseller-body": { type: "ct-text", properties: { text: "Our reseller program gives you access to wholesale pricing, co-branded marketing assets, and priority support. Whether you run a specialty running store or an online fitness marketplace, we make onboarding seamless.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+				"ele-reseller-apply-btn": { type: "ct-button", properties: { label: "BECOME A RESELLER", displayTemplateKey: "outlineButton" } },
+			}},
+			{ id: "ol-reseller-sidebar", title: "Sidebar", tree: [{ id: "sec-reseller-nav", name: "Nav", open: true, children: [{ id: "row-reseller-nav", open: true, children: [{ id: "col-reseller-nav", open: true, elements: [{ id: "ele-rs-nav-1" }, { id: "ele-rs-nav-1a" }, { id: "ele-rs-nav-1b" }, { id: "ele-rs-nav-2" }, { id: "ele-rs-nav-3" }, { id: "ele-rs-nav-4" }] }] }] }], elements: {
+				"ele-rs-nav-1": { type: "ct-nav-item", properties: { label: "News & Events", href: "/about/news-events" } },
+				"ele-rs-nav-1a": { type: "ct-nav-item", properties: { label: "Events", href: "/about/news-events/events", sub: "true" } },
+				"ele-rs-nav-1b": { type: "ct-nav-item", properties: { label: "News", href: "/about/news-events/news", sub: "true" } },
+				"ele-rs-nav-2": { type: "ct-nav-item", properties: { label: "Management", href: "/about/management" } },
+				"ele-rs-nav-3": { type: "ct-nav-item", properties: { label: "Contact us", href: "/about/contact" } },
+				"ele-rs-nav-4": { type: "ct-nav-item", properties: { label: "Become a Coach", href: "/about/coaches" } },
+			}},
+		]}],
+>>>>>>> origin/main
 	},
 
 	{
@@ -1585,13 +3012,21 @@ export const initialPages: Page[] = [
 							"ele-blog-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "The Stride Blog" },
+=======
+									text: "The Stride Blog",
+>>>>>>> origin/main
 								},
 							},
 							"ele-blog-subtext": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Tips, training guides, and gear reviews." },
+=======
+									text: "Tips, training guides, and gear reviews.",
+>>>>>>> origin/main
 								},
 							},
 						},
@@ -1630,13 +3065,21 @@ export const initialPages: Page[] = [
 					"ele-blog-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "The Stride Blog" },
+=======
+							text: "The Stride Blog",
+>>>>>>> origin/main
 						},
 					},
 					"ele-blog-subtext": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Tips, training guides, and gear reviews." },
+=======
+							text: "Tips, training guides, and gear reviews.",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -1651,6 +3094,14 @@ export const initialPages: Page[] = [
 		status: "Published",
 		lastModified: "2023-10-23",
 		contentTypeId: "ct-page",
+<<<<<<< HEAD
+=======
+		displayTemplateKey: "defaultExperience",
+		displaySettings: [
+			{ key: "backgroundColor", value: "light-blue" },
+			{ key: "spacing", value: "default" }
+		],
+>>>>>>> origin/main
 		data: {
 			seo: {
 				en: {
@@ -1706,13 +3157,21 @@ export const initialPages: Page[] = [
 							"ele-products-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "New Arrivals" },
+=======
+									text: "New Arrivals",
+>>>>>>> origin/main
 								},
 							},
 							"ele-products-subtext": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Check out the latest gear for this season." },
+=======
+									text: "Check out the latest gear for this season.",
+>>>>>>> origin/main
 								},
 							},
 						},
@@ -1751,13 +3210,21 @@ export const initialPages: Page[] = [
 					"ele-products-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "New Arrivals" },
+=======
+							text: "New Arrivals",
+>>>>>>> origin/main
 						},
 					},
 					"ele-products-subtext": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Check out the latest gear for this season." },
+=======
+							text: "Check out the latest gear for this season.",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -1828,21 +3295,33 @@ export const initialPages: Page[] = [
 							"ele-product-a-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Stride Elite Runner" },
+=======
+									text: "Stride Elite Runner",
+>>>>>>> origin/main
 								},
 							},
 							"ele-product-a-body": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: {
 										value: "Our most advanced running shoe yet. Lightweight, responsive, and durable.",
 									},
+=======
+									text: "Our most advanced running shoe yet. Lightweight, responsive, and durable.",
+>>>>>>> origin/main
 								},
 							},
 							"ele-product-a-cta": {
 								type: "ct-button",
 								properties: {
+<<<<<<< HEAD
 									label: { value: "Add to Cart" },
+=======
+									label: "Add to Cart",
+>>>>>>> origin/main
 								},
 							},
 						},
@@ -1882,21 +3361,33 @@ export const initialPages: Page[] = [
 					"ele-product-a-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Stride Elite Runner" },
+=======
+							text: "Stride Elite Runner",
+>>>>>>> origin/main
 						},
 					},
 					"ele-product-a-body": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Our most advanced running shoe yet. Lightweight, responsive, and durable.",
 							},
+=======
+							text: "Our most advanced running shoe yet. Lightweight, responsive, and durable.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-product-a-cta": {
 						type: "ct-button",
 						properties: {
+<<<<<<< HEAD
 							label: { value: "Add to Cart" },
+=======
+							label: "Add to Cart",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -1905,6 +3396,427 @@ export const initialPages: Page[] = [
 	},
 
 	{
+<<<<<<< HEAD
+=======
+		id: "page-site-features",
+		name: "Features",
+		parentId: "page-site-home",
+		status: "Published",
+		lastModified: "2026-05-26",
+		contentTypeId: "exp-landing-page",
+		displayTemplateKey: "defaultExperience",
+		displaySettings: [
+			{ key: "backgroundColor", value: "light-blue" },
+			{ key: "spacing", value: "compact" }
+		],
+		slug: "features",
+		data: {
+			seo: {
+				en: {
+					original: {
+						title: "Features | Stride Platform",
+						description: "Orchestrate every crew from one cockpit with Stride Platform.",
+						canonicalUrl: "https://stride.com/features",
+						robots: "index,follow",
+						image: "https://stride.com/og-features.jpg",
+						ogTitle: "Stride Platform Features",
+						ogDescription: "Surface plans, biometrics, and readiness cues in a single operating view.",
+						ogImage: "https://stride.com/og-features.jpg",
+						twitterTitle: "Stride Platform Features",
+						twitterDescription: "Surface plans, biometrics, and readiness cues in a single operating view.",
+						twitterImage: "https://stride.com/og-features.jpg",
+					},
+				},
+			},
+		},
+		variations: [
+			{
+				id: "original",
+				name: "Original",
+				status: "Published",
+				outlines: [
+					{
+						id: "ol-features-main",
+						title: "Main",
+						tree: [
+							// Hero Section
+							{
+								id: "sec-features-hero",
+								name: "Hero",
+								type: "ct-section",
+								open: true,
+								noPadding: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [
+									{ key: "colorScheme", value: "default" },
+									{ key: "spacing", value: "default" }
+								],
+								children: [
+									{
+										id: "row-features-hero",
+										open: true,
+										children: [
+											{
+												id: "col-features-hero-content",
+												open: true,
+												elements: [
+													{ id: "ele-features-hero" },
+												],
+											},
+										],
+									},
+								],
+							},
+							// Section 2: One Canvas
+							{
+								id: "sec-features-canvas",
+								name: "One Canvas",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [
+									{ key: "colorScheme", value: "default" },
+									{ key: "spacing", value: "compact" }
+								],
+								children: [
+									{
+										id: "row-features-canvas",
+										open: true,
+										children: [
+											{
+												id: "col-canvas-content",
+												open: true,
+												elements: [
+													{ id: "ele-canvas-heading" },
+													{ id: "ele-canvas-body" },
+												],
+											},
+										],
+									},
+								],
+							},
+							// Section 3: Design Flows
+							{
+								id: "sec-features-flows",
+								name: "Design Flows",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [
+									{ key: "colorScheme", value: "default" },
+									{ key: "spacing", value: "compact" }
+								],
+								children: [
+									{
+										id: "row-features-flows",
+										open: true,
+										children: [
+											{
+												id: "col-flows-content",
+												open: true,
+												elements: [
+													{ id: "ele-flows-heading" },
+													{ id: "ele-flows-body" },
+												],
+											},
+										],
+									},
+								],
+							},
+							// Section 4: Context Follows
+							{
+								id: "sec-features-context",
+								name: "Context Follows",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [
+									{ key: "colorScheme", value: "default" },
+									{ key: "spacing", value: "compact" }
+								],
+								children: [
+									{
+										id: "row-features-context",
+										open: true,
+										children: [
+											{
+												id: "col-context-content",
+												open: true,
+												elements: [
+													{ id: "ele-context-heading" },
+													{ id: "ele-context-body" },
+												],
+											},
+										],
+									},
+								],
+							},
+							// Section 5: Cards Row
+							{
+								id: "sec-features-cards",
+								name: "Cards",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [
+									{ key: "colorScheme", value: "default" },
+									{ key: "spacing", value: "compact" }
+								],
+								children: [
+									{
+										id: "row-features-cards",
+										open: true,
+										children: [
+											{
+												id: "col-join-card",
+												open: true,
+												elements: [
+													{ id: "ele-join-card" },
+												],
+											},
+											{
+												id: "col-coach-card",
+												open: true,
+												elements: [
+													{ id: "ele-coach-card" },
+												],
+											},
+										],
+									},
+								],
+							},
+						],
+						elements: {
+							// Hero Elements
+							"ele-features-hero": {
+								type: "ct-hero",
+								properties: {
+									badge: "STRIDE PLATFORM",
+									heading: "Orchestrate every crew from one cockpit",
+									subheading: "Surface plans, biometrics, and readiness cues in a single operating view so coaches can shift priorities without jumping between tools.",
+									primaryButton: "",
+									secondaryButton: "",
+									backgroundImage: "/sports-1.jpg",
+									appMockupImage: "",
+									showAppMockup: "false",
+									displayTemplateKey: "centeredHero",
+									displaySettings: [
+										{ key: "layout", value: "centered" },
+									],
+								},
+							},
+
+							// Section 2: One Canvas Elements
+							"ele-canvas-heading": {
+								type: "ct-heading",
+								properties: {
+									text: "One canvas for every signal",
+									accent: "",
+									level: "h2",
+								},
+							},
+							"ele-canvas-body": {
+								type: "ct-text",
+								properties: {
+									text: "Blend workouts, notes, and live vitals into a shared board that updates in real time. Coaches get instant context, and athletes always see the latest calls without waiting for status meetings.",
+									displayTemplateKey: "defaultText",
+					displaySettings: [
+						{ key: "size", value: "default" },
+						{ key: "emphasis", value: "normal" },
+					],
+								},
+							},
+
+							// Section 3: Design Flows Elements
+							"ele-flows-heading": {
+								type: "ct-heading",
+								properties: {
+									text: "Design flows once, reuse forever",
+									accent: "",
+									level: "h2",
+								},
+							},
+							"ele-flows-body": {
+								type: "ct-text",
+								properties: {
+									text: "Template onboarding journeys, playbooks, and recovery protocols. Drop them into any squad with one click and tweak the details without breaking the underlying flow.",
+									displayTemplateKey: "defaultText",
+					displaySettings: [
+						{ key: "size", value: "default" },
+						{ key: "emphasis", value: "normal" },
+					],
+								},
+							},
+
+							// Section 4: Context Follows Elements
+							"ele-context-heading": {
+								type: "ct-heading",
+								properties: {
+									text: "Context follows every decision",
+									accent: "",
+									level: "h2",
+								},
+							},
+							"ele-context-body": {
+								type: "ct-text",
+								properties: {
+									text: "Thread film, files, and AI summaries directly onto each block so history is never siloed. Anyone new to the plan can rewind decisions in seconds.",
+									displayTemplateKey: "defaultText",
+					displaySettings: [
+						{ key: "size", value: "default" },
+						{ key: "emphasis", value: "normal" },
+					],
+								},
+							},
+
+							// Section 5: Cards Elements
+							"ele-join-card": {
+								type: "ct-card",
+								properties: {
+									backgroundImage: "/features-card-1.jpg",
+									label: "Join the Community",
+									description: "Ride with thousands of others.",
+									displayTemplateKey: "defaultCard",
+					displaySettings: [
+						{ key: "style", value: "simple" },
+					],
+								},
+							},
+							"ele-coach-card": {
+								type: "ct-card",
+								properties: {
+									backgroundImage: "/features-card-2.jpg",
+									label: "Find a Coach",
+									description: "Get a personalized training plan.",
+									displayTemplateKey: "defaultCard",
+					displaySettings: [
+						{ key: "style", value: "simple" },
+					],
+								},
+							},
+
+						},
+					},
+					{
+						id: "ol-features-sidebar",
+						title: "Sidebar",
+						tree: [
+							// Events Section
+							{
+								id: "sec-sidebar-events",
+								name: "Events",
+								open: true,
+								children: [
+									{
+										id: "row-sidebar-events",
+										open: true,
+										children: [
+											{
+												id: "col-events-content",
+												open: true,
+												elements: [
+													{ id: "ele-events-label" },
+													{ id: "ele-event-1" },
+													{ id: "ele-event-2" },
+												],
+											},
+										],
+									},
+								],
+							},
+							// News Section
+							{
+								id: "sec-sidebar-news",
+								name: "News",
+								open: true,
+								children: [
+									{
+										id: "row-sidebar-news",
+										open: true,
+										children: [
+											{
+												id: "col-news-content",
+												open: true,
+												elements: [
+													{ id: "ele-news-label" },
+													{ id: "ele-news-1" },
+													{ id: "ele-news-2" },
+													{ id: "ele-news-btn" },
+												],
+											},
+										],
+									},
+								],
+							},
+						],
+						elements: {
+							// Events Elements
+							"ele-events-label": {
+								type: "ct-text",
+								properties: {
+									text: "EVENTS",
+									displayTemplateKey: "accentText",
+					displaySettings: [
+						{ key: "color", value: "blue" },
+					],
+								},
+							},
+							"ele-event-1": {
+								type: "ct-sidebar-item",
+								properties: {
+									title: "Global Running Summit 2026",
+									description: "Join us for a day of keynotes and workshops on the future of endurance sports and wearable technology.",
+								},
+							},
+							"ele-event-2": {
+								type: "ct-sidebar-item",
+								properties: {
+									title: "Stride Community Marathon",
+									description: "Connect with other Stride athletes, break your personal bests, and celebrate with the community.",
+								},
+							},
+
+							// News Elements
+							"ele-news-label": {
+								type: "ct-text",
+								properties: {
+									text: "NEWS",
+									displayTemplateKey: "accentText",
+					displaySettings: [
+						{ key: "color", value: "blue" },
+					],
+								},
+							},
+							"ele-news-1": {
+								type: "ct-sidebar-item",
+								properties: {
+									title: "Stride raises Series B to expand global fitness community",
+									description: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more.",
+								},
+							},
+							"ele-news-2": {
+								type: "ct-sidebar-item",
+								properties: {
+									title: "Introducing Stride Stats 2.0 with AI coaching",
+									description: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing.",
+								},
+							},
+							"ele-news-btn": {
+								type: "ct-button",
+								properties: {
+									label: "ALL NEWS & EVENTS",
+									displayTemplateKey: "outlineButton",
+					displaySettings: [],
+								},
+							},
+						},
+					},
+				],
+			},
+		],
+	},
+	{
+>>>>>>> origin/main
 		id: "page-exp-landing-default",
 		contentTypeId: "exp-landing-page",
 		name: "Default Landing",
@@ -1943,7 +3855,11 @@ export const initialPages: Page[] = [
 							{
 								id: "sec-landing-hero",
 								name: "Hero",
+<<<<<<< HEAD
 								bgImage: "/hero-cycling.jpg",
+=======
+								bgImage: "/stride-hero/hero.png",
+>>>>>>> origin/main
 								open: true,
 								children: [
 									{
@@ -2292,104 +4208,171 @@ export const initialPages: Page[] = [
 							"ele-landing-hero-badge": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "● Join 2M+ active users worldwide" },
+=======
+									text: "● Join 2M+ active users worldwide",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-sub": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Ready. Set. Go." },
+=======
+									text: "Ready. Set. Go.",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: {
 										value: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
 									},
+=======
+									text: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-broken-image": {
 								type: "ct-image-block",
 								properties: {
+<<<<<<< HEAD
 									image: { value: "https://example.com/missing-image-404.jpg" },
+=======
+									image: "https://example.com/missing-image-404.jpg",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-cta-primary": {
 								type: "ct-button",
 								properties: {
+<<<<<<< HEAD
 									label: { value: "Register for your bib" },
 									url: { value: "/register" },
+=======
+									label: "Register for your bib",
+									url: "/register",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-cta-secondary": {
 								type: "ct-button",
 								properties: {
+<<<<<<< HEAD
 									label: { value: "Learn More" },
 									url: { value: "/about" },
+=======
+									label: "Learn More",
+									url: "/about",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-stat-1-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "500K+" },
 									variant: { value: "stat" },
+=======
+									text: "500K+",
+									variant: "stat",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-stat-1-text": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Annual participants" },
 									variant: { value: "stat" },
+=======
+									text: "Annual participants",
+									variant: "stat",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-stat-2-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "45+" },
 									variant: { value: "stat" },
+=======
+									text: "45+",
+									variant: "stat",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-stat-2-text": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Countries represented" },
 									variant: { value: "stat" },
+=======
+									text: "Countries represented",
+									variant: "stat",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-stat-3-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "4.9/5" },
 									variant: { value: "stat" },
+=======
+									text: "4.9/5",
+									variant: "stat",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-stat-3-text": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Average rating" },
 									variant: { value: "stat" },
+=======
+									text: "Average rating",
+									variant: "stat",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-features-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Everything you need to stay motivated" },
+=======
+									text: "Everything you need to stay motivated",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-features-sub": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: {
 										value: "Track your progress, connect with friends, and push your limits with our comprehensive fitness platform.",
 									},
+=======
+									text: "Track your progress, connect with friends, and push your limits with our comprehensive fitness platform.",
+>>>>>>> origin/main
 								},
 							},
 							"ele-feat-1": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2408,14 +4391,20 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-feat-2": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2434,14 +4423,20 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-feat-3": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2460,14 +4455,20 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-feat-4": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2486,14 +4487,20 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-feat-5": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2512,14 +4519,20 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-feat-6": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2538,28 +4551,42 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-testimonials-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Join millions of active users" },
+=======
+									text: "Join millions of active users",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-testimonials-sub": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: {
 										value: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
 									},
+=======
+									text: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
+>>>>>>> origin/main
 								},
 							},
 							"ele-test-1": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2578,14 +4605,20 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-test-2": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2604,49 +4637,76 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-cta-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Ready to join the community?" },
+=======
+									text: "Ready to join the community?",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-cta-sub": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: {
 										value: "Start sharing your fitness journey and get inspired by others.",
 									},
+=======
+									text: "Start sharing your fitness journey and get inspired by others.",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-cta-button": {
 								type: "ct-button",
 								properties: {
+<<<<<<< HEAD
 									label: { value: "Join Now" },
 									url: { value: "/register" },
+=======
+									label: "Join Now",
+									url: "/register",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-challenges-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Push your limits" },
+=======
+									text: "Push your limits",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-challenges-sub": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: {
 										value: "Join exciting challenges and compete with users worldwide to reach new fitness milestones.",
 									},
+=======
+									text: "Join exciting challenges and compete with users worldwide to reach new fitness milestones.",
+>>>>>>> origin/main
 								},
 							},
 							"ele-chal-1": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2665,14 +4725,20 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-chal-2": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2691,14 +4757,20 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-chal-3": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2717,72 +4789,112 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-pricing-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Choose your plan" },
+=======
+									text: "Choose your plan",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-pricing-sub": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: {
 										value: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
 									},
+=======
+									text: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
+>>>>>>> origin/main
 								},
 							},
 							"ele-price-1": {
 								type: "ct-product",
 								properties: {
+<<<<<<< HEAD
 									name: { value: "Free" },
 									price: { value: "$0/mo" },
 									description: {
 										value: "Basic activity tracking, Community access, 5 challenges per month.",
 									},
+=======
+									name: "Free",
+									price: "$0/mo",
+									description: "Basic activity tracking, Community access, 5 challenges per month.",
+>>>>>>> origin/main
 								},
 							},
 							"ele-price-2": {
 								type: "ct-product",
 								properties: {
+<<<<<<< HEAD
 									name: { value: "Pro" },
 									price: { value: "$9.99/mo" },
 									description: {
 										value: "Everything in Free, Unlimited challenges, Advanced analytics, Heart rate monitoring.",
 									},
+=======
+									name: "Pro",
+									price: "$9.99/mo",
+									description: "Everything in Free, Unlimited challenges, Advanced analytics, Heart rate monitoring.",
+>>>>>>> origin/main
 								},
 							},
 							"ele-price-3": {
 								type: "ct-product",
 								properties: {
+<<<<<<< HEAD
 									name: { value: "Team" },
 									price: { value: "$24.99/mo" },
 									description: {
 										value: "Everything in Pro, Up to 10 team members, Team challenges, Admin dashboard.",
 									},
+=======
+									name: "Team",
+									price: "$24.99/mo",
+									description: "Everything in Pro, Up to 10 team members, Team challenges, Admin dashboard.",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-stories-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Real results from real people" },
+=======
+									text: "Real results from real people",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-stories-sub": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: {
 										value: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
 									},
+=======
+									text: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
+>>>>>>> origin/main
 								},
 							},
 							"ele-story-1": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2801,14 +4913,20 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-story-2": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2827,14 +4945,20 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-story-3": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
+<<<<<<< HEAD
 										value: {
+=======
+>>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -2853,31 +4977,46 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
+<<<<<<< HEAD
 									},
+=======
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-footer-cta-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: {
 										value: "Join over 2 million users achieving their goals",
 									},
+=======
+									text: "Join over 2 million users achieving their goals",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-footer-cta-sub": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: {
 										value: "Start your fitness journey today and become part of our success stories.",
 									},
+=======
+									text: "Start your fitness journey today and become part of our success stories.",
+>>>>>>> origin/main
 								},
 							},
 							"ele-landing-footer-cta-stats": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: {
 										value: "4.9/5 App Store Rating | 50K+ 5-Star Reviews | 2M+ Active Users",
 									},
+=======
+									text: "4.9/5 App Store Rating | 50K+ 5-Star Reviews | 2M+ Active Users",
+>>>>>>> origin/main
 								},
 							},
 						},
@@ -2941,69 +5080,113 @@ export const initialPages: Page[] = [
 							"ele-aside-blog-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Latest Blog Posts" },
+=======
+									text: "Latest Blog Posts",
+>>>>>>> origin/main
 								},
 							},
 							"ele-aside-blog-1": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "10 Tips For Your First Marathon (2 days ago)" },
+=======
+									text: "10 Tips For Your First Marathon (2 days ago)",
+>>>>>>> origin/main
 								},
 							},
 							"ele-aside-blog-2": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Cycling Workouts for Beginners (5 days ago)" },
+=======
+									text: "Cycling Workouts for Beginners (5 days ago)",
+>>>>>>> origin/main
 								},
 							},
 							"ele-aside-blog-3": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "The Science of Running Form (1 week ago)" },
+=======
+									text: "The Science of Running Form (1 week ago)",
+>>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-heading": {
 								type: "ct-heading",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Join STRIDE Today" },
+=======
+									text: "Join STRIDE Today",
+>>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-sub": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: { value: "Start your fitness journey with our community" },
+=======
+									text: "Start your fitness journey with our community",
+>>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-name": {
 								type: "ct-input",
 								properties: {
+<<<<<<< HEAD
 									placeholder: { value: "Full Name" },
+=======
+									placeholder: "Full Name",
+>>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-email": {
 								type: "ct-input",
 								properties: {
+<<<<<<< HEAD
 									placeholder: { value: "Email Address" },
+=======
+									placeholder: "Email Address",
+>>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-pass": {
 								type: "ct-input",
 								properties: {
+<<<<<<< HEAD
 									placeholder: { value: "Password" },
+=======
+									placeholder: "Password",
+>>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-btn": {
 								type: "ct-button",
 								properties: {
+<<<<<<< HEAD
 									label: { value: "Create Account" },
+=======
+									label: "Create Account",
+>>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-footer": {
 								type: "ct-text",
 								properties: {
+<<<<<<< HEAD
 									text: {
 										value: "By signing up, you agree to our Terms of Service and Privacy Policy",
 									},
+=======
+									text: "By signing up, you agree to our Terms of Service and Privacy Policy",
+>>>>>>> origin/main
 								},
 							},
 						},
@@ -3019,7 +5202,11 @@ export const initialPages: Page[] = [
 					{
 						id: "sec-landing-hero",
 						name: "Hero",
+<<<<<<< HEAD
 						bgImage: "/hero-cycling.jpg",
+=======
+						bgImage: "/stride-hero/hero.png",
+>>>>>>> origin/main
 						open: true,
 						children: [
 							{
@@ -3323,96 +5510,157 @@ export const initialPages: Page[] = [
 					"ele-landing-hero-badge": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "● Join 2M+ active users worldwide" },
+=======
+							text: "● Join 2M+ active users worldwide",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Ready. Set. Go." },
+=======
+							text: "Ready. Set. Go.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
 							},
+=======
+							text: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-cta-primary": {
 						type: "ct-button",
 						properties: {
+<<<<<<< HEAD
 							label: { value: "Register for your bib" },
+=======
+							label: "Register for your bib",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-cta-secondary": {
 						type: "ct-button",
 						properties: {
+<<<<<<< HEAD
 							label: { value: "Learn More" },
+=======
+							label: "Learn More",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-stat-1-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "500K+" },
 							variant: { value: "stat" },
+=======
+							text: "500K+",
+							variant: "stat",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-stat-1-text": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Annual participants" },
 							variant: { value: "stat" },
+=======
+							text: "Annual participants",
+							variant: "stat",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-stat-2-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "45+" },
 							variant: { value: "stat" },
+=======
+							text: "45+",
+							variant: "stat",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-stat-2-text": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Countries represented" },
 							variant: { value: "stat" },
+=======
+							text: "Countries represented",
+							variant: "stat",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-stat-3-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "4.9/5" },
 							variant: { value: "stat" },
+=======
+							text: "4.9/5",
+							variant: "stat",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-stat-3-text": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Average rating" },
 							variant: { value: "stat" },
+=======
+							text: "Average rating",
+							variant: "stat",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-features-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Everything you need to stay motivated" },
+=======
+							text: "Everything you need to stay motivated",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-features-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Track your progress, connect with friends, and push your limits with our comprehensive fitness platform.",
 							},
+=======
+							text: "Track your progress, connect with friends, and push your limits with our comprehensive fitness platform.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-feat-1": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3431,14 +5679,20 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-feat-2": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3457,14 +5711,20 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-feat-3": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3483,14 +5743,20 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-feat-4": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3509,14 +5775,20 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-feat-5": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3535,14 +5807,20 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-feat-6": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3561,28 +5839,42 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-testimonials-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Join millions of active users" },
+=======
+							text: "Join millions of active users",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-testimonials-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
 							},
+=======
+							text: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-test-1": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3601,14 +5893,20 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-test-2": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3627,48 +5925,74 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-cta-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Ready to join the community?" },
+=======
+							text: "Ready to join the community?",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-cta-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Start sharing your fitness journey and get inspired by others.",
 							},
+=======
+							text: "Start sharing your fitness journey and get inspired by others.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-cta-button": {
 						type: "ct-button",
 						properties: {
+<<<<<<< HEAD
 							label: { value: "Join Now" },
+=======
+							label: "Join Now",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-challenges-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Push your limits" },
+=======
+							text: "Push your limits",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-challenges-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Join exciting challenges and compete with users worldwide to reach new fitness milestones.",
 							},
+=======
+							text: "Join exciting challenges and compete with users worldwide to reach new fitness milestones.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-chal-1": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3687,14 +6011,20 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-chal-2": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3713,14 +6043,20 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-chal-3": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3739,72 +6075,112 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-pricing-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Choose your plan" },
+=======
+							text: "Choose your plan",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-pricing-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
 							},
+=======
+							text: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-price-1": {
 						type: "ct-product",
 						properties: {
+<<<<<<< HEAD
 							name: { value: "Free" },
 							price: { value: "$0/mo" },
 							description: {
 								value: "Basic activity tracking, Community access, 5 challenges per month.",
 							},
+=======
+							name: "Free",
+							price: "$0/mo",
+							description: "Basic activity tracking, Community access, 5 challenges per month.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-price-2": {
 						type: "ct-product",
 						properties: {
+<<<<<<< HEAD
 							name: { value: "Pro" },
 							price: { value: "$9.99/mo" },
 							description: {
 								value: "Everything in Free, Unlimited challenges, Advanced analytics, Heart rate monitoring.",
 							},
+=======
+							name: "Pro",
+							price: "$9.99/mo",
+							description: "Everything in Free, Unlimited challenges, Advanced analytics, Heart rate monitoring.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-price-3": {
 						type: "ct-product",
 						properties: {
+<<<<<<< HEAD
 							name: { value: "Team" },
 							price: { value: "$24.99/mo" },
 							description: {
 								value: "Everything in Pro, Up to 10 team members, Team challenges, Admin dashboard.",
 							},
+=======
+							name: "Team",
+							price: "$24.99/mo",
+							description: "Everything in Pro, Up to 10 team members, Team challenges, Admin dashboard.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-stories-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Real results from real people" },
+=======
+							text: "Real results from real people",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-stories-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
 							},
+=======
+							text: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-story-1": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3823,14 +6199,20 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-story-2": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3849,14 +6231,20 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-story-3": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -3875,29 +6263,44 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-footer-cta-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Join over 2 million users achieving their goals" },
+=======
+							text: "Join over 2 million users achieving their goals",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-footer-cta-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Start your fitness journey today and become part of our success stories.",
 							},
+=======
+							text: "Start your fitness journey today and become part of our success stories.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-landing-footer-cta-stats": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "4.9/5 App Store Rating | 50K+ 5-Star Reviews | 2M+ Active Users",
 							},
+=======
+							text: "4.9/5 App Store Rating | 50K+ 5-Star Reviews | 2M+ Active Users",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -3961,69 +6364,113 @@ export const initialPages: Page[] = [
 					"ele-aside-blog-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Latest Blog Posts" },
+=======
+							text: "Latest Blog Posts",
+>>>>>>> origin/main
 						},
 					},
 					"ele-aside-blog-1": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "10 Tips For Your First Marathon (2 days ago)" },
+=======
+							text: "10 Tips For Your First Marathon (2 days ago)",
+>>>>>>> origin/main
 						},
 					},
 					"ele-aside-blog-2": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Cycling Workouts for Beginners (5 days ago)" },
+=======
+							text: "Cycling Workouts for Beginners (5 days ago)",
+>>>>>>> origin/main
 						},
 					},
 					"ele-aside-blog-3": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "The Science of Running Form (1 week ago)" },
+=======
+							text: "The Science of Running Form (1 week ago)",
+>>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Join STRIDE Today" },
+=======
+							text: "Join STRIDE Today",
+>>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Start your fitness journey with our community" },
+=======
+							text: "Start your fitness journey with our community",
+>>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-name": {
 						type: "ct-input",
 						properties: {
+<<<<<<< HEAD
 							placeholder: { value: "Full Name" },
+=======
+							placeholder: "Full Name",
+>>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-email": {
 						type: "ct-input",
 						properties: {
+<<<<<<< HEAD
 							placeholder: { value: "Email Address" },
+=======
+							placeholder: "Email Address",
+>>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-pass": {
 						type: "ct-input",
 						properties: {
+<<<<<<< HEAD
 							placeholder: { value: "Password" },
+=======
+							placeholder: "Password",
+>>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-btn": {
 						type: "ct-button",
 						properties: {
+<<<<<<< HEAD
 							label: { value: "Create Account" },
+=======
+							label: "Create Account",
+>>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-footer": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "By signing up, you agree to our Terms of Service and Privacy Policy",
 							},
+=======
+							text: "By signing up, you agree to our Terms of Service and Privacy Policy",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -4035,6 +6482,7 @@ export const initialPages: Page[] = [
 		name: "5 Tips for Your First Marathon",
 		parentId: "page-site-blog",
 		status: "Published",
+<<<<<<< HEAD
 		lastModified: "2023-10-24",
 		contentTypeId: "ct-blog-post",
 		slug: "5-tips-for-your-first-marathon",
@@ -4056,10 +6504,45 @@ export const initialPages: Page[] = [
 <h2>5) Rehearse race day</h2>
 <p>Try your breakfast, gels, and outfit on a long run so there are no surprises.</p>`,
 			author: "1",
+=======
+		lastModified: "2026-04-12",
+		contentTypeId: "ct-blog-post",
+		slug: "5-tips-for-your-first-marathon",
+		data: {
+			title: "5 Tips for Your First Marathon with Stride",
+			subtitle: "Build confidence, stay consistent, and make race day feel familiar.",
+			category: "Training",
+			heroLogo: "/boston-marathon-logo.png",
+			readingTime: "8 min read",
+			publishDate: "Apr 12, 2026",
+			featuredImage: "/cmp/assets/recommendation/panel-01-image.jpg",
+			body: `<p>Training for 26.2 miles starts with a single step — and a plan you can actually stick to. Whether you're lacing up your Stride Pros for the first time or graduating from 10Ks, these five tips will help you build fitness without burning out.</p>
+<h2>1) Keep the easy runs easy</h2>
+<p>Your easy pace should feel conversational. That's where most of your aerobic gains come from. The Stride Pro's cushioned midsole is built for exactly this — absorbing miles without breaking you down.</p>
+<h2>2) Long runs are practice, not a test</h2>
+<p>Focus on time-on-feet and fueling. Don't race your long run. Use it to rehearse your race-day nutrition and hydration strategy.</p>
+<h2>3) Fuel early and often</h2>
+<ul>
+  <li><p>Start fueling around 30–45 minutes in</p></li>
+  <li><p>Aim for 30–60g of carbs per hour</p></li>
+  <li><p>Practice with the same gels and drinks you'll use on race day</p></li>
+</ul>
+<h2>4) Don't skip recovery</h2>
+<p>Sleep, easy days, and lower-intensity weeks are part of the training. Your body adapts during rest, not during the run. Stride's recovery line is designed to support this phase.</p>
+<h2>5) Rehearse race day</h2>
+<p>Try your breakfast, gels, shoes, and outfit on a long run so there are no surprises. If you're running a Stride event, check in early and walk the start area the day before.</p>`,
+			author: { name: "Rachel Voss", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face" },
+			ctaHeading: "Ready to compete?",
+			ctaPrimaryText: "GET STARTED",
+			ctaPrimaryLink: "/registration",
+			ctaSecondaryText: "REQUEST A DEMO",
+			ctaSecondaryLink: "/demo",
+>>>>>>> origin/main
 		},
 	},
 	{
 		id: "page-site-blog-post-2",
+<<<<<<< HEAD
 		name: "Intervals for Beginners",
 		parentId: "page-site-blog",
 		status: "Published",
@@ -4070,28 +6553,63 @@ export const initialPages: Page[] = [
 			title: "Intervals for Beginners",
 			subtitle: "A simple approach to speedwork that won’t fry your legs.",
 			body: `<p>Intervals don’t have to be scary. Think of them as controlled effort followed by recovery, repeated a few times. The goal is better form, efficiency, and confidence — not exhaustion.</p>
+=======
+		name: "Interval Training with Stride",
+		parentId: "page-site-blog",
+		status: "Published",
+		lastModified: "2026-04-18",
+		contentTypeId: "ct-blog-post",
+		slug: "interval-training-with-stride",
+		data: {
+			title: "Speed Sessions: A Runner's Guide to Intervals",
+			subtitle: "How to add speedwork to your training without burning out.",
+			category: "Performance",
+			readingTime: "6 min read",
+			publishDate: "Apr 18, 2026",
+			featuredImage: "/cmp/assets/recommendation/panel-06-image.jpg",
+			body: `<p>Intervals don't have to be scary. Think of them as controlled effort followed by recovery, repeated a few times. The goal is better form, efficiency, and confidence — not exhaustion.</p>
+>>>>>>> origin/main
 <h2>A starter workout</h2>
 <ul>
   <li><p><strong>Warm up:</strong> 10 minutes easy + 3 short strides</p></li>
   <li><p><strong>Main set:</strong> 6 × (1 min steady-hard, 2 min easy)</p></li>
   <li><p><strong>Cool down:</strong> 10 minutes easy</p></li>
 </ul>
+<<<<<<< HEAD
 <p>During the hard minute, aim for “comfortably hard” — you should finish feeling like you could do one more rep.</p>
+=======
+<p>During the hard minute, aim for "comfortably hard" — you should finish feeling like you could do one more rep. The Stride Racer's responsive plate gives you that extra snap without the crash.</p>
+<h2>When to level up</h2>
+<p>Once 1-minute reps feel manageable, try 2–3 minute reps at a slightly slower pace. The key is progressive overload — small, sustainable jumps in volume or intensity.</p>
+>>>>>>> origin/main
 <h2>Common mistakes</h2>
 <ul>
   <li><p>Starting too fast on rep 1</p></li>
   <li><p>Skipping the warm-up</p></li>
   <li><p>Doing intervals on tired legs every week</p></li>
 </ul>
+<<<<<<< HEAD
 <p>One interval session per week is plenty for most runners.</p>`,
 			author: "2",
 		},
 	},
 
+=======
+<p>One interval session per week is plenty for most runners. Quality over quantity — always.</p>`,
+			author: { name: "Todd Slayton", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face" },
+			ctaHeading: "Find your next event",
+			ctaPrimaryText: "VIEW EVENTS",
+			ctaPrimaryLink: "/events",
+			ctaSecondaryText: "JOIN THE COMMUNITY",
+			ctaSecondaryLink: "/community",
+		},
+	},
+>>>>>>> origin/main
 	{
 		id: "page-site-blog-post-3",
 		name: "Race Day Checklist",
 		parentId: "page-site-blog",
+<<<<<<< HEAD
 		status: "Draft",
 		lastModified: "2023-10-29",
 		contentTypeId: "ct-blog-post",
@@ -4106,10 +6624,32 @@ export const initialPages: Page[] = [
   <li><p>Pin your bib and pack safety pins (or your belt)</p></li>
   <li><p>Charge your watch and phone</p></li>
   <li><p>Plan breakfast + pack a backup snack</p></li>
+=======
+		status: "Published",
+		lastModified: "2026-05-02",
+		contentTypeId: "ct-blog-post",
+		slug: "race-day-checklist",
+		data: {
+			title: "The Stride Race Day Checklist",
+			subtitle: "Remove the stress by planning the small stuff ahead of time.",
+			category: "Race Day",
+			readingTime: "5 min read",
+			publishDate: "May 2, 2026",
+			featuredImage: "/cmp/assets/recommendation/panel-05-image.jpg",
+			body: `<p>Race mornings get chaotic fast. The best way to stay calm is to remove decisions and make the day feel like a routine workout. Here's the checklist our Stride athletes swear by.</p>
+<h2>The night before</h2>
+<ul>
+  <li><p>Lay out your kit — Stride shoes, socks, top, shorts or tights</p></li>
+  <li><p>Pin your bib and attach your timing chip</p></li>
+  <li><p>Charge your watch and phone</p></li>
+  <li><p>Plan breakfast + pack a backup snack</p></li>
+  <li><p>Check the weather and adjust layers accordingly</p></li>
+>>>>>>> origin/main
 </ul>
 <h2>Race morning</h2>
 <ul>
   <li><p>Arrive early and find toilets first</p></li>
+<<<<<<< HEAD
   <li><p>Do 5–10 minutes easy jogging + a few strides (if appropriate)</p></li>
   <li><p>Start conservatively for the first 5–10 minutes</p></li>
 </ul>
@@ -4118,11 +6658,27 @@ export const initialPages: Page[] = [
 		},
 	},
 
+=======
+  <li><p>Do 5–10 minutes easy jogging + a few strides</p></li>
+  <li><p>Start conservatively for the first 5–10 minutes</p></li>
+  <li><p>Smile at the crowd — they're there for you</p></li>
+</ul>
+<blockquote><p><strong>Pro tip:</strong> Write your plan (pace + fueling) on your wrist or a card in your pocket. When nerves spike, you'll follow the plan instead of the adrenaline.</p></blockquote>`,
+			author: { name: "Rachel Voss", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face" },
+			ctaHeading: "Ready to compete?",
+			ctaPrimaryText: "GET STARTED",
+			ctaPrimaryLink: "/registration",
+			ctaSecondaryText: "REQUEST A DEMO",
+			ctaSecondaryLink: "/demo",
+		},
+	},
+>>>>>>> origin/main
 	{
 		id: "page-site-blog-post-4",
 		name: "How to Choose Running Shoes",
 		parentId: "page-site-blog",
 		status: "Published",
+<<<<<<< HEAD
 		lastModified: "2023-10-30",
 		contentTypeId: "ct-blog-post",
 		slug: "how-to-choose-running-shoes",
@@ -4141,10 +6697,61 @@ export const initialPages: Page[] = [
 <h2>Don’t overthink pronation labels</h2>
 <p>Unless you have a specific injury history, prioritize what feels natural and stable. If possible, test-run them on a treadmill or outside.</p>`,
 			author: "1",
+=======
+		lastModified: "2026-05-10",
+		contentTypeId: "ct-blog-post",
+		slug: "how-to-choose-running-shoes",
+		data: {
+			title: "Finding Your Perfect Stride: A Shoe Guide",
+			subtitle: "Comfort first, then match the shoe to your training.",
+			category: "Gear",
+			readingTime: "7 min read",
+			publishDate: "May 10, 2026",
+			featuredImage: "/cmp/assets/recommendation/panel-08-image.jpg",
+			body: `<p>The "best" shoe is the one that fits your foot and your running. Start with comfort and stability, then refine based on your training goals. Here's how the Stride lineup breaks down.</p>
+<h2>Fit comes first</h2>
+<p>Look for a secure heel, a roomy toe box, and no hot spots. Your toes should be able to wiggle, and the shoe shouldn't slip when you walk or jog. Every Stride shoe is designed with an anatomical last that mirrors the natural foot shape.</p>
+<h2>Match the shoe to the session</h2>
+<ul>
+  <li><p><strong>Stride Pro:</strong> daily trainer — comfortable, durable, forgiving. Built for the miles that matter most.</p></li>
+  <li><p><strong>Stride Racer:</strong> workout shoe — lighter, snappier, carbon plate for race-day performance.</p></li>
+  <li><p><strong>Stride Trail:</strong> trail shoe — aggressive grip, rock plate protection, stable platform for technical terrain.</p></li>
+</ul>
+<h2>Don't overthink pronation labels</h2>
+<p>Unless you have a specific injury history, prioritize what feels natural and stable. Visit a Stride retail partner for a free gait analysis, or test-run them at any Stride event expo.</p>`,
+			author: { name: "Todd Slayton", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face" },
+			ctaHeading: "Find your fit",
+			ctaPrimaryText: "SHOP STRIDE",
+			ctaPrimaryLink: "/shop",
+			ctaSecondaryText: "FIND A STORE",
+			ctaSecondaryLink: "/stores",
+>>>>>>> origin/main
 		},
 	},
 
 	{
+<<<<<<< HEAD
+=======
+		id: "page-site-marathon-2027",
+		name: "Boston Marathon 2027",
+		parentId: "page-site-home",
+		status: "Published",
+		lastModified: "2026-05-29",
+		contentTypeId: "exp-event-page",
+		slug: "boston-marathon-2027",
+		data: {},
+		variations: [
+			{
+				id: "original",
+				name: "Original",
+				status: "Published",
+				outlines: [MARATHON_EVENT_OUTLINE],
+			},
+		],
+	},
+
+	{
+>>>>>>> origin/main
 		id: "page-site-events",
 		name: "Events",
 		parentId: "page-site-home",
@@ -4292,6 +6899,14 @@ export const initialPages: Page[] = [
 	{
 		id: "page-activities",
 		contentTypeId: "exp-landing-page",
+<<<<<<< HEAD
+=======
+		displayTemplateKey: "defaultExperience",
+		displaySettings: [
+			{ key: "backgroundColor", value: "light-blue" },
+			{ key: "spacing", value: "compact" }
+		],
+>>>>>>> origin/main
 		name: "Activities",
 		slug: "activities",
 		parentId: null,
@@ -4359,45 +6974,73 @@ export const initialPages: Page[] = [
 					"ele-activities-hero-badge": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Join 2M+ active users worldwide" },
+=======
+							text: "Join 2M+ active users worldwide",
+>>>>>>> origin/main
 						},
 					},
 					"ele-activities-hero-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Ready. Set. Go." },
+=======
+							text: "Ready. Set. Go.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-activities-hero-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
 							},
+=======
+							text: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
+>>>>>>> origin/main
 						},
 					},
 					"ele-activities-hero-cta": {
 						type: "ct-button",
 						properties: {
+<<<<<<< HEAD
 							label: { value: "Register for your bib" },
+=======
+							label: "Register for your bib",
+>>>>>>> origin/main
 						},
 					},
 					"ele-activities-stat-1": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "500K+ Annual participants" },
+=======
+							text: "500K+ Annual participants",
+>>>>>>> origin/main
 						},
 					},
 					"ele-activities-stat-2": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "45+ Countries represented" },
+=======
+							text: "45+ Countries represented",
+>>>>>>> origin/main
 						},
 					},
 					"ele-activities-stat-3": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "4.9/5 Average rating" },
+=======
+							text: "4.9/5 Average rating",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -4408,6 +7051,14 @@ export const initialPages: Page[] = [
 	{
 		id: "page-community",
 		contentTypeId: "exp-landing-page",
+<<<<<<< HEAD
+=======
+		displayTemplateKey: "defaultExperience",
+		displaySettings: [
+			{ key: "backgroundColor", value: "light-blue" },
+			{ key: "spacing", value: "compact" }
+		],
+>>>>>>> origin/main
 		name: "Community",
 		slug: "community",
 		parentId: null,
@@ -4468,31 +7119,47 @@ export const initialPages: Page[] = [
 					"ele-community-hero-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Join millions of active users" },
+=======
+							text: "Join millions of active users",
+>>>>>>> origin/main
 						},
 					},
 					"ele-community-hero-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
 							},
+=======
+							text: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-community-test-1": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Sarah M.: Amazing run through Central Park this morning! The GPS tracking was spot-on.",
 							},
+=======
+							text: "Sarah M.: Amazing run through Central Park this morning! The GPS tracking was spot-on.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-community-test-2": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Mike R.: Crushed my half-marathon goal! The community challenges really pushed me.",
 							},
+=======
+							text: "Mike R.: Crushed my half-marathon goal! The community challenges really pushed me.",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -4501,6 +7168,7 @@ export const initialPages: Page[] = [
 	},
 
 	{
+<<<<<<< HEAD
 		id: "page-challenges",
 		contentTypeId: "exp-landing-page",
 		name: "Challenges",
@@ -4529,10 +7197,52 @@ export const initialPages: Page[] = [
 										elements: [
 											{ id: "ele-challenges-hero-heading" },
 											{ id: "ele-challenges-hero-sub" },
+=======
+		id: "page-site-challenges",
+		contentTypeId: "exp-landing-page",
+		displayTemplateKey: "defaultExperience",
+		displaySettings: [
+			{ key: "backgroundColor", value: "light-blue" },
+			{ key: "spacing", value: "compact" }
+		],
+		name: "Challenges",
+		slug: "challenges",
+		parentId: "page-site-home",
+		status: "Published",
+		lastModified: "2026-05-28",
+		data: {},
+		variations: [
+			{
+				id: "original",
+				name: "Original",
+				status: "Published",
+				outlines: [
+					{
+						id: "ol-challenges-main",
+						title: "Main",
+						tree: [
+							{
+								id: "sec-challenges-hero",
+								name: "Hero",
+								type: "ct-section",
+								open: true,
+								noPadding: true,
+								children: [
+									{
+										id: "row-challenges-hero",
+										open: true,
+										children: [
+											{
+												id: "col-challenges-hero-content",
+												open: true,
+												elements: [{ id: "ele-challenges-hero" }],
+											},
+>>>>>>> origin/main
 										],
 									},
 								],
 							},
+<<<<<<< HEAD
 						],
 					},
 					{
@@ -4587,6 +7297,206 @@ export const initialPages: Page[] = [
 						},
 					},
 				},
+=======
+							{
+								id: "sec-challenges-calendar",
+								name: "Curated Race Calendar",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [{ key: "spacing", value: "compact" }],
+								children: [{ id: "row-challenges-calendar", open: true, children: [{ id: "col-challenges-calendar", open: true, elements: [{ id: "ele-cal-heading" }, { id: "ele-cal-body" }] }] }],
+							},
+							{
+								id: "sec-challenges-leaderboards",
+								name: "Live Leaderboards",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [{ key: "spacing", value: "compact" }],
+								children: [{ id: "row-challenges-leaderboards", open: true, children: [{ id: "col-challenges-leaderboards", open: true, elements: [{ id: "ele-lb-heading" }, { id: "ele-lb-body" }] }] }],
+							},
+							{
+								id: "sec-challenges-celebrations",
+								name: "Automated Celebrations",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [{ key: "spacing", value: "compact" }],
+								children: [{ id: "row-challenges-celebrations", open: true, children: [{ id: "col-challenges-celebrations", open: true, elements: [{ id: "ele-cel-heading" }, { id: "ele-cel-body" }] }] }],
+							},
+							{
+								id: "sec-challenges-cards",
+								name: "Cards",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [{ key: "spacing", value: "compact" }],
+								children: [{ id: "row-challenges-cards", open: true, children: [
+									{ id: "col-ch-join-card", open: true, elements: [{ id: "ele-ch-join-card" }] },
+									{ id: "col-ch-coach-card", open: true, elements: [{ id: "ele-ch-coach-card" }] },
+								] }],
+							},
+						],
+						elements: {
+							"ele-challenges-hero": {
+								type: "ct-hero",
+								properties: {
+									badge: "STRIDE CHALLENGES",
+									heading: "Challenges that keep every squad honest",
+									subheading: "Spin up time-boxed efforts, layer in stretch goals, and broadcast wins the moment they happen.",
+									backgroundImage: "/sports-2.jpg",
+									showAppMockup: "false",
+									displayTemplateKey: "centeredHero",
+									displaySettings: [{ key: "layout", value: "centered" }],
+								},
+							},
+							"ele-cal-heading": { type: "ct-heading", properties: { text: "Curated race calendar", level: "h2" } },
+							"ele-cal-body": { type: "ct-text", properties: { text: "Choose from community templates or build your own ladder. Mix endurance, skills, or wellness streaks so every athlete has a reason to log in.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+							"ele-lb-heading": { type: "ct-heading", properties: { text: "Live leaderboards everywhere", level: "h2" } },
+							"ele-lb-body": { type: "ct-text", properties: { text: "Embed standings inside chats, dashboards, and announcements. Everyone knows who is leading without refreshing a spreadsheet.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+							"ele-cel-heading": { type: "ct-heading", properties: { text: "Automated celebrations", level: "h2" } },
+							"ele-cel-body": { type: "ct-text", properties: { text: "Trigger highlight reels, reward codes, or coach shout-outs when milestones hit. Keep the hype high while the platform handles delivery.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+							"ele-ch-join-card": { type: "ct-card", properties: { backgroundImage: "/features-card-1.jpg", label: "Join the Community", description: "Ride with thousands of others.", displaySettings: [{ key: "style", value: "simple" }] } },
+							"ele-ch-coach-card": { type: "ct-card", properties: { backgroundImage: "/features-card-2.jpg", label: "Find a Coach", description: "Get a personalized training plan.", displaySettings: [{ key: "style", value: "simple" }] } },
+						},
+					},
+					{
+						id: "ol-challenges-sidebar",
+						title: "Sidebar",
+						tree: [
+							{ id: "sec-ch-sidebar-events", name: "Events", open: true, children: [{ id: "row-ch-sidebar-events", open: true, children: [{ id: "col-ch-events", open: true, elements: [{ id: "ele-ch-events-label" }, { id: "ele-ch-event-1" }, { id: "ele-ch-event-2" }] }] }] },
+							{ id: "sec-ch-sidebar-news", name: "News", open: true, children: [{ id: "row-ch-sidebar-news", open: true, children: [{ id: "col-ch-news", open: true, elements: [{ id: "ele-ch-news-label" }, { id: "ele-ch-news-1" }, { id: "ele-ch-news-2" }, { id: "ele-ch-news-btn" }] }] }] },
+						],
+						elements: {
+							"ele-ch-events-label": { type: "ct-text", properties: { text: "EVENTS", displayTemplateKey: "accentText", displaySettings: [{ key: "color", value: "blue" }] } },
+							"ele-ch-event-1": { type: "ct-sidebar-item", properties: { title: "Global Running Summit 2026", description: "Join us for a day of keynotes and workshops on the future of endurance sports and wearable technology." } },
+							"ele-ch-event-2": { type: "ct-sidebar-item", properties: { title: "Stride Community Marathon", description: "Connect with other Stride athletes, break your personal bests, and celebrate with the community." } },
+							"ele-ch-news-label": { type: "ct-text", properties: { text: "NEWS", displayTemplateKey: "accentText", displaySettings: [{ key: "color", value: "blue" }] } },
+							"ele-ch-news-1": { type: "ct-sidebar-item", properties: { title: "Stride raises Series B to expand global fitness community", description: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more." } },
+							"ele-ch-news-2": { type: "ct-sidebar-item", properties: { title: "Introducing Stride Stats 2.0 with AI coaching", description: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing." } },
+							"ele-ch-news-btn": { type: "ct-button", properties: { label: "ALL NEWS & EVENTS", displayTemplateKey: "outlineButton" } },
+						},
+					},
+				],
+			},
+		],
+	},
+
+	{
+		id: "page-site-subscriptions",
+		contentTypeId: "exp-landing-page",
+		displayTemplateKey: "defaultExperience",
+		displaySettings: [
+			{ key: "backgroundColor", value: "light-blue" },
+			{ key: "spacing", value: "compact" }
+		],
+		name: "Subscriptions",
+		slug: "subscriptions",
+		parentId: "page-site-home",
+		status: "Published",
+		lastModified: "2026-05-28",
+		data: {},
+		variations: [
+			{
+				id: "original",
+				name: "Original",
+				status: "Published",
+				outlines: [
+					{
+						id: "ol-subs-main",
+						title: "Main",
+						tree: [
+							{
+								id: "sec-subs-hero",
+								name: "Hero",
+								type: "ct-section",
+								open: true,
+								noPadding: true,
+								children: [{ id: "row-subs-hero", open: true, children: [{ id: "col-subs-hero-content", open: true, elements: [{ id: "ele-subs-hero" }] }] }],
+							},
+							{
+								id: "sec-subs-packaging",
+								name: "Flexible Packaging",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [{ key: "spacing", value: "compact" }],
+								children: [{ id: "row-subs-packaging", open: true, children: [{ id: "col-subs-packaging", open: true, elements: [{ id: "ele-pkg-heading" }, { id: "ele-pkg-body" }] }] }],
+							},
+							{
+								id: "sec-subs-billing",
+								name: "Billing",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [{ key: "spacing", value: "compact" }],
+								children: [{ id: "row-subs-billing", open: true, children: [{ id: "col-subs-billing", open: true, elements: [{ id: "ele-bil-heading" }, { id: "ele-bil-body" }] }] }],
+							},
+							{
+								id: "sec-subs-perks",
+								name: "Perks",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [{ key: "spacing", value: "compact" }],
+								children: [{ id: "row-subs-perks", open: true, children: [{ id: "col-subs-perks", open: true, elements: [{ id: "ele-prk-heading" }, { id: "ele-prk-body" }] }] }],
+							},
+							{
+								id: "sec-subs-cards",
+								name: "Cards",
+								type: "ct-section",
+								open: true,
+								displayTemplateKey: "defaultSection",
+								displaySettings: [{ key: "spacing", value: "compact" }],
+								children: [{ id: "row-subs-cards", open: true, children: [
+									{ id: "col-sub-join-card", open: true, elements: [{ id: "ele-sub-join-card" }] },
+									{ id: "col-sub-coach-card", open: true, elements: [{ id: "ele-sub-coach-card" }] },
+								] }],
+							},
+						],
+						elements: {
+							"ele-subs-hero": {
+								type: "ct-hero",
+								properties: {
+									badge: "STRIDE SUBSCRIPTIONS",
+									heading: "Subscriptions that scale with every crew",
+									subheading: "Bundle coaching time, premium perks, and merch drops into flexible tiers—billing runs itself while you stay focused on athletes.",
+									backgroundImage: "/sports-3.jpg",
+									showAppMockup: "false",
+									displayTemplateKey: "centeredHero",
+									displaySettings: [{ key: "layout", value: "centered" }],
+								},
+							},
+							"ele-pkg-heading": { type: "ct-heading", properties: { text: "Flexible packaging", level: "h2" } },
+							"ele-pkg-body": { type: "ct-text", properties: { text: "Create recurring bundles for youth squads, elite crews, or remote communities. Add drop-in passes or VIP perks without rebuilding your stack.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+							"ele-bil-heading": { type: "ct-heading", properties: { text: "Billing that looks after itself", level: "h2" } },
+							"ele-bil-body": { type: "ct-text", properties: { text: "Automated renewals, proration, and dunning flows keep revenue steady. Coaches get alerts only when a human touch is needed.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+							"ele-prk-heading": { type: "ct-heading", properties: { text: "Perks tied to engagement", level: "h2" } },
+							"ele-prk-body": { type: "ct-text", properties: { text: "Unlock merch, travel credits, or bonus sessions when members hit streaks. Rewards sync straight to the app so fulfillment is instant.", displayTemplateKey: "defaultText", displaySettings: [{ key: "size", value: "default" }] } },
+							"ele-sub-join-card": { type: "ct-card", properties: { backgroundImage: "/features-card-1.jpg", label: "Join the Community", description: "Ride with thousands of others.", displaySettings: [{ key: "style", value: "simple" }] } },
+							"ele-sub-coach-card": { type: "ct-card", properties: { backgroundImage: "/features-card-2.jpg", label: "Find a Coach", description: "Get a personalized training plan.", displaySettings: [{ key: "style", value: "simple" }] } },
+						},
+					},
+					{
+						id: "ol-subs-sidebar",
+						title: "Sidebar",
+						tree: [
+							{ id: "sec-sub-sidebar-events", name: "Events", open: true, children: [{ id: "row-sub-sidebar-events", open: true, children: [{ id: "col-sub-events", open: true, elements: [{ id: "ele-sub-events-label" }, { id: "ele-sub-event-1" }, { id: "ele-sub-event-2" }] }] }] },
+							{ id: "sec-sub-sidebar-news", name: "News", open: true, children: [{ id: "row-sub-sidebar-news", open: true, children: [{ id: "col-sub-news", open: true, elements: [{ id: "ele-sub-news-label" }, { id: "ele-sub-news-1" }, { id: "ele-sub-news-2" }, { id: "ele-sub-news-btn" }] }] }] },
+						],
+						elements: {
+							"ele-sub-events-label": { type: "ct-text", properties: { text: "EVENTS", displayTemplateKey: "accentText", displaySettings: [{ key: "color", value: "blue" }] } },
+							"ele-sub-event-1": { type: "ct-sidebar-item", properties: { title: "Global Running Summit 2026", description: "Join us for a day of keynotes and workshops on the future of endurance sports and wearable technology." } },
+							"ele-sub-event-2": { type: "ct-sidebar-item", properties: { title: "Stride Community Marathon", description: "Connect with other Stride athletes, break your personal bests, and celebrate with the community." } },
+							"ele-sub-news-label": { type: "ct-text", properties: { text: "NEWS", displayTemplateKey: "accentText", displaySettings: [{ key: "color", value: "blue" }] } },
+							"ele-sub-news-1": { type: "ct-sidebar-item", properties: { title: "Stride raises Series B to expand global fitness community", description: "We are thrilled to announce our latest funding round led by top-tier investors to accelerate our mission of making the world move more." } },
+							"ele-sub-news-2": { type: "ct-sidebar-item", properties: { title: "Introducing Stride Stats 2.0 with AI coaching", description: "Our biggest update yet includes automated form analysis, recovery recommendations, and predictive race pacing." } },
+							"ele-sub-news-btn": { type: "ct-button", properties: { label: "ALL NEWS & EVENTS", displayTemplateKey: "outlineButton" } },
+						},
+					},
+				],
+>>>>>>> origin/main
 			},
 		],
 	},
@@ -4594,6 +7504,14 @@ export const initialPages: Page[] = [
 	{
 		id: "page-pricing",
 		contentTypeId: "exp-landing-page",
+<<<<<<< HEAD
+=======
+		displayTemplateKey: "defaultExperience",
+		displaySettings: [
+			{ key: "backgroundColor", value: "light-blue" },
+			{ key: "spacing", value: "compact" }
+		],
+>>>>>>> origin/main
 		name: "Pricing",
 		slug: "pricing",
 		parentId: null,
@@ -4659,33 +7577,53 @@ export const initialPages: Page[] = [
 					"ele-pricing-hero-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Choose your plan" },
+=======
+							text: "Choose your plan",
+>>>>>>> origin/main
 						},
 					},
 					"ele-pricing-hero-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
 							},
+=======
+							text: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-plan-free": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Free - $0" },
+=======
+							text: "Free - $0",
+>>>>>>> origin/main
 						},
 					},
 					"ele-plan-pro": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Pro - $9.99/mo" },
+=======
+							text: "Pro - $9.99/mo",
+>>>>>>> origin/main
 						},
 					},
 					"ele-plan-team": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Team - $24.99/mo" },
+=======
+							text: "Team - $24.99/mo",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -4756,22 +7694,33 @@ export const initialPages: Page[] = [
 					"ele-stories-hero-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Real results from real people" },
+=======
+							text: "Real results from real people",
+>>>>>>> origin/main
 						},
 					},
 					"ele-stories-hero-sub": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
 							},
+=======
+							text: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-story-1": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -4790,14 +7739,20 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 					"ele-story-2": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
+<<<<<<< HEAD
 								value: {
+=======
+>>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -4816,7 +7771,10 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
+<<<<<<< HEAD
 							},
+=======
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -4867,33 +7825,53 @@ export const initialPages: Page[] = [
 					"ele-prod-31-img": {
 						type: "ct-image-block",
 						properties: {
+<<<<<<< HEAD
 							image: { value: "https://picsum.photos/seed/cycling1/400/300" },
+=======
+							image: "https://picsum.photos/seed/cycling1/400/300",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-31-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Cycle Computer Pro" },
+=======
+							text: "Cycle Computer Pro",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-31-price": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "$199.00" },
+=======
+							text: "$199.00",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-31-desc": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Advanced GPS cycling computer with performance tracking and navigation.",
 							},
+=======
+							text: "Advanced GPS cycling computer with performance tracking and navigation.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-31-buy": {
 						type: "ct-button",
 						properties: {
+<<<<<<< HEAD
 							label: { value: "Add to Cart" },
+=======
+							label: "Add to Cart",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -4947,7 +7925,11 @@ export const initialPages: Page[] = [
 
 						properties: {
 
+<<<<<<< HEAD
 							image: { value: "https://picsum.photos/seed/cycling3/400/300" },
+=======
+							image: "https://picsum.photos/seed/cycling3/400/300",
+>>>>>>> origin/main
 
 						},
 
@@ -4955,27 +7937,43 @@ export const initialPages: Page[] = [
 					"ele-prod-32-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "HR Monitor Band" },
+=======
+							text: "HR Monitor Band",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-32-price": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "$79.00" },
+=======
+							text: "$79.00",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-32-desc": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Precision heart rate monitoring for your most intense workouts.",
 							},
+=======
+							text: "Precision heart rate monitoring for your most intense workouts.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-32-buy": {
 						type: "ct-button",
 						properties: {
+<<<<<<< HEAD
 							label: { value: "Add to Cart" },
+=======
+							label: "Add to Cart",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -5029,7 +8027,11 @@ export const initialPages: Page[] = [
 
 						properties: {
 
+<<<<<<< HEAD
 							image: { value: "https://picsum.photos/seed/cycling2/400/300" },
+=======
+							image: "https://picsum.photos/seed/cycling2/400/300",
+>>>>>>> origin/main
 
 						},
 
@@ -5037,27 +8039,43 @@ export const initialPages: Page[] = [
 					"ele-prod-33-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Smart Bike Trainer" },
+=======
+							text: "Smart Bike Trainer",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-33-price": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "$599.00" },
+=======
+							text: "$599.00",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-33-desc": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Transform your bike into a powerful indoor training machine.",
 							},
+=======
+							text: "Transform your bike into a powerful indoor training machine.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-33-buy": {
 						type: "ct-button",
 						properties: {
+<<<<<<< HEAD
 							label: { value: "Add to Cart" },
+=======
+							label: "Add to Cart",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -5111,7 +8129,11 @@ export const initialPages: Page[] = [
 
 						properties: {
 
+<<<<<<< HEAD
 							image: { value: "https://picsum.photos/seed/cycling4/400/300" },
+=======
+							image: "https://picsum.photos/seed/cycling4/400/300",
+>>>>>>> origin/main
 
 						},
 
@@ -5119,25 +8141,41 @@ export const initialPages: Page[] = [
 					"ele-prod-34-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Cadence Sensor" },
+=======
+							text: "Cadence Sensor",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-34-price": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "$39.00" },
+=======
+							text: "$39.00",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-34-desc": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Track your pedaling cadence with precision and ease." },
+=======
+							text: "Track your pedaling cadence with precision and ease.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-34-buy": {
 						type: "ct-button",
 						properties: {
+<<<<<<< HEAD
 							label: { value: "Add to Cart" },
+=======
+							label: "Add to Cart",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -5191,7 +8229,11 @@ export const initialPages: Page[] = [
 
 						properties: {
 
+<<<<<<< HEAD
 							image: { value: "https://picsum.photos/seed/cycling8/400/300" },
+=======
+							image: "https://picsum.photos/seed/cycling8/400/300",
+>>>>>>> origin/main
 
 						},
 
@@ -5199,27 +8241,43 @@ export const initialPages: Page[] = [
 					"ele-prod-35-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Power Meter" },
+=======
+							text: "Power Meter",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-35-price": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "$449.00" },
+=======
+							text: "$449.00",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-35-desc": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Measure your power output and optimize your cycling performance.",
 							},
+=======
+							text: "Measure your power output and optimize your cycling performance.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-35-buy": {
 						type: "ct-button",
 						properties: {
+<<<<<<< HEAD
 							label: { value: "Add to Cart" },
+=======
+							label: "Add to Cart",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -5273,7 +8331,11 @@ export const initialPages: Page[] = [
 
 						properties: {
 
+<<<<<<< HEAD
 							image: { value: "https://picsum.photos/seed/cycling9/400/300" },
+=======
+							image: "https://picsum.photos/seed/cycling9/400/300",
+>>>>>>> origin/main
 
 						},
 
@@ -5281,27 +8343,43 @@ export const initialPages: Page[] = [
 					"ele-prod-36-heading": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "Speed Sensor" },
+=======
+							text: "Speed Sensor",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-36-price": {
 						type: "ct-heading",
 						properties: {
+<<<<<<< HEAD
 							text: { value: "$39.00" },
+=======
+							text: "$39.00",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-36-desc": {
 						type: "ct-text",
 						properties: {
+<<<<<<< HEAD
 							text: {
 								value: "Accurate speed tracking for your outdoor and indoor rides.",
 							},
+=======
+							text: "Accurate speed tracking for your outdoor and indoor rides.",
+>>>>>>> origin/main
 						},
 					},
 					"ele-prod-36-buy": {
 						type: "ct-button",
 						properties: {
+<<<<<<< HEAD
 							label: { value: "Add to Cart" },
+=======
+							label: "Add to Cart",
+>>>>>>> origin/main
 						},
 					},
 				},
@@ -5790,11 +8868,18 @@ export const siteConfig = {
 	header: {
 		logo: "STRIDE",
 		links: [
+<<<<<<< HEAD
 			{ label: "Activities", href: "/activities" },
 			{ label: "Community", href: "/community" },
 			{ label: "Challenges", href: "/challenges" },
 			{ label: "Pricing", href: "/pricing" },
 			{ label: "Stories", href: "/stories" },
+=======
+			{ label: "Features", href: "/features" },
+			{ label: "Challenges", href: "/challenges" },
+			{ label: "Subscriptions", href: "/subscriptions" },
+			{ label: "About Us", href: "/about" },
+>>>>>>> origin/main
 		],
 		auth: {
 			signIn: "Sign In",

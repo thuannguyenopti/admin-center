@@ -1,7 +1,7 @@
 "use client";
 
 import { Box } from "@optiaxiom/react";
-import { IconDots } from "@tabler/icons-react";
+import {IconEllipsisSolid} from "@/app/lib/axiom-icons";
 import FileIcon from "@/app/assets/file-icon.svg";
 
 interface MediaCardProps {
@@ -71,7 +71,7 @@ export default function MediaCard({ imageUrl, title, altText }: MediaCardProps) 
           }}
           className="hover:bg-[#091E4208]"
         >
-          <IconDots size={16} color="#4F576E" />
+          <IconEllipsisSolid size={16} color="#4F576E" />
         </Box>
       </Box>
     </Box>

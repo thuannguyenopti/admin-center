@@ -1,9 +1,17 @@
 "use client";
 
+<<<<<<< HEAD
 import { Box, Button as AxiomButton, Textarea } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconAgent, IconCircleCheckSolid, IconArrowLeft } from "@optimizely/axiom-icons";
+=======
+import { Box } from "@optiaxiom/react";
+import { Button } from "@/app/components/Button";
+import { Text } from "@/app/components/Text";
+import { IconAgent } from "@optimizely/axiom-icons";
+import { HintBannerWithToggle } from "./components/HintBanner";
+>>>>>>> origin/main
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useOpalContext } from "@/app/context/OpalContext";
@@ -12,10 +20,23 @@ import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
 import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { InlineEditorCard } from "@/app/components/Opal/InlineEditorCard";
+<<<<<<< HEAD
+=======
+import { ApprovalActionCard } from "@/app/components/Opal/ApprovalActionCard";
+import { AskQuestionsActionCard } from "@/app/components/Opal/AskQuestionsActionCard";
+>>>>>>> origin/main
 import { HeadlessTaskPanel, useTaskController } from "./components/HeadlessTaskPanel";
 import { GrabHandle } from "@/app/components/Opal/OpalChatView";
 import { imToChatMessage } from "@/app/opal/im/lib/adapters";
 import type { IMMessage } from "@/app/opal/im/lib/types";
+<<<<<<< HEAD
+=======
+import {
+  RESEARCH_ACTIVITY_SCRIPT,
+  IMAGE_GEN_ACTIVITY_SCRIPT,
+  ASK_QUESTIONS_ACTIVITY_SCRIPT,
+} from "@/app/opal/im/components/ActivityStreamBlock";
+>>>>>>> origin/main
 
 // Loaded client-side only — contains @codemirror/*, @tiptap/*, yjs which are
 // browser-only and must not be included in the SSR bundle.
@@ -31,6 +52,27 @@ const OpalLanding = dynamic(
   () => import("@/app/components/Opal/OpalLanding").then((mod) => mod.OpalLanding)
 );
 
+<<<<<<< HEAD
+=======
+// ── Activity stream scripts ───────────────────────────────────────────────────
+
+const MOCK_RESEARCH_RESPONSE = `Great picks — ODP for C-Suite, covering conversion + post-launch, via blog/SEO. Let me put together a set of content angles that hit those marks.
+
+Here's your ODP content angles doc — 8 angles split across **Conversion** and **Post-Launch Retention**, each with a punchy hook, SEO targets, and format recommendations, plus a suggested 8-week content calendar.
+
+You can view and edit it here: [ODP Product Launch — Content Angles](/opal/artifacts)
+
+Want me to draft any of these angles into a full blog post, or adjust the calendar timing? 🎯`;
+
+const MOCK_IMAGE_RESPONSE = `Here's your illustration! I generated a simple, flat-style image of a unicorn riding a dinosaur — bright colors, minimal details, ready to use in your campaign assets.
+
+You can request variations, change the style, or generate additional sizes.`;
+
+function activityScriptTotalMs(script: { durationMs: number }[]) {
+  return script.reduce((sum, e) => sum + e.durationMs, 0) + 800;
+}
+
+>>>>>>> origin/main
 // ── Landing page flow constants ───────────────────────────────────────────────
 
 const MOCK_LANDING_RESPONSE = `Sure! Here's your landing page. I've built a clean, conversion-focused HTML page for your product — hero section with a headline and CTA, a 3-column features grid, and a simple footer.
@@ -141,6 +183,7 @@ const VAU_PUBLISHED_MSG = `🚀 **discover-the-unknown-qa.md** is live.
 
 Published to the answer-engine surface just now. I'll monitor citation pickup over the next 24h and flag if anything looks off.`;
 
+<<<<<<< HEAD
 type ApprovalState = 'pending' | 'approved' | 'changes' | 'requesting';
 
 function ApprovalActionCard({ state, changesMessage, noteValue, onApprove, onAskChanges, onNoteChange, onNoteSubmit, onNoteCancel, onOpenTask }: {
@@ -308,6 +351,9 @@ function ApprovalActionCard({ state, changesMessage, noteValue, onApprove, onAsk
     </Box>
   );
 }
+=======
+type ApprovalState = 'pending' | 'approved' | 'changes';
+>>>>>>> origin/main
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
@@ -357,6 +403,30 @@ export default function OpalPage() {
   });
 
   const [editorOpen, setEditorOpen] = useState(false);
+<<<<<<< HEAD
+=======
+  /** When true, canvas was opened from the research streaming flow — suppress IM thread sidebar */
+  const [editorFromStream, setEditorFromStream] = useState(false);
+  const activityCallbacksRef = useRef<Map<string, () => void>>(new Map());
+
+  // Open artifact preview when CanvasOutputCard is clicked (research streaming flow)
+  useEffect(() => {
+    const handler = () => { setEditorVersion('v2'); setEditorFromStream(true); setEditorOpen(true); };
+    window.addEventListener("opal-open-canvas", handler);
+    return () => window.removeEventListener("opal-open-canvas", handler);
+  }, []);
+
+  // Hint banner visibility — controlled by DemoResetButton toggle
+  const [showHintBanner, setShowHintBanner] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem("opal-demo-hint-banner") === "true"; } catch { return false; }
+  });
+  useEffect(() => {
+    const handler = (e: Event) => setShowHintBanner((e as CustomEvent<boolean>).detail);
+    window.addEventListener("opal-hint-banner-change", handler);
+    return () => window.removeEventListener("opal-hint-banner-change", handler);
+  }, []);
+>>>>>>> origin/main
   const [editorVersion, setEditorVersion] = useState<'v1' | 'v2'>('v1');
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
   const [headlessTaskOpen, setHeadlessTaskOpen] = useState(false);
@@ -364,9 +434,18 @@ export default function OpalPage() {
   const handleTaskResize = useCallback((dx: number) => {
     setTaskPanelWidth(w => Math.max(320, Math.min(720, w + dx)));
   }, []);
+<<<<<<< HEAD
   const [approvalState, setApprovalState] = useState<ApprovalState>('pending');
   const [approvalNote, setApprovalNote] = useState('');
   const [approvalChangesNote, setApprovalChangesNote] = useState('');
+=======
+  const [approvalState, setApprovalState] = useState<ApprovalState>(() => {
+    try {
+      if (localStorage.getItem('geo-qa-approval') === 'approved') return 'approved';
+    } catch {}
+    return 'pending';
+  });
+>>>>>>> origin/main
   const [landingPageReady, setLandingPageReady] = useState(() => {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('artifacts') === '1';
@@ -414,7 +493,14 @@ export default function OpalPage() {
   const taskController = useTaskController('geo-qa', (stepId) => {
     if (stepId === '2') {
       setApprovalState('approved');
+<<<<<<< HEAD
       pushIMMessage('jamie', '✓ Approved');
+=======
+      try { localStorage.setItem('geo-qa-approval', 'approved'); } catch {}
+      pushIMMessage('jamie', '**Approved** — great work, Frank. This is ready to publish.');
+      pushIMMessage('vau-frank', "Perfect — I'll handle publishing now and send you the live link once it's indexed.", { senderType: 'agent' });
+      pushIMMessage('vau-frank', "Tracking. If you want, I can turn this into a serp shift digest — say the word.", { senderType: 'agent' });
+>>>>>>> origin/main
     }
     if (stepId === '3') {
       pushIMMessage('vau-frank', VAU_PUBLISHED_MSG, { senderType: 'agent' });
@@ -436,6 +522,17 @@ export default function OpalPage() {
         pushIMMessage('jamie', JC_MSG, { minutesAgo: 14 });
         pushIMMessage('mary-anne', TEAMMATE_MSG, { minutesAgo: 10 });
         pushIMMessage('vau-frank', VAU_MSG_2, { minutesAgo: 2, senderType: 'agent' });
+<<<<<<< HEAD
+=======
+        // If already approved (localStorage persisted from a prior session), re-seed the follow-up messages
+        try {
+          if (localStorage.getItem('geo-qa-approval') === 'approved') {
+            pushIMMessage('jamie', '**Approved** — great work, Frank. This is ready to publish.');
+            pushIMMessage('vau-frank', "Perfect — I'll handle publishing now and send you the live link once it's indexed.", { senderType: 'agent' });
+            pushIMMessage('vau-frank', "Tracking. If you want, I can turn this into a serp shift digest — say the word.", { senderType: 'agent' });
+          }
+        } catch {}
+>>>>>>> origin/main
         setLandingPageReady(true);
         setTimeout(() => { setEditorVersion('v2'); setEditorOpen(true); }, 500);
       };
@@ -462,6 +559,10 @@ export default function OpalPage() {
       const qs = params.toString();
       window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
     } else if (editorWasOpen.current) {
+<<<<<<< HEAD
+=======
+      setEditorFromStream(false);
+>>>>>>> origin/main
       // Closing canvas → navigate to artifacts page
       window.location.href = '/opal/artifacts';
     }
@@ -500,6 +601,94 @@ export default function OpalPage() {
     setEditorOpen(true);
   }, [addMessage, updateMessage]);
 
+<<<<<<< HEAD
+=======
+  // Activity streaming flow — shown for regular Opal chat prompts
+  const handleActivityStreamTrigger = useCallback(async (userPrompt: string, scriptOverride?: typeof RESEARCH_ACTIVITY_SCRIPT) => {
+    const isAskQuestions = /ask.*question|question.*me/i.test(userPrompt);
+    const isImageRequest = /\b(generat|creat|draw|make|image|photo|picture|illustrat|render)\b/i.test(userPrompt);
+
+    const askQuestionsScript = [
+      ...ASK_QUESTIONS_ACTIVITY_SCRIPT.slice(0, 2).map((phase, i) =>
+        i === 1
+          ? {
+              ...phase,
+              actionCard: (onContinue: () => void) => (
+                <AskQuestionsActionCard
+                  title="A few quick questions"
+                  description="Help me personalise your content before I get started."
+                  submitLabel="Let's go"
+                  questions={[
+                    {
+                      id: "tone",
+                      label: "What tone should I use?",
+                      options: [
+                        { value: "professional", label: "Professional", description: "Formal, polished, brand-safe" },
+                        { value: "conversational", label: "Conversational", description: "Friendly and approachable" },
+                        { value: "bold", label: "Bold", description: "Direct, punchy, high-impact" },
+                      ],
+                    },
+                    {
+                      id: "length",
+                      label: "How long should it be?",
+                      options: [
+                        { value: "short", label: "Short", description: "Under 150 words" },
+                        { value: "medium", label: "Medium", description: "150–300 words" },
+                        { value: "long", label: "Long", description: "300+ words" },
+                      ],
+                    },
+                  ]}
+                  onSubmit={(_answers) => onContinue()}
+                />
+              ),
+            }
+          : phase
+      ),
+      ...ASK_QUESTIONS_ACTIVITY_SCRIPT.slice(2),
+    ];
+
+    const script = scriptOverride ?? (isAskQuestions ? askQuestionsScript : isImageRequest ? IMAGE_GEN_ACTIVITY_SCRIPT : RESEARCH_ACTIVITY_SCRIPT);
+    const mockResponse = isImageRequest ? MOCK_IMAGE_RESPONSE : MOCK_RESEARCH_RESPONSE;
+
+    addMessage({ role: 'user', content: userPrompt });
+
+    const loadingMsg = addMessage({
+      role: 'assistant',
+      content: '',
+      isLoading: true,
+      activityScript: script,
+      showOpalHeader: true,
+    } as any);
+
+    // Store callback — response only shown after ActivityStreamBlock calls onComplete
+    const showCanvas = !isImageRequest && !isAskQuestions;
+    activityCallbacksRef.current.set(loadingMsg.id, () => {
+      updateMessage(loadingMsg.id, { isLoading: false, content: mockResponse, showCanvasCard: showCanvas } as any);
+    });
+  }, [addMessage, updateMessage]);
+
+  // Called by ActivityStreamBlock via OpalMessage → OpalChat → OpalChatView when the stream finishes
+  const handleActivityComplete = useCallback((messageId: string) => {
+    const cb = activityCallbacksRef.current.get(messageId);
+    if (cb) { cb(); activityCallbacksRef.current.delete(messageId); }
+  }, []);
+
+  // Regenerate: re-run the activity stream for the preceding user message
+  const handleRegenerate = useCallback((assistantMessageId: string) => {
+    const idx = messages.findIndex(m => m.id === assistantMessageId);
+    if (idx < 0) return;
+    const userMsg = [...messages].slice(0, idx).reverse().find(m => m.role === 'user');
+    if (!userMsg) return;
+    const isImageRequest = /\b(generat|creat|draw|make|image|photo|picture|illustrat|render)\b/i.test(userMsg.content);
+    const script = isImageRequest ? IMAGE_GEN_ACTIVITY_SCRIPT : RESEARCH_ACTIVITY_SCRIPT;
+    const mockResponse = isImageRequest ? MOCK_IMAGE_RESPONSE : MOCK_RESEARCH_RESPONSE;
+    updateMessage(assistantMessageId, { content: '', isLoading: true, activityScript: script, timestamp: Date.now() } as any);
+    activityCallbacksRef.current.set(assistantMessageId, () => {
+      updateMessage(assistantMessageId, { isLoading: false, content: mockResponse } as any);
+    });
+  }, [messages, updateMessage]);
+
+>>>>>>> origin/main
   // Clicking "Create a landing page" prefills the input — user fills variables, then submits
   const handleSuggestionClick = useCallback((suggestion: string) => {
     if (suggestion === '__landing_page__') {
@@ -526,8 +715,14 @@ export default function OpalPage() {
       setApprovalState('pending');
       return;
     }
+<<<<<<< HEAD
     handleSendMessage(text ?? "");
   }, [handleLandingPageTrigger, handleSendMessage, setApprovalState, setInputValue]);
+=======
+    setInputValue('');
+    handleActivityStreamTrigger(text ?? "");
+  }, [handleLandingPageTrigger, handleSendMessage, handleActivityStreamTrigger, setApprovalState, setInputValue]);
+>>>>>>> origin/main
 
   // Reset canvas state when chat is cleared (e.g. "New chat")
   // Skip initial mount — messages start empty but landingPageReady may be true from deep link
@@ -552,6 +747,7 @@ export default function OpalPage() {
           selected={editorOpen && editorVersion === 'v1'}
         />
         <ApprovalActionCard
+<<<<<<< HEAD
           state="changes"
           changesMessage="The FAQ section needs more specific examples for each answer."
           onApprove={() => {}}
@@ -560,6 +756,18 @@ export default function OpalPage() {
           onNoteSubmit={() => {}}
           onNoteCancel={() => {}}
           onOpenTask={() => setHeadlessTaskOpen(true)}
+=======
+          authorName="Frank"
+          authorAvatar="/avatars/vau-frank.png"
+          isVAU
+          fileName="discover-the-unknown-qa.md"
+          fileSubtitle="GEO Q&A article · 7 Q&A pairs · v1"
+          approvalTitle="Team approval needed"
+          approvalDescription="Review the updated Q&A article. Approve to proceed with publishing, or request further changes."
+          onApprove={() => {}}
+          onRequestChanges={() => {}}
+          onViewTask={() => setHeadlessTaskOpen(true)}
+>>>>>>> origin/main
         />
       </Box>
     ),
@@ -572,6 +780,7 @@ export default function OpalPage() {
           selected={editorOpen && editorVersion === 'v2'}
           onRegenerate={() => {
             const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+<<<<<<< HEAD
             if (lastAssistant) regenerate(lastAssistant.id);
           }}
         />
@@ -585,6 +794,24 @@ export default function OpalPage() {
           onNoteSubmit={() => { const n = approvalNote; setApprovalChangesNote(n); setApprovalNote(''); setApprovalState('changes'); if (n.trim()) addMessage({ role: 'user', content: n, metadata: { authorName: 'Jamie Chen' } }); }}
           onNoteCancel={() => { setApprovalNote(''); setApprovalState('pending'); }}
           onOpenTask={() => setHeadlessTaskOpen(true)}
+=======
+            if (lastAssistant) handleRegenerate(lastAssistant.id);
+          }}
+        />
+        <ApprovalActionCard
+          authorName="Frank"
+          authorAvatar="/avatars/vau-frank.png"
+          isVAU
+          badge="UPDATED"
+          fileName="discover-the-unknown-qa.md"
+          fileSubtitle="GEO Q&A article · 7 Q&A pairs · updated"
+          approvalTitle="Team approval needed"
+          approvalDescription="Review the updated Q&A article. Approve to proceed with publishing, or request further changes."
+          onApprove={handleApprove}
+          onRequestChanges={() => { setApprovalState('changes'); }}
+          onViewTask={() => setHeadlessTaskOpen(true)}
+          persistKey="geo-qa-approval"
+>>>>>>> origin/main
         />
       </Box>
     ),
@@ -607,7 +834,17 @@ export default function OpalPage() {
         <OpalChatView
           variant="home"
           streamingMode="expanded"
+<<<<<<< HEAD
           headerTitle={landingPageReady ? "Threads" : undefined}
+=======
+          headerTitle={undefined}
+          imThreadName={(!editorFromStream && (editorOpen || headlessTaskOpen)) ? "Frank" : undefined}
+          imIsVAU={(!editorFromStream && (editorOpen || headlessTaskOpen)) || undefined}
+          imTemplateName={(!editorFromStream && (editorOpen || headlessTaskOpen)) ? "GEO Content Strategist" : undefined}
+          imThreadAvatar={(!editorFromStream && (editorOpen || headlessTaskOpen)) ? "/avatars/vau-frank.png" : undefined}
+          imSimplified={!editorFromStream && (editorOpen || headlessTaskOpen)}
+          onImThreadNameClick={landingPageReady ? () => { try { sessionStorage.setItem('im-initial-chat', 'conv-demo-geo-qa'); } catch {} window.location.href = '/opal/im'; } : undefined}
+>>>>>>> origin/main
           messages={messages}
           inputValue={inputValue}
           isLoading={isLoading}
@@ -625,7 +862,12 @@ export default function OpalPage() {
           onDeleteChat={opalContext.history.deleteChat}
           onSelectChat={opalContext.history.selectChat}
           onMessageEdit={() => {}}
+<<<<<<< HEAD
           onRegenerate={regenerate}
+=======
+          onRegenerate={handleRegenerate}
+          onActivityComplete={handleActivityComplete}
+>>>>>>> origin/main
           onMessageVersionChange={switchVersion}
           agentBar={agentBarElement}
           collapsedSessionIds={collapsedSessionIds}
@@ -645,8 +887,13 @@ export default function OpalPage() {
           contextualActionCard={
             approvalState === 'approved'
               ? undefined
+<<<<<<< HEAD
               : landingPageReady && (approvalState === 'pending' || approvalState === 'requesting' || approvalState === 'changes')
               ? <ApprovalActionCard state={approvalState} changesMessage={approvalChangesNote || undefined} noteValue={approvalNote} onApprove={handleApprove} onAskChanges={() => setApprovalState('requesting')} onNoteChange={setApprovalNote} onNoteSubmit={() => { const n = approvalNote; setApprovalChangesNote(n); setApprovalNote(''); setApprovalState('changes'); if (n.trim()) addMessage({ role: 'user', content: n, metadata: { authorName: 'Jamie Chen' } }); }} onNoteCancel={() => { setApprovalNote(''); setApprovalState('pending'); }} onOpenTask={() => setHeadlessTaskOpen(true)} />
+=======
+              : landingPageReady
+              ? <ApprovalActionCard authorName="Frank" authorAvatar="/avatars/vau-frank.png" isVAU badge="UPDATED" fileName="discover-the-unknown-qa.md" fileSubtitle="GEO Q&A article · 7 Q&A pairs · updated" approvalTitle="Team approval needed" approvalDescription="Review the updated Q&A article. Approve to proceed with publishing, or request further changes." onApprove={handleApprove} onRequestChanges={() => { setApprovalState('changes'); }} onViewTask={() => setHeadlessTaskOpen(true)} persistKey="geo-qa-approval" />
+>>>>>>> origin/main
               : (atlassianActionCard ?? undefined)
           }
           messageCards={messageCards}
@@ -702,10 +949,17 @@ export default function OpalPage() {
 
   // Landing state
   return (
+<<<<<<< HEAD
     <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
       {modalElement}
       <OpalLanding
         topSlot={null}
+=======
+    <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0, backgroundColor: 'var(--opal-bg-page)' }}>
+      {modalElement}
+      <OpalLanding
+        topSlot={<HintBannerWithToggle onAddToPrompt={setInputValue} showConfig={showHintBanner} />}
+>>>>>>> origin/main
         inputSlot={
           <OpalInput
             value={inputValue}

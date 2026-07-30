@@ -1,0 +1,15 @@
+/*
+ * React's inline `style` prop can't express `!important` (it assigns to the
+ * DOM's CSSStyleDeclaration properties directly, which silently reject any
+ * value containing "!important" text — only style.setProperty()'s third
+ * argument can do that, and React's style prop doesn't use it). NavItem's
+ * <Icon> wrapper applies a class forcing `height: var(--ax-size-2xs)` (16px)
+ * + `width: auto` to every icon; @optiaxiom/icons components out-rank it with
+ * their own class, but this raw SVGR-imported SVG has nothing to compete with
+ * it on specificity/source order alone — hence !important via a real
+ * stylesheet, which the CSS engine (unlike React's style prop) actually parses.
+ */
+.resourceManagementIcon {
+	width: 20px !important;
+	height: 20px !important;
+}

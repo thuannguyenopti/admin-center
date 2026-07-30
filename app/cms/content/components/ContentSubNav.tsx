@@ -10,7 +10,7 @@ import {
   Sidebar,
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
-import { IconChevronDown, IconChevronLeft, IconChevronRight, IconPin, IconPinned } from "@tabler/icons-react";
+import {IconChevronDown, IconChevronLeft, IconChevronRight, IconThumbtack, IconPinned} from "@/app/lib/axiom-icons";
 import { Text } from "@/app/components/Text";
 import { contentSubNavData, SubNavSection } from "../subNavData";
 import { usePathname, useRouter } from "next/navigation";
@@ -87,7 +87,7 @@ export default function ContentSubNav() {
                     contentSubNavPinned ? (
                       <IconPinned size={16} color={iconColor} />
                     ) : (
-                      <IconPin size={16} color={iconColor} />
+                      <IconThumbtack size={16} color={iconColor} />
                     )
                   }
                   onClick={() => setContentSubNavPinned((prev) => !prev)}

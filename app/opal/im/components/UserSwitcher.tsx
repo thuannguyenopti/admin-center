@@ -3,12 +3,20 @@
 import { useEffect, useState } from "react";
 import {
   Box,
+<<<<<<< HEAD
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Text,
+=======
+  Menu,
+  MenuContent,
+  MenuTrigger,
+  Text,
+  type MenuOption,
+>>>>>>> origin/main
 } from "@optiaxiom/react";
 import { IconAngleDown } from "@optiaxiom/icons";
 import { searchUsers } from "../lib/service";
@@ -41,9 +49,40 @@ export function UserSwitcher() {
     if (typeof window !== "undefined") window.location.reload();
   };
 
+<<<<<<< HEAD
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
+=======
+  const toOption = (
+    u: UserProfile,
+    group: MenuOption["group"],
+  ): MenuOption => ({
+    key: u.user_id,
+    label: u.display_name,
+    group,
+    addon: <UserAvatar userId={u.user_id} name={u.display_name} size={24} />,
+    detail:
+      u.user_id === currentId ? (
+        <Text fontSize="sm" color="fg.tertiary">
+          active
+        </Text>
+      ) : undefined,
+    execute: () => handlePick(u.user_id),
+  });
+
+  const peopleGroup = { label: "People" };
+  const vauGroup = { label: "Virtual teammates", separator: true };
+
+  const options: MenuOption[] = [
+    ...humans.map((u) => toOption(u, peopleGroup)),
+    ...vaus.map((u) => toOption(u, vauGroup)),
+  ];
+
+  return (
+    <Menu options={options}>
+      <MenuTrigger asChild>
+>>>>>>> origin/main
         <Box
           display="flex"
           alignItems="center"
@@ -69,6 +108,7 @@ export function UserSwitcher() {
           </Box>
           <IconAngleDown size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
         </Box>
+<<<<<<< HEAD
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" style={{ minWidth: 240 }}>
         <Box px="12" py="6">
@@ -110,5 +150,10 @@ export function UserSwitcher() {
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+=======
+      </MenuTrigger>
+      <MenuContent align="end" style={{ minWidth: 240 }} />
+    </Menu>
+>>>>>>> origin/main
   );
 }

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { IconChevronDown } from "@tabler/icons-react";
+=======
+import {IconChevronDown} from "@/app/lib/axiom-icons";
+>>>>>>> origin/main
 
 export const parseDate = (dateStr: string): Date | null => {
 	if (dateStr === "No start date" || dateStr === "No end date" || !dateStr) return null;
@@ -17,7 +21,11 @@ export const getStatusColor = (status: string): string => {
 		case "Overdue":
 			return "var(--ax-colors-fg-error)";
 		case "Completed":
+<<<<<<< HEAD
 			return "var(--ax-colors-fg-accent)";
+=======
+			return "var(--ax-colors-fg-success)";
+>>>>>>> origin/main
 		case "Not Started":
 			return "var(--ax-colors-fg-tertiary)";
 		default:
@@ -25,6 +33,11 @@ export const getStatusColor = (status: string): string => {
 	}
 };
 
+<<<<<<< HEAD
 export const IconChevronLeft = ({ size }: { size: number }) => (
 	<IconChevronDown size={size} style={{ transform: "rotate(90deg)" }} />
+=======
+export const IconChevronLeft = ({size}: {size: number}) => (
+	<IconChevronDown size={size} style={{transform: "rotate(90deg)"}} />
+>>>>>>> origin/main
 );

@@ -28,7 +28,7 @@ import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
 import {Table, Th, Tr, Td} from "@/app/components/Table";
 import {webhooks as initialWebhooks} from "./mockData";
-import {IconDots} from "@tabler/icons-react";
+import {IconEllipsisSolid} from "@/app/lib/axiom-icons";
 import {useRouter} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import Link from "next/link";
@@ -155,7 +155,7 @@ export default function WebhooksPage() {
 										]}
 									>
 										<MenuTrigger
-											icon={<IconDots />}
+											icon={<IconEllipsisSolid />}
 											size="sm"
 											aria-label="Webhook Options"
 											appearance="subtle"

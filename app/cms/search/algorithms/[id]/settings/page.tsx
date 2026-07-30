@@ -16,7 +16,7 @@ import {useParams, useRouter} from "next/navigation";
 import {useEffect, useState, use, useMemo} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms, initialUsers} from "@/app/db/initialData";
-import {IconArrowLeft} from "@tabler/icons-react";
+import {IconArrowLeft} from "@/app/lib/axiom-icons";
 import {Aside} from "@/app/context/LayoutContext";
 import Preview from "../order/Preview";
 import {getSelectValueInOptions} from "@/utils/selectValue";

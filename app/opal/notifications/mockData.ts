@@ -21,7 +21,14 @@ export type NotificationType =
     | "collaboration_agent_activated"
     | "collaboration_agent_deactivated"
     | "system_announcement"
+<<<<<<< HEAD
     | "system_maintenance";
+=======
+    | "system_maintenance"
+    | "im_new_message"
+    | "im_mention"
+    | "im_thread_reply";
+>>>>>>> origin/main
 
 export interface Notification {
     id: string;
@@ -37,7 +44,12 @@ export interface Notification {
     | "directory"
     | "tools"
     | "system"
+<<<<<<< HEAD
     | "collaboration";
+=======
+    | "collaboration"
+    | "messages";
+>>>>>>> origin/main
 
     // Context & metadata
     agentId?: string;
@@ -134,6 +146,58 @@ const formatDate = (d: Date) => {
 };
 
 export const mockNotifications: Notification[] = [
+<<<<<<< HEAD
+=======
+    // ── IM Messages ─────────────────────────────────────────────────────────
+    {
+        id: "n-im01",
+        userId: "u1",
+        type: "im_new_message",
+        title: "Priya Rajan sent you a message",
+        message: '"Can we add a section on personalization? It\'s super relevant to our ICP right now."',
+        status: "unread",
+        priority: "low",
+        category: "messages",
+        deepLink: "/opal/messages?conversation=pr",
+        actionRequired: false,
+        createdAt: m(2),
+        timestamp: formatTime(m(2)),
+        date: formatDate(m(2)),
+        author: { name: "Priya Rajan", avatar: "https://i.pravatar.cc/150?img=44" },
+    },
+    {
+        id: "n-im02",
+        userId: "u1",
+        type: "im_mention",
+        title: "Marcus Santos mentioned you in Black Friday Campaign",
+        message: '"@erika can you review the brief before EOD? Need your sign-off."',
+        status: "unread",
+        priority: "medium",
+        category: "messages",
+        deepLink: "/opal/messages?conversation=bf",
+        actionRequired: true,
+        createdAt: m(8),
+        timestamp: formatTime(m(8)),
+        date: formatDate(m(8)),
+        author: { name: "Marcus Santos", avatar: "https://i.pravatar.cc/150?img=68" },
+    },
+    {
+        id: "n-im03",
+        userId: "u1",
+        type: "im_thread_reply",
+        title: "Priya Rajan replied in your thread",
+        message: 'Thread on "Can we review the Q3 blog?" — 2 new replies since your last visit.',
+        status: "unread",
+        priority: "low",
+        category: "messages",
+        deepLink: "/opal/messages?conversation=pr",
+        actionRequired: false,
+        createdAt: m(15),
+        timestamp: formatTime(m(15)),
+        date: formatDate(m(15)),
+        author: { name: "Priya Rajan", avatar: "https://i.pravatar.cc/150?img=44" },
+    },
+>>>>>>> origin/main
     // ── Approval Required ───────────────────────────────────────────────────
     {
         id: "n-a01",
@@ -1749,6 +1813,10 @@ export function getCategoryLabel(category: string): string {
         tools: "Tools & Connections",
         system: "System",
         collaboration: "Collaborative",
+<<<<<<< HEAD
+=======
+        messages: "Messages",
+>>>>>>> origin/main
     };
     return labels[category] || category;
 }
@@ -1776,6 +1844,12 @@ export function getNotificationTypeLabel(type: NotificationType): string {
         collaboration_agent_deactivated: "Agent Deactivated",
         system_announcement: "Announcement",
         system_maintenance: "Maintenance",
+<<<<<<< HEAD
+=======
+        im_new_message: "New Message",
+        im_mention: "Mention",
+        im_thread_reply: "Thread Reply",
+>>>>>>> origin/main
     };
     return labels[type] || type;
 }

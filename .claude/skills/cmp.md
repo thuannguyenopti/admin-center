@@ -1,3 +1,11 @@
+---
+name: cmp
+description: >
+  CMP (Content Marketing Platform) domain knowledge. Invoke automatically when
+  working in app/cmp/ or when the user asks about CMP concepts: Content Models,
+  Tasks, Campaigns, DAM, publishing workflows, or the CMP Content Repository.
+---
+
 # CMP (Content Marketing Platform) Skill
 
 Quick reference for Optimizely Content Marketing Platform concepts, Content Models, Tasks, Campaigns, DAM, and publishing workflows.

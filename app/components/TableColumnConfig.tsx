@@ -9,7 +9,7 @@ import {
     PopoverContent,
     Text,
 } from "@optiaxiom/react";
-import { IconSettings } from "@tabler/icons-react";
+import {IconGear} from "@/app/lib/axiom-icons";
 import { IconGripVertical } from "@optimizely/axiom-icons";
 import { useState, Fragment } from "react";
 
@@ -90,7 +90,7 @@ export function TableColumnConfig({ columns, onColumnsChange, icon, extraContent
             <PopoverTrigger asChild suppressHydrationWarning>
                 <Button
                     appearance="default"
-                    icon={icon || <IconSettings />}
+                    icon={icon || <IconGear />}
                     aria-label="Configure columns"
                 />
             </PopoverTrigger>

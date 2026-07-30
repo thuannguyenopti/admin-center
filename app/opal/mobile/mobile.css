@@ -1,0 +1,136 @@
+/* ── Mobile prototype animations ───────────────────────────────────────────── */
+
+/* Message bubble spring in */
+@keyframes mobile-bubble-in {
+  0%   { transform: scale(0.82) translateY(8px); opacity: 0; }
+  55%  { transform: scale(1.04) translateY(-2px); opacity: 1; }
+  100% { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+.mobile-bubble-in {
+  animation: mobile-bubble-in 0.36s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Staggered load for existing bubbles */
+.mobile-bubble-stagger {
+  animation: mobile-bubble-in 0.3s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+/* Screen slide in from right (push) */
+@keyframes mobile-slide-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+/* Screen slide out to right (pop) */
+@keyframes mobile-slide-out-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+/* Screen slide in from left (reveal underneath on pop) */
+@keyframes mobile-slide-in-left {
+  from { transform: translateX(-8%); }
+  to   { transform: translateX(0); }
+}
+
+.mobile-screen-push {
+  animation: mobile-slide-in-right 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.mobile-screen-pop {
+  animation: mobile-slide-out-right 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.mobile-screen-reveal {
+  animation: mobile-slide-in-left 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* Typing indicator dots — wave with spring timing */
+@keyframes mobile-typing-dot {
+  0%, 60%, 100% { transform: translateY(0);    opacity: 0.35; }
+  30%            { transform: translateY(-6px); opacity: 1; }
+}
+
+.mobile-typing-dot {
+  animation: mobile-typing-dot 1.1s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+/* Presence pulse — radial ripple on active dot */
+@keyframes mobile-presence-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(34, 197, 94, 0.5); }
+  70%  { box-shadow: 0 0 0 5px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(34, 197, 94, 0); }
+}
+
+.mobile-presence-active {
+  animation: mobile-presence-pulse 2.8s ease-out infinite;
+}
+
+/* New message pill pop */
+@keyframes mobile-pill-pop {
+  0%   { transform: translateY(16px) scale(0.88); opacity: 0; }
+  65%  { transform: translateY(-3px) scale(1.04); opacity: 1; }
+  100% { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+.mobile-pill-pop {
+  animation: mobile-pill-pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Send button pulse on tap */
+@keyframes mobile-send-tap {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.86); }
+  100% { transform: scale(1); }
+}
+
+.mobile-send-tap {
+  animation: mobile-send-tap 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Formatting strip slide up */
+@keyframes mobile-fmt-in {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes mobile-fmt-out {
+  from { transform: translateY(0);    opacity: 1; }
+  to   { transform: translateY(100%); opacity: 0; }
+}
+
+.mobile-fmt-in  { animation: mobile-fmt-in  0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.mobile-fmt-out { animation: mobile-fmt-out 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+
+/* Reaction emoji float-up */
+@keyframes mobile-reaction-add {
+  0%   { transform: translateY(0)     scale(1); }
+  50%  { transform: translateY(-10px) scale(1.3); }
+  100% { transform: translateY(0)     scale(1); }
+}
+
+.mobile-reaction-add {
+  animation: mobile-reaction-add 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* HITL card slide in */
+@keyframes mobile-hitl-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.mobile-hitl-in {
+  animation: mobile-hitl-in 0.3s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+/* Tab bar active indicator */
+@keyframes mobile-tab-pop {
+  0%   { transform: scale(0.7); opacity: 0; }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+.mobile-tab-active-dot {
+  animation: mobile-tab-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}

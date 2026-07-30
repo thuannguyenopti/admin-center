@@ -106,7 +106,12 @@ export const Th = ({
 				}}
 				onClick={onSort || onClick}
 			>
+<<<<<<< HEAD
 					<Box fontFamily="mono" fontSize="sm" textTransform="uppercase" color="fg.tertiary" fontWeight="400" className="inline-flex items-center gap-1 min-h-[14px]">
+=======
+					<Box asChild fontFamily="mono" fontSize="sm" textTransform="uppercase" color="fg.tertiary" fontWeight="400" className="inline-flex items-center gap-1 min-h-[14px]">
+					<span>
+>>>>>>> origin/main
 						{children}
 						{onSort &&
 							(sortDirection === "asc" ? (
@@ -123,6 +128,10 @@ export const Th = ({
 								</span>
 							</Tooltip>
 						)}
+<<<<<<< HEAD
+=======
+					</span>
+>>>>>>> origin/main
 					</Box>
 			</th>
 		</Box>

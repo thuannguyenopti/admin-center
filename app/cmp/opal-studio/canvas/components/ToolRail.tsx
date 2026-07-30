@@ -1,10 +1,10 @@
 "use client";
 
-import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconPlus } from "@tabler/icons-react";
-import { ToolRailButton } from "./ToolRailButton";
-import type { ActiveTool } from "../config";
+import type {IconDefinition} from "@fortawesome/fontawesome-svg-core";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {IconPlus} from "@/app/lib/axiom-icons";
+import {ToolRailButton} from "./ToolRailButton";
+import type {ActiveTool} from "../config";
 
 interface ToolMenuItem {
 	key: ActiveTool;
@@ -77,7 +77,7 @@ export function ToolRail({
 				/>
 
 				{toolMenuItems.slice(0, 4).map((item, index) => (
-					<div key={item.key} style={{ display: "contents" }}>
+					<div key={item.key} style={{display: "contents"}}>
 						<ToolRailButton
 							active={activeTool === item.key}
 							onClick={item.onClick}
@@ -137,7 +137,7 @@ export function ToolRail({
 							margin: "12px 0 8px",
 						}}
 					/>
-					<div style={{ display: "grid", gap: 4 }}>
+					<div style={{display: "grid", gap: 4}}>
 						{toolMenuItems.map((item, index) => (
 							<div key={item.key}>
 								<button
@@ -151,8 +151,14 @@ export function ToolRail({
 										height: 40,
 										border: 0,
 										borderRadius: 10,
-										background: activeTool === item.key ? "var(--ax-colors-bg-accent-light)" : "transparent",
-										color: activeTool === item.key ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-secondary)",
+										background:
+											activeTool === item.key
+												? "var(--ax-colors-bg-default-pressed)"
+												: "transparent",
+										color:
+											activeTool === item.key
+												? "var(--ax-colors-fg-default)"
+												: "var(--ax-colors-fg-secondary)",
 										display: "flex",
 										alignItems: "center",
 										gap: 12,
@@ -162,7 +168,10 @@ export function ToolRail({
 										fontWeight: 500,
 									}}
 								>
-									<FontAwesomeIcon icon={item.icon} style={{ fontSize: 16, width: 18 }} />
+									<FontAwesomeIcon
+										icon={item.icon}
+										style={{fontSize: 16, width: 18}}
+									/>
 									<span>{item.label}</span>
 								</button>
 								{index === 3 ? (

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
@@ -2038,3 +2039,17 @@ export default function FilesPage() {
     </Box>
   );
 }
+=======
+"use client";
+
+import {Suspense} from "react";
+import {FilesPage} from "./FilesPage";
+
+export default function Page() {
+	return (
+		<Suspense>
+			<FilesPage />
+		</Suspense>
+	);
+}
+>>>>>>> origin/main

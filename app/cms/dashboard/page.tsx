@@ -21,11 +21,7 @@ import { Text } from "@/app/components/Text";
 import { Input } from "@/app/components/Input";
 import { Button } from "@/app/components/Button";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import {
-  IconSearch,
-  IconChevronDown,
-  IconDots,
-} from "@tabler/icons-react";
+import {IconSearch, IconChevronDown, IconEllipsisSolid} from "@/app/lib/axiom-icons";
 import { workflowItems, brokenLinks } from "./mockData";
 import { BrokenLinksWidget } from "./components/BrokenLinksWidget";
 import { WorkflowStatus, TabConfig } from "./types";
@@ -268,7 +264,7 @@ export default function DashboardPage() {
                       <Button
                         aria-label="Actions"
                         size="md"
-                        icon={<IconDots />}
+                        icon={<IconEllipsisSolid />}
                         appearance="subtle"
                       />
                     </Td>

@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import { Box, Button, Text } from "@optiaxiom/react";
+=======
+import { Box, Button, Text, Textarea } from "@optiaxiom/react";
+>>>>>>> origin/main
 import {
 	IconPenToSquare as IconEdit,
 	IconCheck,
 	IconSparkles,
+<<<<<<< HEAD
 	IconChevronDown,
 	IconChevronRight,
 	IconCircleInfo,
@@ -26,11 +31,16 @@ import {
 } from "@optimizely/axiom-icons";
 import type { BrandPack, CmpOrgChannel, CmpPlatform } from "../../types";
 import { orgCmpChannels } from "../../data";
+=======
+} from "@optimizely/axiom-icons";
+import type { BrandPack } from "../../types";
+>>>>>>> origin/main
 
 type BrandBriefTabProps = {
 	pack: BrandPack;
 };
 
+<<<<<<< HEAD
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
 	return (
 		<Box
@@ -247,11 +257,14 @@ function ChannelConnections({
 	);
 }
 
+=======
+>>>>>>> origin/main
 export function BrandBriefTab({ pack }: BrandBriefTabProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [briefText, setBriefText] = useState(pack.brandBrief);
 	const [saved, setSaved] = useState(false);
 
+<<<<<<< HEAD
 	// Channel expand state
 	const [expandedChannels, setExpandedChannels] = useState<Set<string>>(new Set());
 	const toggleChannel = (cat: string) => {
@@ -268,12 +281,15 @@ export function BrandBriefTab({ pack }: BrandBriefTabProps) {
 		pack.approvedChannelConnections ?? {}
 	);
 
+=======
+>>>>>>> origin/main
 	const handleSave = () => {
 		setSaved(true);
 		setIsEditing(false);
 		setTimeout(() => setSaved(false), 2000);
 	};
 
+<<<<<<< HEAD
 	const toggleApproval = (category: string, connId: string) => {
 		setChannelEdits((prev) => {
 			const current = prev[category] ?? [];
@@ -287,6 +303,10 @@ export function BrandBriefTab({ pack }: BrandBriefTabProps) {
 	return (
 		<Box display="flex" flexDirection="column" gap="16" style={{ maxWidth: 760 }}>
 			{/* Brand Brief editor */}
+=======
+	return (
+		<Box display="flex" flexDirection="column" gap="16" style={{ maxWidth: 760 }}>
+>>>>>>> origin/main
 			<Box
 				bg="bg.default"
 				border="1"
@@ -299,7 +319,11 @@ export function BrandBriefTab({ pack }: BrandBriefTabProps) {
 				shadow="sm"
 			>
 				<Box alignItems="center" display="flex" justifyContent="space-between">
+<<<<<<< HEAD
 					<Text fontWeight="600" style={{ fontSize: 14 }}>Brand Brief</Text>
+=======
+					<Text fontWeight="600" style={{ fontSize: 14 }}>Brand Instruction</Text>
+>>>>>>> origin/main
 					<Box alignItems="center" display="flex" gap="8">
 						{!isEditing && (
 							<Button
@@ -334,6 +358,7 @@ export function BrandBriefTab({ pack }: BrandBriefTabProps) {
 				</Box>
 
 				{isEditing ? (
+<<<<<<< HEAD
 					<textarea
 						value={briefText}
 						onChange={(e) => setBriefText(e.target.value)}
@@ -351,6 +376,13 @@ export function BrandBriefTab({ pack }: BrandBriefTabProps) {
 							resize: "vertical",
 							width: "100%",
 						}}
+=======
+					<Textarea
+						value={briefText}
+						onChange={(e) => setBriefText(e.target.value)}
+						rows={8}
+						style={{ lineHeight: 1.6 }}
+>>>>>>> origin/main
 					/>
 				) : (
 					<Text color="fg.secondary" fontSize="sm" style={{ lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
@@ -358,6 +390,7 @@ export function BrandBriefTab({ pack }: BrandBriefTabProps) {
 					</Text>
 				)}
 			</Box>
+<<<<<<< HEAD
 
 			{/* Tone keywords */}
 			<SectionCard title="Tone of Voice">
@@ -604,6 +637,8 @@ export function BrandBriefTab({ pack }: BrandBriefTabProps) {
 					)}
 				</Box>
 			</SectionCard>
+=======
+>>>>>>> origin/main
 		</Box>
 	);
 }

@@ -31,10 +31,10 @@ import {Button} from "@/app/components/Button";
 import {
 	IconSparkles,
 	IconArrowLeft,
-	IconX,
+	IconXmark,
 	IconChevronDown,
 	IconChevronUp,
-} from "@tabler/icons-react";
+} from "@/app/lib/axiom-icons";
 import Flow from "@/app/components/Flow";
 
 type TimeRange = "7d" | "28d" | "90d";
@@ -551,7 +551,7 @@ Provide actionable insights based on trends and performance.`;
 									<Heading level="3">Analytics Summary</Heading>
 									<Button
 										appearance="subtle"
-										icon={<IconX />}
+										icon={<IconXmark />}
 										onClick={handleBackToData}
 										aria-label="close"
 									/>
@@ -582,7 +582,7 @@ Provide actionable insights based on trends and performance.`;
 									</Heading>
 									<Text>{summaryData.topPerformer}</Text>
 
-									<Card p="16" bg="bg.accent.subtle">
+									<Card p="16" bg="bg.information.subtle">
 										<Heading level="4" mb="8">
 											Recommendation
 										</Heading>

@@ -1,0 +1,208 @@
+.detailPage {
+	background: var(--ax-colors-bg-page);
+	min-height: 100%;
+}
+
+/* ── Section nav panel (injected via setSubNavContent) ─────────────────────── */
+
+.sectionNavPanel {
+	background: var(--ax-colors-bg-default);
+	font-family: var(--ax-fontFamily-sans);
+	min-height: 100%;
+	padding: 20px 12px 32px;
+}
+
+.sectionNavHeader {
+	border-bottom: 1px solid var(--ax-colors-border-tertiary);
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 12px;
+	padding: 0 8px 12px;
+}
+
+/* ── Group headers ("Assets", "Instructions") ─────────────────────────────── */
+
+.navGroupHeader {
+	color: var(--ax-colors-fg-tertiary);
+	display: block;
+	font-family: "Roboto", system-ui, sans-serif;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	margin-top: 4px;
+	padding: 6px 10px 2px;
+	text-transform: uppercase;
+	user-select: none;
+}
+
+/* ── Sub-item row (inside a group) ─────────────────────────────────────────── */
+
+.navSubItem {
+	appearance: none;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--ax-borderRadius-md);
+	color: var(--ax-colors-fg-secondary);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	font-family: var(--ax-fontFamily-sans);
+	font-size: 14px;
+	font-weight: 400;
+	gap: 6px;
+	line-height: 1.3;
+	min-height: 40px;
+	padding: 6px 10px 6px 14px;
+	text-align: left;
+	transition:
+		background var(--ax-duration-sm),
+		color var(--ax-duration-sm);
+	width: 100%;
+}
+
+.navSubItem:hover {
+	background: var(--ax-colors-bg-secondary);
+}
+
+.navSubItemSelected {
+	background: var(--ax-colors-bg-secondary);
+	color: var(--ax-colors-fg-default);
+	font-weight: 600;
+}
+
+.navSubItem:focus-visible {
+	box-shadow: 0 0 0 2px var(--ax-colors-border-focus);
+	outline: none;
+}
+
+/* ── Design System box (separate section at bottom) ─────────────────────────── */
+
+.navDSBox {
+	background: var(--ax-colors-bg-secondary);
+	border: 1px solid var(--ax-colors-bg-secondary-hovered);
+	border-radius: var(--ax-borderRadius-lg);
+	margin-top: 16px;
+	overflow: hidden;
+	padding: 8px 4px 4px;
+}
+
+.navDSLabel {
+	color: var(--ax-colors-fg-success-strong);
+	display: block;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	padding: 0 10px 4px;
+	text-transform: uppercase;
+}
+
+.sectionNavItem {
+	appearance: none;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--ax-borderRadius-md);
+	cursor: pointer;
+	display: block;
+	font: inherit;
+	min-height: 48px;
+	padding: 8px 10px;
+	text-align: left;
+	transition:
+		background var(--ax-duration-sm),
+		border-color var(--ax-duration-sm);
+	width: 100%;
+}
+
+.sectionNavItemContent {
+	display: grid;
+	grid-template-rows: auto auto;
+	min-width: 0;
+	row-gap: 2px;
+	width: 100%;
+}
+
+.sectionNavItemTitle {
+	align-items: center;
+	display: flex;
+	gap: 6px;
+	min-width: 0;
+	width: 100%;
+}
+
+.sectionNavItemLabel {
+	color: var(--ax-colors-fg-secondary);
+	display: block;
+	font-family: var(--ax-fontFamily-sans);
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1.3;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sectionNavItemLabelSelected {
+	color: var(--ax-colors-fg-default);
+	font-weight: 600;
+}
+
+.sectionNavItemDescription {
+	color: var(--ax-colors-fg-tertiary);
+	display: block;
+	font-size: 11px;
+	line-height: 1.3;
+	white-space: normal;
+	word-break: normal;
+}
+
+.sectionNavCount {
+	align-items: center;
+	background: var(--ax-colors-bg-tertiary);
+	border-radius: var(--ax-borderRadius-full);
+	color: var(--ax-colors-fg-tertiary);
+	display: inline-flex;
+	flex: 0 0 auto;
+	font-size: 11px;
+	font-weight: 700;
+	height: 18px;
+	justify-content: center;
+	line-height: 1;
+	min-width: 18px;
+	padding-inline: 5px;
+}
+
+.sectionNavChevron {
+	color: var(--ax-colors-fg-tertiary);
+	display: inline-flex;
+	flex: 0 0 auto;
+	margin-left: auto;
+}
+
+.sectionNavDivider {
+	background: var(--ax-colors-border-tertiary);
+	height: 1px;
+	margin: 4px 10px;
+}
+
+.sectionNavItem:hover {
+	background: var(--ax-colors-bg-secondary);
+	border-color: transparent;
+}
+
+.sectionNavItemSelected {
+	background: var(--ax-colors-bg-secondary);
+	border-color: transparent;
+}
+
+.sectionNavItem:focus-visible {
+	box-shadow: 0 0 0 2px var(--ax-colors-border-focus);
+	outline: none;
+}
+
+.sectionContent {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+}

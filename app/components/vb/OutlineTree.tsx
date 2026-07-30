@@ -2,15 +2,27 @@
 
 import React, {useMemo, useState, useEffect, useRef} from "react";
 import {Box, Button, Text} from "@optiaxiom/react";
+<<<<<<< HEAD
 import {IconPlus} from "@tabler/icons-react";
+=======
+import {IconPlus} from "@/app/lib/axiom-icons";
+>>>>>>> origin/main
 
 import Section from "./Section";
 import Row from "./Row";
 import Col from "./Col";
 import Ele, {EleMap} from "./Ele";
 import {getProperty, isImageDrag, isInternalDrag, VB_INTERNAL_MIME} from "./blocks/utils";
+<<<<<<< HEAD
 import {BLOCK_SCHEMAS} from "./blocks/schemas";
 import {initialPages} from "@/app/db/initialData";
+=======
+import {getPreviewLabel} from "./blocks/previewLabel";
+import {BLOCK_SCHEMAS} from "./blocks/schemas";
+import {findTemplateBySemanticTag, findTemplateByValue} from "./blocks/displayTemplateUtils";
+import {initialPages, initialContentTypes, ContentType} from "@/app/db/initialData";
+import usePersistentState from "@/app/usePersistentState";
+>>>>>>> origin/main
 
 /** Extract plain text from a TipTap JSON document (or string) for outline labels. */
 function extractPlainText(value: any): string {
@@ -36,7 +48,11 @@ function getImageNameFromUrl(url: string): string {
 	try {
 		const urlObj = new URL(url);
 		const pathname = urlObj.pathname;
+<<<<<<< HEAD
 		const parts = pathname.split('/').filter(Boolean);
+=======
+		const parts = pathname.split("/").filter(Boolean);
+>>>>>>> origin/main
 
 		// Handle picsum.photos URLs with /seed/{name}/{width}/{height} pattern
 		if (urlObj.hostname.includes("picsum.photos") && parts.includes("seed")) {
@@ -96,7 +112,11 @@ const getDraggedAlt = (dt: DataTransfer) => {
 
 const INSERT_BAR_STYLE: React.CSSProperties = {
 	height: "2px",
+<<<<<<< HEAD
 	backgroundColor: "#0037FF",
+=======
+	backgroundColor: "var(--ax-colors-fg-secondary)",
+>>>>>>> origin/main
 	borderRadius: "2px",
 	margin: "-1px 0",
 	pointerEvents: "none",
@@ -190,6 +210,7 @@ export default function OutlineTree({
 	};
 
 	const elementOptions = useMemo(() => {
+<<<<<<< HEAD
 		const types = new Set<string>();
 
 		initialPages.forEach((page) => {
@@ -201,12 +222,38 @@ export default function OutlineTree({
 		});
 
 		const source = types.size ? Array.from(types) : Object.keys(BLOCK_SCHEMAS);
+=======
+		// Exclude variant types — they're style options on the parent tile, not separate elements
+		const source = Object.keys(BLOCK_SCHEMAS).filter((type) => !BLOCK_SCHEMAS[type]?.variantOf);
+
+		// availableForComposition is a code-level flag — always read from initialContentTypes,
+		// not from the localStorage copy which may have stale or stripped fields.
+		const compositionMap = new Map(initialContentTypes.map((ct) => [ct.id, ct]));
+>>>>>>> origin/main
 
 		return source
 			.map((type) => ({
 				type,
 				label: BLOCK_SCHEMAS[type]?.displayName ?? toTitle(type),
 			}))
+<<<<<<< HEAD
+=======
+			.filter((opt) => {
+				const ct = compositionMap.get(opt.type);
+				if (ct?.availableForComposition && ct.compositionDisplayAs?.includes("Element"))
+					return true;
+				// Let variant types through if their parent content type passes the filter
+				const parentId = BLOCK_SCHEMAS[opt.type]?.variantOf;
+				if (parentId) {
+					const parentCt = compositionMap.get(parentId);
+					return (
+						parentCt?.availableForComposition &&
+						parentCt.compositionDisplayAs?.includes("Element")
+					);
+				}
+				return false;
+			})
+>>>>>>> origin/main
 			.sort((a, b) => a.label.localeCompare(b.label));
 	}, []);
 
@@ -362,7 +409,17 @@ export default function OutlineTree({
 	};
 
 	// addElement used by Col "+" menu
+<<<<<<< HEAD
 	const addElement = (type: string, colIndex: number, rowIndex: number, sectionIndex: number) => {
+=======
+	const addElement = (
+		type: string,
+		colIndex: number,
+		rowIndex: number,
+		sectionIndex: number,
+		initialProps?: Record<string, any>
+	) => {
+>>>>>>> origin/main
 		const uKey = `${type}-${Date.now()}`;
 
 		const pendingImageData = (window as any).__pendingImageData;
@@ -376,16 +433,40 @@ export default function OutlineTree({
 				properties: (() => {
 					const schema = BLOCK_SCHEMAS[type];
 					if (schema) {
+<<<<<<< HEAD
 						const props: Record<string, {value: any}> = {};
 						Object.entries(schema.properties).forEach(([key, def]) => {
 							props[key] = {value: def.default ?? ""};
+=======
+						const props: Record<string, any> = {};
+						Object.entries(schema.properties).forEach(([key, def]) => {
+							props[key] = def.default ?? "";
+>>>>>>> origin/main
 						});
 
 						// Special case for image if we have pending data
 						if (type === "ct-image" && imageUrl) {
+<<<<<<< HEAD
 							if (props["title"]) props["title"].value = imageAlt || "Untitled Image";
 							if (props["altText"]) props["altText"].value = imageAlt;
 							if (props["imageUrl"]) props["imageUrl"].value = imageUrl;
+=======
+							if ("title" in props) props["title"] = imageAlt || "Untitled Image";
+							if ("altText" in props) props["altText"] = imageAlt;
+							if ("imageUrl" in props) props["imageUrl"] = imageUrl;
+						}
+
+						// Merge caller-supplied initial props (e.g. selected template variant)
+						if (initialProps) Object.assign(props, initialProps);
+
+						// Derive displayTemplateKey from the template value so the canvas
+						// renders the correct visual style without requiring a separate edit.
+						if (props.template && !props.displayTemplateKey) {
+							const dtKey =
+								findTemplateBySemanticTag(props.template, {contentType: type}) ??
+								findTemplateByValue(props.template, {contentType: type});
+							if (dtKey) props.displayTemplateKey = dtKey;
+>>>>>>> origin/main
 						}
 
 						return props;
@@ -543,7 +624,13 @@ export default function OutlineTree({
 	useEffect(() => {
 		const currentSectionIds = data.map((section: any) => section?.id).filter(Boolean);
 		const previousSectionIds = prevSectionIdsRef.current;
+<<<<<<< HEAD
 		const addedSectionIds = currentSectionIds.filter((id: string) => !previousSectionIds.includes(id));
+=======
+		const addedSectionIds = currentSectionIds.filter(
+			(id: string) => !previousSectionIds.includes(id)
+		);
+>>>>>>> origin/main
 
 		// Only scroll if exactly one section was added (not removed, not switched outlines)
 		if (
@@ -558,9 +645,15 @@ export default function OutlineTree({
 				// Find the newly added section element
 				const addedSectionEl = Array.from(
 					outlineContainerRef.current.querySelectorAll("[data-section-id]")
+<<<<<<< HEAD
 				).find(
 					(el) => el.getAttribute("data-section-id") === addedSectionId
 				) as HTMLElement | undefined;
+=======
+				).find((el) => el.getAttribute("data-section-id") === addedSectionId) as
+					| HTMLElement
+					| undefined;
+>>>>>>> origin/main
 
 				if (addedSectionEl) {
 					addedSectionEl.scrollIntoView({
@@ -618,10 +711,17 @@ export default function OutlineTree({
 			[uKey]: {
 				type: "ct-image",
 				properties: {
+<<<<<<< HEAD
 					imageUrl: {value: imageUrl},
 					altText: {value: imageAlt || "Untitled Image"},
 					width: {value: "auto"},
 					height: {value: "auto"},
+=======
+					imageUrl: imageUrl,
+					altText: imageAlt || "Untitled Image",
+					width: "auto",
+					height: "auto",
+>>>>>>> origin/main
 				},
 			},
 		}));
@@ -690,7 +790,13 @@ export default function OutlineTree({
 								addRow={(e: any) => addRow(e, sindex, null)}
 								isSelected={currentSection === section.id}
 								onHoverChange={setCurrentHoverSection}
+<<<<<<< HEAD
 								onScrollToPreview={(sectionId) => onScrollToSection?.(sectionId, outlineId!)}
+=======
+								onScrollToPreview={(sectionId) =>
+									onScrollToSection?.(sectionId, outlineId!)
+								}
+>>>>>>> origin/main
 							>
 								{(section.children ?? []).map((row: any, rIndex: number) => {
 									const showRowBarAbove =
@@ -755,11 +861,22 @@ export default function OutlineTree({
 																	removeCol={() =>
 																		removeCol(col.id)
 																	}
+<<<<<<< HEAD
 																	addElement={(type: string) =>
+=======
+																	addElement={(
+																		type: string,
+																		initialProps?: Record<
+																			string,
+																			any
+																		>
+																	) =>
+>>>>>>> origin/main
 																		addElement(
 																			type,
 																			cIndex,
 																			rIndex,
+<<<<<<< HEAD
 																			sindex
 																		)
 																	}
@@ -767,6 +884,22 @@ export default function OutlineTree({
 																	isSelected={currentColumn === col.id}
 																	onHoverChange={setCurrentHoverColumn}
 																	onScrollToPreview={onScrollToColumn}
+=======
+																			sindex,
+																			initialProps
+																		)
+																	}
+																	elementOptions={elementOptions}
+																	isSelected={
+																		currentColumn === col.id
+																	}
+																	onHoverChange={
+																		setCurrentHoverColumn
+																	}
+																	onScrollToPreview={
+																		onScrollToColumn
+																	}
+>>>>>>> origin/main
 																>
 																	<div
 																		className={
@@ -1016,6 +1149,7 @@ export default function OutlineTree({
 																		}}
 																	>
 																		{/* Empty state for columns with no elements */}
+<<<<<<< HEAD
 																		{(getColChildren(col) ?? []).length === 0 && !dragging && (
 																			<Box
 																				display="flex"
@@ -1036,6 +1170,38 @@ export default function OutlineTree({
 																				</Text>
 																			</Box>
 																		)}
+=======
+																		{(getColChildren(col) ?? [])
+																			.length === 0 &&
+																			!dragging && (
+																				<Box
+																					display="flex"
+																					flexDirection="column"
+																					alignItems="center"
+																					justifyContent="center"
+																					gap="8"
+																					p="16"
+																					rounded="md"
+																					bg="bg.default.hovered"
+																					style={{
+																						minHeight:
+																							"80px",
+																						border: "1px dashed var(--border-secondary)",
+																					}}
+																				>
+																					<Text
+																						fontSize="sm"
+																						color="fg.tertiary"
+																						textAlign="center"
+																					>
+																						Drop
+																						elements
+																						here or use
+																						the + button
+																					</Text>
+																				</Box>
+																			)}
+>>>>>>> origin/main
 
 																		{(
 																			getColChildren(col) ??
@@ -1113,11 +1279,16 @@ export default function OutlineTree({
 																									element
 																								}
 																								label={
+<<<<<<< HEAD
 																									getProperty(
+=======
+																									getPreviewLabel(
+>>>>>>> origin/main
 																										theEles[
 																											element
 																												.id
 																										]
+<<<<<<< HEAD
 																											?.properties,
 																										"text",
 																										"Text"
@@ -1148,6 +1319,20 @@ export default function OutlineTree({
 																											?.properties,
 																										"alt",
 																										"Alt Text"
+=======
+																											?.properties
+																									) ||
+																									getImageNameFromUrl(
+																										getProperty(
+																											theEles[
+																												element
+																													.id
+																											]
+																												?.properties,
+																											"appImage",
+																											"App Image"
+																										)
+>>>>>>> origin/main
 																									) ||
 																									getImageNameFromUrl(
 																										getProperty(
@@ -1171,7 +1356,11 @@ export default function OutlineTree({
 																											"Rich Text"
 																										)
 																									) ||
+<<<<<<< HEAD
 																									undefined
+=======
+																									""
+>>>>>>> origin/main
 																								}
 																								setCurrentEle={
 																									setCurrentEle
@@ -1181,7 +1370,14 @@ export default function OutlineTree({
 																								}
 																								onOpenStyleEditor={
 																									onOpenStyleEditor
+<<<<<<< HEAD
 																										? () => onOpenStyleEditor(element.id)
+=======
+																										? () =>
+																												onOpenStyleEditor(
+																													element.id
+																												)
+>>>>>>> origin/main
 																										: undefined
 																								}
 																							/>

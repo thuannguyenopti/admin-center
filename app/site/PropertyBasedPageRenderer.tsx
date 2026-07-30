@@ -2,6 +2,10 @@
 
 import React from "react";
 import { BlockRegistry } from "@/app/components/vb/blocks";
+<<<<<<< HEAD
+=======
+import StrideColumnGrid from "./StrideColumnGrid";
+>>>>>>> origin/main
 
 interface PropertyBasedPageRendererProps {
 	contentTypeId: string;
@@ -28,7 +32,12 @@ export default function PropertyBasedPageRenderer({
 	}
 
 	return (
+<<<<<<< HEAD
 		<div className="flex-1">
+=======
+		<div className="flex-1 w-full font-stride-sans relative" style={{backgroundColor: "#F2F8FC"}}>
+			<StrideColumnGrid />
+>>>>>>> origin/main
 			<BlockComponent properties={properties} pageId={pageId} />
 		</div>
 	);
