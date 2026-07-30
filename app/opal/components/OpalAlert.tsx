@@ -2,10 +2,6 @@
 
 import { Box, Button, Link, Text } from "@optiaxiom/react";
 import { IconXmark, IconPopOut } from "@/app/lib/axiom-icons";
-<<<<<<< HEAD
-import Image from "next/image";
-=======
->>>>>>> origin/main
 import { useState, type ReactNode } from "react";
 
 // Opal brand gradient at 20% opacity blended over white
@@ -76,12 +72,8 @@ export function OpalAlert({
             justifyContent: isCTA ? "center" : "flex-start",
           }}
         >
-<<<<<<< HEAD
-          <Image src="/opal-orb.png" alt="" width={20} height={20} />
-=======
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/opal-icon-nav.png" alt="" width={20} height={20} style={{ display: "block" }} />
->>>>>>> origin/main
         </Box>
 
         {/* Text area */}

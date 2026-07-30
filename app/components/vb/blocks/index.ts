@@ -6,11 +6,6 @@ import { ImageBlock } from "./ImageBlock";
 import { RichTextBlock } from "./RichTextBlock";
 import { ProductBlock } from "./ProductBlock";
 import { BlogPostBlock } from "./BlogPostBlock";
-<<<<<<< HEAD
-
-export const BlockRegistry: Record<string, React.FC<any>> = {
-    "ct-heading": HeadingBlock,
-=======
 import { SectionHeaderBlock } from "./SectionHeaderBlock";
 import { HeroBlock } from "./StrideHeroBlock";
 import { NumberLineBlock } from "./StrideNumberLineBlock";
@@ -28,22 +23,16 @@ export const BlockRegistry: Record<string, React.FC<any>> = {
     "ct-heading-h2": HeadingBlock,
     "ct-heading-h3": HeadingBlock,
     "ct-heading-h4": HeadingBlock,
->>>>>>> origin/main
     "ct-text": TextBlock,
     "ct-rich-text": RichTextBlock,
     "ct-product": ProductBlock,
     "ct-button": ButtonBlock,
-<<<<<<< HEAD
-=======
     "ct-button-outline": ButtonBlock,
     "ct-button-subtle": ButtonBlock,
->>>>>>> origin/main
     "ct-input": InputBlock,
     "ct-image": ImageBlock,
     "ct-image-block": ImageBlock,
     "ct-blog-post": BlogPostBlock,
-<<<<<<< HEAD
-=======
     "ct-section-header": SectionHeaderBlock,
     "ct-hero": HeroBlock,
     "ct-number-line": NumberLineBlock,
@@ -54,5 +43,4 @@ export const BlockRegistry: Record<string, React.FC<any>> = {
     "ct-nav-item": NavItemBlock,
     "ct-event-card": EventCardBlock,
     "ct-news-item": NewsItemBlock,
->>>>>>> origin/main
 };

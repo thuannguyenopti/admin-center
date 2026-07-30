@@ -31,8 +31,6 @@ export type SectionTemplates = {
  * Each element type has multiple visual templates that can be swapped
  */
 export const ELEMENT_TEMPLATES: ElementTemplates = {
-<<<<<<< HEAD
-=======
     "ct-hero": {
         defaultTemplate: "default",
         templates: [
@@ -59,7 +57,6 @@ export const ELEMENT_TEMPLATES: ElementTemplates = {
             },
         ],
     },
->>>>>>> origin/main
     "ct-heading": {
         defaultTemplate: "default",
         templates: [

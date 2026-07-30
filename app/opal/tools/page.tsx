@@ -31,10 +31,7 @@ import {
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { Input } from "@/app/components/Input";
 import { AddConnectorModal, type ConnectedConnector } from "./components/AddConnectorModal";
-<<<<<<< HEAD
-=======
 import { ToolsTab } from "./components/ToolsTab";
->>>>>>> origin/main
 import { ConnectorAvatar } from "./components/ConnectorAvatar";
 import { OCPConfigPanel } from "./components/OCPConfigPanel";
 import { OCPConfigModal } from "./components/OCPConfigModal";
@@ -99,20 +96,12 @@ export default function ToolsPage() {
     // Feedback toggle
     const [ocpAsPanel, setOcpAsPanel] = useState(false);
     const [userView, setUserView] = useState(false);
-<<<<<<< HEAD
-    const [ctaButtonMode, setCtaButtonMode, ctaButtonModeHydrated] = usePersistentState("opal-connectors-cta-button-mode", false) as [boolean, (v: boolean) => void, boolean];
-=======
->>>>>>> origin/main
 
     // Modal state — which connector (if any) and which screen to open to
     const [modalOpen, setModalOpen] = useState(false);
     const [modalInitialConnector, setModalInitialConnector] = useState<Connector | null>(null);
     const [modalInitialScreen, setModalInitialScreen] = useState<"browse" | "detail" | "configure">("browse");
-<<<<<<< HEAD
-    const [modalInitialStep, setModalInitialStep] = useState<0 | 1 | 2>(0);
-=======
     const [modalInitialStep, setModalInitialStep] = useState<0 | 1 | 2 | 3>(0);
->>>>>>> origin/main
     const [modalInitialToolsDisclosureOpen, setModalInitialToolsDisclosureOpen] = useState(false);
     const [addAuthProviderOpen, setAddAuthProviderOpen] = useState(false);
     const [remoteMcpInitialStep, setRemoteMcpInitialStep] = useState<0 | 1 | 2>(0);
@@ -171,23 +160,16 @@ export default function ToolsPage() {
         toaster.create(`${connector.name} successfully connected`, { intent: "success" });
     };
 
-<<<<<<< HEAD
-    const openConfigure = (connector: Connector) => {
-=======
     const openConfigure = (connector: Connector, step: 0 | 1 | 2 | 3 = 0) => {
         setOcpModalOpen(false);
         setOcpConnector(null);
->>>>>>> origin/main
         if (ocpAsPanel) {
             setStepperPanelConnector(connector);
             return;
         }
         setModalInitialConnector(connector);
         setModalInitialScreen("configure");
-<<<<<<< HEAD
-=======
         setModalInitialStep(step);
->>>>>>> origin/main
         setModalOpen(true);
     };
 
@@ -217,31 +199,18 @@ export default function ToolsPage() {
             : "var(--ax-colors-border-secondary)";
 
         return (
-<<<<<<< HEAD
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <span
-                    style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "999px",
-=======
             <Box display="flex" alignItems="center" gap="8">
                 <Box
                     rounded="full"
                     style={{
                         width: 8,
                         height: 8,
->>>>>>> origin/main
                         background: dotColor,
                         flexShrink: 0,
                     }}
                 />
                 <span>{status}</span>
-<<<<<<< HEAD
-            </span>
-=======
             </Box>
->>>>>>> origin/main
         );
     };
 
@@ -344,11 +313,7 @@ export default function ToolsPage() {
             const connector = connectorId ? CONNECTORS.find(item => item.id === connectorId) ?? null : null;
             const initialScreen = screen === "detail" || screen === "configure" || screen === "browse" ? screen : "browse";
             const parsedStep = Number(searchParams.get("step") ?? "0");
-<<<<<<< HEAD
-            const initialStep = parsedStep === 1 || parsedStep === 2 ? parsedStep : 0;
-=======
             const initialStep = ([1, 2, 3].includes(parsedStep) ? parsedStep : 0) as 0 | 1 | 2 | 3;
->>>>>>> origin/main
             const initialToolsDisclosureOpen = searchParams.get("tools") === "expanded";
 
             setModalInitialConnector(connector);
@@ -442,10 +407,7 @@ export default function ToolsPage() {
                     connector={stepperPanelConnector}
                     onClose={() => setStepperPanelConnector(null)}
                     onSave={handleConnectorAdded}
-<<<<<<< HEAD
-=======
                     initialStep={stepperPanelConnector.usesOCP ? 2 : 0}
->>>>>>> origin/main
                 />
             )}
 
@@ -480,13 +442,6 @@ export default function ToolsPage() {
                             <Switch checked={userView} onCheckedChange={setUserView} />
                             <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>User view</Text>
                         </Box>
-<<<<<<< HEAD
-                        <Box display="flex" alignItems="center" gap="8">
-                            <Switch checked={ctaButtonModeHydrated ? ctaButtonMode : false} onCheckedChange={setCtaButtonMode} />
-                            <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>CTA Button</Text>
-                        </Box>
-=======
->>>>>>> origin/main
                     </Box>
                 </Box>
 
@@ -555,11 +510,7 @@ export default function ToolsPage() {
                                 </DropdownMenu>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-<<<<<<< HEAD
-                                        <Button appearance="primary" style={{ marginLeft: "auto" }} icon={<IconPlus />}>
-=======
                                         <Button appearance="default" size="lg" style={{ marginLeft: "auto" }} icon={<IconPlus />}>
->>>>>>> origin/main
                                             Add Connector
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -593,18 +544,11 @@ export default function ToolsPage() {
                                             isConnected={connectedIds.includes(connector.id)}
                                             isConfigured={configuredIds.includes(connector.id)}
                                             isUserView={userView}
-<<<<<<< HEAD
-                                            ctaButtonMode={ctaButtonModeHydrated ? ctaButtonMode : false}
-                                            onConnect={() => {
-                                                if (connector.usesOCP) {
-                                                    openOCP(connector);
-=======
                                             ctaButtonMode={true}
                                             onConnect={() => {
                                                 if (connector.usesOCP) {
                                                     // OCP connectors skip Permissions + Type — user just connects their account
                                                     openConfigure(connector, 2);
->>>>>>> origin/main
                                                     return;
                                                 }
 
@@ -625,11 +569,7 @@ export default function ToolsPage() {
 
                                                 openConfigure(connector);
                                             }}
-<<<<<<< HEAD
-                                            onDetails={() => connector.usesOCP ? openOCP(connector) : openDetails(connector)}
-=======
                                             onDetails={() => connector.usesOCP ? openConfigure(connector, 2) : openDetails(connector)}
->>>>>>> origin/main
                                         />
                                     ))}
                                 </Box>
@@ -640,11 +580,7 @@ export default function ToolsPage() {
                     {/* ── Tools tab ────────────────────────────────────────── */}
                     <TabsContent value="tools">
                         <Box pt="16">
-<<<<<<< HEAD
-                            <ToolsTab />
-=======
                             <ToolsTab isUserView={userView} />
->>>>>>> origin/main
                         </Box>
                     </TabsContent>
 
@@ -775,11 +711,7 @@ export default function ToolsPage() {
                                                     </Tr>
                                                     {isExpanded ? (
                                                         <Tr>
-<<<<<<< HEAD
-                                                            <td
-=======
                                                             <Td
->>>>>>> origin/main
                                                                 colSpan={7}
                                                                 style={{
                                                                     padding: "16px 16px 16px 80px",
@@ -798,11 +730,7 @@ export default function ToolsPage() {
                                                                         {provider.isRemoteMcp ? <Badge intent="information">Remote MCP</Badge> : null}
                                                                     </Box>
                                                                 </Box>
-<<<<<<< HEAD
-                                                            </td>
-=======
                                                             </Td>
->>>>>>> origin/main
                                                         </Tr>
                                                     ) : null}
                                                 </Fragment>
@@ -844,18 +772,6 @@ function ConnectorCard({
     if (ctaButtonMode) {
         // ── CTA Button layout (Figma variant) ─────────────────────────────────
         // Footer states:
-<<<<<<< HEAD
-        //   not connected + admin  → Configure button
-        //   not connected + user   → Connect button
-        //   connected   + admin    → gear icon in header only (no footer button)
-        //   connected   + user     → Open button (left) + green dot + "Connected" (right)
-        const showGearInHeader = isConnected && !isUserView;
-        const showFooter = !(isConnected && !isUserView);
-
-        let footerContent: React.ReactNode = null;
-        if (isConnected && isUserView) {
-            // connected + user: Open button left, Connected indicator right
-=======
         //   connected              → Open button (left) + green dot + "Connected" (right)
         //   not connected + admin  → Configure button
         //   not connected + user   → Connect button
@@ -863,7 +779,6 @@ function ConnectorCard({
         let footerContent: React.ReactNode = null;
         if (isConnected) {
             // connected: Open button left, Connected indicator right
->>>>>>> origin/main
             footerContent = (
                 <Box display="flex" alignItems="center" justifyContent="space-between" pt="4">
                     <Button
@@ -879,19 +794,11 @@ function ConnectorCard({
                             style={{
                                 width: 8,
                                 height: 8,
-<<<<<<< HEAD
-                                background: "var(--ax-colors-fg-success-strong)",
-                                flexShrink: 0,
-                            }}
-                        />
-                        <Text fontSize="sm" fontWeight="500" color="fg.success">
-=======
                                 background: "var(--ax-colors-fg-success)",
                                 flexShrink: 0,
                             }}
                         />
                         <Text fontSize="sm" color="fg.success">
->>>>>>> origin/main
                             Connected
                         </Text>
                     </Box>
@@ -953,18 +860,6 @@ function ConnectorCard({
                         {connector.name}
                     </Text>
                     <ConnectorAvatar connector={connector} size={40} />
-<<<<<<< HEAD
-                    {showGearInHeader && (
-                        <Button
-                            appearance="subtle"
-                            size="md"
-                            icon={<IconGear />}
-                            onClick={e => { e.stopPropagation(); onConnect(); }}
-                            aria-label="Configure"
-                        />
-                    )}
-=======
->>>>>>> origin/main
                 </Box>
 
                 {/* Description */}
@@ -985,11 +880,7 @@ function ConnectorCard({
                 </Text>
 
                 {/* Footer CTA */}
-<<<<<<< HEAD
-                {showFooter && footerContent}
-=======
                 {footerContent}
->>>>>>> origin/main
             </Box>
         );
     }
@@ -1075,25 +966,6 @@ function ConnectorCard({
     );
 }
 
-<<<<<<< HEAD
-// ── Tools tab ─────────────────────────────────────────────────────────────────
-
-function ToolsTab() {
-    return (
-        <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            py="48"
-            rounded="md"
-            style={{ border: "1px solid var(--ax-colors-border-tertiary)" }}
-        >
-            <Text color="fg.tertiary">Tools content coming soon.</Text>
-        </Box>
-    );
-}
-=======
->>>>>>> origin/main
 
 function RegistriesTab() {
     return (

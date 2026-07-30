@@ -1,10 +1,6 @@
 import { Box, Button } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-<<<<<<< HEAD
-import { IconChevronDown } from "@tabler/icons-react";
-=======
 import {IconChevronDown} from "@/app/lib/axiom-icons";
->>>>>>> origin/main
 
 type PlanViewFooterProps = {
 	page: number;
@@ -30,13 +26,8 @@ export function PlanViewFooter({ page, onPageChange, pageSize, totalItems, total
 				<Text fontSize="sm" color="fg.tertiary">
 					{totalItems} items · Page Size
 				</Text>
-<<<<<<< HEAD
-				<Button appearance="subtle" size="sm">
-					{pageSize} <IconChevronDown size={14} />
-=======
 				<Button appearance="subtle" size="sm" addonAfter={<IconChevronDown size={16} />}>
 					{pageSize}
->>>>>>> origin/main
 				</Button>
 			</Box>
 			<Box display="flex" alignItems="center" gap="4">

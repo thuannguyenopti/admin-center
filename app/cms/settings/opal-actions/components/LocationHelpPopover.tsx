@@ -2,11 +2,7 @@
 
 import React from "react";
 import {Box, Text, Button, Popover, PopoverTrigger, PopoverContent, Badge} from "@optiaxiom/react";
-<<<<<<< HEAD
-import {IconHelp} from "@tabler/icons-react";
-=======
 import {IconHelp} from "@/app/lib/axiom-icons";
->>>>>>> origin/main
 import {LocationId} from "../types";
 
 interface LocationHelpPopoverProps {
@@ -15,13 +11,9 @@ interface LocationHelpPopoverProps {
 
 export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locationId}) => {
 	// Determine which area should be highlighted based on location
-<<<<<<< HEAD
-	const isToolbarLocation = ["toolbar-improve", "toolbar-page", "toolbar-context"].includes(locationId);
-=======
 	const isToolbarLocation = ["toolbar-improve", "toolbar-page", "toolbar-context"].includes(
 		locationId
 	);
->>>>>>> origin/main
 	const isOutlineLocation = locationId === "outline-section";
 	const isPropertyLocation = [
 		"property-text",
@@ -37,14 +29,10 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 	const getLocationInfo = () => {
 		switch (locationId) {
 			case "toolbar-improve":
-<<<<<<< HEAD
-				return {name: "Toolbar Improve Button", description: "Actions in the Improve dropdown menu"};
-=======
 				return {
 					name: "Toolbar Improve Button",
 					description: "Actions in the Improve dropdown menu",
 				};
->>>>>>> origin/main
 			case "toolbar-page":
 				return {name: "Page", description: "Page-level context menu actions"};
 			case "toolbar-context":
@@ -62,14 +50,10 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 			case "property-reference":
 				return {name: "Reference", description: "Reference property editor actions"};
 			case "property-editor":
-<<<<<<< HEAD
-				return {name: "Property Editor", description: "Generic actions for text/longstring/xhtmlstring properties"};
-=======
 				return {
 					name: "Property Editor",
 					description: "Generic actions for text/longstring/xhtmlstring properties",
 				};
->>>>>>> origin/main
 			case "asset-panel":
 				return {name: "Asset Panel", description: "Asset management context menu"};
 			default:
@@ -82,12 +66,6 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
-<<<<<<< HEAD
-				<Button appearance="subtle" size="sm" icon={<IconHelp size={14} />} aria-label="Location help" />
-			</PopoverTrigger>
-
-			<PopoverContent align="start" style={{width: "540px", maxHeight: "500px", overflow: "auto"}}>
-=======
 				<Button
 					appearance="subtle"
 					size="sm"
@@ -100,7 +78,6 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 				align="start"
 				style={{width: "540px", maxHeight: "500px", overflow: "auto"}}
 			>
->>>>>>> origin/main
 				<Box p="16" display="flex" flexDirection="column" gap="16">
 					{/* Header */}
 					<Box>
@@ -133,9 +110,6 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 								display="flex"
 								alignItems="start"
 							>
-<<<<<<< HEAD
-								<Text fontSize="xs" color="fg.secondary" style={{writingMode: "vertical-rl", transform: "rotate(180deg)"}}>
-=======
 								<Text
 									fontSize="xs"
 									color="fg.secondary"
@@ -144,7 +118,6 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 										transform: "rotate(180deg)",
 									}}
 								>
->>>>>>> origin/main
 									Nav
 								</Text>
 							</Box>
@@ -160,9 +133,6 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 									display="flex"
 									alignItems="center"
 									justifyContent="space-between"
-<<<<<<< HEAD
-									style={isToolbarLocation ? {boxShadow: "inset 0 0 0 2px var(--ax-colors-border-accent)"} : {}}
-=======
 									style={
 										isToolbarLocation
 											? {
@@ -171,22 +141,17 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 												}
 											: {}
 									}
->>>>>>> origin/main
 								>
 									<Text fontSize="xs" color="fg.secondary">
 										Toolbar
 									</Text>
 									{isToolbarLocation && (
 										<Box
-<<<<<<< HEAD
-											style={{width: "12px", height: "12px", borderRadius: "50%"}}
-=======
 											style={{
 												width: "12px",
 												height: "12px",
 												borderRadius: "50%",
 											}}
->>>>>>> origin/main
 											bg="bg.accent"
 										/>
 									)}
@@ -200,11 +165,6 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 											flexBasis: "60px",
 											flexGrow: 0,
 											flexShrink: 0,
-<<<<<<< HEAD
-											...((isOutlineLocation || isPropertyLocation) ? {boxShadow: "inset 0 0 0 2px var(--ax-colors-border-accent)"} : {}),
-										}}
-										bg={(isOutlineLocation || isPropertyLocation) ? "bg.accent.subtle" : "bg.secondary"}
-=======
 											...(isOutlineLocation || isPropertyLocation
 												? {
 														boxShadow:
@@ -217,7 +177,6 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 												? "bg.accent.subtle"
 												: "bg.secondary"
 										}
->>>>>>> origin/main
 										borderR="1"
 										borderColor="border.secondary"
 										p="6"
@@ -227,24 +186,17 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 									>
 										{(isOutlineLocation || isPropertyLocation) && (
 											<Box
-<<<<<<< HEAD
-												style={{width: "12px", height: "12px", borderRadius: "50%"}}
-=======
 												style={{
 													width: "12px",
 													height: "12px",
 													borderRadius: "50%",
 												}}
->>>>>>> origin/main
 												bg="bg.accent"
 											/>
 										)}
 									</Box>
 
 									{/* Main Content Area */}
-<<<<<<< HEAD
-									<Box flex="1" bg="bg.page" p="6" display="flex" alignItems="start">
-=======
 									<Box
 										flex="1"
 										bg="bg.page"
@@ -252,7 +204,6 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 										display="flex"
 										alignItems="start"
 									>
->>>>>>> origin/main
 										<Text fontSize="xs" color="fg.secondary">
 											Content
 										</Text>
@@ -266,16 +217,12 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 									flexBasis: "50px",
 									flexGrow: 0,
 									flexShrink: 0,
-<<<<<<< HEAD
-									...(isAssetLocation ? {boxShadow: "inset 0 0 0 2px var(--ax-colors-border-accent)"} : {}),
-=======
 									...(isAssetLocation
 										? {
 												boxShadow:
 													"inset 0 0 0 2px var(--ax-colors-fg-information)",
 											}
 										: {}),
->>>>>>> origin/main
 								}}
 								borderL="1"
 								borderColor="border.secondary"

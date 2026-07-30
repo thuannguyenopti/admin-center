@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 import { MARATHON_EVENT_OUTLINE } from "./marathonEventOutline";
 
->>>>>>> origin/main
 // --- SEO Block Type ---
 export type SEOBlockLocale = {
 	title: string;
@@ -391,10 +388,7 @@ export type ContentType = {
 	isAvailable?: boolean;
 	availableForComposition?: boolean;
 	compositionDisplayAs?: CompositionDisplayAs[];
-<<<<<<< HEAD
-=======
 	componentDocsUrl?: string;
->>>>>>> origin/main
 	// AvailableContentTypesAttribute (parent-side control)
 	availableContentTypes?: {
 		availability?: "All" | "None"; // Default behavior: All means all types allowed, None means no types allowed
@@ -476,11 +470,6 @@ export const initialContentTypes: ContentType[] = [
 		properties: [
 			{ id: "title", name: "Title", displayName: "Title", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "String", groupName: "Content", order: 2 },
-<<<<<<< HEAD
-			{ id: "featuredImage", name: "Featured Image", displayName: "Featured Image", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 3 },
-			{ id: "body", name: "Body", displayName: "Body", type: "XhtmlString", required: true, groupName: "Content", order: 4 },
-			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", allowedTypes: ["ct-author"], required: true, groupName: "Content", order: 5 },
-=======
 			{ id: "category", name: "Category", displayName: "Category", type: "String", groupName: "Content", order: 3 },
 			{ id: "readingTime", name: "Reading Time", displayName: "Reading Time", type: "String", groupName: "Content", order: 4 },
 			{ id: "publishDate", name: "Publish Date", displayName: "Publish Date", type: "String", groupName: "Content", order: 5 },
@@ -493,7 +482,6 @@ export const initialContentTypes: ContentType[] = [
 			{ id: "ctaPrimaryLink", name: "CTA Primary Link", displayName: "CTA Primary Link", type: "String", groupName: "Actions", order: 3 },
 			{ id: "ctaSecondaryText", name: "CTA Secondary Text", displayName: "CTA Secondary Button", type: "String", groupName: "Actions", order: 4 },
 			{ id: "ctaSecondaryLink", name: "CTA Secondary Link", displayName: "CTA Secondary Link", type: "String", groupName: "Actions", order: 5 },
->>>>>>> origin/main
 			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
 		],
 	},
@@ -595,8 +583,6 @@ export const initialContentTypes: ContentType[] = [
 		],
 	},
 	{
-<<<<<<< HEAD
-=======
 		id: "exp-about-page",
 		name: "About Page",
 		displayName: "About Page",
@@ -618,7 +604,6 @@ export const initialContentTypes: ContentType[] = [
 		],
 	},
 	{
->>>>>>> origin/main
 		id: "ct-product",
 		name: "Product",
 		displayName: "Product",
@@ -666,11 +651,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Image",
 		baseType: "Block",
 		description: "An image block for page layouts",
-<<<<<<< HEAD
-=======
 		availableForComposition: true,
 		compositionDisplayAs: ["Element"],
->>>>>>> origin/main
 		properties: [
 			{
 				id: "image",
@@ -709,16 +691,11 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Heading",
 		baseType: "Block",
 		description: "A heading block",
-<<<<<<< HEAD
-		properties: [
-			{ id: "text", name: "Text", displayName: "Text", type: "String", required: true, groupName: "Content", order: 1 },
-=======
 		availableForComposition: true,
 		compositionDisplayAs: ["Element"],
 		properties: [
 			{ id: "text", name: "Text", displayName: "Text", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "accent", name: "Accent", displayName: "Accent Text", type: "String", required: false, groupName: "Content", order: 2, description: "Optional rotated accent text displayed above the heading" },
->>>>>>> origin/main
 			{
 				id: "level",
 				name: "Level",
@@ -742,28 +719,16 @@ export const initialContentTypes: ContentType[] = [
 				type: "SelectOne",
 				groupName: "Appearance",
 				options: [
-<<<<<<< HEAD
-					{ label: "Default", value: "default" },
-					{ label: "Prominent", value: "prominent" },
-					{ label: "Subtle", value: "subtle" },
-					{ label: "Red Accent", value: "accent-red" },
-					{ label: "Blue Accent", value: "accent-blue" }
-				],
-				defaultValue: "default"
-=======
 					{ label: "H1", value: "h-1" },
 					{ label: "H2", value: "h-2" },
 					{ label: "H3", value: "h-3" },
 					{ label: "H4", value: "h-4" }
 				],
 				defaultValue: "h-1"
->>>>>>> origin/main
 			}
 		],
 	},
 	{
-<<<<<<< HEAD
-=======
 		id: "ct-number-line",
 		name: "NumberLine",
 		displayName: "Number Line",
@@ -776,21 +741,15 @@ export const initialContentTypes: ContentType[] = [
 		],
 	},
 	{
->>>>>>> origin/main
 		id: "ct-text",
 		name: "Text",
 		displayName: "Text",
 		baseType: "Block",
 		description: "A text block",
-<<<<<<< HEAD
-		properties: [
-			{ id: "text", name: "Text", displayName: "Text", type: "String", required: true, groupName: "Content", order: 1 },
-=======
 		availableForComposition: true,
 		compositionDisplayAs: ["Element"],
 		properties: [
 			{ id: "text", name: "Text", displayName: "Text", type: "LongString", required: true, groupName: "Content", order: 1 },
->>>>>>> origin/main
 			{
 				id: "template",
 				name: "Template",
@@ -812,11 +771,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Rich Text",
 		baseType: "Block",
 		description: "A rich text block supporting simple markup",
-<<<<<<< HEAD
-=======
 		availableForComposition: true,
 		compositionDisplayAs: ["Element"],
->>>>>>> origin/main
 		properties: [{ id: "richtext", name: "Rich Text", displayName: "Rich Text", type: "XhtmlString", required: true, groupName: "Content", order: 1 }],
 	},
 	{
@@ -825,11 +781,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Button",
 		baseType: "Block",
 		description: "A button block",
-<<<<<<< HEAD
-=======
 		availableForComposition: true,
 		compositionDisplayAs: ["Element"],
->>>>>>> origin/main
 		properties: [
 			{ id: "label", name: "Label", displayName: "Label", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "url", name: "URL", displayName: "URL", type: "Url", groupName: "Content", order: 2 },
@@ -841,11 +794,7 @@ export const initialContentTypes: ContentType[] = [
 				groupName: "Appearance",
 				options: [
 					{ label: "Primary", value: "primary" },
-<<<<<<< HEAD
-					{ label: "Secondary", value: "secondary" },
-=======
 					{ label: "Outline", value: "outline" },
->>>>>>> origin/main
 					{ label: "Subtle", value: "subtle" }
 				],
 				defaultValue: "primary"
@@ -853,8 +802,6 @@ export const initialContentTypes: ContentType[] = [
 		],
 	},
 	{
-<<<<<<< HEAD
-=======
 		id: "ct-section-header",
 		name: "Section Header",
 		displayName: "Section Header",
@@ -1182,7 +1129,6 @@ export const initialContentTypes: ContentType[] = [
 		],
 	},
 	{
->>>>>>> origin/main
 		id: "ct-author",
 		name: "Author",
 		displayName: "Author",
@@ -1244,11 +1190,8 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Input",
 		baseType: "Block",
 		description: "An input block",
-<<<<<<< HEAD
-=======
 		availableForComposition: true,
 		compositionDisplayAs: ["Element"],
->>>>>>> origin/main
 		properties: [
 			{ id: "label", name: "Label", displayName: "Label", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "placeholder", name: "Placeholder", displayName: "Placeholder", type: "String", groupName: "Content", order: 2 },
@@ -1314,10 +1257,7 @@ export const initialContentTypes: ContentType[] = [
 					{ id: "pm-bp-title", sourcePropertyId: "field-bp-title", targetPropertyId: "title", transformation: "direct", required: true, description: "Title → Title" },
 					{ id: "pm-bp-excerpt", sourcePropertyId: "field-bp-excerpt", targetPropertyId: "subtitle", transformation: "direct", description: "Excerpt → Subtitle" },
 					{ id: "pm-bp-featured-image", sourcePropertyId: "field-bp-featured-image", targetPropertyId: "featuredImage", transformation: "direct", description: "Featured Image → Featured Image" },
-<<<<<<< HEAD
-=======
 					{ id: "pm-bp-hero-logo", sourcePropertyId: "field-bp-hero-logo", targetPropertyId: "heroLogo", transformation: "direct", description: "Hero Logo → Hero Logo" },
->>>>>>> origin/main
 					{ id: "pm-bp-content", sourcePropertyId: "field-bp-content", targetPropertyId: "body", transformation: "direct", required: true, description: "Content → Body" },
 					{ id: "pm-bp-author", sourcePropertyId: "field-bp-author", targetPropertyId: "author", transformation: "direct", required: true, description: "Author → Author" },
 				],
@@ -1437,12 +1377,6 @@ export type EleDef = {
 	| "ct-rich-text"
 	| "ct-input"
 	| "ct-button"
-<<<<<<< HEAD
-	| "ct-image"
-	| "ct-product"
-	| string;
-	properties: Record<string, { value: any }>;
-=======
 	| "ct-section-header"
 	| "ct-hero"
 	| "ct-card"
@@ -1453,7 +1387,6 @@ export type EleDef = {
 	| "ct-product"
 	| string;
 	properties: Record<string, any>;
->>>>>>> origin/main
 };
 
 export type EleMap = Record<string, EleDef>;
@@ -1483,12 +1416,8 @@ export type Page = {
 	id: string;
 	name: string;
 	parentId: string | null;
-<<<<<<< HEAD
-	status: "Published" | "Draft" | "Review" | "Changed" | "In Trash";
-=======
 	status: "Published" | "Draft" | "Review" | "Changed" | "In Trash" | "Scheduled";
 	scheduledDate?: string;
->>>>>>> origin/main
 	lastModified: string;
 	contentTypeId: string;
 	slug?: string;
@@ -1505,12 +1434,9 @@ export type Page = {
 	tags?: string[];
 	/** When set, used by getAllContentItems instead of getPageTagsAndCategories for this page */
 	categories?: string[];
-<<<<<<< HEAD
-=======
 	/** Display template system (Optimizely pattern) */
 	displayTemplateKey?: string;
 	displaySettings?: Array<{key: string; value: string}>;
->>>>>>> origin/main
 	/** CMP connection metadata - tracks connection to CMP content instance */
 	cmpConnection?: {
 		instanceId: string; // ID of connected CMP content instance
@@ -1535,10 +1461,7 @@ export type Application = {
 	name: string;
 	appId: string;
 	url?: string;
-<<<<<<< HEAD
-=======
 	componentDocsUrl?: string;
->>>>>>> origin/main
 	startPageId?: string;
 	modifiedAt?: string;
 	modifiedBy?: string;
@@ -1552,30 +1475,15 @@ export const initialPages: Page[] = [
 		status: "Published",
 		lastModified: "2023-10-27",
 		contentTypeId: "ct-page",
-<<<<<<< HEAD
-=======
 		displayTemplateKey: "defaultExperience",
 		displaySettings: [
 			{ key: "backgroundColor", value: "light-blue" },
 			{ key: "spacing", value: "default" }
 		],
->>>>>>> origin/main
 		data: {
 			seo: {
 				en: {
 					original: {
-<<<<<<< HEAD
-						title: "Homepage | Stride",
-						description: "Unleash your potential with Stride. Up to 50% off everything.",
-						canonicalUrl: "https://stride.com/",
-						robots: "index,follow",
-						image: "https://stride.com/og-home.jpg",
-						ogTitle: "Unleash Your Potential | Stride",
-						ogDescription: "Up to 50% off everything.",
-						ogImage: "https://stride.com/og-home.jpg",
-						twitterTitle: "Unleash Your Potential | Stride",
-						twitterDescription: "Up to 50% off everything.",
-=======
 						title: "Stride - Personal Training App | Set it. Sweat it. Send it.",
 						description: "Level up your game with Stride, your go-to personal training app that boosts workout efficiency with essential tools. Join the community today.",
 						canonicalUrl: "https://stride.com/",
@@ -1586,7 +1494,6 @@ export const initialPages: Page[] = [
 						ogImage: "https://stride.com/og-home.jpg",
 						twitterTitle: "Stride - Personal Training App",
 						twitterDescription: "Level up your game with Stride personal training app.",
->>>>>>> origin/main
 						twitterImage: "https://stride.com/og-home.jpg",
 					},
 				},
@@ -1602,12 +1509,6 @@ export const initialPages: Page[] = [
 						id: "ol-home-main",
 						title: "Main",
 						tree: [
-<<<<<<< HEAD
-							{
-								id: "sec-home-hero",
-								name: "Hero",
-								open: true,
-=======
 							// Hero Section
 							{
 								id: "sec-home-hero",
@@ -1620,71 +1521,22 @@ export const initialPages: Page[] = [
 									{ key: "colorScheme", value: "default" },
 									{ key: "spacing", value: "default" }
 								],
->>>>>>> origin/main
 								children: [
 									{
 										id: "row-home-hero",
 										open: true,
 										children: [
 											{
-<<<<<<< HEAD
-												id: "col-home-hero",
-												open: true,
-												elements: [
-													{ id: "ele-home-hero-heading" },
-													{ id: "ele-home-hero-subtext" },
-=======
 												id: "col-home-hero-content",
 												open: true,
 												elements: [
 													{ id: "ele-hero-block" },
->>>>>>> origin/main
 												],
 											},
 										],
 									},
 								],
 							},
-<<<<<<< HEAD
-						],
-						elements: {
-							"ele-home-hero-heading": {
-								type: "ct-heading",
-								properties: { text: { value: "Unleash Your Potential" } },
-							},
-							"ele-home-hero-subtext": {
-								type: "ct-text",
-								properties: { text: { value: "Up to 50% off everything." } },
-							},
-						},
-					},
-				],
-			},
-			{
-				id: "var-winter",
-				name: "Winter Sale",
-				status: "Draft",
-				outlines: [
-					{
-						id: "ol-home-main-winter",
-						title: "Main",
-						tree: [
-							{
-								id: "sec-home-hero",
-								name: "Hero",
-								open: true,
-								children: [
-									{
-										id: "row-home-hero",
-										open: true,
-										children: [
-											{
-												id: "col-home-hero",
-												open: true,
-												elements: [
-													{ id: "ele-home-hero-heading" },
-													{ id: "ele-home-hero-subtext" },
-=======
 							// Section 1.5: What is Stride? - Two-column intro (New Figma Design)
 							{
 								id: "sec-stride-intro",
@@ -1714,51 +1566,12 @@ export const initialPages: Page[] = [
 												elements: [
 													{ id: "ele-intro-line" },
 													{ id: "ele-intro-body" },
->>>>>>> origin/main
 												],
 											},
 										],
 									},
 								],
 							},
-<<<<<<< HEAD
-						],
-						elements: {
-							"ele-home-hero-heading": {
-								type: "ct-heading",
-								properties: { text: { value: "Winter Clearance" } },
-							},
-							"ele-home-hero-subtext": {
-								type: "ct-text",
-								properties: { text: { value: "Up to 50% off everything." } },
-							},
-						},
-					},
-				],
-			},
-			{
-				id: "var-vip",
-				name: "VIP Segment",
-				status: "Published",
-				outlines: [
-					{
-						id: "ol-home-main-vip",
-						title: "Main",
-						tree: [
-							{
-								id: "sec-home-hero",
-								name: "Hero",
-								open: true,
-								children: [
-									{
-										id: "row-home-hero",
-										open: true,
-										children: [
-											{
-												id: "col-home-hero",
-												open: true,
-												elements: [{ id: "ele-home-hero-heading" }],
-=======
 							// Section 1.75: Three-column feature cards (New Figma Design)
 							{
 								id: "sec-challenges",
@@ -1794,19 +1607,11 @@ export const initialPages: Page[] = [
 												elements: [
 													{ id: "ele-challenge-card-3" },
 												],
->>>>>>> origin/main
 											},
 										],
 									},
 								],
 							},
-<<<<<<< HEAD
-						],
-						elements: {
-							"ele-home-hero-heading": {
-								type: "ct-heading",
-								properties: { text: { value: "Welcome Back, VIP!" } },
-=======
 							// Section 2: Level up your game - Cards variant
 							{
 								id: "sec-home-levelup-1",
@@ -2320,7 +2125,6 @@ export const initialPages: Page[] = [
 									description: "Stride pings the right person when recovery lags or a milestone unlocks.",
 									style: "compact",
 								},
->>>>>>> origin/main
 							},
 						},
 					},
@@ -2328,38 +2132,10 @@ export const initialPages: Page[] = [
 			},
 		],
 	},
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main
 	{
 		id: "page-site-about",
 		name: "About Us",
 		parentId: "page-site-home",
-<<<<<<< HEAD
-		status: "Draft",
-		lastModified: "2023-10-26",
-		contentTypeId: "ct-page",
-		data: {
-			seo: {
-				en: {
-					original: {
-						title: "About Us | Stride",
-						description: "Born on the track, designed for the street. Stride empowers athletes everywhere.",
-						canonicalUrl: "https://stride.com/about",
-						robots: "index,follow",
-						image: "https://stride.com/og-about.jpg",
-						ogTitle: "About Stride",
-						ogDescription: "Born on the track, designed for the street.",
-						ogImage: "https://stride.com/og-about.jpg",
-						twitterTitle: "About Stride",
-						twitterDescription: "Born on the track, designed for the street.",
-						twitterImage: "https://stride.com/og-about.jpg",
-					},
-				},
-			},
-		},
-=======
 		status: "Published",
 		lastModified: "2026-05-28",
 		contentTypeId: "exp-about-page",
@@ -2370,7 +2146,6 @@ export const initialPages: Page[] = [
 		],
 		slug: "about",
 		data: {},
->>>>>>> origin/main
 		variations: [
 			{
 				id: "original",
@@ -2382,92 +2157,6 @@ export const initialPages: Page[] = [
 						title: "Main",
 						tree: [
 							{
-<<<<<<< HEAD
-								id: "sec-about-story",
-								name: "Our Story",
-								open: true,
-								children: [
-									{
-										id: "row-about-story",
-										open: true,
-										children: [
-											{
-												id: "col-about-story",
-												open: true,
-												elements: [
-													{ id: "ele-about-heading" },
-													{ id: "ele-about-body" },
-												],
-											},
-										],
-									},
-								],
-							},
-						],
-						elements: {
-							"ele-about-heading": {
-								type: "ct-heading",
-								properties: {
-									text: { value: "Our Story" },
-								},
-							},
-							"ele-about-body": {
-								type: "ct-text",
-								properties: {
-									text: {
-										value: "Born on the track, designed for the street. Stride empowers athletes everywhere.",
-									},
-								},
-							},
-						},
-					},
-				],
-			},
-		],
-		outlines: [
-			{
-				id: "ol-about-main",
-				title: "Main",
-				tree: [
-					{
-						id: "sec-about-story",
-						name: "Our Story",
-						open: true,
-						children: [
-							{
-								id: "row-about-story",
-								open: true,
-								children: [
-									{
-										id: "col-about-story",
-										open: true,
-										elements: [
-											{ id: "ele-about-heading" },
-											{ id: "ele-about-body" },
-										],
-									},
-								],
-							},
-						],
-					},
-				],
-				elements: {
-					"ele-about-heading": {
-						type: "ct-heading",
-						properties: {
-							text: { value: "Our Story" },
-						},
-					},
-					"ele-about-body": {
-						type: "ct-text",
-						properties: {
-							text: {
-								value: "Born on the track, designed for the street. Stride empowers athletes everywhere.",
-							},
-						},
-					},
-				},
-=======
 								id: "sec-about-intro",
 								name: "Introduction",
 								type: "ct-section",
@@ -2541,180 +2230,10 @@ export const initialPages: Page[] = [
 						},
 					},
 				],
->>>>>>> origin/main
 			},
 		],
 	},
 
-<<<<<<< HEAD
-	{
-		id: "page-site-contact",
-		name: "Contact",
-		parentId: "page-site-home",
-		status: "Published",
-		lastModified: "2023-10-25",
-		contentTypeId: "ct-page",
-		data: {
-			seo: {
-				en: {
-					original: {
-						title: "Contact | Stride",
-						description: "Questions about your order? We're here to help.",
-						canonicalUrl: "https://stride.com/contact",
-						robots: "index,follow",
-						image: "https://stride.com/og-contact.jpg",
-						ogTitle: "Contact Stride",
-						ogDescription: "Questions about your order? We're here to help.",
-						ogImage: "https://stride.com/og-contact.jpg",
-						twitterTitle: "Contact Stride",
-						twitterDescription: "Questions about your order? We're here to help.",
-						twitterImage: "https://stride.com/og-contact.jpg",
-					},
-				},
-			},
-		},
-		variations: [
-			{
-				id: "original",
-				name: "Original",
-				status: "Published",
-				outlines: [
-					{
-						id: "ol-contact-main",
-						title: "Main",
-						tree: [
-							{
-								id: "sec-contact-form",
-								name: "Contact Form",
-								open: true,
-								children: [
-									{
-										id: "row-contact-form",
-										open: true,
-										children: [
-											{
-												id: "col-contact-form",
-												open: true,
-												elements: [
-													{ id: "ele-contact-heading" },
-													{ id: "ele-contact-subtext" },
-													{ id: "ele-contact-name" },
-													{ id: "ele-contact-email" },
-													{ id: "ele-contact-submit" },
-												],
-											},
-										],
-									},
-								],
-							},
-						],
-						elements: {
-							"ele-contact-heading": {
-								type: "ct-heading",
-								properties: {
-									text: { value: "Get in Touch" },
-								},
-							},
-							"ele-contact-subtext": {
-								type: "ct-text",
-								properties: {
-									text: {
-										value: "Questions about your order? We're here to help.",
-									},
-								},
-							},
-							"ele-contact-name": {
-								type: "ct-input",
-								properties: {
-									label: { value: "Name" },
-									placeholder: { value: "Your Name" },
-								},
-							},
-							"ele-contact-email": {
-								type: "ct-input",
-								properties: {
-									label: { value: "Email" },
-									placeholder: { value: "you@example.com" },
-								},
-							},
-							"ele-contact-submit": {
-								type: "ct-button",
-								properties: {
-									label: { value: "Send Message" },
-								},
-							},
-						},
-					},
-				],
-			},
-		],
-		outlines: [
-			{
-				id: "ol-contact-main",
-				title: "Main",
-				tree: [
-					{
-						id: "sec-contact-form",
-						name: "Contact Form",
-						open: true,
-						children: [
-							{
-								id: "row-contact-form",
-								open: true,
-								children: [
-									{
-										id: "col-contact-form",
-										open: true,
-										elements: [
-											{ id: "ele-contact-heading" },
-											{ id: "ele-contact-subtext" },
-											{ id: "ele-contact-name" },
-											{ id: "ele-contact-email" },
-											{ id: "ele-contact-submit" },
-										],
-									},
-								],
-							},
-						],
-					},
-				],
-				elements: {
-					"ele-contact-heading": {
-						type: "ct-heading",
-						properties: {
-							text: { value: "Get in Touch" },
-						},
-					},
-					"ele-contact-subtext": {
-						type: "ct-text",
-						properties: {
-							text: { value: "Questions about your order? We're here to help." },
-						},
-					},
-					"ele-contact-name": {
-						type: "ct-input",
-						properties: {
-							label: { value: "Name" },
-							placeholder: { value: "Your Name" },
-						},
-					},
-					"ele-contact-email": {
-						type: "ct-input",
-						properties: {
-							label: { value: "Email" },
-							placeholder: { value: "you@example.com" },
-						},
-					},
-					"ele-contact-submit": {
-						type: "ct-button",
-						properties: {
-							label: { value: "Send Message" },
-						},
-					},
-				},
-			},
-		],
-=======
 	// --- About Sub-Pages (all use exp-about-page with left sidenav) ---
 
 	{
@@ -2945,7 +2464,6 @@ export const initialPages: Page[] = [
 				"ele-rs-nav-4": { type: "ct-nav-item", properties: { label: "Become a Coach", href: "/about/coaches" } },
 			}},
 		]}],
->>>>>>> origin/main
 	},
 
 	{
@@ -3012,21 +2530,13 @@ export const initialPages: Page[] = [
 							"ele-blog-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "The Stride Blog" },
-=======
 									text: "The Stride Blog",
->>>>>>> origin/main
 								},
 							},
 							"ele-blog-subtext": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Tips, training guides, and gear reviews." },
-=======
 									text: "Tips, training guides, and gear reviews.",
->>>>>>> origin/main
 								},
 							},
 						},
@@ -3065,21 +2575,13 @@ export const initialPages: Page[] = [
 					"ele-blog-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "The Stride Blog" },
-=======
 							text: "The Stride Blog",
->>>>>>> origin/main
 						},
 					},
 					"ele-blog-subtext": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Tips, training guides, and gear reviews." },
-=======
 							text: "Tips, training guides, and gear reviews.",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -3094,14 +2596,11 @@ export const initialPages: Page[] = [
 		status: "Published",
 		lastModified: "2023-10-23",
 		contentTypeId: "ct-page",
-<<<<<<< HEAD
-=======
 		displayTemplateKey: "defaultExperience",
 		displaySettings: [
 			{ key: "backgroundColor", value: "light-blue" },
 			{ key: "spacing", value: "default" }
 		],
->>>>>>> origin/main
 		data: {
 			seo: {
 				en: {
@@ -3157,21 +2656,13 @@ export const initialPages: Page[] = [
 							"ele-products-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "New Arrivals" },
-=======
 									text: "New Arrivals",
->>>>>>> origin/main
 								},
 							},
 							"ele-products-subtext": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Check out the latest gear for this season." },
-=======
 									text: "Check out the latest gear for this season.",
->>>>>>> origin/main
 								},
 							},
 						},
@@ -3210,21 +2701,13 @@ export const initialPages: Page[] = [
 					"ele-products-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "New Arrivals" },
-=======
 							text: "New Arrivals",
->>>>>>> origin/main
 						},
 					},
 					"ele-products-subtext": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Check out the latest gear for this season." },
-=======
 							text: "Check out the latest gear for this season.",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -3295,33 +2778,19 @@ export const initialPages: Page[] = [
 							"ele-product-a-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Stride Elite Runner" },
-=======
 									text: "Stride Elite Runner",
->>>>>>> origin/main
 								},
 							},
 							"ele-product-a-body": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: {
-										value: "Our most advanced running shoe yet. Lightweight, responsive, and durable.",
-									},
-=======
 									text: "Our most advanced running shoe yet. Lightweight, responsive, and durable.",
->>>>>>> origin/main
 								},
 							},
 							"ele-product-a-cta": {
 								type: "ct-button",
 								properties: {
-<<<<<<< HEAD
-									label: { value: "Add to Cart" },
-=======
 									label: "Add to Cart",
->>>>>>> origin/main
 								},
 							},
 						},
@@ -3361,33 +2830,19 @@ export const initialPages: Page[] = [
 					"ele-product-a-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Stride Elite Runner" },
-=======
 							text: "Stride Elite Runner",
->>>>>>> origin/main
 						},
 					},
 					"ele-product-a-body": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Our most advanced running shoe yet. Lightweight, responsive, and durable.",
-							},
-=======
 							text: "Our most advanced running shoe yet. Lightweight, responsive, and durable.",
->>>>>>> origin/main
 						},
 					},
 					"ele-product-a-cta": {
 						type: "ct-button",
 						properties: {
-<<<<<<< HEAD
-							label: { value: "Add to Cart" },
-=======
 							label: "Add to Cart",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -3396,8 +2851,6 @@ export const initialPages: Page[] = [
 	},
 
 	{
-<<<<<<< HEAD
-=======
 		id: "page-site-features",
 		name: "Features",
 		parentId: "page-site-home",
@@ -3816,7 +3269,6 @@ export const initialPages: Page[] = [
 		],
 	},
 	{
->>>>>>> origin/main
 		id: "page-exp-landing-default",
 		contentTypeId: "exp-landing-page",
 		name: "Default Landing",
@@ -3855,11 +3307,7 @@ export const initialPages: Page[] = [
 							{
 								id: "sec-landing-hero",
 								name: "Hero",
-<<<<<<< HEAD
-								bgImage: "/hero-cycling.jpg",
-=======
 								bgImage: "/stride-hero/hero.png",
->>>>>>> origin/main
 								open: true,
 								children: [
 									{
@@ -4208,171 +3656,99 @@ export const initialPages: Page[] = [
 							"ele-landing-hero-badge": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "● Join 2M+ active users worldwide" },
-=======
 									text: "● Join 2M+ active users worldwide",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-sub": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Ready. Set. Go." },
-=======
 									text: "Ready. Set. Go.",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: {
-										value: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
-									},
-=======
 									text: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-broken-image": {
 								type: "ct-image-block",
 								properties: {
-<<<<<<< HEAD
-									image: { value: "https://example.com/missing-image-404.jpg" },
-=======
 									image: "https://example.com/missing-image-404.jpg",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-cta-primary": {
 								type: "ct-button",
 								properties: {
-<<<<<<< HEAD
-									label: { value: "Register for your bib" },
-									url: { value: "/register" },
-=======
 									label: "Register for your bib",
 									url: "/register",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-cta-secondary": {
 								type: "ct-button",
 								properties: {
-<<<<<<< HEAD
-									label: { value: "Learn More" },
-									url: { value: "/about" },
-=======
 									label: "Learn More",
 									url: "/about",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-stat-1-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "500K+" },
-									variant: { value: "stat" },
-=======
 									text: "500K+",
 									variant: "stat",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-stat-1-text": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Annual participants" },
-									variant: { value: "stat" },
-=======
 									text: "Annual participants",
 									variant: "stat",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-stat-2-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "45+" },
-									variant: { value: "stat" },
-=======
 									text: "45+",
 									variant: "stat",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-stat-2-text": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Countries represented" },
-									variant: { value: "stat" },
-=======
 									text: "Countries represented",
 									variant: "stat",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-stat-3-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "4.9/5" },
-									variant: { value: "stat" },
-=======
 									text: "4.9/5",
 									variant: "stat",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-hero-stat-3-text": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Average rating" },
-									variant: { value: "stat" },
-=======
 									text: "Average rating",
 									variant: "stat",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-features-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Everything you need to stay motivated" },
-=======
 									text: "Everything you need to stay motivated",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-features-sub": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: {
-										value: "Track your progress, connect with friends, and push your limits with our comprehensive fitness platform.",
-									},
-=======
 									text: "Track your progress, connect with friends, and push your limits with our comprehensive fitness platform.",
->>>>>>> origin/main
 								},
 							},
 							"ele-feat-1": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4391,20 +3767,12 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-feat-2": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4423,20 +3791,12 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-feat-3": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4455,20 +3815,12 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-feat-4": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4487,20 +3839,12 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-feat-5": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4519,20 +3863,12 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-feat-6": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4551,42 +3887,24 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-testimonials-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Join millions of active users" },
-=======
 									text: "Join millions of active users",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-testimonials-sub": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: {
-										value: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
-									},
-=======
 									text: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
->>>>>>> origin/main
 								},
 							},
 							"ele-test-1": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4605,20 +3923,12 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-test-2": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4637,76 +3947,43 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-cta-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Ready to join the community?" },
-=======
 									text: "Ready to join the community?",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-cta-sub": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: {
-										value: "Start sharing your fitness journey and get inspired by others.",
-									},
-=======
 									text: "Start sharing your fitness journey and get inspired by others.",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-cta-button": {
 								type: "ct-button",
 								properties: {
-<<<<<<< HEAD
-									label: { value: "Join Now" },
-									url: { value: "/register" },
-=======
 									label: "Join Now",
 									url: "/register",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-challenges-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Push your limits" },
-=======
 									text: "Push your limits",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-challenges-sub": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: {
-										value: "Join exciting challenges and compete with users worldwide to reach new fitness milestones.",
-									},
-=======
 									text: "Join exciting challenges and compete with users worldwide to reach new fitness milestones.",
->>>>>>> origin/main
 								},
 							},
 							"ele-chal-1": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4725,20 +4002,12 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-chal-2": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4757,20 +4026,12 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-chal-3": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4789,112 +4050,60 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-pricing-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Choose your plan" },
-=======
 									text: "Choose your plan",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-pricing-sub": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: {
-										value: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
-									},
-=======
 									text: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
->>>>>>> origin/main
 								},
 							},
 							"ele-price-1": {
 								type: "ct-product",
 								properties: {
-<<<<<<< HEAD
-									name: { value: "Free" },
-									price: { value: "$0/mo" },
-									description: {
-										value: "Basic activity tracking, Community access, 5 challenges per month.",
-									},
-=======
 									name: "Free",
 									price: "$0/mo",
 									description: "Basic activity tracking, Community access, 5 challenges per month.",
->>>>>>> origin/main
 								},
 							},
 							"ele-price-2": {
 								type: "ct-product",
 								properties: {
-<<<<<<< HEAD
-									name: { value: "Pro" },
-									price: { value: "$9.99/mo" },
-									description: {
-										value: "Everything in Free, Unlimited challenges, Advanced analytics, Heart rate monitoring.",
-									},
-=======
 									name: "Pro",
 									price: "$9.99/mo",
 									description: "Everything in Free, Unlimited challenges, Advanced analytics, Heart rate monitoring.",
->>>>>>> origin/main
 								},
 							},
 							"ele-price-3": {
 								type: "ct-product",
 								properties: {
-<<<<<<< HEAD
-									name: { value: "Team" },
-									price: { value: "$24.99/mo" },
-									description: {
-										value: "Everything in Pro, Up to 10 team members, Team challenges, Admin dashboard.",
-									},
-=======
 									name: "Team",
 									price: "$24.99/mo",
 									description: "Everything in Pro, Up to 10 team members, Team challenges, Admin dashboard.",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-stories-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Real results from real people" },
-=======
 									text: "Real results from real people",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-stories-sub": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: {
-										value: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
-									},
-=======
 									text: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
->>>>>>> origin/main
 								},
 							},
 							"ele-story-1": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4913,20 +4122,12 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-story-2": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4945,20 +4146,12 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-story-3": {
 								type: "ct-rich-text",
 								properties: {
 									richtext: {
-<<<<<<< HEAD
-										value: {
-=======
->>>>>>> origin/main
 											type: "doc",
 											content: [
 												{
@@ -4977,46 +4170,24 @@ export const initialPages: Page[] = [
 												},
 											],
 										},
-<<<<<<< HEAD
-									},
-=======
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-footer-cta-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: {
-										value: "Join over 2 million users achieving their goals",
-									},
-=======
 									text: "Join over 2 million users achieving their goals",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-footer-cta-sub": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: {
-										value: "Start your fitness journey today and become part of our success stories.",
-									},
-=======
 									text: "Start your fitness journey today and become part of our success stories.",
->>>>>>> origin/main
 								},
 							},
 							"ele-landing-footer-cta-stats": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: {
-										value: "4.9/5 App Store Rating | 50K+ 5-Star Reviews | 2M+ Active Users",
-									},
-=======
 									text: "4.9/5 App Store Rating | 50K+ 5-Star Reviews | 2M+ Active Users",
->>>>>>> origin/main
 								},
 							},
 						},
@@ -5080,113 +4251,67 @@ export const initialPages: Page[] = [
 							"ele-aside-blog-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Latest Blog Posts" },
-=======
 									text: "Latest Blog Posts",
->>>>>>> origin/main
 								},
 							},
 							"ele-aside-blog-1": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "10 Tips For Your First Marathon (2 days ago)" },
-=======
 									text: "10 Tips For Your First Marathon (2 days ago)",
->>>>>>> origin/main
 								},
 							},
 							"ele-aside-blog-2": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Cycling Workouts for Beginners (5 days ago)" },
-=======
 									text: "Cycling Workouts for Beginners (5 days ago)",
->>>>>>> origin/main
 								},
 							},
 							"ele-aside-blog-3": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "The Science of Running Form (1 week ago)" },
-=======
 									text: "The Science of Running Form (1 week ago)",
->>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-heading": {
 								type: "ct-heading",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Join STRIDE Today" },
-=======
 									text: "Join STRIDE Today",
->>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-sub": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: { value: "Start your fitness journey with our community" },
-=======
 									text: "Start your fitness journey with our community",
->>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-name": {
 								type: "ct-input",
 								properties: {
-<<<<<<< HEAD
-									placeholder: { value: "Full Name" },
-=======
 									placeholder: "Full Name",
->>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-email": {
 								type: "ct-input",
 								properties: {
-<<<<<<< HEAD
-									placeholder: { value: "Email Address" },
-=======
 									placeholder: "Email Address",
->>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-pass": {
 								type: "ct-input",
 								properties: {
-<<<<<<< HEAD
-									placeholder: { value: "Password" },
-=======
 									placeholder: "Password",
->>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-btn": {
 								type: "ct-button",
 								properties: {
-<<<<<<< HEAD
-									label: { value: "Create Account" },
-=======
 									label: "Create Account",
->>>>>>> origin/main
 								},
 							},
 							"ele-aside-signup-footer": {
 								type: "ct-text",
 								properties: {
-<<<<<<< HEAD
-									text: {
-										value: "By signing up, you agree to our Terms of Service and Privacy Policy",
-									},
-=======
 									text: "By signing up, you agree to our Terms of Service and Privacy Policy",
->>>>>>> origin/main
 								},
 							},
 						},
@@ -5202,11 +4327,7 @@ export const initialPages: Page[] = [
 					{
 						id: "sec-landing-hero",
 						name: "Hero",
-<<<<<<< HEAD
-						bgImage: "/hero-cycling.jpg",
-=======
 						bgImage: "/stride-hero/hero.png",
->>>>>>> origin/main
 						open: true,
 						children: [
 							{
@@ -5510,157 +4631,91 @@ export const initialPages: Page[] = [
 					"ele-landing-hero-badge": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "● Join 2M+ active users worldwide" },
-=======
 							text: "● Join 2M+ active users worldwide",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Ready. Set. Go." },
-=======
 							text: "Ready. Set. Go.",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
-							},
-=======
 							text: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-cta-primary": {
 						type: "ct-button",
 						properties: {
-<<<<<<< HEAD
-							label: { value: "Register for your bib" },
-=======
 							label: "Register for your bib",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-cta-secondary": {
 						type: "ct-button",
 						properties: {
-<<<<<<< HEAD
-							label: { value: "Learn More" },
-=======
 							label: "Learn More",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-stat-1-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "500K+" },
-							variant: { value: "stat" },
-=======
 							text: "500K+",
 							variant: "stat",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-stat-1-text": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Annual participants" },
-							variant: { value: "stat" },
-=======
 							text: "Annual participants",
 							variant: "stat",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-stat-2-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "45+" },
-							variant: { value: "stat" },
-=======
 							text: "45+",
 							variant: "stat",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-stat-2-text": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Countries represented" },
-							variant: { value: "stat" },
-=======
 							text: "Countries represented",
 							variant: "stat",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-stat-3-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "4.9/5" },
-							variant: { value: "stat" },
-=======
 							text: "4.9/5",
 							variant: "stat",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-hero-stat-3-text": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Average rating" },
-							variant: { value: "stat" },
-=======
 							text: "Average rating",
 							variant: "stat",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-features-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Everything you need to stay motivated" },
-=======
 							text: "Everything you need to stay motivated",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-features-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Track your progress, connect with friends, and push your limits with our comprehensive fitness platform.",
-							},
-=======
 							text: "Track your progress, connect with friends, and push your limits with our comprehensive fitness platform.",
->>>>>>> origin/main
 						},
 					},
 					"ele-feat-1": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -5679,20 +4734,12 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-feat-2": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -5711,20 +4758,12 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-feat-3": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -5743,20 +4782,12 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-feat-4": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -5775,20 +4806,12 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-feat-5": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -5807,20 +4830,12 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-feat-6": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -5839,42 +4854,24 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-testimonials-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Join millions of active users" },
-=======
 							text: "Join millions of active users",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-testimonials-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
-							},
-=======
 							text: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
->>>>>>> origin/main
 						},
 					},
 					"ele-test-1": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -5893,20 +4890,12 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-test-2": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -5925,74 +4914,42 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-cta-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Ready to join the community?" },
-=======
 							text: "Ready to join the community?",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-cta-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Start sharing your fitness journey and get inspired by others.",
-							},
-=======
 							text: "Start sharing your fitness journey and get inspired by others.",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-cta-button": {
 						type: "ct-button",
 						properties: {
-<<<<<<< HEAD
-							label: { value: "Join Now" },
-=======
 							label: "Join Now",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-challenges-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Push your limits" },
-=======
 							text: "Push your limits",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-challenges-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Join exciting challenges and compete with users worldwide to reach new fitness milestones.",
-							},
-=======
 							text: "Join exciting challenges and compete with users worldwide to reach new fitness milestones.",
->>>>>>> origin/main
 						},
 					},
 					"ele-chal-1": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -6011,20 +4968,12 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-chal-2": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -6043,20 +4992,12 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-chal-3": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -6075,112 +5016,60 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-pricing-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Choose your plan" },
-=======
 							text: "Choose your plan",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-pricing-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
-							},
-=======
 							text: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
->>>>>>> origin/main
 						},
 					},
 					"ele-price-1": {
 						type: "ct-product",
 						properties: {
-<<<<<<< HEAD
-							name: { value: "Free" },
-							price: { value: "$0/mo" },
-							description: {
-								value: "Basic activity tracking, Community access, 5 challenges per month.",
-							},
-=======
 							name: "Free",
 							price: "$0/mo",
 							description: "Basic activity tracking, Community access, 5 challenges per month.",
->>>>>>> origin/main
 						},
 					},
 					"ele-price-2": {
 						type: "ct-product",
 						properties: {
-<<<<<<< HEAD
-							name: { value: "Pro" },
-							price: { value: "$9.99/mo" },
-							description: {
-								value: "Everything in Free, Unlimited challenges, Advanced analytics, Heart rate monitoring.",
-							},
-=======
 							name: "Pro",
 							price: "$9.99/mo",
 							description: "Everything in Free, Unlimited challenges, Advanced analytics, Heart rate monitoring.",
->>>>>>> origin/main
 						},
 					},
 					"ele-price-3": {
 						type: "ct-product",
 						properties: {
-<<<<<<< HEAD
-							name: { value: "Team" },
-							price: { value: "$24.99/mo" },
-							description: {
-								value: "Everything in Pro, Up to 10 team members, Team challenges, Admin dashboard.",
-							},
-=======
 							name: "Team",
 							price: "$24.99/mo",
 							description: "Everything in Pro, Up to 10 team members, Team challenges, Admin dashboard.",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-stories-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Real results from real people" },
-=======
 							text: "Real results from real people",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-stories-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
-							},
-=======
 							text: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
->>>>>>> origin/main
 						},
 					},
 					"ele-story-1": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -6199,20 +5088,12 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-story-2": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -6231,20 +5112,12 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-story-3": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -6263,44 +5136,24 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-footer-cta-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Join over 2 million users achieving their goals" },
-=======
 							text: "Join over 2 million users achieving their goals",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-footer-cta-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Start your fitness journey today and become part of our success stories.",
-							},
-=======
 							text: "Start your fitness journey today and become part of our success stories.",
->>>>>>> origin/main
 						},
 					},
 					"ele-landing-footer-cta-stats": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "4.9/5 App Store Rating | 50K+ 5-Star Reviews | 2M+ Active Users",
-							},
-=======
 							text: "4.9/5 App Store Rating | 50K+ 5-Star Reviews | 2M+ Active Users",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -6364,113 +5217,67 @@ export const initialPages: Page[] = [
 					"ele-aside-blog-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Latest Blog Posts" },
-=======
 							text: "Latest Blog Posts",
->>>>>>> origin/main
 						},
 					},
 					"ele-aside-blog-1": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "10 Tips For Your First Marathon (2 days ago)" },
-=======
 							text: "10 Tips For Your First Marathon (2 days ago)",
->>>>>>> origin/main
 						},
 					},
 					"ele-aside-blog-2": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Cycling Workouts for Beginners (5 days ago)" },
-=======
 							text: "Cycling Workouts for Beginners (5 days ago)",
->>>>>>> origin/main
 						},
 					},
 					"ele-aside-blog-3": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "The Science of Running Form (1 week ago)" },
-=======
 							text: "The Science of Running Form (1 week ago)",
->>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Join STRIDE Today" },
-=======
 							text: "Join STRIDE Today",
->>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Start your fitness journey with our community" },
-=======
 							text: "Start your fitness journey with our community",
->>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-name": {
 						type: "ct-input",
 						properties: {
-<<<<<<< HEAD
-							placeholder: { value: "Full Name" },
-=======
 							placeholder: "Full Name",
->>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-email": {
 						type: "ct-input",
 						properties: {
-<<<<<<< HEAD
-							placeholder: { value: "Email Address" },
-=======
 							placeholder: "Email Address",
->>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-pass": {
 						type: "ct-input",
 						properties: {
-<<<<<<< HEAD
-							placeholder: { value: "Password" },
-=======
 							placeholder: "Password",
->>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-btn": {
 						type: "ct-button",
 						properties: {
-<<<<<<< HEAD
-							label: { value: "Create Account" },
-=======
 							label: "Create Account",
->>>>>>> origin/main
 						},
 					},
 					"ele-aside-signup-footer": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "By signing up, you agree to our Terms of Service and Privacy Policy",
-							},
-=======
 							text: "By signing up, you agree to our Terms of Service and Privacy Policy",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -6482,29 +5289,6 @@ export const initialPages: Page[] = [
 		name: "5 Tips for Your First Marathon",
 		parentId: "page-site-blog",
 		status: "Published",
-<<<<<<< HEAD
-		lastModified: "2023-10-24",
-		contentTypeId: "ct-blog-post",
-		slug: "5-tips-for-your-first-marathon",
-		data: {
-			title: "5 Tips for Your First Marathon",
-			subtitle: "Build confidence, stay consistent, and make race day feel familiar.",
-			body: `<p>Training for 26.2 miles starts with a single step — and a plan you can actually stick to. Here are five practical tips that help first-timers build fitness without burning out.</p>
-<h2>1) Keep the easy runs easy</h2>
-<p>Your easy pace should feel conversational. That’s where most of your aerobic gains come from.</p>
-<h2>2) Long runs are practice, not a test</h2>
-<p>Focus on time-on-feet and fueling. Don’t race your long run.</p>
-<h2>3) Fuel early and often</h2>
-<ul>
-  <li><p>Start fueling around 30–45 minutes in</p></li>
-  <li><p>Aim for consistent carbs + water</p></li>
-</ul>
-<h2>4) Don’t skip recovery</h2>
-<p>Sleep, easy days, and lower-intensity weeks are part of the training.</p>
-<h2>5) Rehearse race day</h2>
-<p>Try your breakfast, gels, and outfit on a long run so there are no surprises.</p>`,
-			author: "1",
-=======
 		lastModified: "2026-04-12",
 		contentTypeId: "ct-blog-post",
 		slug: "5-tips-for-your-first-marathon",
@@ -6537,23 +5321,10 @@ export const initialPages: Page[] = [
 			ctaPrimaryLink: "/registration",
 			ctaSecondaryText: "REQUEST A DEMO",
 			ctaSecondaryLink: "/demo",
->>>>>>> origin/main
 		},
 	},
 	{
 		id: "page-site-blog-post-2",
-<<<<<<< HEAD
-		name: "Intervals for Beginners",
-		parentId: "page-site-blog",
-		status: "Published",
-		lastModified: "2023-10-28",
-		contentTypeId: "ct-blog-post",
-		slug: "intervals-for-beginners",
-		data: {
-			title: "Intervals for Beginners",
-			subtitle: "A simple approach to speedwork that won’t fry your legs.",
-			body: `<p>Intervals don’t have to be scary. Think of them as controlled effort followed by recovery, repeated a few times. The goal is better form, efficiency, and confidence — not exhaustion.</p>
-=======
 		name: "Interval Training with Stride",
 		parentId: "page-site-blog",
 		status: "Published",
@@ -6568,33 +5339,21 @@ export const initialPages: Page[] = [
 			publishDate: "Apr 18, 2026",
 			featuredImage: "/cmp/assets/recommendation/panel-06-image.jpg",
 			body: `<p>Intervals don't have to be scary. Think of them as controlled effort followed by recovery, repeated a few times. The goal is better form, efficiency, and confidence — not exhaustion.</p>
->>>>>>> origin/main
 <h2>A starter workout</h2>
 <ul>
   <li><p><strong>Warm up:</strong> 10 minutes easy + 3 short strides</p></li>
   <li><p><strong>Main set:</strong> 6 × (1 min steady-hard, 2 min easy)</p></li>
   <li><p><strong>Cool down:</strong> 10 minutes easy</p></li>
 </ul>
-<<<<<<< HEAD
-<p>During the hard minute, aim for “comfortably hard” — you should finish feeling like you could do one more rep.</p>
-=======
 <p>During the hard minute, aim for "comfortably hard" — you should finish feeling like you could do one more rep. The Stride Racer's responsive plate gives you that extra snap without the crash.</p>
 <h2>When to level up</h2>
 <p>Once 1-minute reps feel manageable, try 2–3 minute reps at a slightly slower pace. The key is progressive overload — small, sustainable jumps in volume or intensity.</p>
->>>>>>> origin/main
 <h2>Common mistakes</h2>
 <ul>
   <li><p>Starting too fast on rep 1</p></li>
   <li><p>Skipping the warm-up</p></li>
   <li><p>Doing intervals on tired legs every week</p></li>
 </ul>
-<<<<<<< HEAD
-<p>One interval session per week is plenty for most runners.</p>`,
-			author: "2",
-		},
-	},
-
-=======
 <p>One interval session per week is plenty for most runners. Quality over quantity — always.</p>`,
 			author: { name: "Todd Slayton", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face" },
 			ctaHeading: "Find your next event",
@@ -6604,27 +5363,10 @@ export const initialPages: Page[] = [
 			ctaSecondaryLink: "/community",
 		},
 	},
->>>>>>> origin/main
 	{
 		id: "page-site-blog-post-3",
 		name: "Race Day Checklist",
 		parentId: "page-site-blog",
-<<<<<<< HEAD
-		status: "Draft",
-		lastModified: "2023-10-29",
-		contentTypeId: "ct-blog-post",
-		slug: "race-day-checklist",
-		data: {
-			title: "Race Day Checklist",
-			subtitle: "Remove the stress by planning the small stuff ahead of time.",
-			body: `<p>Race mornings get chaotic fast. The best way to stay calm is to remove decisions and make the day feel like a routine workout.</p>
-<h2>The night before</h2>
-<ul>
-  <li><p>Lay out your kit (shoes, socks, top, shorts/tights)</p></li>
-  <li><p>Pin your bib and pack safety pins (or your belt)</p></li>
-  <li><p>Charge your watch and phone</p></li>
-  <li><p>Plan breakfast + pack a backup snack</p></li>
-=======
 		status: "Published",
 		lastModified: "2026-05-02",
 		contentTypeId: "ct-blog-post",
@@ -6644,21 +5386,10 @@ export const initialPages: Page[] = [
   <li><p>Charge your watch and phone</p></li>
   <li><p>Plan breakfast + pack a backup snack</p></li>
   <li><p>Check the weather and adjust layers accordingly</p></li>
->>>>>>> origin/main
 </ul>
 <h2>Race morning</h2>
 <ul>
   <li><p>Arrive early and find toilets first</p></li>
-<<<<<<< HEAD
-  <li><p>Do 5–10 minutes easy jogging + a few strides (if appropriate)</p></li>
-  <li><p>Start conservatively for the first 5–10 minutes</p></li>
-</ul>
-<blockquote><p><strong>Pro tip:</strong> Write your plan (pace + fueling) on a note in your phone. When nerves spike, you’ll follow the plan.</p></blockquote>`,
-			author: "3",
-		},
-	},
-
-=======
   <li><p>Do 5–10 minutes easy jogging + a few strides</p></li>
   <li><p>Start conservatively for the first 5–10 minutes</p></li>
   <li><p>Smile at the crowd — they're there for you</p></li>
@@ -6672,32 +5403,11 @@ export const initialPages: Page[] = [
 			ctaSecondaryLink: "/demo",
 		},
 	},
->>>>>>> origin/main
 	{
 		id: "page-site-blog-post-4",
 		name: "How to Choose Running Shoes",
 		parentId: "page-site-blog",
 		status: "Published",
-<<<<<<< HEAD
-		lastModified: "2023-10-30",
-		contentTypeId: "ct-blog-post",
-		slug: "how-to-choose-running-shoes",
-		data: {
-			title: "How to Choose Running Shoes",
-			subtitle: "Comfort first, then match the shoe to your training.",
-			body: `<p>The “best” shoe is the one that fits your foot and your running. Start with comfort and stability, then refine based on your training goals.</p>
-<h2>Fit comes first</h2>
-<p>Look for a secure heel, a roomy toe box, and no hot spots. Your toes should be able to wiggle, and the shoe shouldn’t slip when you walk or jog.</p>
-<h2>Match the shoe to the session</h2>
-<ul>
-  <li><p><strong>Daily trainer:</strong> comfortable, durable, forgiving</p></li>
-  <li><p><strong>Workout shoe:</strong> lighter, snappier, more responsive</p></li>
-  <li><p><strong>Trail shoe:</strong> grip, protection, stable platform</p></li>
-</ul>
-<h2>Don’t overthink pronation labels</h2>
-<p>Unless you have a specific injury history, prioritize what feels natural and stable. If possible, test-run them on a treadmill or outside.</p>`,
-			author: "1",
-=======
 		lastModified: "2026-05-10",
 		contentTypeId: "ct-blog-post",
 		slug: "how-to-choose-running-shoes",
@@ -6725,13 +5435,10 @@ export const initialPages: Page[] = [
 			ctaPrimaryLink: "/shop",
 			ctaSecondaryText: "FIND A STORE",
 			ctaSecondaryLink: "/stores",
->>>>>>> origin/main
 		},
 	},
 
 	{
-<<<<<<< HEAD
-=======
 		id: "page-site-marathon-2027",
 		name: "Boston Marathon 2027",
 		parentId: "page-site-home",
@@ -6751,7 +5458,6 @@ export const initialPages: Page[] = [
 	},
 
 	{
->>>>>>> origin/main
 		id: "page-site-events",
 		name: "Events",
 		parentId: "page-site-home",
@@ -6899,14 +5605,11 @@ export const initialPages: Page[] = [
 	{
 		id: "page-activities",
 		contentTypeId: "exp-landing-page",
-<<<<<<< HEAD
-=======
 		displayTemplateKey: "defaultExperience",
 		displaySettings: [
 			{ key: "backgroundColor", value: "light-blue" },
 			{ key: "spacing", value: "compact" }
 		],
->>>>>>> origin/main
 		name: "Activities",
 		slug: "activities",
 		parentId: null,
@@ -6974,73 +5677,43 @@ export const initialPages: Page[] = [
 					"ele-activities-hero-badge": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Join 2M+ active users worldwide" },
-=======
 							text: "Join 2M+ active users worldwide",
->>>>>>> origin/main
 						},
 					},
 					"ele-activities-hero-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Ready. Set. Go." },
-=======
 							text: "Ready. Set. Go.",
->>>>>>> origin/main
 						},
 					},
 					"ele-activities-hero-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
-							},
-=======
 							text: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
->>>>>>> origin/main
 						},
 					},
 					"ele-activities-hero-cta": {
 						type: "ct-button",
 						properties: {
-<<<<<<< HEAD
-							label: { value: "Register for your bib" },
-=======
 							label: "Register for your bib",
->>>>>>> origin/main
 						},
 					},
 					"ele-activities-stat-1": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "500K+ Annual participants" },
-=======
 							text: "500K+ Annual participants",
->>>>>>> origin/main
 						},
 					},
 					"ele-activities-stat-2": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "45+ Countries represented" },
-=======
 							text: "45+ Countries represented",
->>>>>>> origin/main
 						},
 					},
 					"ele-activities-stat-3": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "4.9/5 Average rating" },
-=======
 							text: "4.9/5 Average rating",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -7051,14 +5724,11 @@ export const initialPages: Page[] = [
 	{
 		id: "page-community",
 		contentTypeId: "exp-landing-page",
-<<<<<<< HEAD
-=======
 		displayTemplateKey: "defaultExperience",
 		displaySettings: [
 			{ key: "backgroundColor", value: "light-blue" },
 			{ key: "spacing", value: "compact" }
 		],
->>>>>>> origin/main
 		name: "Community",
 		slug: "community",
 		parentId: null,
@@ -7119,47 +5789,25 @@ export const initialPages: Page[] = [
 					"ele-community-hero-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Join millions of active users" },
-=======
 							text: "Join millions of active users",
->>>>>>> origin/main
 						},
 					},
 					"ele-community-hero-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
-							},
-=======
 							text: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
->>>>>>> origin/main
 						},
 					},
 					"ele-community-test-1": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Sarah M.: Amazing run through Central Park this morning! The GPS tracking was spot-on.",
-							},
-=======
 							text: "Sarah M.: Amazing run through Central Park this morning! The GPS tracking was spot-on.",
->>>>>>> origin/main
 						},
 					},
 					"ele-community-test-2": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Mike R.: Crushed my half-marathon goal! The community challenges really pushed me.",
-							},
-=======
 							text: "Mike R.: Crushed my half-marathon goal! The community challenges really pushed me.",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -7168,36 +5816,6 @@ export const initialPages: Page[] = [
 	},
 
 	{
-<<<<<<< HEAD
-		id: "page-challenges",
-		contentTypeId: "exp-landing-page",
-		name: "Challenges",
-		slug: "challenges",
-		parentId: null,
-		status: "Published",
-		lastModified: "2023-12-18",
-		data: {},
-		outlines: [
-			{
-				id: "ol-challenges-main",
-				title: "Main",
-				tree: [
-					{
-						id: "sec-challenges-hero",
-						name: "Hero",
-						open: true,
-						children: [
-							{
-								id: "row-challenges-hero",
-								open: true,
-								children: [
-									{
-										id: "col-challenges-hero",
-										open: true,
-										elements: [
-											{ id: "ele-challenges-hero-heading" },
-											{ id: "ele-challenges-hero-sub" },
-=======
 		id: "page-site-challenges",
 		contentTypeId: "exp-landing-page",
 		displayTemplateKey: "defaultExperience",
@@ -7237,67 +5855,10 @@ export const initialPages: Page[] = [
 												open: true,
 												elements: [{ id: "ele-challenges-hero" }],
 											},
->>>>>>> origin/main
 										],
 									},
 								],
 							},
-<<<<<<< HEAD
-						],
-					},
-					{
-						id: "sec-challenges-list",
-						name: "Active Challenges",
-						open: true,
-						children: [
-							{
-								id: "row-challenges-list",
-								open: true,
-								children: [
-									{
-										id: "col-challenge-1",
-										open: true,
-										elements: [{ id: "ele-challenge-1" }],
-									},
-									{
-										id: "col-challenge-2",
-										open: true,
-										elements: [{ id: "ele-challenge-2" }],
-									},
-								],
-							},
-						],
-					},
-				],
-				elements: {
-					"ele-challenges-hero-heading": {
-						type: "ct-heading",
-						properties: {
-							text: { value: "Push your limits" },
-						},
-					},
-					"ele-challenges-hero-sub": {
-						type: "ct-text",
-						properties: {
-							text: {
-								value: "Join exciting challenges and compete with users worldwide to reach new fitness milestones.",
-							},
-						},
-					},
-					"ele-challenge-1": {
-						type: "ct-heading",
-						properties: {
-							text: { value: "October Run Streak" },
-						},
-					},
-					"ele-challenge-2": {
-						type: "ct-heading",
-						properties: {
-							text: { value: "100 Mile Challenge" },
-						},
-					},
-				},
-=======
 							{
 								id: "sec-challenges-calendar",
 								name: "Curated Race Calendar",
@@ -7496,7 +6057,6 @@ export const initialPages: Page[] = [
 						},
 					},
 				],
->>>>>>> origin/main
 			},
 		],
 	},
@@ -7504,14 +6064,11 @@ export const initialPages: Page[] = [
 	{
 		id: "page-pricing",
 		contentTypeId: "exp-landing-page",
-<<<<<<< HEAD
-=======
 		displayTemplateKey: "defaultExperience",
 		displaySettings: [
 			{ key: "backgroundColor", value: "light-blue" },
 			{ key: "spacing", value: "compact" }
 		],
->>>>>>> origin/main
 		name: "Pricing",
 		slug: "pricing",
 		parentId: null,
@@ -7577,53 +6134,31 @@ export const initialPages: Page[] = [
 					"ele-pricing-hero-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Choose your plan" },
-=======
 							text: "Choose your plan",
->>>>>>> origin/main
 						},
 					},
 					"ele-pricing-hero-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
-							},
-=======
 							text: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
->>>>>>> origin/main
 						},
 					},
 					"ele-plan-free": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Free - $0" },
-=======
 							text: "Free - $0",
->>>>>>> origin/main
 						},
 					},
 					"ele-plan-pro": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Pro - $9.99/mo" },
-=======
 							text: "Pro - $9.99/mo",
->>>>>>> origin/main
 						},
 					},
 					"ele-plan-team": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Team - $24.99/mo" },
-=======
 							text: "Team - $24.99/mo",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -7694,33 +6229,19 @@ export const initialPages: Page[] = [
 					"ele-stories-hero-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Real results from real people" },
-=======
 							text: "Real results from real people",
->>>>>>> origin/main
 						},
 					},
 					"ele-stories-hero-sub": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
-							},
-=======
 							text: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
->>>>>>> origin/main
 						},
 					},
 					"ele-story-1": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -7739,20 +6260,12 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 					"ele-story-2": {
 						type: "ct-rich-text",
 						properties: {
 							richtext: {
-<<<<<<< HEAD
-								value: {
-=======
->>>>>>> origin/main
 									type: "doc",
 									content: [
 										{
@@ -7771,10 +6284,6 @@ export const initialPages: Page[] = [
 										},
 									],
 								},
-<<<<<<< HEAD
-							},
-=======
->>>>>>> origin/main
 						},
 					},
 				},
@@ -7825,53 +6334,31 @@ export const initialPages: Page[] = [
 					"ele-prod-31-img": {
 						type: "ct-image-block",
 						properties: {
-<<<<<<< HEAD
-							image: { value: "https://picsum.photos/seed/cycling1/400/300" },
-=======
 							image: "https://picsum.photos/seed/cycling1/400/300",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-31-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Cycle Computer Pro" },
-=======
 							text: "Cycle Computer Pro",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-31-price": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "$199.00" },
-=======
 							text: "$199.00",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-31-desc": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Advanced GPS cycling computer with performance tracking and navigation.",
-							},
-=======
 							text: "Advanced GPS cycling computer with performance tracking and navigation.",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-31-buy": {
 						type: "ct-button",
 						properties: {
-<<<<<<< HEAD
-							label: { value: "Add to Cart" },
-=======
 							label: "Add to Cart",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -7925,11 +6412,7 @@ export const initialPages: Page[] = [
 
 						properties: {
 
-<<<<<<< HEAD
-							image: { value: "https://picsum.photos/seed/cycling3/400/300" },
-=======
 							image: "https://picsum.photos/seed/cycling3/400/300",
->>>>>>> origin/main
 
 						},
 
@@ -7937,43 +6420,25 @@ export const initialPages: Page[] = [
 					"ele-prod-32-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "HR Monitor Band" },
-=======
 							text: "HR Monitor Band",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-32-price": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "$79.00" },
-=======
 							text: "$79.00",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-32-desc": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Precision heart rate monitoring for your most intense workouts.",
-							},
-=======
 							text: "Precision heart rate monitoring for your most intense workouts.",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-32-buy": {
 						type: "ct-button",
 						properties: {
-<<<<<<< HEAD
-							label: { value: "Add to Cart" },
-=======
 							label: "Add to Cart",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -8027,11 +6492,7 @@ export const initialPages: Page[] = [
 
 						properties: {
 
-<<<<<<< HEAD
-							image: { value: "https://picsum.photos/seed/cycling2/400/300" },
-=======
 							image: "https://picsum.photos/seed/cycling2/400/300",
->>>>>>> origin/main
 
 						},
 
@@ -8039,43 +6500,25 @@ export const initialPages: Page[] = [
 					"ele-prod-33-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Smart Bike Trainer" },
-=======
 							text: "Smart Bike Trainer",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-33-price": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "$599.00" },
-=======
 							text: "$599.00",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-33-desc": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Transform your bike into a powerful indoor training machine.",
-							},
-=======
 							text: "Transform your bike into a powerful indoor training machine.",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-33-buy": {
 						type: "ct-button",
 						properties: {
-<<<<<<< HEAD
-							label: { value: "Add to Cart" },
-=======
 							label: "Add to Cart",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -8129,11 +6572,7 @@ export const initialPages: Page[] = [
 
 						properties: {
 
-<<<<<<< HEAD
-							image: { value: "https://picsum.photos/seed/cycling4/400/300" },
-=======
 							image: "https://picsum.photos/seed/cycling4/400/300",
->>>>>>> origin/main
 
 						},
 
@@ -8141,41 +6580,25 @@ export const initialPages: Page[] = [
 					"ele-prod-34-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Cadence Sensor" },
-=======
 							text: "Cadence Sensor",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-34-price": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "$39.00" },
-=======
 							text: "$39.00",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-34-desc": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Track your pedaling cadence with precision and ease." },
-=======
 							text: "Track your pedaling cadence with precision and ease.",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-34-buy": {
 						type: "ct-button",
 						properties: {
-<<<<<<< HEAD
-							label: { value: "Add to Cart" },
-=======
 							label: "Add to Cart",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -8229,11 +6652,7 @@ export const initialPages: Page[] = [
 
 						properties: {
 
-<<<<<<< HEAD
-							image: { value: "https://picsum.photos/seed/cycling8/400/300" },
-=======
 							image: "https://picsum.photos/seed/cycling8/400/300",
->>>>>>> origin/main
 
 						},
 
@@ -8241,43 +6660,25 @@ export const initialPages: Page[] = [
 					"ele-prod-35-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Power Meter" },
-=======
 							text: "Power Meter",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-35-price": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "$449.00" },
-=======
 							text: "$449.00",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-35-desc": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Measure your power output and optimize your cycling performance.",
-							},
-=======
 							text: "Measure your power output and optimize your cycling performance.",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-35-buy": {
 						type: "ct-button",
 						properties: {
-<<<<<<< HEAD
-							label: { value: "Add to Cart" },
-=======
 							label: "Add to Cart",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -8331,11 +6732,7 @@ export const initialPages: Page[] = [
 
 						properties: {
 
-<<<<<<< HEAD
-							image: { value: "https://picsum.photos/seed/cycling9/400/300" },
-=======
 							image: "https://picsum.photos/seed/cycling9/400/300",
->>>>>>> origin/main
 
 						},
 
@@ -8343,43 +6740,25 @@ export const initialPages: Page[] = [
 					"ele-prod-36-heading": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "Speed Sensor" },
-=======
 							text: "Speed Sensor",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-36-price": {
 						type: "ct-heading",
 						properties: {
-<<<<<<< HEAD
-							text: { value: "$39.00" },
-=======
 							text: "$39.00",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-36-desc": {
 						type: "ct-text",
 						properties: {
-<<<<<<< HEAD
-							text: {
-								value: "Accurate speed tracking for your outdoor and indoor rides.",
-							},
-=======
 							text: "Accurate speed tracking for your outdoor and indoor rides.",
->>>>>>> origin/main
 						},
 					},
 					"ele-prod-36-buy": {
 						type: "ct-button",
 						properties: {
-<<<<<<< HEAD
-							label: { value: "Add to Cart" },
-=======
 							label: "Add to Cart",
->>>>>>> origin/main
 						},
 					},
 				},
@@ -8868,18 +7247,10 @@ export const siteConfig = {
 	header: {
 		logo: "STRIDE",
 		links: [
-<<<<<<< HEAD
-			{ label: "Activities", href: "/activities" },
-			{ label: "Community", href: "/community" },
-			{ label: "Challenges", href: "/challenges" },
-			{ label: "Pricing", href: "/pricing" },
-			{ label: "Stories", href: "/stories" },
-=======
 			{ label: "Features", href: "/features" },
 			{ label: "Challenges", href: "/challenges" },
 			{ label: "Subscriptions", href: "/subscriptions" },
 			{ label: "About Us", href: "/about" },
->>>>>>> origin/main
 		],
 		auth: {
 			signIn: "Sign In",

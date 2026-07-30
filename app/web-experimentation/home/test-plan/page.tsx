@@ -4,10 +4,7 @@ import {
 	Box,
 	Card,
 	Text as AxiomText,
-<<<<<<< HEAD
-=======
 	Link as AxiomLink,
->>>>>>> origin/main
 	Field,
 	Textarea,
 	Select,
@@ -15,19 +12,11 @@ import {
 	SelectContent,
 	Button,
 } from "@optiaxiom/react";
-<<<<<<< HEAD
-import { useState } from "react";
-import { Text } from "@/app/components/Text";
-import { Input } from "@/app/components/Input";
-import Link from "next/link";
-import { IconArrowLeft, IconDownload } from "@tabler/icons-react";
-=======
 import {useState} from "react";
 import {Text} from "@/app/components/Text";
 import {Input} from "@/app/components/Input";
 import Link from "next/link";
 import {IconArrowLeft, IconDownload} from "@/app/lib/axiom-icons";
->>>>>>> origin/main
 
 export default function TestPlanBuilderPage() {
 	const [hypothesis, setHypothesis] = useState("");
@@ -54,11 +43,7 @@ export default function TestPlanBuilderPage() {
 			rolloutPlan,
 			decisionCriteria,
 		};
-<<<<<<< HEAD
-		const blob = new Blob([JSON.stringify(brief, null, 2)], { type: "application/json" });
-=======
 		const blob = new Blob([JSON.stringify(brief, null, 2)], {type: "application/json"});
->>>>>>> origin/main
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;
@@ -69,17 +54,6 @@ export default function TestPlanBuilderPage() {
 
 	return (
 		<Box display="flex" flexDirection="column" gap="24" w="full">
-<<<<<<< HEAD
-			<Link
-				href="/web-experimentation/home"
-				style={{ display: "inline-flex", alignItems: "center", gap: "8", marginBottom: "8" }}
-			>
-				<IconArrowLeft size={18} />
-				<AxiomText fontSize="sm" color="fg.accent">
-					Back to Home
-				</AxiomText>
-			</Link>
-=======
 			<AxiomLink asChild fontSize="sm">
 				<Link
 					href="/web-experimentation/home"
@@ -94,19 +68,13 @@ export default function TestPlanBuilderPage() {
 					Back to Home
 				</Link>
 			</AxiomLink>
->>>>>>> origin/main
 			<Text fontSize="lg" fontWeight="600">
 				Test plan builder
 			</Text>
 			<AxiomText fontSize="sm" color="fg.secondary" mb="8">
-<<<<<<< HEAD
-				Structured experiment brief: hypothesis, variants, audience, traffic, duration, sample size,
-				dependencies, risks, rollout, and decision criteria. Draft with AI or export to brief / Jira.
-=======
 				Structured experiment brief: hypothesis, variants, audience, traffic, duration,
 				sample size, dependencies, risks, rollout, and decision criteria. Draft with AI or
 				export to brief / Jira.
->>>>>>> origin/main
 			</AxiomText>
 			<Card p="24">
 				<Box display="flex" flexDirection="column" gap="16">
@@ -162,13 +130,9 @@ export default function TestPlanBuilderPage() {
 						<Textarea
 							placeholder="Technical or product dependencies"
 							value={dependencies}
-<<<<<<< HEAD
-							onChange={(e) => setDependencies((e.target as HTMLTextAreaElement).value)}
-=======
 							onChange={(e) =>
 								setDependencies((e.target as HTMLTextAreaElement).value)
 							}
->>>>>>> origin/main
 							w="full"
 						/>
 					</Field>
@@ -184,13 +148,9 @@ export default function TestPlanBuilderPage() {
 						<Textarea
 							placeholder="How will you roll out the winner?"
 							value={rolloutPlan}
-<<<<<<< HEAD
-							onChange={(e) => setRolloutPlan((e.target as HTMLTextAreaElement).value)}
-=======
 							onChange={(e) =>
 								setRolloutPlan((e.target as HTMLTextAreaElement).value)
 							}
->>>>>>> origin/main
 							w="full"
 						/>
 					</Field>
@@ -198,13 +158,9 @@ export default function TestPlanBuilderPage() {
 						<Textarea
 							placeholder="When do we call a winner or stop?"
 							value={decisionCriteria}
-<<<<<<< HEAD
-							onChange={(e) => setDecisionCriteria((e.target as HTMLTextAreaElement).value)}
-=======
 							onChange={(e) =>
 								setDecisionCriteria((e.target as HTMLTextAreaElement).value)
 							}
->>>>>>> origin/main
 							w="full"
 						/>
 					</Field>
@@ -212,16 +168,12 @@ export default function TestPlanBuilderPage() {
 						<Button appearance="subtle" size="lg">
 							Draft with AI
 						</Button>
-<<<<<<< HEAD
-						<Button appearance="primary" size="lg" icon={<IconDownload size={18} />} onClick={handleExport}>
-=======
 						<Button
 							appearance="primary"
 							size="lg"
 							icon={<IconDownload size={18} />}
 							onClick={handleExport}
 						>
->>>>>>> origin/main
 							Export brief
 						</Button>
 						<Link href="/web-experimentation/home">

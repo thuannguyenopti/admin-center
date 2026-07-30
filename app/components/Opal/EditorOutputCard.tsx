@@ -75,17 +75,10 @@ export function EditorOutputCard({
           alignItems="center"
           justifyContent="center"
           style={{ width: 32, height: 32, flexShrink: 0 }}
-<<<<<<< HEAD
-          bg="bg.accent.subtle"
-          rounded="md"
-        >
-          <IconFileLines size={16} style={{ color: "var(--ax-colors-fg-accent)" }} />
-=======
           bg="bg.information.subtle"
           rounded="md"
         >
           <IconFileLines size={16} style={{ color: "var(--ax-colors-fg-information-strong)" }} />
->>>>>>> origin/main
         </Box>
         <Box flex="1" display="flex" flexDirection="column" gap="2">
           <Text fontSize="md" fontWeight="600" color="fg.default">

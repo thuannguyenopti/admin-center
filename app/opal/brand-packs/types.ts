@@ -49,11 +49,6 @@ export type BrandTemplate = {
 export type BrandAsset = {
 	id: string;
 	name: string;
-<<<<<<< HEAD
-	type: "logo" | "photo" | "icon" | "illustration";
-	url: string;
-	format: string;
-=======
 	type: "logo" | "photo" | "icon" | "illustration" | "background";
 	url: string;
 	format: string;
@@ -117,7 +112,6 @@ export type BrandWritingGuidelines = {
 	sentence_case_headlines: boolean;
 	grammar_rules: string[];
 	approved_descriptors: string[];
->>>>>>> origin/main
 };
 
 export type BrandPack = {
@@ -134,15 +128,12 @@ export type BrandPack = {
 	templateCount: number;
 	templates: BrandTemplate[];
 	assets: BrandAsset[];
-<<<<<<< HEAD
-=======
 	logo_system?: LogoSystem | null;
 	brand_devices?: BrandDevice[] | null;
 	photography_mood_brief?: PhotographyMoodBrief | null;
 	tone_of_voice?: ToneOfVoice;
 	brand_values?: BrandValues | null;
 	writing_guidelines?: BrandWritingGuidelines | null;
->>>>>>> origin/main
 	brandBrief: string;
 	sourceUrl?: string;
 	sourceFigma?: string;

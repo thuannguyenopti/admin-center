@@ -50,24 +50,7 @@ function learningMatchesPeriod(lastActivityAt: string, period: LearningsPeriod, 
 	const maxDays = period === "30d" ? 30 : period === "3mo" ? 90 : period === "6mo" ? 180 : 365;
 	return daysAgo <= maxDays;
 }
-<<<<<<< HEAD
-import {
-	IconAlertTriangle,
-	IconClock,
-	IconBulb,
-	IconTarget,
-	IconChartBar,
-	IconFileText,
-	IconUsers,
-	IconSearch,
-	IconMicrophone,
-	IconChevronLeft,
-	IconChevronRight,
-	IconChevronDown,
-} from "@tabler/icons-react";
-=======
 import {IconTriangleExclamation, IconClock, IconBulb, IconTarget, IconChartColumn as IconChartBar, IconFileLines, IconUsers, IconSearch, IconMicrophone, IconChevronLeft, IconChevronRight, IconChevronDown} from "@/app/lib/axiom-icons";
->>>>>>> origin/main
 import {
 	IconChartColumn,
 	IconDownload,
@@ -388,11 +371,7 @@ export default function ExperimentationHomePage() {
 			href: "/web-experimentation/home/competitive-research",
 		},
 		{
-<<<<<<< HEAD
-			icon: <IconFileText size={24} style={{ color: opalPrimary }} />,
-=======
 			icon: <IconFileLines size={24} style={{ color: opalPrimary }} />,
->>>>>>> origin/main
 			title: "Building hypothesis",
 			description: "Draft a clear hypothesis with problem, audience, and expected impact.",
 			prompt: "Help me build a hypothesis for [experiment idea]. Include problem statement, target audience, proposed change, and primary metric.",

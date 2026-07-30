@@ -47,7 +47,6 @@ const OPAL_CAPABILITIES = [
 const PRODUCT_AREA_MAP: Record<string, string> = {
   cms: "Content Management System (CMS)",
   opal: "Opal AI Platform",
-  "admin-center": "Admin Center",
   "connect-platform": "Connect Platform",
   "fe-hosting": "Frontend Hosting",
 };

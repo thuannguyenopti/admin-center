@@ -10,11 +10,8 @@ export type RowNode = {
 	id: string;
 	open: boolean;
 	children: ColumnNode[];
-<<<<<<< HEAD
-=======
 	displayTemplateKey?: string;  // NEW: Display template system
 	displaySettings?: Array<{key: string; value: string}>;  // NEW
->>>>>>> origin/main
 };
 
 export type SectionNode = {
@@ -23,12 +20,9 @@ export type SectionNode = {
 	open: boolean;
 	bgImage?: string;
 	children: RowNode[];
-<<<<<<< HEAD
-=======
 	template?: string;  // OLD: Keep for backward compatibility during migration
 	displayTemplateKey?: string;  // NEW: Display template system
 	displaySettings?: Array<{key: string; value: string}>;  // NEW
->>>>>>> origin/main
 };
 
 export type OutlineState = {
@@ -44,8 +38,6 @@ export type Selection =
 	| { kind: "row"; sectionId: string; rowId: string }
 	| { kind: "column"; sectionId: string; rowId: string; columnId: string }
 	| { kind: "element"; sectionId: string; rowId: string; columnId: string; elementId: string };
-<<<<<<< HEAD
-=======
 
 // Display Template System (Optimizely pattern)
 export type DisplayTemplateSetting = {
@@ -72,4 +64,3 @@ export type DisplayTemplate = {
 	defaultSettings: Record<string, string>;  // For AI default application
 	settings: Record<string, DisplayTemplateSetting>;
 };
->>>>>>> origin/main

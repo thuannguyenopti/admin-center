@@ -19,15 +19,12 @@ export type ChatHistoryItem = {
   needsInput?: boolean;
   /** Presence status for DM avatars ("online" | "away" | "offline"). */
   presenceStatus?: string;
-<<<<<<< HEAD
-=======
   /** When true, render the AI/VAU wand badge instead of a presence dot. */
   isVAU?: boolean;
   /** Template name for VAU DMs (e.g. "Experiment Monitor"). */
   vauTemplateName?: string;
   /** When true, this item represents a channel (public or private). */
   isChannel?: boolean;
->>>>>>> origin/main
 };
 
 export type OpalMode = 'docked' | 'popped-out';
@@ -113,16 +110,8 @@ export function useOpalHistory() {
 
       setChatHistory(loadedHistory);
 
-<<<<<<< HEAD
-      // Prefer restoring previously selected chat; otherwise select the first chat if any.
-      const initialActive =
-        (savedActiveChatId && loadedHistory.some(h => h.id === savedActiveChatId) && savedActiveChatId) ||
-        (loadedHistory.length > 0 ? loadedHistory[0].id : null);
-      setActiveChat(initialActive);
-=======
       // Always land on home (new thread) — history sidebar shows previous chats but none is pre-selected.
       setActiveChat(null);
->>>>>>> origin/main
 
       if (savedMode) {
         setMode(savedMode as OpalMode);

@@ -1,10 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-<<<<<<< HEAD
-=======
   allowedDevOrigins: ["10.102.254.88"],
->>>>>>> origin/main
   reactStrictMode: false,
   compress: true,
   output: "standalone",

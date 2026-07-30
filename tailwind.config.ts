@@ -12,9 +12,6 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-<<<<<<< HEAD
-      },
-=======
         stride: {
           dark: '#1C1C1C',      // fg1 - primary text
           blue: '#0980F6',      // key1 - primary accent
@@ -47,7 +44,6 @@ export default {
         'stride': '8px',
         'stride-lg': '12px',
       }
->>>>>>> origin/main
     },
   },
   plugins: [],

@@ -1,10 +1,6 @@
 import { Box, Badge, Button } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-<<<<<<< HEAD
-import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
-=======
 import {IconChevronDown, IconChevronRight} from "@/app/lib/axiom-icons";
->>>>>>> origin/main
 import { parseDate, getStatusColor } from "../utils";
 import type { PlanItem } from "../types";
 

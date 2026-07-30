@@ -40,15 +40,9 @@ import {
 	IconTrash,
 	IconSearch,
 	IconChevronDown,
-<<<<<<< HEAD
-	IconDots,
-	IconX,
-} from "@tabler/icons-react";
-=======
 	IconEllipsisSolid,
 	IconXmark,
 } from "@/app/lib/axiom-icons";
->>>>>>> origin/main
 import {IconAgent, IconFolderArrowDown, IconSparkles} from "@optimizely/axiom-icons";
 import Link from "next/link";
 import {UploadContextDropZone} from "@/app/web-experimentation/UploadContextDropZone";
@@ -71,12 +65,7 @@ const MOCK_GENERATED_TEST_IDEAS: GeneratedTestIdea[] = [
 		title: "Optimize Hero CTA Button",
 		description:
 			"Increase CTA visibility with a larger, higher contrast button and urgency driven copy to drive more clicks",
-<<<<<<< HEAD
-		opportunity:
-			"62% of users abandon the form before completion (session recording data).",
-=======
 		opportunity: "62% of users abandon the form before completion (session recording data).",
->>>>>>> origin/main
 		hypothesis:
 			"Adding a sticky CTA bar that remains visible while scrolling on mobile will reduce friction in the conversion path and increase mobile conversion rate by making the action always accessible.",
 		whyThisWillWork:
@@ -157,15 +146,9 @@ const MOCK_GENERATED_TEST_IDEAS: GeneratedTestIdea[] = [
 ];
 
 const TARGET_BY_OPTIONS = [
-<<<<<<< HEAD
-	{ label: "URL", value: "url" },
-	{ label: "Saved Pages", value: "saved-pages" },
-	{ label: "Screenshot", value: "screenshot" },
-=======
 	{label: "URL", value: "url"},
 	{label: "Saved Pages", value: "saved-pages"},
 	{label: "Screenshot", value: "screenshot"},
->>>>>>> origin/main
 ];
 
 function buildExperimentCreationPayload(
@@ -173,58 +156,37 @@ function buildExperimentCreationPayload(
 	targetByValue: string,
 	urlList: string[],
 	savedPageIds: string[],
-<<<<<<< HEAD
-	savedPagesSearch: string,
-=======
 	savedPagesSearch: string
->>>>>>> origin/main
 ): ExperimentCreationAgentPayload {
 	const targetByLabel =
 		TARGET_BY_OPTIONS.find((o) => o.value === targetByValue)?.label ?? targetByValue;
 	let urlPrefill = "";
 	if (targetByValue === "url") {
 		const parts = urlList.map((u) => u.trim()).filter(Boolean);
-<<<<<<< HEAD
-		urlPrefill = parts.length ? parts.join("\n") : "Add target URLs in Test Setup (none entered yet).";
-=======
 		urlPrefill = parts.length
 			? parts.join("\n")
 			: "Add target URLs in Test Setup (none entered yet).";
->>>>>>> origin/main
 	} else if (targetByValue === "saved-pages") {
 		const names: string[] = [];
 		for (const id of savedPageIds) {
 			const p = MOCK_SAVED_PAGES.find((x) => x.id === id);
 			if (p) names.push(p.name);
 		}
-<<<<<<< HEAD
-		urlPrefill = names.length ? names.join(", ") : "Select saved pages below (none selected yet).";
-=======
 		urlPrefill = names.length
 			? names.join(", ")
 			: "Select saved pages below (none selected yet).";
->>>>>>> origin/main
 	} else {
 		urlPrefill = "Switch Target by to URL or Saved Pages to set a destination.";
 	}
 
 	return {
-<<<<<<< HEAD
-		intro:
-			"The Experiment Creation agent is ready to draft your experiment from this test idea and the context you entered on the page. Fields below are prefilled—edit if needed, then run the agent.",
-=======
 		intro: "The Experiment Creation agent is ready to draft your experiment from this test idea and the context you entered on the page. Fields below are prefilled—edit if needed, then run the agent.",
->>>>>>> origin/main
 		name: idea.title,
 		description: idea.description,
 		hypothesis: idea.hypothesis,
 		targetBy: targetByLabel === "Screenshot" ? "URL" : targetByLabel,
 		url: urlPrefill,
-<<<<<<< HEAD
-		savedPagesCatalog: MOCK_SAVED_PAGES.map((p) => ({ ...p })),
-=======
 		savedPagesCatalog: MOCK_SAVED_PAGES.map((p) => ({...p})),
->>>>>>> origin/main
 		savedPagesSearchInitial: savedPagesSearch,
 		savedPageIdsInitial: [...savedPageIds],
 	};
@@ -256,11 +218,7 @@ function UrlListField({
 			<Box display="flex" flexDirection="column" gap="8" w="full">
 				{value.map((url, i) => (
 					<Box key={i} display="flex" gap="8" alignItems="center" w="full">
-<<<<<<< HEAD
-						<Box flex="1" style={{ minWidth: 0 }}>
-=======
 						<Box flex="1" style={{minWidth: 0}}>
->>>>>>> origin/main
 							<Input
 								placeholder={placeholder}
 								value={url}
@@ -268,11 +226,7 @@ function UrlListField({
 								w="full"
 							/>
 						</Box>
-<<<<<<< HEAD
-						<Box display="flex" gap="8" style={{ flexShrink: 0 }}>
-=======
 						<Box display="flex" gap="8" style={{flexShrink: 0}}>
->>>>>>> origin/main
 							{i === value.length - 1 && (
 								<Button
 									appearance="default"
@@ -325,18 +279,11 @@ export default function WebExperimentationIdeasPage() {
 		};
 	}, []);
 
-<<<<<<< HEAD
-	const selectedIdea = selectedIdeaId != null ? mockAudiences.find((a) => a.id === selectedIdeaId) : null;
-
-	return (
-		<Box display="flex" flexDirection="column" gap="0" w="full" style={{ minHeight: 0 }}>
-=======
 	const selectedIdea =
 		selectedIdeaId != null ? mockAudiences.find((a) => a.id === selectedIdeaId) : null;
 
 	return (
 		<Box display="flex" flexDirection="column" gap="0" w="full" style={{minHeight: 0}}>
->>>>>>> origin/main
 			<Tabs value={tab} onValueChange={(v) => setTab(v as "draft" | "saved")}>
 				<TabsList mb="16" w="full">
 					<TabsTrigger value="draft">
@@ -375,11 +322,6 @@ export default function WebExperimentationIdeasPage() {
 					</TabsTrigger>
 				</TabsList>
 
-<<<<<<< HEAD
-				<Box display="flex" gap="24" w="full" flex="1" style={{ minWidth: 0, minHeight: 0 }}>
-					<Box flex="1" display="flex" flexDirection="column" style={{ minWidth: 0, minHeight: 0 }}>
-						<Box flex="1" overflow="auto" display="flex" flexDirection="column" style={{ minHeight: 0 }}>
-=======
 				<Box display="flex" gap="24" w="full" flex="1" style={{minWidth: 0, minHeight: 0}}>
 					<Box
 						flex="1"
@@ -394,7 +336,6 @@ export default function WebExperimentationIdeasPage() {
 							flexDirection="column"
 							style={{minHeight: 0}}
 						>
->>>>>>> origin/main
 							<TabsContent value="draft">
 								<Card p="24" w="full">
 									<Box mb="16" w="full">
@@ -408,14 +349,6 @@ export default function WebExperimentationIdeasPage() {
 									<Box borderB="1" borderColor="border.tertiary" pb="16" w="full">
 										<Disclosure defaultOpen>
 											<DisclosureTrigger chevronPosition="start">
-<<<<<<< HEAD
-												<Box display="flex" flexDirection="column" style={{ gap: "4px" }} w="full">
-													<AxiomText asChild fontSize="sm" fontWeight="600" color="fg.default">
-														<span>Test Setup</span>
-													</AxiomText>
-													<AxiomText fontSize="sm" color="fg.secondary" mb="0">
-														Define where the test runs and what you want to improve.
-=======
 												<Box
 													display="flex"
 													flexDirection="column"
@@ -437,7 +370,6 @@ export default function WebExperimentationIdeasPage() {
 													>
 														Define where the test runs and what you want
 														to improve.
->>>>>>> origin/main
 													</AxiomText>
 												</Box>
 											</DisclosureTrigger>
@@ -448,11 +380,7 @@ export default function WebExperimentationIdeasPage() {
 													gap="12"
 													mt="12"
 													w="full"
-<<<<<<< HEAD
-													style={{ paddingLeft: "24px" }}
-=======
 													style={{paddingLeft: "24px"}}
->>>>>>> origin/main
 												>
 													<Field label="Target by">
 														<Select
@@ -460,11 +388,6 @@ export default function WebExperimentationIdeasPage() {
 															onValueChange={setTargetBy}
 															options={TARGET_BY_OPTIONS}
 														>
-<<<<<<< HEAD
-															<SelectTrigger placeholder="Select target type" size="lg" w="full">
-																{TARGET_BY_OPTIONS.find((o) => o.value === targetBy)
-																	?.label ?? "Select target type"}
-=======
 															<SelectTrigger
 																placeholder="Select target type"
 																size="lg"
@@ -473,7 +396,6 @@ export default function WebExperimentationIdeasPage() {
 																{TARGET_BY_OPTIONS.find(
 																	(o) => o.value === targetBy
 																)?.label ?? "Select target type"}
->>>>>>> origin/main
 															</SelectTrigger>
 															<SelectContent />
 														</Select>
@@ -485,13 +407,9 @@ export default function WebExperimentationIdeasPage() {
 															searchQuery={savedPagesSearch}
 															onSearchChange={setSavedPagesSearch}
 															selectedIds={selectedSavedPageIds}
-<<<<<<< HEAD
-															onChangeSelectedIds={setSelectedSavedPageIds}
-=======
 															onChangeSelectedIds={
 																setSelectedSavedPageIds
 															}
->>>>>>> origin/main
 														/>
 													) : targetBy === "screenshot" ? (
 														<UploadContextDropZone label="Screenshot" />
@@ -509,9 +427,6 @@ export default function WebExperimentationIdeasPage() {
 															placeholder="What do you want to improve?"
 															w="full"
 															value={goal}
-<<<<<<< HEAD
-															onChange={(e) => setGoal((e.target as HTMLTextAreaElement).value)}
-=======
 															onChange={(e) =>
 																setGoal(
 																	(
@@ -519,32 +434,17 @@ export default function WebExperimentationIdeasPage() {
 																	).value
 																)
 															}
->>>>>>> origin/main
 														/>
 													</Field>
 												</Box>
 											</DisclosureContent>
-<<<<<<< HEAD
-								</Disclosure>
-							</Box>
-=======
 										</Disclosure>
 									</Box>
->>>>>>> origin/main
 
 									{/* Research */}
 									<Box borderB="1" borderColor="border.tertiary" py="16" w="full">
 										<Disclosure>
 											<DisclosureTrigger chevronPosition="start">
-<<<<<<< HEAD
-												<Box display="flex" flexDirection="column" style={{ gap: "4px" }} w="full">
-													<AxiomText asChild fontSize="sm" fontWeight="600" color="fg.default">
-														<span>Research</span>
-													</AxiomText>
-													<AxiomText fontSize="sm" color="fg.secondary" mb="0">
-														Add qualitative insights or files to explain user behavior and problem
-														areas.
-=======
 												<Box
 													display="flex"
 													flexDirection="column"
@@ -566,7 +466,6 @@ export default function WebExperimentationIdeasPage() {
 													>
 														Add qualitative insights or files to explain
 														user behavior and problem areas.
->>>>>>> origin/main
 													</AxiomText>
 												</Box>
 											</DisclosureTrigger>
@@ -577,11 +476,7 @@ export default function WebExperimentationIdeasPage() {
 													gap="12"
 													mt="12"
 													w="full"
-<<<<<<< HEAD
-													style={{ paddingLeft: "24px" }}
-=======
 													style={{paddingLeft: "24px"}}
->>>>>>> origin/main
 												>
 													<UploadContextDropZone label="Additional context" />
 													<Box w="full">
@@ -590,15 +485,11 @@ export default function WebExperimentationIdeasPage() {
 															w="full"
 															value={researchNotes}
 															onChange={(e) =>
-<<<<<<< HEAD
-																setResearchNotes((e.target as HTMLTextAreaElement).value)
-=======
 																setResearchNotes(
 																	(
 																		e.target as HTMLTextAreaElement
 																	).value
 																)
->>>>>>> origin/main
 															}
 														/>
 													</Box>
@@ -611,14 +502,6 @@ export default function WebExperimentationIdeasPage() {
 									<Box borderB="1" borderColor="border.tertiary" py="16" w="full">
 										<Disclosure>
 											<DisclosureTrigger chevronPosition="start">
-<<<<<<< HEAD
-												<Box display="flex" flexDirection="column" style={{ gap: "4px" }} w="full">
-													<AxiomText asChild fontSize="sm" fontWeight="600" color="fg.default">
-														<span>Analytics</span>
-													</AxiomText>
-													<AxiomText fontSize="sm" color="fg.secondary" mb="0">
-														Reference GA4 metrics used to evaluate test outcomes.
-=======
 												<Box
 													display="flex"
 													flexDirection="column"
@@ -640,7 +523,6 @@ export default function WebExperimentationIdeasPage() {
 													>
 														Reference GA4 metrics used to evaluate test
 														outcomes.
->>>>>>> origin/main
 													</AxiomText>
 												</Box>
 											</DisclosureTrigger>
@@ -651,11 +533,7 @@ export default function WebExperimentationIdeasPage() {
 													gap="12"
 													mt="12"
 													w="full"
-<<<<<<< HEAD
-													style={{ paddingLeft: "24px" }}
-=======
 													style={{paddingLeft: "24px"}}
->>>>>>> origin/main
 												>
 													<UrlListField
 														label="GA4 Metrics"
@@ -667,14 +545,10 @@ export default function WebExperimentationIdeasPage() {
 														Don&apos;t have GA4 connected?{" "}
 														<Link
 															href="#"
-<<<<<<< HEAD
-															style={{ color: "var(--ax-colors-fg-accent)", textDecoration: "underline" }}
-=======
 															style={{
 																color: "var(--ax-colors-fg-default)",
 																textDecoration: "underline",
 															}}
->>>>>>> origin/main
 														>
 															Enable it
 														</Link>{" "}
@@ -689,15 +563,6 @@ export default function WebExperimentationIdeasPage() {
 									<Box py="16" w="full">
 										<Disclosure>
 											<DisclosureTrigger chevronPosition="start">
-<<<<<<< HEAD
-												<Box display="flex" flexDirection="column" style={{ gap: "4px" }} w="full">
-													<AxiomText asChild fontSize="sm" fontWeight="600" color="fg.default">
-														<span>Sources</span>
-													</AxiomText>
-													<AxiomText fontSize="sm" color="fg.secondary" mb="0">
-														Reference competitors and past tests to inform ideas and avoid
-														duplication.
-=======
 												<Box
 													display="flex"
 													flexDirection="column"
@@ -719,7 +584,6 @@ export default function WebExperimentationIdeasPage() {
 													>
 														Reference competitors and past tests to
 														inform ideas and avoid duplication.
->>>>>>> origin/main
 													</AxiomText>
 												</Box>
 											</DisclosureTrigger>
@@ -730,11 +594,7 @@ export default function WebExperimentationIdeasPage() {
 													gap="12"
 													mt="12"
 													w="full"
-<<<<<<< HEAD
-													style={{ paddingLeft: "24px" }}
-=======
 													style={{paddingLeft: "24px"}}
->>>>>>> origin/main
 												>
 													<UrlListField
 														label="Competitor URLs"
@@ -744,14 +604,6 @@ export default function WebExperimentationIdeasPage() {
 													/>
 													<Field label="Previous Tests">
 														<Box display="flex" gap="8" w="full">
-<<<<<<< HEAD
-															<Box flex="1" style={{ minWidth: 0 }}>
-																<Input
-																	placeholder="Search to add tests"
-																	value={previousTestsSearch}
-																	onChange={(e) => setPreviousTestsSearch(e.target.value)}
-																	addonBefore={<IconSearch size={16} />}
-=======
 															<Box flex="1" style={{minWidth: 0}}>
 																<Input
 																	placeholder="Search to add tests"
@@ -764,7 +616,6 @@ export default function WebExperimentationIdeasPage() {
 																	addonBefore={
 																		<IconSearch size={16} />
 																	}
->>>>>>> origin/main
 																	w="full"
 																/>
 															</Box>
@@ -791,13 +642,9 @@ export default function WebExperimentationIdeasPage() {
 												size="lg"
 												onClick={() => {
 													if (getTestIdeasTimeoutRef.current != null) {
-<<<<<<< HEAD
-														clearTimeout(getTestIdeasTimeoutRef.current);
-=======
 														clearTimeout(
 															getTestIdeasTimeoutRef.current
 														);
->>>>>>> origin/main
 														getTestIdeasTimeoutRef.current = null;
 													}
 													setTestIdeasLoading(false);
@@ -821,24 +668,13 @@ export default function WebExperimentationIdeasPage() {
 												disabled={testIdeasLoading}
 												onClick={() => {
 													if (getTestIdeasTimeoutRef.current != null) {
-<<<<<<< HEAD
-														clearTimeout(getTestIdeasTimeoutRef.current);
-=======
 														clearTimeout(
 															getTestIdeasTimeoutRef.current
 														);
->>>>>>> origin/main
 													}
 													setHasRunGetTestIdeas(true);
 													setGeneratedTestIdeas([]);
 													setTestIdeasLoading(true);
-<<<<<<< HEAD
-													getTestIdeasTimeoutRef.current = setTimeout(() => {
-														setGeneratedTestIdeas([...MOCK_GENERATED_TEST_IDEAS]);
-														setTestIdeasLoading(false);
-														getTestIdeasTimeoutRef.current = null;
-													}, 900);
-=======
 													getTestIdeasTimeoutRef.current = setTimeout(
 														() => {
 															setGeneratedTestIdeas([
@@ -849,7 +685,6 @@ export default function WebExperimentationIdeasPage() {
 														},
 														900
 													);
->>>>>>> origin/main
 												}}
 											>
 												Get Test Ideas
@@ -859,15 +694,6 @@ export default function WebExperimentationIdeasPage() {
 								</Card>
 							</TabsContent>
 
-<<<<<<< HEAD
-							<TabsContent value="saved" style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflow: "visible" }}>
-								<Box w="full" display="flex" flexDirection="column" gap="24" style={{ overflow: "visible" }}>
-									<Box flex="1" style={{ maxWidth: "266px", padding: "2px" }}>
-										<SearchInput
-											size="lg"
-											placeholder="Search"
-											style={{ borderRadius: "6px" }}
-=======
 							<TabsContent
 								value="saved"
 								style={{
@@ -890,18 +716,12 @@ export default function WebExperimentationIdeasPage() {
 											size="lg"
 											placeholder="Search"
 											style={{borderRadius: "6px"}}
->>>>>>> origin/main
 											w="full"
 										/>
 									</Box>
 									<Table>
 										<thead>
 											<Tr>
-<<<<<<< HEAD
-												<Th style={{ width: "95%" }}>
-													<Flex gap="4" alignItems="center">
-														<Text fontSize="md" color="fg.secondary" style={{ letterSpacing: "0.01px" }}>
-=======
 												<Th style={{width: "95%"}}>
 													<Flex gap="4" alignItems="center">
 														<Text
@@ -909,17 +729,11 @@ export default function WebExperimentationIdeasPage() {
 															color="fg.secondary"
 															style={{letterSpacing: "0.01px"}}
 														>
->>>>>>> origin/main
 															Name
 														</Text>
 														<IconChevronDown size={8} color="#66708c" />
 													</Flex>
 												</Th>
-<<<<<<< HEAD
-												<Th style={{ minWidth: "120px", width: "120px" }}>
-													<Flex gap="4" alignItems="center">
-														<Text fontSize="md" color="fg.secondary" style={{ letterSpacing: "0.01px" }}>
-=======
 												<Th style={{minWidth: "120px", width: "120px"}}>
 													<Flex gap="4" alignItems="center">
 														<Text
@@ -927,17 +741,12 @@ export default function WebExperimentationIdeasPage() {
 															color="fg.secondary"
 															style={{letterSpacing: "0.01px"}}
 														>
->>>>>>> origin/main
 															Added
 														</Text>
 														<IconChevronDown size={8} color="#66708c" />
 													</Flex>
 												</Th>
-<<<<<<< HEAD
-												<Th style={{ width: "56px" }} />
-=======
 												<Th style={{width: "56px"}} />
->>>>>>> origin/main
 											</Tr>
 										</thead>
 										<tbody>
@@ -946,13 +755,6 @@ export default function WebExperimentationIdeasPage() {
 													key={audience.id}
 													onClick={() => setSelectedIdeaId(audience.id)}
 												>
-<<<<<<< HEAD
-													<Td type="header" description={audience.description} style={{ borderRight: "none" }}>
-														{audience.name}
-													</Td>
-													<Td>{audience.addedDate}</Td>
-													<Td type="button" style={{ borderLeft: "none" }}>
-=======
 													<Td
 														type="header"
 														description={audience.description}
@@ -962,18 +764,13 @@ export default function WebExperimentationIdeasPage() {
 													</Td>
 													<Td>{audience.addedDate}</Td>
 													<Td type="button" style={{borderLeft: "none"}}>
->>>>>>> origin/main
 														<div onClick={(e) => e.stopPropagation()}>
 															<Button
 																aria-label="Actions"
 																size="md"
-<<<<<<< HEAD
-																icon={<IconDots size={16} />}
-=======
 																icon={
 																	<IconEllipsisSolid size={16} />
 																}
->>>>>>> origin/main
 																appearance="subtle"
 															/>
 														</div>
@@ -988,101 +785,6 @@ export default function WebExperimentationIdeasPage() {
 					</Box>
 
 					{tab === "draft" && (
-<<<<<<< HEAD
-					<Box flex="1" display="flex" flexDirection="column" style={{ minWidth: 0, minHeight: 0 }}>
-						<Box
-							p="24"
-							w="full"
-							flex="1"
-							display="flex"
-							flexDirection="column"
-							style={{ minHeight: 0 }}
-						>
-							<Box w="full">
-								<AxiomText fontWeight="600">Test Ideas</AxiomText>
-								<AxiomText fontSize="sm" color="fg.secondary" mt="4">
-									List of test ideas based on your context
-								</AxiomText>
-							</Box>
-
-							{testIdeasLoading ? (
-								<Box
-									flex="1"
-									w="full"
-									display="flex"
-									flexDirection="column"
-									overflow="auto"
-									style={{ minHeight: 0 }}
-									mt="16"
-									gap="12"
-								>
-									{[0, 1, 2].map((i) => (
-										<Card
-											key={i}
-											p="16"
-											w="full"
-											border="1"
-											borderColor="border.tertiary"
-											rounded="md"
-											bg="bg.default"
-										>
-											<Box display="flex" flexDirection="column" style={{ gap: "8px" }} w="full" pl="24">
-												<Skeleton
-													h="16"
-													className="opal-skeleton-shimmer"
-													style={{ width: "52%", borderRadius: "4px" }}
-												/>
-												<Skeleton
-													h="12"
-													className="opal-skeleton-shimmer"
-													style={{ width: "100%", borderRadius: "4px" }}
-												/>
-												<Skeleton
-													h="12"
-													className="opal-skeleton-shimmer"
-													style={{ width: "78%", borderRadius: "4px" }}
-												/>
-											</Box>
-										</Card>
-									))}
-								</Box>
-							) : generatedTestIdeas.length === 0 ? (
-								<Box
-									flex="1"
-									w="full"
-									display="flex"
-									flexDirection="column"
-									alignItems="center"
-									justifyContent="center"
-									textAlign="center"
-									px="24"
-									style={{ minHeight: 0 }}
-								>
-									<AxiomText fontWeight="600" mb="4">
-										{hasRunGetTestIdeas ? "No ideas left" : "No test ideas yet"}
-									</AxiomText>
-									<AxiomText color="fg.secondary">
-										{hasRunGetTestIdeas
-											? "Dismissed ideas are removed from this list. Run Get Test Ideas again to regenerate."
-											: "Add context and click “Get Test Ideas” to get started."}
-									</AxiomText>
-								</Box>
-							) : (
-								<Box
-									flex="1"
-									w="full"
-									display="flex"
-									flexDirection="column"
-									overflow="auto"
-									style={{ minHeight: 0 }}
-									mt="16"
-									gap="12"
-								>
-									{generatedTestIdeas.map((idea) => {
-										return (
-											<Card
-												key={idea.id}
-=======
 						<Box
 							flex="1"
 							display="flex"
@@ -1118,7 +820,6 @@ export default function WebExperimentationIdeasPage() {
 										{[0, 1, 2].map((i) => (
 											<Card
 												key={i}
->>>>>>> origin/main
 												p="16"
 												w="full"
 												border="1"
@@ -1126,180 +827,6 @@ export default function WebExperimentationIdeasPage() {
 												rounded="md"
 												bg="bg.default"
 											>
-<<<<<<< HEAD
-												<Box w="full" pr="32" mb="8" style={{ position: "relative" }}>
-													<Box
-														style={{ position: "absolute", top: 0, right: 0, zIndex: 1 }}
-													>
-														<Button
-															type="button"
-															appearance="subtle"
-															size="md"
-															icon={<IconX size={16} />}
-															aria-label={`Dismiss ${idea.title}`}
-															onClick={(e) => {
-																e.stopPropagation();
-																setGeneratedTestIdeas((prev) => prev.filter((x) => x.id !== idea.id));
-															}}
-														/>
-													</Box>
-													<Disclosure>
-														<DisclosureTrigger chevronPosition="start">
-															<Box display="flex" flexDirection="column" style={{ gap: "4px" }} w="full">
-																<AxiomText
-																	asChild
-																	fontSize="sm"
-																	fontWeight="600"
-																	color="fg.default"
-																	style={{
-																		lineHeight: 1.15,
-																		margin: 0,
-																		padding: 0,
-																		paddingRight: "8px",
-																	}}
-																>
-																	<span>{idea.title}</span>
-																</AxiomText>
-																<AxiomText
-																	fontSize="sm"
-																	color="fg.secondary"
-																	mb="0"
-																	style={{
-																		lineHeight: 1.35,
-																		margin: 0,
-																		padding: 0,
-																	}}
-																>
-																	{idea.description}
-																</AxiomText>
-															</Box>
-														</DisclosureTrigger>
-														<DisclosureContent asChild>
-															<Box
-																display="flex"
-																flexDirection="column"
-																gap="16"
-																mt="12"
-																w="full"
-																style={{ paddingLeft: "24px" }}
-															>
-																<Box>
-																	<AxiomText fontWeight="600" fontSize="sm" display="block" mb="4">
-																		Opportunity
-																	</AxiomText>
-																	<AxiomText fontSize="sm" color="fg.secondary">
-																		{idea.opportunity}
-																	</AxiomText>
-																</Box>
-																<Box>
-																	<AxiomText fontWeight="600" fontSize="sm" display="block" mb="4">
-																		Hypothesis
-																	</AxiomText>
-																	<AxiomText fontSize="sm" color="fg.secondary">
-																		{idea.hypothesis}
-																	</AxiomText>
-																</Box>
-																<Box
-																	rounded="md"
-																	p="12"
-																	bg="bg.secondary"
-																	border="1"
-																	borderColor="border.tertiary"
-																	display="flex"
-																	flexDirection="column"
-																	gap="12"
-																	w="full"
-																>
-																	<Box>
-																		<AxiomText fontWeight="600" fontSize="sm" display="block" mb="4">
-																			Why this will work
-																		</AxiomText>
-																		<AxiomText fontSize="sm" color="fg.secondary">
-																			{idea.whyThisWillWork}
-																		</AxiomText>
-																	</Box>
-																	<Box>
-																		<AxiomText fontWeight="600" fontSize="sm" display="block" mb="4">
-																			Sources
-																		</AxiomText>
-																		<Box
-																			display="flex"
-																			flexDirection="column"
-																			gap="4"
-																			style={{ paddingLeft: "4px" }}
-																		>
-																			{idea.sources.map((src, i) => (
-																				<Box key={i} display="flex" gap="8" alignItems="start">
-																					<AxiomText fontSize="sm" color="fg.secondary" mt="2">
-																						•
-																					</AxiomText>
-																					<AxiomText fontSize="sm" color="fg.secondary" style={{ flex: 1 }}>
-																						{src}
-																					</AxiomText>
-																				</Box>
-																			))}
-																		</Box>
-																	</Box>
-																</Box>
-															</Box>
-														</DisclosureContent>
-													</Disclosure>
-												</Box>
-												<Box
-													display="flex"
-													flexWrap="wrap"
-													gap="8"
-													w="full"
-													style={{ paddingLeft: "24px" }}
-												>
-													<Button
-														appearance="default"
-														size="md"
-														rounded="md"
-														icon={<IconFolderArrowDown size={16} />}
-														iconPosition="start"
-													>
-														Save
-													</Button>
-													<Button
-														appearance="default-opal"
-														size="md"
-														rounded="md"
-														icon={<IconSparkles size={16} />}
-														iconPosition="start"
-													>
-														Refine
-													</Button>
-													<Button
-														type="button"
-														appearance="default-opal"
-														size="md"
-														rounded="md"
-														icon={<IconAgent size={16} />}
-														iconPosition="start"
-														onClick={() => {
-															openExperimentCreationAgent(
-																buildExperimentCreationPayload(
-																	idea,
-																	targetBy,
-																	urls,
-																	selectedSavedPageIds,
-																	savedPagesSearch,
-																),
-															);
-														}}
-													>
-														Build
-													</Button>
-												</Box>
-											</Card>
-										);
-									})}
-								</Box>
-							)}
-						</Box>
-					</Box>
-=======
 												<Box
 													display="flex"
 													flexDirection="column"
@@ -1615,7 +1142,6 @@ export default function WebExperimentationIdeasPage() {
 								)}
 							</Box>
 						</Box>
->>>>>>> origin/main
 					)}
 				</Box>
 			</Tabs>
@@ -1634,16 +1160,8 @@ export default function WebExperimentationIdeasPage() {
 						overflow: "hidden",
 					}}
 				>
-<<<<<<< HEAD
-					<DialogHeader style={{ flexShrink: 0 }}>{selectedIdea?.name ?? ""}</DialogHeader>
-					<DialogBody
-						pt="0"
-						style={{ flex: 1, minHeight: 0, overflowY: "auto" }}
-					>
-=======
 					<DialogHeader style={{flexShrink: 0}}>{selectedIdea?.name ?? ""}</DialogHeader>
 					<DialogBody pt="0" style={{flex: 1, minHeight: 0, overflowY: "auto"}}>
->>>>>>> origin/main
 						<Box display="flex" flexDirection="column" gap="16">
 							{selectedIdea?.description && (
 								<AxiomText fontSize="sm" color="fg.secondary">
@@ -1652,16 +1170,12 @@ export default function WebExperimentationIdeasPage() {
 							)}
 							{selectedIdea?.problem && (
 								<Box>
-<<<<<<< HEAD
-									<AxiomText fontWeight="600" fontSize="sm" mb="4" display="block">
-=======
 									<AxiomText
 										fontWeight="600"
 										fontSize="sm"
 										mb="4"
 										display="block"
 									>
->>>>>>> origin/main
 										Problem
 									</AxiomText>
 									<AxiomText fontSize="sm" color="fg.secondary">
@@ -1671,16 +1185,12 @@ export default function WebExperimentationIdeasPage() {
 							)}
 							{selectedIdea?.hypothesis && (
 								<Box>
-<<<<<<< HEAD
-									<AxiomText fontWeight="600" fontSize="sm" mb="4" display="block">
-=======
 									<AxiomText
 										fontWeight="600"
 										fontSize="sm"
 										mb="4"
 										display="block"
 									>
->>>>>>> origin/main
 										Hypothesis
 									</AxiomText>
 									<AxiomText fontSize="sm" color="fg.secondary">
@@ -1690,16 +1200,12 @@ export default function WebExperimentationIdeasPage() {
 							)}
 							{selectedIdea?.basedOn && selectedIdea.basedOn.length > 0 && (
 								<Box>
-<<<<<<< HEAD
-									<AxiomText fontWeight="600" fontSize="sm" mb="4" display="block">
-=======
 									<AxiomText
 										fontWeight="600"
 										fontSize="sm"
 										mb="4"
 										display="block"
 									>
->>>>>>> origin/main
 										Based on
 									</AxiomText>
 									<ul
@@ -1710,17 +1216,12 @@ export default function WebExperimentationIdeasPage() {
 										}}
 									>
 										{selectedIdea.basedOn.map((item, i) => (
-<<<<<<< HEAD
-											<li key={i} style={{ marginBottom: "4px" }}>
-												<AxiomText fontSize="sm" color="fg.secondary" asChild>
-=======
 											<li key={i} style={{marginBottom: "4px"}}>
 												<AxiomText
 													fontSize="sm"
 													color="fg.secondary"
 													asChild
 												>
->>>>>>> origin/main
 													<span>{item}</span>
 												</AxiomText>
 											</li>
@@ -1730,16 +1231,12 @@ export default function WebExperimentationIdeasPage() {
 							)}
 							{selectedIdea?.whyThisWillWork && (
 								<Box>
-<<<<<<< HEAD
-									<AxiomText fontWeight="600" fontSize="sm" mb="4" display="block">
-=======
 									<AxiomText
 										fontWeight="600"
 										fontSize="sm"
 										mb="4"
 										display="block"
 									>
->>>>>>> origin/main
 										Why this will work
 									</AxiomText>
 									<AxiomText fontSize="sm" color="fg.secondary">
@@ -1749,11 +1246,6 @@ export default function WebExperimentationIdeasPage() {
 							)}
 						</Box>
 					</DialogBody>
-<<<<<<< HEAD
-					<DialogFooter style={{ flexShrink: 0 }}>
-						<DialogClose asChild>
-							<Button appearance="primary" size="lg" onClick={() => setSelectedIdeaId(null)}>
-=======
 					<DialogFooter style={{flexShrink: 0}}>
 						<DialogClose asChild>
 							<Button
@@ -1761,7 +1253,6 @@ export default function WebExperimentationIdeasPage() {
 								size="lg"
 								onClick={() => setSelectedIdeaId(null)}
 							>
->>>>>>> origin/main
 								Close
 							</Button>
 						</DialogClose>
@@ -1771,7 +1262,3 @@ export default function WebExperimentationIdeasPage() {
 		</Box>
 	);
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main

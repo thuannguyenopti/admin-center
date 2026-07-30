@@ -41,15 +41,6 @@
   ],
   "exclude": [
     "node_modules",
-<<<<<<< HEAD
-    "app/components/Opal/editor/multi-editor.ts",
-    "app/components/Opal/editor/toolbar/editor-toolbar.ts",
-    "app/components/Opal/editor/toolbar/editor-status-bar.ts",
-    "app/components/Opal/editor/toolbar/comment-panel.ts",
-    "app/components/Opal/editor/toolbar/comment-list-panel.ts",
-    "app/components/Opal/editor/toolbar/suggest-status.ts",
-    "app/components/Opal/editor/toolbar/version-panel.ts"
-=======
     "temp-stride-source",
     "app/components/Opal/editor/multi-editor.ts",
     "app/components/Opal/editor/toolbar",
@@ -73,6 +64,5 @@
     "app/components/Opal/editor/local-version-manager.ts",
     "app/components/Opal/editor/debug-log.ts",
     "app/components/Opal/editor/collab-cursor-plugin.ts"
->>>>>>> origin/main
   ]
 }

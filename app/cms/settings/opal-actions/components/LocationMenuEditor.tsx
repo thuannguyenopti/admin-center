@@ -19,11 +19,7 @@ import {
 	Checkbox,
 	Badge,
 } from "@optiaxiom/react";
-<<<<<<< HEAD
-import {IconX, IconPlus, IconGripVertical, IconDots} from "@tabler/icons-react";
-=======
 import {IconXmark, IconPlus, IconGripVertical, IconEllipsisSolid} from "@/app/lib/axiom-icons";
->>>>>>> origin/main
 import {LocationMenu, LocationId, MenuGroup, UserGroup, GroupAgent} from "../types";
 import {availableAgents} from "../mockData";
 import {AgentPicker} from "./AgentPicker";
@@ -699,11 +695,7 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 																		<Button
 																			appearance="subtle"
 																			size="sm"
-<<<<<<< HEAD
-																			icon={<IconDots size={16} />}
-=======
 																			icon={<IconEllipsisSolid size={16} />}
->>>>>>> origin/main
 																			aria-label="Agent options"
 																			onClick={(e) => e.stopPropagation()}
 																		/>

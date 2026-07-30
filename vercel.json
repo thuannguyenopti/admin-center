@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-{
-  "installCommand": "corepack yarn install --no-immutable"
-}
-=======
 {
   "installCommand": "corepack yarn install --no-immutable && sh scripts/vercel-postinstall.sh"
 }
->>>>>>> origin/main

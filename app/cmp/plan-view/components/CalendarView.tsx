@@ -1,28 +1,15 @@
-<<<<<<< HEAD
-import { useState } from "react";
-import { Box, Button } from "@optiaxiom/react";
-import { Text } from "@/app/components/Text";
-import { IconChevronRight } from "@tabler/icons-react";
-import { parseDate, getStatusColor, IconChevronLeft } from "../utils";
-import type { PlanItem } from "../types";
-=======
 import {useState} from "react";
 import {Box, Button} from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {IconChevronLeft, IconChevronRight} from "@/app/lib/axiom-icons";
 import {parseDate, getStatusColor} from "../utils";
 import type {PlanItem} from "../types";
->>>>>>> origin/main
 
 type CalendarViewProps = {
 	data: PlanItem[];
 };
 
-<<<<<<< HEAD
-export function CalendarView({ data }: CalendarViewProps) {
-=======
 export function CalendarView({data}: CalendarViewProps) {
->>>>>>> origin/main
 	const [currentDate, setCurrentDate] = useState(new Date());
 	const today = new Date();
 
@@ -44,18 +31,6 @@ export function CalendarView({data}: CalendarViewProps) {
 
 	const daysInMonth = getDaysInMonth(currentDate);
 	const firstDay = getFirstDayOfMonth(currentDate);
-<<<<<<< HEAD
-	const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-	const emptyDays = Array.from({ length: firstDay }, (_, i) => i);
-
-	const getItemsForDate = (day: number) => {
-		const dateStr = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-			.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-		return data.filter(
-			(item) =>
-				!item.isGroup &&
-				(item.startDate === dateStr || item.endDate === dateStr),
-=======
 	const days = Array.from({length: daysInMonth}, (_, i) => i + 1);
 	const emptyDays = Array.from({length: firstDay}, (_, i) => i);
 
@@ -67,7 +42,6 @@ export function CalendarView({data}: CalendarViewProps) {
 		).toLocaleDateString("en-US", {year: "numeric", month: "short", day: "numeric"});
 		return data.filter(
 			(item) => !item.isGroup && (item.startDate === dateStr || item.endDate === dateStr)
->>>>>>> origin/main
 		);
 	};
 
@@ -78,26 +52,6 @@ export function CalendarView({data}: CalendarViewProps) {
 			overflow="hidden"
 			bg="bg.default"
 			p="16"
-<<<<<<< HEAD
-			style={{ height: "100%", width: "100%" }}
-		>
-			<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
-				<Button appearance="subtle" onClick={goToPreviousMonth}>
-					<IconChevronLeft size={20} />
-				</Button>
-				<Text fontWeight="600" fontSize="lg">
-					{currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-				</Text>
-				<Button appearance="subtle" onClick={goToNextMonth}>
-					<IconChevronRight size={20} />
-				</Button>
-			</Box>
-
-			<Box style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-				<Box
-					display="grid"
-					style={{ gridTemplateColumns: "repeat(7, 1fr)", gap: "8px", marginBottom: "8px" }}
-=======
 			style={{height: "100%", width: "100%"}}
 		>
 			<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
@@ -112,7 +66,6 @@ export function CalendarView({data}: CalendarViewProps) {
 				<Box
 					display="grid"
 					style={{gridTemplateColumns: "repeat(7, 1fr)", gap: "8px", marginBottom: "8px"}}
->>>>>>> origin/main
 				>
 					{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
 						<Box
@@ -130,14 +83,10 @@ export function CalendarView({data}: CalendarViewProps) {
 					))}
 				</Box>
 
-<<<<<<< HEAD
-				<Box display="grid" style={{ gridTemplateColumns: "repeat(7, 1fr)", gap: "8px", flex: 1 }}>
-=======
 				<Box
 					display="grid"
 					style={{gridTemplateColumns: "repeat(7, 1fr)", gap: "8px", flex: 1}}
 				>
->>>>>>> origin/main
 					{emptyDays.map((_, idx) => (
 						<Box
 							key={`empty-${idx}`}
@@ -160,17 +109,11 @@ export function CalendarView({data}: CalendarViewProps) {
 							<Box
 								key={day}
 								style={{
-<<<<<<< HEAD
-									backgroundColor: isToday ? "var(--ax-colors-bg-tertiary)" : "var(--ax-colors-bg-secondary)",
-									border: isToday
-										? "2px solid var(--ax-colors-fg-accent)"
-=======
 									backgroundColor: isToday
 										? "var(--ax-colors-bg-tertiary)"
 										: "var(--ax-colors-bg-secondary)",
 									border: isToday
 										? "2px solid var(--ax-colors-border-default)"
->>>>>>> origin/main
 										: "1px solid var(--ax-colors-border-tertiary)",
 									borderRadius: "6px",
 									padding: "8px",
@@ -182,13 +125,6 @@ export function CalendarView({data}: CalendarViewProps) {
 								}}
 								onMouseEnter={(e) => {
 									const el = e.currentTarget as HTMLElement;
-<<<<<<< HEAD
-									if (!isToday) el.style.backgroundColor = "var(--ax-colors-bg-default)";
-								}}
-								onMouseLeave={(e) => {
-									const el = e.currentTarget as HTMLElement;
-									if (!isToday) el.style.backgroundColor = "var(--ax-colors-bg-secondary)";
-=======
 									if (!isToday)
 										el.style.backgroundColor = "var(--ax-colors-bg-default)";
 								}}
@@ -196,7 +132,6 @@ export function CalendarView({data}: CalendarViewProps) {
 									const el = e.currentTarget as HTMLElement;
 									if (!isToday)
 										el.style.backgroundColor = "var(--ax-colors-bg-secondary)";
->>>>>>> origin/main
 								}}
 							>
 								<Text fontWeight={isToday ? "600" : "500"} fontSize="sm">

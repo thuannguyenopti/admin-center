@@ -22,19 +22,6 @@ import {toIsolatedStoryUrl, deriveVariantStoryUrl} from "@/app/components/Previe
 const indentDistance = 8;
 
 const Col: React.FC<{
-<<<<<<< HEAD
-    setOpen: any;
-    col: any;
-    children: ReactNode;
-    addElement: any;
-    removeCol: any;
-    onDragStart: any;
-    elementOptions: { type: string; label: string }[];
-    isSelected?: boolean;
-    onHoverChange?: (colId: string | null) => void;
-    onScrollToPreview?: (colId: string) => void;
-}> = ({ setOpen, col, children, addElement, removeCol, onDragStart, elementOptions, isSelected, onHoverChange, onScrollToPreview }) => {
-=======
 	setOpen: any;
 	col: any;
 	children: ReactNode;
@@ -77,7 +64,6 @@ const Col: React.FC<{
 				return <IconBracketsSquare size={16} />;
 		}
 	};
->>>>>>> origin/main
 
 	const fallbackOptions = [
 		{type: "ct-heading", label: "Heading"},
@@ -90,104 +76,6 @@ const Col: React.FC<{
 	const optionsSource =
 		elementOptions && elementOptions.length > 0 ? elementOptions : fallbackOptions;
 
-<<<<<<< HEAD
-    const optionsSource = (elementOptions && elementOptions.length > 0) ? elementOptions : fallbackOptions;
-    return (
-        <Box
-            style={{
-                transition: "background-color 0.2s",
-            }}
-        >
-            <div
-                className="newsection group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
-                draggable
-                style={{
-                    paddingLeft: `${4 + indentDistance * 2}px`,
-                    backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : undefined
-                }}
-                onClick={() => onScrollToPreview?.(col.id)}
-                onDragStart={onDragStart}
-                onMouseEnter={() => onHoverChange?.(col.id)}
-                onMouseLeave={() => onHoverChange?.(null)}
-            >
-                <div className="flex gap-1 items-center">
-                    <svg
-                        className="chevron cursor-pointer"
-                        width="12"
-                        height="12"
-                        viewBox="0 0 12 12"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        style={{
-                            transform: col.open ? "rotate(0deg)" : "rotate(-90deg)",
-                        }}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setOpen(col.id, !col.open);
-                        }}
-                    >
-                        <path
-                            d="M6.39844 8.64844C6.16406 8.88281 5.8125 8.88281 5.60156 8.64844L1.85156 4.89844C1.61719 4.6875 1.61719 4.33594 1.85156 4.125C2.0625 3.89062 2.41406 3.89062 2.625 4.125L5.97656 7.47656L9.35156 4.10156C9.5625 3.89062 9.91406 3.89062 10.125 4.10156C10.3594 4.33594 10.3594 4.6875 10.125 4.89844L6.39844 8.64844Z"
-                            fill="#66708C"
-                        />
-                    </svg>
-                    <div>Column</div>
-                </div>
-                <div className="group-hover:visible invisible gap-0.5 flex">
-                    <Menu
-                        options={[
-                            {
-                                addon: <IconTrash size={16} />,
-                                label: "Remove Column",
-                                intent: "danger",
-                                execute: () => {
-                                    removeCol();
-                                },
-                            },
-                        ]}
-                    >
-                        <MenuTrigger
-                            icon={<IconDots />}
-                            aria-label="add ele"
-                            appearance="subtle"
-                            size="sm"
-                            onClick={(e: any) => {
-                                e.stopPropagation();
-                            }}
-                            iconPosition="start"
-                        />
-                        <MenuContent />
-                    </Menu>
-                    <Menu
-                        options={optionsSource.map((opt, idx) => ({
-                            group: idx === 0 ? { label: "Add Element" } : undefined,
-                            addon: iconForType(opt.type),
-                            label: opt.label,
-                            execute: () => addElement(opt.type),
-                        }))}
-                    >
-                        <MenuTrigger
-                            icon={<IconPlus />}
-                            aria-label="add ele"
-                            appearance="subtle"
-                            size="sm"
-                            onClick={(e: any) => {
-                                e.stopPropagation();
-                            }}
-                            iconPosition="start"
-                        />
-                        <MenuContent
-                            onClick={(e: any) => {
-                                e.stopPropagation();
-                            }}
-                        />
-                    </Menu>
-                </div>
-            </div>
-            <div style={{ display: col.open ? "block" : "none", backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : undefined }}>{children}</div>
-        </Box>
-    );
-=======
 	const [gridOpen, setGridOpen] = useState(false);
 	const [addMenuOpen, setAddMenuOpen] = useState(false);
 	const [removeMenuOpen, setRemoveMenuOpen] = useState(false);
@@ -435,7 +323,6 @@ const Col: React.FC<{
 			</div>
 		</Box>
 	);
->>>>>>> origin/main
 };
 
 export default Col;

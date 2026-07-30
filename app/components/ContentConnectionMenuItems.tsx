@@ -1,9 +1,5 @@
 import React from "react";
-<<<<<<< HEAD
-import {Box, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator} from "@optiaxiom/react";
-=======
 import type {MenuOption} from "@optiaxiom/react";
->>>>>>> origin/main
 import {IconLink, IconLinkSlash as IconUnlink} from "@optimizely/axiom-icons";
 
 interface ContentConnectionMenuOptionsArgs {
@@ -47,37 +43,5 @@ export function contentConnectionMenuOptions({
 		});
 	}
 
-<<<<<<< HEAD
-			{/* Connect / Change connected content */}
-			{onConnectContent && (
-				<DropdownMenuItem
-					onSelect={onConnectContent}
-					disabled={!hasConnection && compatibleInstancesCount === 0}
-				>
-					<Box display="flex" alignItems="center" gap="8">
-						<IconLink size={16} />
-						{hasConnection ? "Change connected content..." : "Connect content..."}
-					</Box>
-				</DropdownMenuItem>
-			)}
-
-			{/* Disconnect - only show if connected */}
-			{hasConnection && onDisconnectContent && (
-				<DropdownMenuItem
-					onSelect={onDisconnectContent}
-					intent="danger"
-				>
-					<Box display="flex" alignItems="center" gap="8">
-						<IconUnlink size={16} />
-						Disconnect content
-					</Box>
-				</DropdownMenuItem>
-			)}
-
-			<DropdownMenuSeparator />
-		</>
-	);
-=======
 	return items;
->>>>>>> origin/main
 }

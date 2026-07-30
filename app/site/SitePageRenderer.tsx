@@ -2,15 +2,11 @@
 
 import React from "react";
 import type {Outline} from "@/app/db/initialData";
-<<<<<<< HEAD
-import {BlockRegistry} from "@/app/components/vb/blocks";
-=======
 import {getContentType} from "@/app/db/initialData";
 import {BlockRegistry} from "@/app/components/vb/blocks";
 import {getDisplayTemplateClasses} from "@/app/components/vb/blocks/displayTemplateRenderer";
 import StrideColumnGrid from "./StrideColumnGrid";
 import "./StrideGrid.css";
->>>>>>> origin/main
 
 /**
  * Read-only renderer for published pages.
@@ -20,15 +16,12 @@ import "./StrideGrid.css";
  * This is the "customer website" side, so it uses raw HTML + Tailwind (not Axiom).
  */
 
-<<<<<<< HEAD
-=======
 const SECTION_SPACING_MAP: Record<string, string> = {
 	'exp-landing-page': 'space-y-0',   // Sections control their own spacing
 	'ct-page': 'space-y-0',            // Sections control their own spacing
 	'default': 'space-y-0'
 };
 
->>>>>>> origin/main
 type EleMap = Record<string, {type: string; properties: any}>;
 
 function isAsideOutline(o: any): boolean {
@@ -42,8 +35,6 @@ function isAsideOutline(o: any): boolean {
 function renderOutlineTree(outline: Outline, isMobile = false) {
 	return outline.tree.map((section: any, sindex: number) => {
 		const hasBgImage = !!section.bgImage;
-<<<<<<< HEAD
-=======
 		const noPadding = section.noPadding === true;
 
 		// Get display template classes for section
@@ -98,43 +89,10 @@ function renderOutlineTree(outline: Outline, isMobile = false) {
 		const showcaseMargins = isShowcaseSection
 			? "md:-mt-120 mt-6 md:-mb-100 -mb-20"
 			: "";
->>>>>>> origin/main
 
 		return (
 			<section
 				key={section.id ?? sindex}
-<<<<<<< HEAD
-				className={`mb-6 last:mb-0 overflow-hidden rounded-[10px] ${
-					hasBgImage ? "relative min-h-[500px] flex items-center" : "bg-white shadow-sm"
-				}`}
-				style={
-					hasBgImage
-						? {
-								backgroundImage: `linear-gradient(rgba(25, 75, 255, 0.8), rgba(25, 75, 255, 0.8)), url(${section.bgImage})`,
-								backgroundSize: "cover",
-								backgroundPosition: "center",
-							}
-						: {}
-				}
-			>
-				<div
-					className={
-						hasBgImage ? "relative z-10 w-full p-12 md:p-20" : "w-full p-8 md:p-12"
-					}
-				>
-					{(section.children || []).map((row: any, rIndex: number) => (
-						<div
-							className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-flow-col md:auto-cols-fr"} gap-4 ${
-								hasBgImage ? "text-white" : "text-[#05051F]"
-							}`}
-							key={row.id ?? rIndex}
-						>
-							{(row.children || []).map((col: any, cIndex: number) => {
-								const colChildren = col.elements || col.children || [];
-
-								return (
-									<div key={col.id ?? cIndex}>
-=======
 				className={`${
 					hasBgImage ? "relative min-h-[500px] flex items-center rounded-stride-lg" : ""
 				} ${heroBottomMargin} ${appPreviewPadding} ${showcaseMargins} ${templateClasses}`}
@@ -196,7 +154,6 @@ function renderOutlineTree(outline: Outline, isMobile = false) {
 											maskImage: 'linear-gradient(#000 40%, transparent 75%)',
 										} : {}}
 									>
->>>>>>> origin/main
 										{colChildren.map((element: any, eleIndex: number) => {
 											const ele = outline.elements[element.id];
 											if (!ele) return null;
@@ -216,35 +173,14 @@ function renderOutlineTree(outline: Outline, isMobile = false) {
 								);
 							})}
 						</div>
-<<<<<<< HEAD
-					))}
-=======
 					);
 				})}
->>>>>>> origin/main
 				</div>
 			</section>
 		);
 	});
 }
 
-<<<<<<< HEAD
-export default function SitePageRenderer({outlines, isMobile = false}: {outlines: Outline[]; isMobile?: boolean}) {
-	const mainOutlines = outlines.filter((o) => !isAsideOutline(o));
-	const asideOutlines = outlines.filter((o) => isAsideOutline(o));
-	const hasAside = asideOutlines.length > 0 && mainOutlines.length > 0;
-
-	return (
-		<div className="w-full p-6 md:p-6 flex-1" style={{background: "#F3F4F6"}}>
-			{hasAside ? (
-				<div className={isMobile ? "flex flex-col gap-6" : "flex flex-col md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-6 md:items-start"}>
-					<div className="space-y-6">
-						{mainOutlines.map((outline) => (
-							<div key={outline.id}>{renderOutlineTree(outline, isMobile)}</div>
-						))}
-					</div>
-					<aside className="space-y-6">
-=======
 export default function SitePageRenderer({
 	outlines,
 	isMobile = false,
@@ -352,20 +288,14 @@ export default function SitePageRenderer({
 						))}
 					</div>
 					<aside className={isMobile ? "space-y-6" : "md:col-span-4 space-y-6"}>
->>>>>>> origin/main
 						{asideOutlines.map((outline) => (
 							<div key={outline.id}>{renderOutlineTree(outline, isMobile)}</div>
 						))}
 					</aside>
 				</div>
 			) : (
-<<<<<<< HEAD
-				<div className="space-y-6">
-					{[...mainOutlines, ...asideOutlines].map((outline) => (
-=======
 				<div className={firstSectionHasHero ? `max-w-[1200px] mx-auto px-6 mt-6 ${sectionSpacing}` : `max-w-[1200px] mx-auto px-6 ${sectionSpacing}`}>
 					{remainingMainSections.map((outline) => (
->>>>>>> origin/main
 						<div key={outline.id}>{renderOutlineTree(outline, isMobile)}</div>
 					))}
 				</div>

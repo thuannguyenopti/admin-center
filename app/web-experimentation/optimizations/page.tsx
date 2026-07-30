@@ -25,11 +25,7 @@ import {
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-<<<<<<< HEAD
-import { IconChevronDown, IconDots } from "@tabler/icons-react";
-=======
 import {IconChevronDown, IconEllipsisSolid} from "@/app/lib/axiom-icons";
->>>>>>> origin/main
 import { IconChartColumn, IconColumns3, IconSortSolid } from "@optimizely/axiom-icons";
 import type { Optimization, OptimizationStatus } from "./mockData";
 import { mockOptimizations } from "./mockData";
@@ -326,11 +322,7 @@ export default function OptimizationsPage() {
 														<Button
 															appearance="subtle"
 															size="sm"
-<<<<<<< HEAD
-															icon={<IconDots size={16} />}
-=======
 															icon={<IconEllipsisSolid size={16} />}
->>>>>>> origin/main
 															aria-label="More actions"
 															style={{ width: 56 }}
 														/>

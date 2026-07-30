@@ -1,15 +1,4 @@
-<<<<<<< HEAD
-import {
-	IconBrandFigma,
-	IconBrandSlack,
-	IconBrandNotion,
-	IconBrandAirtable,
-	IconBrandGithub,
-	IconBrandAsana,
-} from "@tabler/icons-react";
-=======
 import {IconBrandFigma, IconBrandSlack, IconBrandNotion, IconBrandAirtable, IconBrandGithub, IconBrandAsana} from "@/app/lib/axiom-icons";
->>>>>>> origin/main
 import { IconGoogle } from "@optimizely/axiom-icons";
 
 export type ToolMeta = {

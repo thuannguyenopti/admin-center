@@ -1,17 +1,6 @@
 "use client";
 
-<<<<<<< HEAD
-import {
-	IconBrandTwitter,
-	IconBrandWordpress,
-	IconBrandYoutube,
-	IconBrandFacebook,
-	IconServer,
-	IconWebhook,
-} from "@tabler/icons-react";
-=======
 import {IconBrandTwitter, IconBrandWordpress, IconBrandYoutube, IconBrandFacebook, IconServer, IconWebhook} from "@/app/lib/axiom-icons";
->>>>>>> origin/main
 import type { ChannelDefinition } from "./channelDefinitions";
 
 const iconMap: Record<ChannelDefinition["icon"], typeof IconServer> = {

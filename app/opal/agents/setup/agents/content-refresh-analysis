@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {
     "schema_version": "1.0",
     "agent_type": "specialized",
@@ -67,74 +66,4 @@
     "memory_token_limit": 8000,
     "evaluation_criteria": null,
     "system_prompt_template": ""
-=======
-{
-    "schema_version": "1.0",
-    "agent_type": "specialized",
-    "name": "Content Refresh Analysis",
-    "output": {
-        "type": "text",
-        "description": null,
-        "schema": null
-    },
-    "version": "1.0.0",
-    "agent_id": "content_refresh_analysis",
-    "file_urls": [
-        {
-            "url": "gs://opal-backend-prod-file-contents/27b7ea46-c74c-43ad-abe3-78853c5c700a",
-            "description": "SPARKS Report.html",
-            "type": "text",
-            "preview_url": "https://opal-backend.optimizely.com/v1/file/Z3M6Ly9vcGFsLWJhY2tlbmQtcHJvZC1maWxlLWNvbnRlbnRzLzI3YjdlYTQ2LWM3NGMtNDNhZC1hYmUzLTc4ODUzYzVjNzAwYQ=="
-        },
-        {
-            "url": "gs://opal-backend-prod-file-contents/7b931312-b52b-4861-af61-f6a2adbb506d",
-            "description": "COBS 4 Communicating with clients, including financial promotions.pdf",
-            "type": "text",
-            "preview_url": "https://opal-backend.optimizely.com/v1/file/Z3M6Ly9vcGFsLWJhY2tlbmQtcHJvZC1maWxlLWNvbnRlbnRzLzdiOTMxMzEyLWI1MmItNDg2MS1hZjYxLWY2YTJhZGJiNTA2ZA=="
-        }
-    ],
-    "is_active": true,
-    "creativity": 0.1,
-    "is_deleted": false,
-    "parameters": [
-        {
-            "name": "time frame",
-            "description": "Please use days/weeks/months/years as this input. Will default to months",
-            "type": "string",
-            "required": false,
-            "default": null
-        },
-        {
-            "name": "urls",
-            "description": "Specific urls you want analyzed if applicable",
-            "type": "string",
-            "required": false,
-            "default": null
-        }
-    ],
-    "description": "Audits your website in Optimizely SaaS CMS to automatically identify, sort, and help resolve duplicate and outdated content by referencing established content and best practice guidelines. This empowers content teams to improve SEO performance, enhance site credibility and compliance, and streamline overall content maintenance efficiency.",
-    "prompt_pills": null,
-    "enabled_tools": [
-        "search_optimizely_graph",
-        "graph_content_graphql_executor",
-        "graph_content_search_tool",
-        "graph_content_type_schema",
-        "send_email",
-        "create_canvas",
-        "browse_web",
-        "convert_to_pdf",
-        "edit_canvas"
-    ],
-    "agent_metadata": null,
-    "inference_type": "complex",
-    "initial_message": null,
-    "prompt_template": "## Goal\n\nRetrieve CMS page URLs that has a modified date older than [[time frame]]. If those values are blank default to older than 1 year.\n\nActions Start with executing the tool `graph_content_type_schema`, to get information about the content types that exist on the Graph schema together with all the fields that exist in the types.\n\nUse the following GraphQL query to retrieve data using the `graph_content_graphql_executor`:\n\nquery GetOldPages *\\_Page { items {* metadata { displayName url { default base } lastModified } } } }\n\nDo NOT modify the query aside from adding the lastModified filter based on the provided date.\n\nAfter retrieving the graph data remove any pages that are returned with no URL data. DO NOT modify the graph request to check for existence.\n\nOutput a list of all the outdated pages with their fully qualified URL (base URL with the default route appended on) and their last updated date. An empty list is a valid output if no content is found. Do NOT make it seem like you are refreshing any content, you are just summarizing actions the user should take, not making any changes\n\nNext:\n\nDo NOT make it seem like you are refreshing any content, you are just summarizing actions the user should take, not making any changes\n\n## C - Context\n\n- Your Role: You are a senior compliance manager working in financial services who is in charge of writing reviewing content to identify content requiring an update based on a set of reference guidelines in a report.\n\n- What you will produce: You create complete, high quality compliance reports. Infer the industry from the [[urls]] you are prompted to review.\n\n- Your writing style: clear, confident, and reassuring, but also empathetic and straightforward, avoiding unnecessary jargon.\n\n## L - Logic\n\nPrioritise brevity over creativity. You should ensure the following sections are included:\n\n1. Executive Summary and overall compliance score\n2. Highlight major issues in red and minor issues in amber). Include justification for issues.\n3. The report sections should be in the following order: Tone of Voice, Accessibility, Clarity, Regulations\n\n## E - Examples\n\nHighlight and emphasize non-compliant items clearly with suggested corrective action. Do not suggest changes to content already considered compliant.\n\n## A - Action\n\n1. You must review the web page on each of the [[urls]]\n2. Your review is comparing the content on [[urls]] with Financial Conduct Authority Guidelines of financial promotions attachment `COBS 4 Communicating with clients, including financial promotions.pdf`\n3. Your task is to generating in Canvas a formatted compliance report summarizing findings and recommended remediation. Highlight risks, gaps, and potential violations identified in the web content. use create_canvas tool to generate the report.\n4. Send an email with HTML version of the report to email addresses: [[email_addresses]]. Include HTML code in email body, do not attach the report as a separate file. Skip the step if email addresses are not provided.\n\n## R - Result\n\nOutput the report in chat using the `html` file as a template and output to Canvas (use create_canvas tool). Use this template EXCLUSIVELY for the overall report design, structure, and styling. Under no circumstances should any textual content, placeholder text, or example data from the sample report be used in the final output.\n\nMake sure the report generated is always in the same format each time.",
-    "internal_version": 2,
-    "conversation_mode": false,
-    "first_prompt_mode": "open",
-    "is_enabled_in_chat": true,
-    "memory_token_limit": 8000,
-    "evaluation_criteria": null,
-    "system_prompt_template": ""
->>>>>>> origin/main
 }

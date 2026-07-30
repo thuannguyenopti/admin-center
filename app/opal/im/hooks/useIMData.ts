@@ -84,13 +84,9 @@ export function useIMData(): UseIMData {
       const convs = await refreshConversations();
       if (cancelled) return;
       if (convs.length > 0 && !selectedIdRef.current) {
-<<<<<<< HEAD
-        let initial = convs[0].conversation_id;
-=======
         let initial =
           convs.find((c) => c.conversation_id === "conv-jamie-frank")?.conversation_id ??
           convs[0].conversation_id;
->>>>>>> origin/main
         try {
           const hint = sessionStorage.getItem("im-initial-chat");
           if (hint && convs.some((c) => c.conversation_id === hint)) {

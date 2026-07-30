@@ -2,17 +2,10 @@
 
 import {Box} from "@optiaxiom/react";
 import SparklesIcon from "@/app/cmp/assets/sparkles 16.svg";
-<<<<<<< HEAD
-import { IconBrowser, IconFileText } from "@tabler/icons-react";
-import type { Page } from "@/app/db/initialData";
-import type { ContentInstance } from "@/app/db/cmpInitialData";
-import type { AssetItem, TaskArticle } from "../../types";
-=======
 import {IconBrowser, IconFileLines} from "@/app/lib/axiom-icons";
 import type {Page} from "@/app/db/initialData";
 import type {ContentInstance} from "@/app/db/cmpInitialData";
 import type {AssetItem, TaskArticle} from "../../types";
->>>>>>> origin/main
 
 type TaskItemStripProps = {
 	contentInstances: ContentInstance[];
@@ -146,11 +139,6 @@ export function TaskItemStrip({
 							type="button"
 						>
 							{entry.kind === "suggested" ? (
-<<<<<<< HEAD
-								<SparklesIcon height={14} style={{ color: "var(--ax-colors-fg-secondary)" }} width={14} />
-							) : entry.kind === "content-instance" ? (
-								<IconFileText color="var(--ax-colors-fg-secondary)" size={16} />
-=======
 								<SparklesIcon
 									height={14}
 									style={{color: "var(--ax-colors-fg-secondary)"}}
@@ -158,7 +146,6 @@ export function TaskItemStrip({
 								/>
 							) : entry.kind === "content-instance" ? (
 								<IconFileLines color="var(--ax-colors-fg-secondary)" size={16} />
->>>>>>> origin/main
 							) : entry.kind === "page" ? (
 								<IconBrowser color="var(--ax-colors-fg-secondary)" size={16} />
 							) : entry.kind === "article" ? (

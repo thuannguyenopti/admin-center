@@ -21,14 +21,10 @@ export type NotificationType =
     | "collaboration_agent_activated"
     | "collaboration_agent_deactivated"
     | "system_announcement"
-<<<<<<< HEAD
-    | "system_maintenance";
-=======
     | "system_maintenance"
     | "im_new_message"
     | "im_mention"
     | "im_thread_reply";
->>>>>>> origin/main
 
 export interface Notification {
     id: string;
@@ -44,12 +40,8 @@ export interface Notification {
     | "directory"
     | "tools"
     | "system"
-<<<<<<< HEAD
-    | "collaboration";
-=======
     | "collaboration"
     | "messages";
->>>>>>> origin/main
 
     // Context & metadata
     agentId?: string;
@@ -146,8 +138,6 @@ const formatDate = (d: Date) => {
 };
 
 export const mockNotifications: Notification[] = [
-<<<<<<< HEAD
-=======
     // ── IM Messages ─────────────────────────────────────────────────────────
     {
         id: "n-im01",
@@ -197,7 +187,6 @@ export const mockNotifications: Notification[] = [
         date: formatDate(m(15)),
         author: { name: "Priya Rajan", avatar: "https://i.pravatar.cc/150?img=44" },
     },
->>>>>>> origin/main
     // ── Approval Required ───────────────────────────────────────────────────
     {
         id: "n-a01",
@@ -1813,10 +1802,7 @@ export function getCategoryLabel(category: string): string {
         tools: "Tools & Connections",
         system: "System",
         collaboration: "Collaborative",
-<<<<<<< HEAD
-=======
         messages: "Messages",
->>>>>>> origin/main
     };
     return labels[category] || category;
 }
@@ -1844,12 +1830,9 @@ export function getNotificationTypeLabel(type: NotificationType): string {
         collaboration_agent_deactivated: "Agent Deactivated",
         system_announcement: "Announcement",
         system_maintenance: "Maintenance",
-<<<<<<< HEAD
-=======
         im_new_message: "New Message",
         im_mention: "Mention",
         im_thread_reply: "Thread Reply",
->>>>>>> origin/main
     };
     return labels[type] || type;
 }
