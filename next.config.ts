@@ -1,11 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["10.102.254.88"],
   reactStrictMode: false,
   compress: true,
   output: "standalone",
   transpilePackages: ["@optiaxiom/react", "@optimizely/axiom-icons"],
+  // Source inspector API reads this fixed file (no dynamic app/* paths).
+  outputFileTracingIncludes: {
+    "/api/source-code": ["./public/source-bundle.json"],
+  },
   // These packages are client-only (editor/collab libs) but get incorrectly traced
   // as server-side dependencies through app/api/source-code/route.ts → CodeMirrorEditor.tsx.
   // Marking them as serverExternalPackages prevents Turbopack from trying to bundle

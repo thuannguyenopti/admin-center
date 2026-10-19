@@ -1,4 +1,4 @@
-import { readFile, readdir } from "fs/promises";
+import { readFile } from "fs/promises";
 import { join } from "path";
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -18,6 +18,11 @@ type ApiFileOption = {
 
 let sourceBundle: SourceBundle | null = null;
 
+/**
+ * Only read the fixed source-bundle.json path.
+ * Dynamic app/* filesystem reads make Vercel NFT trace the whole project.
+ * Bundle is produced by `yarn bundle-sources` during `yarn build`.
+ */
 async function loadSourceBundle() {
 	if (sourceBundle) {
 		return sourceBundle;
@@ -29,7 +34,7 @@ async function loadSourceBundle() {
 		sourceBundle = JSON.parse(bundleContent);
 		return sourceBundle;
 	} catch {
-		console.warn("Source bundle not found - falling back to filesystem reads");
+		console.warn("Source bundle not found at public/source-bundle.json");
 		return null;
 	}
 }
@@ -40,15 +45,6 @@ function getLanguageFromPath(filePath: string) {
 	if (filePath.endsWith(".css")) return "css";
 	if (filePath.endsWith(".json")) return "json";
 	return "typescript";
-}
-
-async function canReadFile(filePath: string) {
-	try {
-		await readFile(join(process.cwd(), filePath), "utf-8");
-		return true;
-	} catch {
-		return false;
-	}
 }
 
 function buildCandidatePaths(filePath: string) {
@@ -69,15 +65,11 @@ function buildCandidatePaths(filePath: string) {
 	return Array.from(candidates);
 }
 
-async function resolveFilePath(filePath: string, bundle: SourceBundle | null) {
+function resolveFilePath(filePath: string, bundle: SourceBundle | null) {
 	const candidates = buildCandidatePaths(filePath);
 
 	for (const candidate of candidates) {
 		if (bundle?.[candidate]) {
-			return candidate;
-		}
-
-		if (await canReadFile(candidate)) {
 			return candidate;
 		}
 	}
@@ -94,53 +86,6 @@ function getRelatedFiles(resolvedFilePath: string, bundle: SourceBundle | null) 
 		.filter((bundlePath) => bundlePath.startsWith(`${directory}/`))
 		.filter((bundlePath) => bundlePath.split("/").length - baseDepth <= 3)
 		.filter((bundlePath) => /\.(tsx?|jsx?|css|json)$/.test(bundlePath))
-		.sort((left, right) => {
-			if (left === resolvedFilePath) return -1;
-			if (right === resolvedFilePath) return 1;
-			if (left.endsWith("/page.tsx")) return -1;
-			if (right.endsWith("/page.tsx")) return 1;
-			return left.localeCompare(right);
-		})
-		.map((path) => ({
-			id: path,
-			label: path,
-			path,
-		}));
-}
-
-async function getRelatedFilesFromFilesystem(resolvedFilePath: string) {
-	const directory = resolvedFilePath.substring(0, resolvedFilePath.lastIndexOf("/"));
-	const absoluteDirectory = join(process.cwd(), directory);
-	const relatedPaths: string[] = [];
-
-	async function walk(currentDirectory: string, depth: number) {
-		if (depth > 2) {
-			return;
-		}
-
-		const entries = await readdir(currentDirectory, { withFileTypes: true });
-		for (const entry of entries) {
-			if (entry.name.startsWith(".")) {
-				continue;
-			}
-
-			const absolutePath = join(currentDirectory, entry.name);
-			const relativePath = absolutePath.replace(`${process.cwd()}/`, "");
-
-			if (entry.isDirectory()) {
-				await walk(absolutePath, depth + 1);
-				continue;
-			}
-
-			if (/\.(tsx?|jsx?|css|json)$/.test(entry.name)) {
-				relatedPaths.push(relativePath);
-			}
-		}
-	}
-
-	await walk(absoluteDirectory, 0);
-
-	return relatedPaths
 		.sort((left, right) => {
 			if (left === resolvedFilePath) return -1;
 			if (right === resolvedFilePath) return 1;
@@ -312,7 +257,7 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
 		}
 
-		const resolvedFilePath = await resolveFilePath(requestedFilePath, bundle);
+		const resolvedFilePath = resolveFilePath(requestedFilePath, bundle);
 		if (!resolvedFilePath) {
 			return createNotFoundResponse(requestedFilePath);
 		}
@@ -323,14 +268,12 @@ export async function GET(request: NextRequest) {
 				id: view.id,
 				label: view.label,
 				path: view.path,
-			})) ??
-			(bundle && Object.keys(bundle).length > 0
-				? getRelatedFiles(resolvedFilePath, bundle)
-				: await getRelatedFilesFromFilesystem(resolvedFilePath));
+			})) ?? getRelatedFiles(resolvedFilePath, bundle);
 
-		const sourceContent =
-			bundle?.[resolvedFilePath]?.content ??
-			(await readFile(join(process.cwd(), resolvedFilePath), "utf-8"));
+		const sourceContent = bundle?.[resolvedFilePath]?.content;
+		if (!sourceContent) {
+			return createNotFoundResponse(resolvedFilePath);
+		}
 		const snippet = extractSnippet(sourceContent, selectedManifestView?.selector);
 
 		return NextResponse.json({
