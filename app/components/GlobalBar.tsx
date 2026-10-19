@@ -175,6 +175,10 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 									label: "Web Experimentation",
 									execute: () => router.push("/web-experimentation"),
 								},
+								{
+									label: "Admin Center",
+									execute: () => router.push("/admin-center/user-management/users"),
+								},
 							]}
 						>
 							<MenuTrigger asChild>

@@ -13,23 +13,58 @@ export type Upload = {
 	failedRecords: number;
 };
 
-export const UPLOADS: Upload[] = [
-	{ id: "up-1", fileName: "Myadmin.csv", uploadedBy: "noah@outlook.com", uploadedOn: "Jul 21, 2022", status: "Processing", progress: 85, usersProcessed: null, failedRecords: 0 },
-	{ id: "up-2", fileName: "Myadmin.csv", uploadedBy: "noah@outlook.com", uploadedOn: "Jul 21, 2022", status: "Completed", progress: 100, usersProcessed: 100, failedRecords: 0 },
-	{ id: "up-3", fileName: "Myadmin.csv", uploadedBy: "olivia@outlook.com", uploadedOn: "Jul 21, 2022", status: "Completed", progress: 100, usersProcessed: 240, failedRecords: 3 },
-	{ id: "up-4", fileName: "Myadmin.csv", uploadedBy: "liam@optimizely.com", uploadedOn: "Jul 21, 2022", status: "Completed", progress: 100, usersProcessed: 88, failedRecords: 0 },
-	{ id: "up-5", fileName: "Myadmin.csv", uploadedBy: "emma@optimizely.com", uploadedOn: "Jul 21, 2022", status: "Completed", progress: 100, usersProcessed: 512, failedRecords: 12 },
-	{ id: "up-6", fileName: "Myadmin.csv", uploadedBy: "noah@outlook.com", uploadedOn: "Jul 21, 2022", status: "Completed", progress: 100, usersProcessed: 64, failedRecords: 0 },
-	{ id: "up-7", fileName: "Myadmin.csv", uploadedBy: "ava@optimizely.com", uploadedOn: "Jul 21, 2022", status: "Completed", progress: 100, usersProcessed: 320, failedRecords: 5 },
-	{ id: "up-8", fileName: "Myadmin.csv", uploadedBy: "william@outlook.com", uploadedOn: "Jul 21, 2022", status: "Failed", progress: 0, usersProcessed: 0, failedRecords: 150 },
-	{ id: "up-9", fileName: "Myadmin.csv", uploadedBy: "sophia@optimizely.com", uploadedOn: "Jul 21, 2022", status: "Failed", progress: 0, usersProcessed: 0, failedRecords: 42 },
-	{ id: "up-10", fileName: "Myadmin.csv", uploadedBy: "james@outlook.com", uploadedOn: "Jul 21, 2022", status: "Failed", progress: 0, usersProcessed: 0, failedRecords: 1000 },
-	{ id: "up-11", fileName: "Myadmin.csv", uploadedBy: "mia@optimizely.com", uploadedOn: "Jul 21, 2022", status: "Failed", progress: 0, usersProcessed: 0, failedRecords: 7 },
-	{ id: "up-12", fileName: "Myadmin.csv", uploadedBy: "noah@outlook.com", uploadedOn: "Jul 21, 2022", status: "Failed", progress: 0, usersProcessed: 0, failedRecords: 89 },
-];
+/** Row status in staging (Upload tab). Duplicate = email already on the system. */
+export type StagingRowStatus = "Valid" | "Duplicate";
 
-export function statusColor(status: UploadStatus): "fg.warning" | "fg.success" | "fg.error" {
+export type StagingUser = {
+	id: string;
+	uploadId: string;
+	fileName: string;
+	email: string;
+	first: string;
+	last: string;
+	status: StagingRowStatus;
+};
+
+/** Jobs start empty — populated when the user uploads a real CSV. */
+export const UPLOADS: Upload[] = [];
+
+/** Staging starts empty — filled from completed import jobs. */
+export const INITIAL_STAGING_USERS: StagingUser[] = [];
+
+export function statusColor(
+	status: UploadStatus,
+): "fg.warning" | "fg.success" | "fg.error" {
 	if (status === "Processing") return "fg.warning";
 	if (status === "Completed") return "fg.success";
 	return "fg.error";
+}
+
+export function stagingStatusColor(
+	status: StagingRowStatus,
+): "fg.success" | "fg.error" {
+	return status === "Valid" ? "fg.success" : "fg.error";
+}
+
+/** Mark rows duplicate if email already exists in the system user list. */
+export function applyDuplicateCheck(
+	staging: StagingUser[],
+	systemEmails: Iterable<string>,
+): StagingUser[] {
+	const set = new Set(
+		[...systemEmails].map((e) => e.trim().toLowerCase()),
+	);
+	return staging.map((u) => ({
+		...u,
+		status: set.has(u.email.toLowerCase()) ? "Duplicate" : "Valid",
+	}));
+}
+
+/** Upsert a job into the list (newest first). */
+export function upsertUpload(list: Upload[], job: Upload): Upload[] {
+	const idx = list.findIndex((u) => u.id === job.id);
+	if (idx === -1) return [job, ...list];
+	const next = [...list];
+	next[idx] = job;
+	return next;
 }

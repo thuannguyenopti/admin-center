@@ -48,6 +48,7 @@ export function ProductAccessStep({
 	presetProduct,
 	autoOpenWhenEmpty = true,
 	showGroupAccess = true,
+	initialKind = "product",
 }: {
 	accessList: AccessEntry[];
 	setAccessList: (a: AccessEntry[]) => void;
@@ -58,6 +59,8 @@ export function ProductAccessStep({
 	autoOpenWhenEmpty?: boolean;
 	/** Show the "Add group access" button. Hidden when configuring a group itself. */
 	showGroupAccess?: boolean;
+	/** Which editor to open first when auto-opening an empty list. */
+	initialKind?: AccessKind;
 }) {
 	const [editor, setEditor] = useState<
 		| { mode: "new" | "edit"; kind: AccessKind; id?: string; initial: AccessEntry | null }
@@ -66,15 +69,16 @@ export function ProductAccessStep({
 		autoOpenWhenEmpty && accessList.length === 0
 			? {
 					mode: "new",
-					kind: "product",
-					initial: presetProduct
-						? {
-								id: "preset",
-								kind: "product",
-								name: presetProduct,
-								instances: [],
-							}
-						: null,
+					kind: initialKind,
+					initial:
+						initialKind === "product" && presetProduct
+							? {
+									id: "preset",
+									kind: "product",
+									name: presetProduct,
+									instances: [],
+								}
+							: null,
 				}
 			: null,
 	);
@@ -262,29 +266,49 @@ export function AccessEditor({
 			</Field>
 
 			{instances.length > 0 && (
-				<Table>
-					<thead>
-						<Tr>
-							<Th>Instance</Th>
-							<Th style={{ width: 220 }}>Role</Th>
-						</Tr>
-					</thead>
-					<tbody>
-						{instances.map((inst, idx) => (
-							<Tr key={inst.name}>
-								<Td>{inst.name}</Td>
-								<Td>
-									<SingleSelectMenu
-										label="Role"
-										value={inst.roles[0] ?? ""}
-										options={ROLES as readonly string[]}
-										onChange={(role) => setRoles(idx, role ? [role] : [])}
-									/>
-								</Td>
+				<Box display="flex" flexDirection="column" gap="8">
+					<Table>
+						<thead>
+							<Tr>
+								<Th>Instance</Th>
+								<Th style={{ minWidth: 220 }}>
+									<Box display="inline-flex" alignItems="center" gap="4">
+										<span>Roles</span>
+										<Text asChild color="fg.error">
+											<span>*</span>
+										</Text>
+									</Box>
+								</Th>
 							</Tr>
-						))}
-					</tbody>
-				</Table>
+						</thead>
+						<tbody>
+							{instances.map((inst, idx) => {
+								const missingRoles = inst.roles.length === 0;
+								return (
+									<Tr key={inst.name}>
+										<Td>{inst.name}</Td>
+										<Td>
+											<Box display="flex" flexDirection="column" gap="4">
+												<MultiSelectMenu
+													label="Roles"
+													values={inst.roles}
+													options={ROLES as readonly string[]}
+													onChange={(roles) => setRoles(idx, roles)}
+													required={missingRoles}
+												/>
+												{missingRoles && (
+													<Text fontSize="sm" color="fg.error">
+														Required — select at least one role
+													</Text>
+												)}
+											</Box>
+										</Td>
+									</Tr>
+								);
+							})}
+						</tbody>
+					</Table>
+				</Box>
 			)}
 
 			<Box display="flex" justifyContent="end" gap="8" mt="4">
@@ -436,30 +460,43 @@ export function MultiSelectMenu({
 	options,
 	onChange,
 	disabled,
+	required,
 }: {
 	label: string;
 	values: string[];
 	options: readonly string[];
 	onChange: (v: string[]) => void;
 	disabled?: boolean;
+	/** When true and empty, emphasize that a selection is required. */
+	required?: boolean;
 }) {
 	const toggle = (opt: string) => {
 		if (values.includes(opt)) onChange(values.filter((v) => v !== opt));
 		else onChange([...values, opt]);
 	};
-	const summary =
-		values.length === 0
-			? `Select ${label.toLowerCase()}`
-			: values.length === 1
-				? values[0]
-				: `${values.length} selected`;
+	const empty = values.length === 0;
+	const summary = empty
+		? `Select ${label.toLowerCase()}`
+		: values.length === 1
+			? values[0]
+			: `${values.length} selected`;
+	const showRequired = !!required && empty;
 
 	// Popover (not Menu) so the dropdown stays open while toggling multiple
 	// checkboxes — Menu closes on every select and double-fires the addon.
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
-				<LabelMenuButton label={label} disabled={disabled}>
+				<LabelMenuButton
+					label={label}
+					disabled={disabled}
+					aria-invalid={showRequired || undefined}
+					style={
+						showRequired
+							? { borderColor: "var(--ax-colors-border-error)" }
+							: undefined
+					}
+				>
 					{summary}
 				</LabelMenuButton>
 			</PopoverTrigger>

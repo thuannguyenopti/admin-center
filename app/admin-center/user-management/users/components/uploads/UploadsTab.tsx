@@ -1,190 +1,217 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Box, Button, Text, toaster } from "@optiaxiom/react";
+import { IconPlus } from "@optiaxiom/icons";
 import {
-	Box,
-	Button,
-	Checkbox,
-	EllipsisMenuButton,
-	Menu,
-	MenuContent,
-	MenuTrigger,
-	Pagination,
-	SearchInput,
-	Text,
-} from "@optiaxiom/react";
-import { IconFilter } from "@optimizely/axiom-icons";
-import { Table, Tr, Th, Td } from "@/app/components/Table";
-import { UPLOADS, statusColor, type Upload } from "./data";
+	applyDuplicateCheck,
+	type StagingUser,
+	type Upload,
+} from "./data";
+import { StagingIssuesPanel } from "./StagingIssuesPanel";
+import { StagingAssignPanel } from "./StagingAssignPanel";
+import { UploadJobsSection } from "./UploadJobsSection";
+import { StagingUsersSection } from "./StagingUsersSection";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 export function UploadsTab({
+	files,
+	staging,
+	setStaging,
 	onViewDetails,
+	onImportUsers,
+	systemEmails,
+	onOpenImport,
 }: {
+	files: Upload[];
+	staging: StagingUser[];
+	setStaging: React.Dispatch<React.SetStateAction<StagingUser[]>>;
 	onViewDetails: (u: Upload) => void;
+	onImportUsers: (users: StagingUser[]) => void;
+	systemEmails: string[];
+	onOpenImport: () => void;
 }) {
 	const [search, setSearch] = useState("");
-	const [filtersOpen, setFiltersOpen] = useState(false);
+	const [fileFilter, setFileFilter] = useState<string>("all");
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [page, setPage] = useState(1);
+	const [issuesOpen, setIssuesOpen] = useState(false);
+	const [assignOpen, setAssignOpen] = useState(false);
+
+	useEffect(() => {
+		setStaging((prev) => applyDuplicateCheck(prev, systemEmails));
+	}, [systemEmails, setStaging]);
+
+	const issues = useMemo(
+		() => staging.filter((u) => u.status === "Duplicate"),
+		[staging],
+	);
 
 	const filtered = useMemo(() => {
 		const q = search.trim().toLowerCase();
-		return q
-			? UPLOADS.filter(
-					(u) =>
-						u.fileName.toLowerCase().includes(q) ||
-						u.uploadedBy.toLowerCase().includes(q),
-				)
-			: UPLOADS;
-	}, [search]);
+		return staging.filter((u) => {
+			if (fileFilter !== "all" && u.uploadId !== fileFilter) return false;
+			if (!q) return true;
+			const name = `${u.first} ${u.last}`.toLowerCase();
+			return (
+				u.email.toLowerCase().includes(q) ||
+				name.includes(q) ||
+				u.fileName.toLowerCase().includes(q)
+			);
+		});
+	}, [staging, search, fileFilter]);
 
 	const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 	const safePage = Math.min(page, totalPages);
-	const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+	const pageRows = filtered.slice(
+		(safePage - 1) * PAGE_SIZE,
+		safePage * PAGE_SIZE,
+	);
 
-	const pageRowIds = pageRows.map((r) => r.id);
-	const allOnPageSelected =
-		pageRowIds.length > 0 && pageRowIds.every((id) => selectedIds.has(id));
+	const validSelected = useMemo(
+		() =>
+			staging.filter((u) => selectedIds.has(u.id) && u.status === "Valid"),
+		[staging, selectedIds],
+	);
 
-	const toggleRow = (id: string) =>
+	const toggleRow = (u: StagingUser) => {
+		if (u.status !== "Valid") return;
 		setSelectedIds((prev) => {
 			const next = new Set(prev);
-			next.has(id) ? next.delete(id) : next.add(id);
+			next.has(u.id) ? next.delete(u.id) : next.add(u.id);
 			return next;
 		});
+	};
 
-	const togglePageSelectAll = () =>
+	const validOnPage = pageRows.filter((u) => u.status === "Valid");
+	const allValidOnPageSelected =
+		validOnPage.length > 0 &&
+		validOnPage.every((u) => selectedIds.has(u.id));
+
+	const togglePageSelectAll = () => {
 		setSelectedIds((prev) => {
 			const next = new Set(prev);
-			if (allOnPageSelected) pageRowIds.forEach((id) => next.delete(id));
-			else pageRowIds.forEach((id) => next.add(id));
+			if (allValidOnPageSelected) {
+				validOnPage.forEach((u) => next.delete(u.id));
+			} else {
+				validOnPage.forEach((u) => next.add(u.id));
+			}
 			return next;
 		});
+	};
+
+	const removeFromStaging = (ids: string[]) => {
+		const idSet = new Set(ids);
+		setStaging((prev) => prev.filter((u) => !idSet.has(u.id)));
+		setSelectedIds((prev) => {
+			const next = new Set(prev);
+			ids.forEach((id) => next.delete(id));
+			return next;
+		});
+		toaster.create(
+			`Removed ${ids.length} user${ids.length === 1 ? "" : "s"} from staging`,
+			{ intent: "success" },
+		);
+	};
+
+	const handleAssignComplete = (ids: string[]) => {
+		const idSet = new Set(ids);
+		const imported = staging.filter((u) => idSet.has(u.id));
+		onImportUsers(imported);
+		setStaging((prev) => prev.filter((u) => !idSet.has(u.id)));
+		setSelectedIds(new Set());
+	};
+
+	const completedFiles = files.filter((f) => f.status === "Completed");
 
 	return (
-		<>
-			<Box display="flex" alignItems="center" gap="16" mb="16">
-				<Box style={{ width: 280 }}>
-					<SearchInput
-						size="lg"
-						placeholder="Search users by name or email"
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-					/>
-				</Box>
+		<Box display="flex" flexDirection="column" gap="20">
+			<UploadJobsSection
+				files={files}
+				onViewDetails={onViewDetails}
+				onOpenImport={onOpenImport}
+			/>
+
+			<StagingUsersSection
+				stagingCount={staging.length}
+				issuesCount={issues.length}
+				onViewIssues={() => setIssuesOpen(true)}
+				search={search}
+				onSearchChange={(v) => {
+					setSearch(v);
+					setPage(1);
+				}}
+				fileFilter={fileFilter}
+				onFileFilterChange={(id) => {
+					setFileFilter(id);
+					setPage(1);
+				}}
+				completedFiles={completedFiles}
+				pageRows={pageRows}
+				validOnPage={validOnPage}
+				allValidOnPageSelected={allValidOnPageSelected}
+				onTogglePageSelectAll={togglePageSelectAll}
+				selectedIds={selectedIds}
+				onToggleRow={toggleRow}
+				safePage={safePage}
+				totalPages={totalPages}
+				onPageChange={setPage}
+			/>
+
+			{validSelected.length > 0 && (
 				<Box
-					display="inline-flex"
+					display="flex"
+					alignItems="center"
+					justifyContent="space-between"
+					gap="12"
+					px="16"
+					py="12"
+					rounded="md"
 					border="1"
-					rounded="sm"
-					style={{ borderColor: "var(--ax-colors-bg-accent-subtle-hovered)" }}
+					borderColor="border.default"
+					bg="bg.default"
+					style={{
+						position: "sticky",
+						bottom: 16,
+						zIndex: 5,
+						boxShadow: "var(--ax-shadows-md)",
+					}}
+					flexWrap="wrap"
 				>
+					<Text fontSize="sm" fontWeight="500">
+						{`${validSelected.length} valid user${
+							validSelected.length === 1 ? "" : "s"
+						} selected`}
+					</Text>
 					<Button
-						appearance="subtle"
-						size="lg"
-						icon={<IconFilter />}
-						onClick={() => setFiltersOpen((open) => !open)}
-						aria-expanded={filtersOpen}
+						appearance="primary"
+						size="sm"
+						icon={<IconPlus size={16} />}
+						iconPosition="start"
+						onClick={() => setAssignOpen(true)}
 					>
-						Filter
+						Assign access
 					</Button>
 				</Box>
-			</Box>
+			)}
 
-			<Box p="12" border="1" borderColor="border.secondary" rounded="md" mb="16">
-				<Text fontSize="sm" color="fg.secondary">
-					Select file uploads from the list to manage them in bulk.
-				</Text>
-			</Box>
+			<StagingIssuesPanel
+				open={issuesOpen}
+				issues={issues}
+				onClose={() => setIssuesOpen(false)}
+				onDelete={(ids) => {
+					removeFromStaging(ids);
+					if (ids.length >= issues.length) setIssuesOpen(false);
+				}}
+			/>
 
-			<Table>
-				<thead>
-					<Tr>
-						<Th style={{ width: 48 }}>
-							<Checkbox
-								checked={allOnPageSelected}
-								onCheckedChange={togglePageSelectAll}
-								aria-label="Select all on this page"
-							/>
-						</Th>
-						<Th>File name</Th>
-						<Th>Uploaded by</Th>
-						<Th>Upload date</Th>
-						<Th tooltip="Status of the bulk upload: processing, completed, or failed.">
-							Status
-						</Th>
-						<Th style={{ width: 60 }} />
-					</Tr>
-				</thead>
-				<tbody>
-					{pageRows.length === 0 ? (
-						<tr>
-							<td colSpan={6}>
-								<Box p="32" textAlign="center">
-									<Text color="fg.tertiary">No uploads found.</Text>
-								</Box>
-							</td>
-						</tr>
-					) : (
-						pageRows.map((u) => (
-							<Tr key={u.id} onClick={() => onViewDetails(u)}>
-								<Td style={{ width: 48 }}>
-									<Box onClick={(e) => e.stopPropagation()} display="inline-flex">
-										<Checkbox
-											checked={selectedIds.has(u.id)}
-											onCheckedChange={() => toggleRow(u.id)}
-											aria-label={`Select ${u.fileName}`}
-										/>
-									</Box>
-								</Td>
-								<Td>{u.fileName}</Td>
-								<Td>{u.uploadedBy}</Td>
-								<Td>{u.uploadedOn}</Td>
-								<Td>
-									<Text asChild color={statusColor(u.status)} fontWeight="500">
-										<span>{u.status}</span>
-									</Text>
-								</Td>
-								<Td type="raw" style={{ width: 60 }}>
-									<Box
-										onClick={(e) => e.stopPropagation()}
-										display="flex"
-										justifyContent="end"
-									>
-										<Menu
-											options={[
-												{
-													label: "View details",
-													execute: () => onViewDetails(u),
-												},
-												{
-													intent: "danger",
-													label: "Delete upload",
-													execute: () => {},
-												},
-											]}
-										>
-											<MenuTrigger asChild>
-												<EllipsisMenuButton
-													appearance="subtle"
-													size="sm"
-													aria-label={`Actions for ${u.fileName}`}
-												/>
-											</MenuTrigger>
-											<MenuContent />
-										</Menu>
-									</Box>
-								</Td>
-							</Tr>
-						))
-					)}
-				</tbody>
-			</Table>
-
-			<Box display="flex" justifyContent="center" mt="16">
-				<Pagination page={safePage} total={totalPages} onPageChange={setPage} />
-			</Box>
-		</>
+			<StagingAssignPanel
+				open={assignOpen}
+				users={validSelected}
+				onClose={() => setAssignOpen(false)}
+				onComplete={handleAssignComplete}
+			/>
+		</Box>
 	);
 }

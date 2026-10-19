@@ -39,7 +39,11 @@ import {
 import { UploadsTab } from "./components/uploads/UploadsTab";
 import { ImportUsersPanel } from "./components/uploads/ImportUsersPanel";
 import { UploadDetailsModal } from "./components/uploads/UploadDetailsModal";
-import { type Upload } from "./components/uploads/data";
+import {
+	upsertUpload,
+	type StagingUser,
+	type Upload,
+} from "./components/uploads/data";
 import {
 	USERS,
 	PRODUCTS,
@@ -123,8 +127,11 @@ export default function AdminCenterUsersPage() {
 	const [bulkModal, setBulkModal] = useState<BulkModal>(null);
 	const [importPanelOpen, setImportPanelOpen] = useState(false);
 	const [detailUpload, setDetailUpload] = useState<Upload | null>(null);
+	const [uploadFiles, setUploadFiles] = useState<Upload[]>([]);
+	const [stagingUsers, setStagingUsers] = useState<StagingUser[]>([]);
 
 	const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
+	const systemEmails = useMemo(() => users.map((u) => u.email), [users]);
 
 	const filtered = useMemo(() => filterUsers(users, filters), [users, filters]);
 	const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -270,6 +277,36 @@ export default function AdminCenterUsersPage() {
 		setCurrentPage(1);
 	};
 
+	const handleStagingImport = (staged: StagingUser[]) => {
+		const today = new Date().toLocaleDateString("en-US", {
+			month: "short",
+			day: "2-digit",
+			year: "numeric",
+		});
+		const existing = new Set(users.map((u) => u.email.toLowerCase()));
+		const newUsers: User[] = staged
+			.filter((u) => !existing.has(u.email.toLowerCase()))
+			.map((u, i) => ({
+				id: `u-import-${Date.now()}-${i}`,
+				firstName: u.first,
+				lastName: u.last,
+				email: u.email,
+				activationStatus: "N/A" as const,
+				createdDate: today,
+				lastActiveDate: null,
+				userType: "Local" as const,
+				product: PRODUCTS[0],
+				instance: INSTANCES[0],
+				project: PROJECTS[0],
+				role: ROLES[0],
+			}));
+		if (newUsers.length === 0) return;
+		setUsers((prev) => [...newUsers, ...prev]);
+		setActiveTab("all");
+		setFilters(DEFAULT_FILTERS);
+		setCurrentPage(1);
+	};
+
 	return (
 		<Box>
 			<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
@@ -340,7 +377,15 @@ export default function AdminCenterUsersPage() {
 			</Box>
 
 			{activeTab === "upload" ? (
-				<UploadsTab onViewDetails={setDetailUpload} />
+				<UploadsTab
+					files={uploadFiles}
+					staging={stagingUsers}
+					setStaging={setStagingUsers}
+					onViewDetails={setDetailUpload}
+					onImportUsers={handleStagingImport}
+					systemEmails={systemEmails}
+					onOpenImport={() => setImportPanelOpen(true)}
+				/>
 			) : activeTab === "invitations" ? (
 				<Box
 					p="32"
@@ -724,6 +769,22 @@ export default function AdminCenterUsersPage() {
 				open={importPanelOpen}
 				onClose={() => setImportPanelOpen(false)}
 				onViewDetails={setDetailUpload}
+				recentUploads={uploadFiles}
+				systemEmails={systemEmails}
+				onJobUpdate={(job) => {
+					setUploadFiles((prev) => upsertUpload(prev, job));
+					setDetailUpload((cur) => (cur?.id === job.id ? job : cur));
+				}}
+				onJobComplete={(job, staged) => {
+					setUploadFiles((prev) => upsertUpload(prev, job));
+					setStagingUsers((prev) => {
+						const without = prev.filter((u) => u.uploadId !== job.id);
+						return [...staged, ...without];
+					});
+					setActiveTab("upload");
+					setImportPanelOpen(false);
+				}}
+				onGoToUploadTab={() => setActiveTab("upload")}
 			/>
 
 			{detailUpload && (

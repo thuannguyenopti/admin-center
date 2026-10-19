@@ -127,8 +127,7 @@ export function UserSearchInput({
 				side="bottom"
 				sideOffset={4}
 				align="start"
-				style={{ width: "100%",
-					minWidth: "var(--radix-popover-trigger-width)", }}
+				style={{ width: "var(--radix-popover-trigger-width)" }}
 				onOpenAutoFocus={(e) => e.preventDefault()}
 				onCloseAutoFocus={(e) => e.preventDefault()}
 			>

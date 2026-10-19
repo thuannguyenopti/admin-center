@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
 	Box,
 	Button,
@@ -12,11 +13,11 @@ import {
 	Tooltip,
 } from "@optiaxiom/react";
 import {
+	IconXmark,
 	IconPen,
 	IconTrashCan,
 	IconCircleInfo,
 } from "@optiaxiom/icons";
-import { PanelShell } from "@/app/admin-center/components/PanelShell";
 import { type User, type UserType } from "../data";
 import { ProductAccessStep, type AccessEntry } from "./ProductAccessStep";
 
@@ -90,15 +91,72 @@ export function UserDetailPanel({
 		if (user) setAccessEntries(deriveUserAccess(user));
 	}, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-	return (
-		<PanelShell
-			open={open && !!user}
-			onClose={onClose}
-			title="User details"
-			footer={<Button appearance="default" onClick={onClose}>Close</Button>}
-		>
-			{user && (
-			<Box display="flex" flexDirection="column" gap="20">
+	useEffect(() => {
+		if (!open) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") onClose();
+		};
+		document.addEventListener("keydown", onKey);
+		const prevOverflow = document.body.style.overflow;
+		document.body.style.overflow = "hidden";
+		return () => {
+			document.removeEventListener("keydown", onKey);
+			document.body.style.overflow = prevOverflow;
+		};
+	}, [open, onClose]);
+
+	if (!open || !user || typeof document === "undefined") return null;
+
+	return createPortal(
+		<>
+			<Box
+				onClick={onClose}
+				style={{
+					position: "fixed",
+					inset: 0,
+					zIndex: 1000,
+					background: "var(--ax-colors-bg-overlay)",
+				}}
+			/>
+			<Box
+				role="dialog"
+				aria-modal="true"
+				aria-label="User details"
+				bg="bg.default"
+				display="flex"
+				flexDirection="column"
+				style={{
+					position: "fixed",
+					top: 0,
+					right: 0,
+					bottom: 0,
+					width: PANEL_WIDTH,
+					maxWidth: "100vw",
+					zIndex: 1001,
+					boxShadow: "var(--ax-shadows-xl)",
+				}}
+			>
+				<Box
+					display="flex"
+					alignItems="center"
+					justifyContent="space-between"
+					px="24"
+					py="20"
+					borderB="1"
+					borderColor="border.tertiary"
+				>
+					<Heading level="2">User details</Heading>
+					<Button
+						appearance="subtle"
+						size="md"
+						icon={<IconXmark size={20} />}
+						aria-label="Close"
+						onClick={onClose}
+					/>
+				</Box>
+
+				<Box flex="1" overflow="auto" px="24" py="20">
+					<Box display="flex" flexDirection="column" gap="20">
 						<Box bg="bg.page" rounded="md" p="16">
 							<Box
 								display="flex"
@@ -317,8 +375,25 @@ export function UserDetailPanel({
 								</Text>
 							</Box>
 						)}
+					</Box>
 				</Box>
-			)}
-		</PanelShell>
+
+				<Box
+					display="flex"
+					justifyContent="end"
+					gap="12"
+					px="24"
+					py="16"
+					borderT="1"
+					borderColor="border.tertiary"
+					bg="bg.page"
+				>
+					<Button appearance="default" onClick={onClose}>
+						Close
+					</Button>
+				</Box>
+			</Box>
+		</>,
+		document.body,
 	);
 }
