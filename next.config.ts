@@ -4,11 +4,21 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["10.102.254.88"],
   reactStrictMode: false,
   compress: true,
-  output: "standalone",
+  // Standalone is for Docker/self-host. On Vercel it can break routing (platform 404).
+  ...(process.env.VERCEL ? {} : { output: "standalone" as const }),
   transpilePackages: ["@optiaxiom/react", "@optimizely/axiom-icons"],
   // Source inspector API reads this fixed file (no dynamic app/* paths).
   outputFileTracingIncludes: {
     "/api/source-code": ["./public/source-bundle.json"],
+  },
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/admin-center/user-management/users",
+        permanent: false,
+      },
+    ];
   },
   // These packages are client-only (editor/collab libs) but get incorrectly traced
   // as server-side dependencies through app/api/source-code/route.ts → CodeMirrorEditor.tsx.

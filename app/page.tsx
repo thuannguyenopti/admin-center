@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Skip the mock login/password screen and land in Admin Center. */
+/** Home → Admin Center (also configured in next.config redirects). */
 export default function Home() {
 	redirect("/admin-center/user-management/users");
 }
