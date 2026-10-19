@@ -17,6 +17,7 @@ import {useOpalNav} from "@/app/opal/navigation";
 import {connectPlatformNav} from "@/app/connect-platform/navigation";
 import {feHostingNav} from "@/app/fe-hosting/navigation";
 import {webExperimentationNav} from "@/app/web-experimentation/navigation";
+import {adminCenterNav} from "@/app/admin-center/navigation";
 
 export default function RootLayout({
 	children,
@@ -34,6 +35,7 @@ export default function RootLayout({
 		opal: opalNav,
 		cmp: cmpNav,
 		"web-experimentation": webExperimentationNav,
+		"admin-center": adminCenterNav,
 	};
 
 	const key: string = path.split("/")[1] ?? "";
@@ -50,7 +52,7 @@ export default function RootLayout({
 				{/* figma-capture: remove after capture */}
 				<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
 			</head>
-			<body suppressHydrationWarning>
+			<body suppressHydrationWarning data-brand="v3">
 				<ThemeProvider>
 					<ProofreadingProvider>
 						<OpalGenerationProvider>
