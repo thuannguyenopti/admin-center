@@ -1,282 +1,342 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Badge, Box, Heading, Link, Text } from "@optiaxiom/react";
 import {
-  IconUser,
-  IconRobot,
-  IconGrid,
-  IconEnvelopeOpen,
-  IconUsers,
-  IconWavePulse,
-  IconChartColumn,
+	Badge,
+	Box,
+	Button,
+	Heading,
+	Link,
+	Text,
+} from "@optiaxiom/react";
+import {
+	IconUser,
+	IconRobot,
+	IconGrid,
+	IconEnvelopeOpen,
+	IconCircleDollar,
+	IconArrowRight,
+	IconUsers,
+	IconWavePulse,
+	IconChartColumn,
+	IconBell,
 } from "@optiaxiom/icons";
 
-import { NotificationsPanel } from "./components/NotificationsPanel";
-import { DashboardSidebar } from "./components/DashboardSidebar";
-import { USERS } from "../user-management/users/data";
-import { AGENTS_SUMMARY, PRODUCTS_SUMMARY, SEATS } from "./data";
+import {
+	NotificationsPanel,
+	UNREAD_NOTIFICATION_COUNT,
+} from "./components/NotificationsPanel";
 
-// ── Shared sub-components ─────────────────────────────────────────────────────
+import { USERS } from "../user-management/users/data";
+import {
+	BILLING,
+	SEATS,
+	AGENTS_SUMMARY,
+	PRODUCTS_SUMMARY,
+} from "./data";
+
+type StatCardProps = {
+	icon: React.ReactNode;
+	label: string;
+	value: string | number;
+	helper?: React.ReactNode;
+	href?: string;
+	extra?: React.ReactNode;
+};
 
 function ProgressBar({ pct }: { pct: number }) {
-  const capped = Math.min(100, pct);
-  return (
-    <Box rounded="full" bg="bg.tertiary" style={{ height: 6, width: "100%", overflow: "hidden" }}>
-      <Box
-        style={{
-          height: "100%",
-          width: `${capped}%`,
-          background:
-            pct >= 95
-              ? "var(--ax-colors-fg-error)"
-              : pct >= 80
-                ? "var(--ax-colors-fg-warning)"
-                : "var(--ax-colors-fg-accent-strong)",
-          transition: "width 200ms ease",
-        }}
-      />
-    </Box>
-  );
+	const capped = Math.min(100, pct);
+	return (
+		<Box
+			rounded="full"
+			bg="bg.tertiary"
+			style={{ height: 8, width: "100%", overflow: "hidden" }}
+		>
+			<Box
+				style={{
+					height: "100%",
+					width: `${capped}%`,
+					background:
+						pct >= 95
+							? "var(--ax-colors-fg-error)"
+							: pct >= 80
+								? "var(--ax-colors-fg-warning)"
+								: "var(--ax-colors-fg-accent-strong)",
+					transition: "width 200ms ease",
+				}}
+			/>
+		</Box>
+	);
 }
 
-// ── Usage & billing card ──────────────────────────────────────────────────────
-
-type UsageStatus = "on-track" | "overage" | "warning";
-
-type UsageCardProps = {
-  icon: React.ReactNode;
-  label: string;
-  primary: string;
-  detail: string;
-  pct: number;
-  status: UsageStatus;
-  footerLabel: string;
-  footerText: string;
-  href?: string;
-};
-
-function UsageCard({ icon, label, primary, detail, pct, status, footerLabel, footerText, href }: UsageCardProps) {
-  const badge = {
-    "on-track": { text: "ON TRACK", intent: "success" as const },
-    "overage":  { text: "OVERAGE",  intent: "danger"  as const },
-    "warning":  { text: "WATCH USAGE", intent: "warning" as const },
-  }[status];
-
-  const inner = (
-    <Box p="20" rounded="md" border="1" borderColor="border.tertiary" bg="bg.default" style={{ height: "100%" }}>
-      <Box display="flex" alignItems="center" gap="8" mb="12">
-        <Box color="fg.tertiary" display="inline-flex">{icon}</Box>
-        <Text fontSize="sm" color="fg.tertiary">{label}</Text>
-      </Box>
-      <Box display="flex" gap="10" mb="10" style={{ alignItems: "baseline" }}>
-        <Text style={{ fontSize: 28, fontWeight: 700, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-          {primary}
-        </Text>
-        <Text fontSize="sm" color="fg.secondary">{detail}</Text>
-      </Box>
-      <Box mb="10">
-        <ProgressBar pct={pct} />
-      </Box>
-      <Box mb="16">
-        <Badge intent={badge.intent} variant="strong">
-          {badge.text}
-        </Badge>
-      </Box>
-      <Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "0 -20px 12px" }} />
-      <Text fontSize="sm" color="fg.tertiary" mb="2">{footerLabel}</Text>
-      <Text fontSize="sm" color="fg.secondary">{footerText}</Text>
-    </Box>
-  );
-
-  if (!href) return inner;
-  return (
-    <Link href={href} style={{ textDecoration: "none", color: "inherit" }}>
-      {inner}
-    </Link>
-  );
+function StatCard({ icon, label, value, helper, href, extra }: StatCardProps) {
+	const inner = (
+		<Box
+			display="flex"
+			flexDirection="column"
+			gap="8"
+			p="20"
+			rounded="md"
+			border="1"
+			borderColor="border.tertiary"
+			bg="bg.default"
+			style={{ height: "100%" }}
+		>
+			<Box display="flex" alignItems="center" justifyContent="space-between">
+				<Text fontSize="sm" color="fg.secondary">
+					{label}
+				</Text>
+				<Box
+					display="inline-flex"
+					alignItems="center"
+					justifyContent="center"
+					rounded="full"
+					bg="bg.accent.subtle"
+					color="fg.accent"
+					style={{ width: 28, height: 28 }}
+				>
+					{icon}
+				</Box>
+			</Box>
+			<Heading level="2">{value}</Heading>
+			{helper && (
+				<Text fontSize="sm" color="fg.tertiary">
+					{helper}
+				</Text>
+			)}
+			{extra}
+		</Box>
+	);
+	if (!href) return inner;
+	return (
+		<Link href={href} style={{ textDecoration: "none", color: "inherit", height: "100%" }}>
+			{inner}
+		</Link>
+	);
 }
-
-// ── User stat card ────────────────────────────────────────────────────────────
-
-type UserStatCardProps = {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-  badgeText?: string;
-  badgeIntent?: "danger" | "warning" | "success" | "neutral";
-  helper?: string;
-  href?: string;
-};
-
-function UserStatCard({ icon, label, value, badgeText, badgeIntent = "danger", helper, href }: UserStatCardProps) {
-  const inner = (
-    <Box p="16" rounded="md" border="1" borderColor="border.tertiary" bg="bg.default" style={{ height: "100%" }}>
-      <Box display="flex" justifyContent="space-between" alignItems="start" mb="8">
-        <Text fontSize="sm" color="fg.tertiary">{label}</Text>
-        <Box
-          display="inline-flex"
-          alignItems="center"
-          justifyContent="center"
-          rounded="full"
-          bg="bg.accent.subtle"
-          color="fg.accent"
-          style={{ width: 28, height: 28, flexShrink: 0 }}
-        >
-          {icon}
-        </Box>
-      </Box>
-      <Text style={{ fontSize: 32, fontWeight: 700, lineHeight: 1, fontVariantNumeric: "tabular-nums" }} mb="10">
-        {value}
-      </Text>
-      {badgeText && (
-        <Box mb="6">
-          <Badge intent={badgeIntent} variant="strong">{badgeText}</Badge>
-        </Box>
-      )}
-      {helper && <Text fontSize="sm" color="fg.tertiary">{helper}</Text>}
-    </Box>
-  );
-
-  if (!href) return inner;
-  return (
-    <Link href={href} style={{ textDecoration: "none", color: "inherit" }}>
-      {inner}
-    </Link>
-  );
-}
-
-// ── Page ──────────────────────────────────────────────────────────────────────
-
-// Mock MAU data (Experimentation)
-const MAU_USED = 6_330_000;
-const MAU_TOTAL = 12_000_000;
-const MAU_PCT = Math.round((MAU_USED / MAU_TOTAL) * 100);
-
-const OPAL_USED = 8200;
-const OPAL_TOTAL = 15000;
-const OPAL_PCT = Math.round((OPAL_USED / OPAL_TOTAL) * 100);
-
-const SEAT_PCT = Math.round((SEATS.used / SEATS.total) * 100);
 
 export default function AdminCenterDashboardPage() {
-  const userStats = useMemo(() => {
-    const total = USERS.length;
-    const inactive = USERS.filter(
-      (u) => u.activationStatus === "Password Expired" || u.activationStatus === "N/A",
-    ).length;
-    const pending = USERS.filter((u) => u.activationStatus === "N/A").length;
-    return { total, inactive, pending };
-  }, []);
+	const userStats = useMemo(() => {
+		const total = USERS.length;
+		const active = USERS.filter((u) => u.activationStatus === "Active").length;
+		const pending = USERS.filter((u) => u.activationStatus === "N/A").length;
+		const expired = USERS.filter((u) => u.activationStatus === "Password Expired").length;
+		return { total, active, pending, expired };
+	}, []);
 
-  const [notifOpen, setNotifOpen] = useState(false);
+	const [notifPanelOpen, setNotifPanelOpen] = useState(false);
 
-  return (
-    <Box>
-      <Box
-        display="grid"
-        gap="24"
-        style={{ gridTemplateColumns: "1fr 264px", alignItems: "start" }}
-      >
-        {/* ── Main content ─────────────────────────────────────────── */}
-        <Box>
-          <Box mb="24">
-            <Heading level="2">Dashboard</Heading>
-            <Text color="fg.secondary" fontSize="md">
-              Overview of users, access, and billing for your organization.
-            </Text>
-          </Box>
+	return (
+		<Box>
+			<Box display="flex" alignItems="center" justifyContent="space-between" mb="24">
+				<Box>
+					<Heading level="2">Dashboard</Heading>
+					<Text color="fg.secondary" fontSize="md">
+						Overview of users, access, and billing for your organization.
+					</Text>
+				</Box>
+				<Box display="flex" gap="8">
+					<Link href="/admin-center/user-management/users" style={{ textDecoration: "none" }}>
+						<Button appearance="default">Manage users</Button>
+					</Link>
+					<Button appearance="primary">Invite User</Button>
+				</Box>
+			</Box>
 
-          {/* Usage & billing */}
-          <Box mb="32">
-            <Heading level="4" mb="16">Usage &amp; billing</Heading>
-            <Box
-              display="grid"
-              gap="16"
-              style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
-            >
-              <UsageCard
-                icon={<IconChartColumn size={14} />}
-                label="Opal credits"
-                primary={`${OPAL_PCT}%`}
-                detail={`${(OPAL_USED / 1000).toFixed(1)}K of ${(OPAL_TOTAL / 1000).toFixed(0)}K used`}
-                pct={OPAL_PCT}
-                status="on-track"
-                footerLabel="Usage across"
-                footerText="2 groups • 4 Virtual Teammates"
-                href="/admin-center/settings/usage-billing?tab=Opal"
-              />
-              <UsageCard
-                icon={<IconWavePulse size={14} />}
-                label="Experimentation MAU"
-                primary={`${MAU_PCT}%`}
-                detail={`${(MAU_USED / 1_000_000).toFixed(2)}M of ${(MAU_TOTAL / 1_000_000).toFixed(0)}M used`}
-                pct={MAU_PCT}
-                status="on-track"
-                footerLabel="Projected usage"
-                footerText="10.74M • 90% of contract limit"
-                href="/admin-center/settings/usage-billing"
-              />
-              <UsageCard
-                icon={<IconUsers size={14} />}
-                label="Collaboration seats"
-                primary={`${SEATS.used} / ${SEATS.total}`}
-                detail={`${SEATS.used - SEATS.total} over limit`}
-                pct={SEAT_PCT}
-                status="overage"
-                footerLabel="13 inactive users"
-                footerText="No activity in the past 90 days"
-                href="/admin-center/settings/usage-billing"
-              />
-            </Box>
-          </Box>
+			<Box
+				onClick={() => setNotifPanelOpen(true)}
+				cursor="pointer"
+				display="flex"
+				alignItems="center"
+				gap="12"
+				p="16"
+				mb="24"
+				rounded="md"
+				border="1"
+				borderColor="border.tertiary"
+				bg="bg.default"
+			>
+				<Box
+					display="inline-flex"
+					alignItems="center"
+					justifyContent="center"
+					rounded="full"
+					style={{
+						width: 36,
+						height: 36,
+						flexShrink: 0,
+						position: "relative",
+						backgroundColor: "rgba(255, 93, 82, 0.16)",
+						color: "rgba(143, 71, 100, 1)",
+					}}
+				>
+					<IconBell size={18} />
+					{UNREAD_NOTIFICATION_COUNT > 0 && (
+						<Box
+							rounded="full"
+							display="flex"
+							alignItems="center"
+							justifyContent="center"
+							style={{
+								position: "absolute",
+								top: -4,
+								right: -4,
+								minWidth: 18,
+								height: 18,
+								padding: "0 5px",
+								background: "var(--ax-colors-fg-error)",
+								color: "var(--ax-colors-fg-white)",
+								fontSize: 10,
+								fontWeight: 700,
+								lineHeight: "18px",
+								border: "2px solid var(--ax-colors-bg-default)",
+								boxShadow: "0 0 0 0 var(--ax-colors-fg-error)",
+								animation: "noti-pulse 1.8s ease-out infinite",
+							}}
+							aria-label={`${UNREAD_NOTIFICATION_COUNT} unread`}
+						>
+							{UNREAD_NOTIFICATION_COUNT > 9
+								? "9+"
+								: UNREAD_NOTIFICATION_COUNT}
+						</Box>
+					)}
+				</Box>
+				<style>{`
+					@keyframes noti-pulse {
+						0%   { box-shadow: 0 0 0 0   rgba(217, 45, 32, 0.5); }
+						70%  { box-shadow: 0 0 0 8px rgba(217, 45, 32, 0);   }
+						100% { box-shadow: 0 0 0 0   rgba(217, 45, 32, 0);   }
+					}
+				`}</style>
+				<Box flex="1">
+					<Text fontWeight="600">
+						{UNREAD_NOTIFICATION_COUNT > 0
+							? `${UNREAD_NOTIFICATION_COUNT} new notification${UNREAD_NOTIFICATION_COUNT === 1 ? "" : "s"}`
+							: "You're all caught up"}
+					</Text>
+					<Text fontSize="sm" color="fg.tertiary">
+						{UNREAD_NOTIFICATION_COUNT > 0
+							? "Click to view recent activity."
+							: "No new notifications."}
+					</Text>
+				</Box>
+				<IconArrowRight
+					size={16}
+					color="var(--ax-colors-fg-tertiary)"
+				/>
+			</Box>
 
-          {/* User management overview */}
-          <Box mb="32">
-            <Heading level="4" mb="16">User management overview</Heading>
-            <Box
-              display="grid"
-              gap="16"
-              style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
-            >
-              <UserStatCard
-                icon={<IconUser size={14} />}
-                label="Total Users"
-                value={userStats.total}
-                badgeText={userStats.inactive > 0 ? `${userStats.inactive} INACTIVES` : undefined}
-                badgeIntent="danger"
-                href="/admin-center/user-management/users"
-              />
-              <UserStatCard
-                icon={<IconEnvelopeOpen size={14} />}
-                label="Pending Invites"
-                value={userStats.pending}
-                helper="Awaiting activation"
-                href="/admin-center/user-management/users"
-              />
-              <UserStatCard
-                icon={<IconRobot size={14} />}
-                label="VTs created"
-                value={AGENTS_SUMMARY.count}
-                helper={AGENTS_SUMMARY.delta ? `+${AGENTS_SUMMARY.delta} this month` : undefined}
-                href={AGENTS_SUMMARY.href}
-              />
-              <UserStatCard
-                icon={<IconGrid size={14} />}
-                label="Products"
-                value={PRODUCTS_SUMMARY.count}
-                helper="Across your org"
-                href="/admin-center/access-setup/product-access"
-              />
-            </Box>
-          </Box>
-        </Box>
+			<Box mb="32">
+				<Heading level="4">Organization Overview</Heading>
+				<Text fontSize="sm" color="fg.secondary" mb="16">
+					Live counts across your admin center.
+				</Text>
+				<Box
+					display="grid"
+					gap="16"
+					style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
+				>
+					<StatCard
+						icon={<IconUser size={14} />}
+						label="Users"
+						value={userStats.total}
+						helper={`${userStats.active} active`}
+						href="/admin-center/user-management/users"
+					/>
+					<StatCard
+						icon={<IconEnvelopeOpen size={14} />}
+						label="Pending Invites"
+						value={userStats.pending}
+						helper="Awaiting activation"
+						href="/admin-center/user-management/users"
+					/>
+					<StatCard
+						icon={<IconRobot size={14} />}
+						label={AGENTS_SUMMARY.label}
+						value={AGENTS_SUMMARY.count}
+						helper={
+							AGENTS_SUMMARY.delta
+								? `+${AGENTS_SUMMARY.delta} this month`
+								: undefined
+						}
+						href={AGENTS_SUMMARY.href}
+					/>
+					<StatCard
+						icon={<IconGrid size={14} />}
+						label="Products"
+						value={PRODUCTS_SUMMARY.count}
+						helper="Across your org"
+						href="/admin-center/access-setup/product-access"
+					/>
+				</Box>
+			</Box>
 
-        {/* ── Right sidebar ─────────────────────────────────────────── */}
-        <DashboardSidebar onNotifClick={() => setNotifOpen(true)} />
-      </Box>
+			<Box mb="32">
+				<Heading level="4">Subscription & Usage</Heading>
+				<Text fontSize="sm" color="fg.secondary" mb="16">
+					Click any card to view full usage & billing details.
+				</Text>
+				<Box
+					display="grid"
+					gap="16"
+					style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
+				>
+					<StatCard
+						icon={<IconChartColumn size={14} />}
+						label="Opal credits"
+						value="8.2K / 15K"
+						helper="+5% WoW"
+						href="/admin-center/settings/usage-billing"
+						extra={<ProgressBar pct={Math.round((8200 / 15000) * 100)} />}
+					/>
+					<StatCard
+						icon={<IconWavePulse size={14} />}
+						label="MAU"
+						value="50K / 100K"
+						helper="+12% MoM"
+						href="/admin-center/settings/usage-billing"
+						extra={<ProgressBar pct={Math.round((50000 / 100000) * 100)} />}
+					/>
+					<StatCard
+						icon={<IconUsers size={14} />}
+						label="Seats"
+						value={`${SEATS.used} / ${SEATS.total}`}
+						helper={`${SEATS.used} of ${SEATS.total} seats used`}
+						href="/admin-center/settings/usage-billing"
+						extra={
+							<Box display="flex" flexDirection="column" gap="6">
+								<ProgressBar
+									pct={Math.round((SEATS.used / SEATS.total) * 100)}
+								/>
+								{SEATS.used > SEATS.total && (
+									<Text fontSize="sm" color="fg.error">
+										{SEATS.used - SEATS.total} over limit
+									</Text>
+								)}
+							</Box>
+						}
+					/>
+					<StatCard
+						icon={<IconCircleDollar size={14} />}
+						label="Plan"
+						value={BILLING.plan}
+						helper={`${BILLING.cycle} · Renews ${BILLING.nextRenewalDate}`}
+						href="/admin-center/settings/usage-billing"
+						extra={
+							<Box>
+								<Badge intent="success" variant="strong">
+									Active
+								</Badge>
+							</Box>
+						}
+					/>
+				</Box>
+			</Box>
 
-      <NotificationsPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
-    </Box>
-  );
+			<NotificationsPanel
+				open={notifPanelOpen}
+				onClose={() => setNotifPanelOpen(false)}
+			/>
+		</Box>
+	);
 }
