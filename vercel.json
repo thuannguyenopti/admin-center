@@ -1,3 +1,4 @@
 {
-  "installCommand": "corepack yarn install --no-immutable && sh scripts/vercel-postinstall.sh"
+  "installCommand": "corepack enable && corepack yarn install --no-immutable && sh scripts/vercel-postinstall.sh",
+  "buildCommand": "corepack yarn build"
 }
