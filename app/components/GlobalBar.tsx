@@ -68,6 +68,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const light = theme === "light";
 	const isOpalRoute = pathname.startsWith("/opal");
 	const isImRoute = pathname.startsWith("/opal/im");
+	const isAdminCenterRoute = pathname.startsWith("/admin-center");
 	const {codePanelControls, setAsideContent} = useLayout();
 	const plannerLabel = usePlannerLabel();
 	const [trackerOpen, setTrackerOpen] = useState(false);
@@ -814,28 +815,45 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 								</MenuTrigger>
 								<MenuContent />
 							</Menu>
-							<OpalChatButton
-								options={[
-									{
-										label: "Opal",
-										addon: (
-											<Image
-												src="/opal-orb.svg"
-												alt=""
-												width={16}
-												height={16}
-												style={{borderRadius: "50%"}}
-											/>
-										),
-										execute: () => onOpalClick?.(),
-									},
-									{
-										label: "Team Messages",
-										addon: <IconMessages size={16} />,
-										execute: () => router.push("/opal/messages"),
-									},
-								]}
-							/>
+							{isAdminCenterRoute ? (
+								<Button
+									appearance="subtle"
+									size="md"
+									aria-label="Opal AI Assistant"
+									onClick={() => onOpalClick?.()}
+								>
+									<img
+										src="/opal-orb.png"
+										alt=""
+										width={20}
+										height={20}
+										style={{display: "block", borderRadius: "50%"}}
+									/>
+								</Button>
+							) : (
+								<OpalChatButton
+									options={[
+										{
+											label: "Opal",
+											addon: (
+												<Image
+													src="/opal-orb.svg"
+													alt=""
+													width={16}
+													height={16}
+													style={{borderRadius: "50%"}}
+												/>
+											),
+											execute: () => onOpalClick?.(),
+										},
+										{
+											label: "Team Messages",
+											addon: <IconMessages size={16} />,
+											execute: () => router.push("/opal/messages"),
+										},
+									]}
+								/>
+							)}
 							<Button
 								appearance="subtle"
 								size="md"
