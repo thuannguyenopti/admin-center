@@ -115,6 +115,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 		if (pathname.startsWith("/web-experimentation")) return "Web Experimentation";
 		if (pathname.startsWith("/cms")) return "CMS";
 		if (pathname.startsWith("/cmp")) return "CMP";
+		if (pathname.startsWith("/admin-center")) return "Admin Center";
 		if (pathname.startsWith("/graph")) return "Graph";
 		if (pathname.startsWith("/fe-hosting")) return "Frontend Hosting";
 		if (pathname.startsWith("/connect-platform")) return "Connect Platform";
@@ -596,6 +597,10 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 								{
 									label: "Opal",
 									execute: () => router.push("/opal"),
+								},
+								{
+									label: "Admin Center",
+									execute: () => router.push("/admin-center/user-management/users"),
 								},
 								{
 									label: "Content Management System",
