@@ -122,7 +122,7 @@ function parseCsvText(
 					errors,
 				});
 			},
-			error: (err) => {
+			error: (err: Error) => {
 				resolve({
 					ok: false,
 					fileName,

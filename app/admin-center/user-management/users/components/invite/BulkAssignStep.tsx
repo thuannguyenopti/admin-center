@@ -284,7 +284,7 @@ export function BulkAssignStep({
 										size={16}
 										color="var(--ax-colors-fg-tertiary)"
 									/>
-									<Box flex="1" minW="0">
+									<Box flex="1" style={{ minWidth: 0 }}>
 										<Text fontWeight="600">{cluster.label}</Text>
 										<Text fontSize="sm" color="fg.secondary">
 											{`${cluster.userEmails.length} user${

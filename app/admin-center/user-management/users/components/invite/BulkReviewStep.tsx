@@ -133,7 +133,7 @@ export function BulkReviewStep({
 									size={16}
 									color="var(--ax-colors-fg-tertiary)"
 								/>
-								<Box flex="1" minW="0">
+								<Box flex="1" style={{ minWidth: 0 }}>
 									<Box display="flex" alignItems="center" gap="8">
 										<Text fontWeight="600">{cluster.label}</Text>
 										<Badge variant="subtle">
