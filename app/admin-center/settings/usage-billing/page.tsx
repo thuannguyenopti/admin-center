@@ -23,7 +23,6 @@ import {
 
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { PRODUCTS, INSTANCES } from "../../user-management/users/data";
-import { OpalCreditsSection } from "./components/OpalCreditsSection";
 
 type Tab =
 	| "All"
@@ -114,12 +113,12 @@ type SeatRow = {
 };
 
 const SEAT_ROWS: SeatRow[] = [
-	{ product: "CMS", instance: "Production", total: 12, used: 11 },
-	{ product: "CMS", instance: "Sandbox", total: 8, used: 5 },
-	{ product: "CMP", instance: "Production", total: 10, used: 9 },
-	{ product: "Opal", instance: "Production", total: 15, used: 12 },
-	{ product: "Web Experimentation", instance: "Production", total: 6, used: 4 },
-	{ product: "Frontend Hosting", instance: "Staging", total: 5, used: 2 },
+	{ product: "CMS", instance: "Stride", total: 12, used: 11 },
+	{ product: "CMS", instance: "Alloy", total: 8, used: 5 },
+	{ product: "CMP", instance: "Stride", total: 10, used: 9 },
+	{ product: "Opal", instance: "Stride", total: 15, used: 12 },
+	{ product: "Web Experimentation", instance: "Stride", total: 6, used: 4 },
+	{ product: "Frontend Hosting", instance: "Mosey Bank", total: 5, used: 2 },
 ];
 
 type Invoice = {
@@ -141,14 +140,14 @@ const INVOICES: Invoice[] = [
 
 const TAB_SEATS: Record<Tab, { instance: string; used: number; total: number }[]> = {
 	All: SEAT_ROWS.map((r) => ({ instance: `${r.product} · ${r.instance}`, used: r.used, total: r.total })),
-	Experimentation: [{ instance: "Production", used: 4, total: 6 }],
-	CMP: [{ instance: "Production", used: 9, total: 10 }],
+	Experimentation: [{ instance: "Stride", used: 4, total: 6 }],
+	CMP: [{ instance: "Stride", used: 9, total: 10 }],
 	CMS: [
-		{ instance: "Production", used: 11, total: 12 },
-		{ instance: "Sandbox", used: 5, total: 8 },
+		{ instance: "Stride", used: 11, total: 12 },
+		{ instance: "Alloy", used: 5, total: 8 },
 	],
-	Collaboration: [{ instance: "Production", used: 7, total: 10 }],
-	Opal: [{ instance: "Production", used: 12, total: 15 }],
+	Collaboration: [{ instance: "Stride", used: 7, total: 10 }],
+	Opal: [{ instance: "Stride", used: 12, total: 15 }],
 };
 
 function FilterDropdown({
@@ -365,10 +364,6 @@ export default function UsageBillingPage() {
 							unit="credits"
 							trend="+5% WoW"
 						/>
-					</Box>
-				) : activeTab === "Opal" ? (
-					<Box mb="16">
-						<OpalCreditsSection />
 					</Box>
 				) : (
 					<Box mb="16">

@@ -71,17 +71,17 @@ const MY_PRODUCTS: {
 	{
 		name: "Content Management System",
 		standard: [
-			{ instance: "Production", role: "Admin" },
-			{ instance: "Staging", role: "Editor" },
+			{ instance: "Stride", role: "Admin" },
+			{ instance: "Mosey Bank", role: "Editor" },
 		],
 	},
 	{
 		name: "Content Marketing Platform",
-		standard: [{ instance: "Production", role: "Editor" }],
+		standard: [{ instance: "Stride", role: "Editor" }],
 	},
 	{
 		name: "Opal",
-		standard: [{ instance: "Production", role: "Owner" }],
+		standard: [{ instance: "Stride", role: "Owner" }],
 	},
 ];
 
@@ -92,14 +92,14 @@ const MY_EXPERIMENTATION: {
 	name: "Web Experimentation",
 	instances: [
 		{
-			instance: "Production",
+			instance: "Stride",
 			projects: [
 				{ project: "Marketing Site", role: "Admin" },
 				{ project: "E-commerce Store", role: "Editor" },
 			],
 		},
 		{
-			instance: "Sandbox",
+			instance: "Alloy",
 			projects: [{ project: "Mobile App", role: "Contributor" }],
 		},
 	],
