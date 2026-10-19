@@ -60,6 +60,7 @@ import {
 	type UserFilters,
 	type UserType,
 } from "./data";
+import { downloadUsersCsv } from "./exportUsersCsv";
 
 const PAGE_SIZE = 12;
 
@@ -221,6 +222,11 @@ export default function AdminCenterUsersPage() {
 		[users, selectedIds],
 	);
 
+	const handleExportUsers = () => {
+		const rows = selectedUsers.length > 0 ? selectedUsers : filtered;
+		downloadUsersCsv(rows);
+	};
+
 	const applyInfoUpdate = (
 		updates: { id: string; firstName: string; lastName: string }[],
 	) => {
@@ -314,7 +320,12 @@ export default function AdminCenterUsersPage() {
 					<Heading level="2">Users</Heading>
 				</Box>
 				<Box display="flex" alignItems="center" gap="8">
-					<Button appearance="default" addonBefore={<IconFileExport size={16} />}>
+					<Button
+						appearance="default"
+						addonBefore={<IconFileExport size={16} />}
+						onClick={handleExportUsers}
+						disabled={selectedUsers.length === 0 && filtered.length === 0}
+					>
 						Export User
 					</Button>
 					<Button
