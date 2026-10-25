@@ -127,6 +127,9 @@ export default function AdminCenterUsersPage() {
 	const [inviteMode, setInviteMode] = useState<"manual" | "upload">("manual");
 	const [bulkModal, setBulkModal] = useState<BulkModal>(null);
 	const [importPanelOpen, setImportPanelOpen] = useState(false);
+	const [importMode, setImportMode] = useState<"users" | "groupAccess">(
+		"users",
+	);
 	const [detailUpload, setDetailUpload] = useState<Upload | null>(null);
 	const [uploadFiles, setUploadFiles] = useState<Upload[]>([]);
 	const [stagingUsers, setStagingUsers] = useState<StagingUser[]>([]);
@@ -301,10 +304,17 @@ export default function AdminCenterUsersPage() {
 				createdDate: today,
 				lastActiveDate: null,
 				userType: "Local" as const,
-				product: PRODUCTS[0],
-				instance: INSTANCES[0],
+				product:
+					u.groupMatch === "matched" && u.product
+						? u.product
+						: PRODUCTS[0],
+				instance:
+					u.groupMatch === "matched" && u.instance
+						? u.instance
+						: INSTANCES[0],
 				project: PROJECTS[0],
-				role: ROLES[0],
+				role:
+					u.groupMatch === "matched" && u.role ? u.role : ROLES[0],
 			}));
 		if (newUsers.length === 0) return;
 		setUsers((prev) => [...newUsers, ...prev]);
@@ -328,13 +338,36 @@ export default function AdminCenterUsersPage() {
 					>
 						Export User
 					</Button>
-					<Button
-						appearance="default"
-						addonBefore={<IconFileImport size={16} />}
-						onClick={() => setImportPanelOpen(true)}
+					<Menu
+						options={[
+							{
+								label: "Import users",
+								execute: () => {
+									setImportMode("users");
+									setImportPanelOpen(true);
+								},
+							},
+							{
+								label: "Import by group access",
+								execute: () => {
+									setImportMode("groupAccess");
+									setImportPanelOpen(true);
+								},
+							},
+						]}
 					>
-						Import User
-					</Button>
+						<MenuTrigger asChild>
+							<Button
+								appearance="default"
+								addonBefore={<IconFileImport size={16} />}
+								icon={<IconAngleDown size={16} />}
+								iconPosition="end"
+							>
+								Import User
+							</Button>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
 					<Menu
 						options={[
 							{
@@ -395,7 +428,10 @@ export default function AdminCenterUsersPage() {
 					onViewDetails={setDetailUpload}
 					onImportUsers={handleStagingImport}
 					systemEmails={systemEmails}
-					onOpenImport={() => setImportPanelOpen(true)}
+					onOpenImport={() => {
+						setImportMode("users");
+						setImportPanelOpen(true);
+					}}
 				/>
 			) : activeTab === "invitations" ? (
 				<Box
@@ -782,6 +818,7 @@ export default function AdminCenterUsersPage() {
 				onViewDetails={setDetailUpload}
 				recentUploads={uploadFiles}
 				systemEmails={systemEmails}
+				mode={importMode}
 				onJobUpdate={(job) => {
 					setUploadFiles((prev) => upsertUpload(prev, job));
 					setDetailUpload((cur) => (cur?.id === job.id ? job : cur));

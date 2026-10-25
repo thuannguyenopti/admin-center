@@ -15,7 +15,11 @@ import {
 import { IconUpload, IconXmark } from "@optiaxiom/icons";
 import { RecentUploadRow } from "./RecentUploadRow";
 import type { StagingUser, Upload } from "./data";
-import { downloadImportTemplate } from "./parseImportCsv";
+import {
+	downloadGroupAccessTemplate,
+	downloadImportTemplate,
+	type ImportParseMode,
+} from "./parseImportCsv";
 import { useImportJob } from "./useImportJob";
 
 const PANEL_WIDTH = 700;
@@ -29,6 +33,7 @@ export function ImportUsersPanel({
 	onJobUpdate,
 	onJobComplete,
 	onGoToUploadTab,
+	mode = "users",
 }: {
 	open: boolean;
 	onClose: () => void;
@@ -38,12 +43,15 @@ export function ImportUsersPanel({
 	onJobUpdate: (job: Upload) => void;
 	onJobComplete: (job: Upload, staging: StagingUser[]) => void;
 	onGoToUploadTab: () => void;
+	mode?: ImportParseMode;
 }) {
 	const inputRef = useRef<HTMLInputElement>(null);
+	const isGroupAccess = mode === "groupAccess";
 	const { fileName, error, busy, handleFileChange, resetForm } = useImportJob({
 		systemEmails,
 		onJobUpdate,
 		onJobComplete,
+		mode,
 	});
 
 	// Clear form when panel closes so the next open starts empty.
@@ -66,6 +74,12 @@ export function ImportUsersPanel({
 	if (!open || typeof document === "undefined") return null;
 
 	const recent = recentUploads.slice(0, 8);
+	const title = isGroupAccess
+		? "Import by group access"
+		: "Import users";
+	const templateLabel = isGroupAccess
+		? "columns: email, first_name, last_name, group_name — group_name must match an existing group"
+		: "columns: email, first_name, last_name in any order — CSV or Excel, max 10MB, 1,000 users";
 
 	return createPortal(
 		<>
@@ -81,7 +95,7 @@ export function ImportUsersPanel({
 			<Box
 				role="dialog"
 				aria-modal="true"
-				aria-label="Import users"
+				aria-label={title}
 				bg="bg.default"
 				display="flex"
 				flexDirection="column"
@@ -105,7 +119,7 @@ export function ImportUsersPanel({
 					borderB="1"
 					borderColor="border.tertiary"
 				>
-					<Heading level="2">Import users</Heading>
+					<Heading level="2">{title}</Heading>
 					<Button
 						appearance="subtle"
 						size="md"
@@ -123,13 +137,16 @@ export function ImportUsersPanel({
 							href="#"
 							onClick={(e) => {
 								e.preventDefault();
-								downloadImportTemplate();
+								if (isGroupAccess) downloadGroupAccessTemplate();
+								else downloadImportTemplate();
 							}}
 						>
 							this template
 						</Link>{" "}
-						(columns: email, first_name, last_name in any order — CSV or Excel, max 10MB, 1,000 users).
-						Imported users go to the Upload tab staging list.
+						({templateLabel}).
+						{isGroupAccess
+							? " Matched groups apply product, instance, and role in staging."
+							: " Imported users go to the Upload tab staging list."}
 					</Text>
 
 					<input
@@ -216,15 +233,18 @@ export function ImportUsersPanel({
 								You haven&rsquo;t uploaded any files yet.
 							</Text>
 							<Text color="fg.secondary">
-								Select a CSV to import users into staging.
+								{isGroupAccess
+									? "Select a CSV with group_name to import users into staging."
+									: "Select a CSV to import users into staging."}
 							</Text>
 						</Box>
 					) : (
 						<Box display="flex" flexDirection="column" gap="24" mt="8">
 							<Banner intent="information">
 								<Text fontSize="sm">
-									You can close this panel and track progress in the Upload
-									tab. After import completes, assign access from staging.
+									{isGroupAccess
+										? "You can close this panel and track progress in the Upload tab. Users with a matched group can import with that group’s access."
+										: "You can close this panel and track progress in the Upload tab. After import completes, assign access from staging."}
 								</Text>
 							</Banner>
 							{recent.map((u) => (

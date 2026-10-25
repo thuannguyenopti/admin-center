@@ -31,6 +31,7 @@ export function StagingUsersSection({
 	safePage,
 	totalPages,
 	onPageChange,
+	showGroupCol = false,
 }: {
 	stagingCount: number;
 	issuesCount: number;
@@ -49,7 +50,10 @@ export function StagingUsersSection({
 	safePage: number;
 	totalPages: number;
 	onPageChange: (p: number) => void;
+	showGroupCol?: boolean;
 }) {
+	const colSpan = showGroupCol ? 7 : 6;
+
 	return (
 		<Box display="flex" flexDirection="column" gap="12">
 			<Box display="flex" flexDirection="column" gap="2">
@@ -59,7 +63,8 @@ export function StagingUsersSection({
 				</Box>
 				<Text fontSize="sm" color="fg.secondary">
 					Separate from All users. Fix duplicates, then select valid users to
-					assign access and import.
+					assign access and import. Group-access rows can import with the
+					matched group&rsquo;s product, instance, and role.
 				</Text>
 			</Box>
 
@@ -126,6 +131,7 @@ export function StagingUsersSection({
 						<Th style={{ paddingLeft: 8 }}>Email</Th>
 						<Th>First name</Th>
 						<Th>Last name</Th>
+						{showGroupCol && <Th>Group</Th>}
 						<Th>Source file</Th>
 						<Th>Status</Th>
 					</Tr>
@@ -133,7 +139,7 @@ export function StagingUsersSection({
 				<tbody>
 					{pageRows.length === 0 ? (
 						<tr>
-							<td colSpan={6}>
+							<td colSpan={colSpan}>
 								<Box p="32" textAlign="center">
 									<Text color="fg.tertiary">
 										No staged users. Import a CSV to populate staging.
@@ -184,6 +190,33 @@ export function StagingUsersSection({
 									</Td>
 									<Td>{u.first}</Td>
 									<Td>{u.last}</Td>
+									{showGroupCol && (
+										<Td>
+											{u.groupName ? (
+												<Box
+													display="flex"
+													flexDirection="column"
+													gap="2"
+												>
+													<Text fontSize="sm">{u.groupName}</Text>
+													{u.groupMatch === "matched" && (
+														<Text fontSize="sm" color="fg.secondary">
+															{u.product} · {u.instance} · {u.role}
+														</Text>
+													)}
+													{u.groupMatch === "unknown" && (
+														<Text fontSize="sm" color="fg.error">
+															Unknown group
+														</Text>
+													)}
+												</Box>
+											) : (
+												<Text fontSize="sm" color="fg.tertiary">
+													—
+												</Text>
+											)}
+										</Td>
+									)}
 									<Td>
 										<Text fontSize="sm" color="fg.secondary">
 											{u.fileName}

@@ -2,7 +2,9 @@ import * as XLSX from "xlsx";
 import {
 	buildParsedRows,
 	headersHaveEmail,
+	headersHaveGroup,
 	normalizeHeader,
+	type ImportParseMode,
 	type ParsedImportRow,
 } from "./parseImportRows";
 
@@ -30,6 +32,7 @@ export function isZipOrXlsxBytes(buf: ArrayBuffer): boolean {
  */
 export function parseImportExcelBuffer(
 	buf: ArrayBuffer,
+	mode: ImportParseMode = "users",
 ): ExcelParseOk | ExcelParseFail {
 	try {
 		const wb = XLSX.read(buf, { type: "array", cellDates: false });
@@ -48,7 +51,9 @@ export function parseImportExcelBuffer(
 			return {
 				ok: false,
 				message:
-					"No data rows found. Put headers in row 1 (email, first_name, last_name).",
+					mode === "groupAccess"
+						? "No data rows found. Put headers in row 1 (email, first_name, last_name, group_name)."
+						: "No data rows found. Put headers in row 1 (email, first_name, last_name).",
 			};
 		}
 
@@ -67,6 +72,17 @@ export function parseImportExcelBuffer(
 			};
 		}
 
+		if (mode === "groupAccess" && !headersHaveGroup(headers)) {
+			const found =
+				headers.length > 0
+					? ` Found columns: ${headers.join(", ")}.`
+					: "";
+			return {
+				ok: false,
+				message: `File must include a "group_name" column.${found}`,
+			};
+		}
+
 		if (raw.length > MAX_ROWS) {
 			return {
 				ok: false,
@@ -74,12 +90,14 @@ export function parseImportExcelBuffer(
 			};
 		}
 
-		const { rows, failedRecords, errors } = buildParsedRows(raw);
+		const { rows, failedRecords, errors } = buildParsedRows(raw, mode);
 		if (rows.length === 0) {
 			return {
 				ok: false,
 				message:
-					"No valid users found. Check that emails are valid and the template columns are correct.",
+					mode === "groupAccess"
+						? "No valid users found. Check email and group_name columns."
+						: "No valid users found. Check that emails are valid and the template columns are correct.",
 			};
 		}
 

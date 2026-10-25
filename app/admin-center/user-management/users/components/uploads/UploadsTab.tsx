@@ -54,10 +54,12 @@ export function UploadsTab({
 			if (fileFilter !== "all" && u.uploadId !== fileFilter) return false;
 			if (!q) return true;
 			const name = `${u.first} ${u.last}`.toLowerCase();
+			const group = (u.groupName ?? "").toLowerCase();
 			return (
 				u.email.toLowerCase().includes(q) ||
 				name.includes(q) ||
-				u.fileName.toLowerCase().includes(q)
+				u.fileName.toLowerCase().includes(q) ||
+				group.includes(q)
 			);
 		});
 	}, [staging, search, fileFilter]);
@@ -74,6 +76,10 @@ export function UploadsTab({
 			staging.filter((u) => selectedIds.has(u.id) && u.status === "Valid"),
 		[staging, selectedIds],
 	);
+
+	const allSelectedHaveGroupAccess =
+		validSelected.length > 0 &&
+		validSelected.every((u) => u.groupMatch === "matched");
 
 	const toggleRow = (u: StagingUser) => {
 		if (u.status !== "Valid") return;
@@ -123,6 +129,16 @@ export function UploadsTab({
 		setSelectedIds(new Set());
 	};
 
+	const handleImportWithGroupAccess = () => {
+		if (!allSelectedHaveGroupAccess) return;
+		const ids = validSelected.map((u) => u.id);
+		toaster.create(
+			`${ids.length} user${ids.length === 1 ? "" : "s"} imported with group access`,
+			{ intent: "success" },
+		);
+		handleAssignComplete(ids);
+	};
+
 	const completedFiles = files.filter((f) => f.status === "Completed");
 
 	return (
@@ -157,6 +173,9 @@ export function UploadsTab({
 				safePage={safePage}
 				totalPages={totalPages}
 				onPageChange={setPage}
+				showGroupCol={staging.some(
+					(u) => u.importMode === "groupAccess" || Boolean(u.groupName),
+				)}
 			/>
 
 			{validSelected.length > 0 && (
@@ -184,15 +203,26 @@ export function UploadsTab({
 							validSelected.length === 1 ? "" : "s"
 						} selected`}
 					</Text>
-					<Button
-						appearance="primary"
-						size="sm"
-						icon={<IconPlus size={16} />}
-						iconPosition="start"
-						onClick={() => setAssignOpen(true)}
-					>
-						Assign access
-					</Button>
+					<Box display="flex" alignItems="center" gap="8" flexWrap="wrap">
+						{allSelectedHaveGroupAccess && (
+							<Button
+								appearance="primary"
+								size="sm"
+								onClick={handleImportWithGroupAccess}
+							>
+								Import with group access
+							</Button>
+						)}
+						<Button
+							appearance={allSelectedHaveGroupAccess ? "default" : "primary"}
+							size="sm"
+							icon={<IconPlus size={16} />}
+							iconPosition="start"
+							onClick={() => setAssignOpen(true)}
+						>
+							Assign access
+						</Button>
+					</Box>
 				</Box>
 			)}
 

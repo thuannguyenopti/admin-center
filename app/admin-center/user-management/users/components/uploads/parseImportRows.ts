@@ -1,7 +1,11 @@
+export type ImportParseMode = "users" | "groupAccess";
+
 export type ParsedImportRow = {
 	email: string;
 	first: string;
 	last: string;
+	/** Present when importing by group access. */
+	groupName?: string;
 };
 
 /** Strip BOM / NBSP / zero-width / quotes so Sheets & Excel exports still match. */
@@ -52,12 +56,26 @@ const LAST_KEYS = [
 	"family_name",
 	"surname",
 ];
+export const GROUP_KEYS = [
+	"group_name",
+	"group",
+	"groupname",
+	"access_group",
+	"group_access",
+];
 
 export function headersHaveEmail(headers: string[]): boolean {
 	return headers.some((h) => EMAIL_KEYS.includes(h));
 }
 
-export function buildParsedRows(raw: Record<string, unknown>[]): {
+export function headersHaveGroup(headers: string[]): boolean {
+	return headers.some((h) => GROUP_KEYS.includes(h));
+}
+
+export function buildParsedRows(
+	raw: Record<string, unknown>[],
+	mode: ImportParseMode = "users",
+): {
 	rows: ParsedImportRow[];
 	failedRecords: number;
 	errors: string[];
@@ -66,16 +84,23 @@ export function buildParsedRows(raw: Record<string, unknown>[]): {
 	const seen = new Set<string>();
 	let failedRecords = 0;
 	const errors: string[] = [];
+	const requireGroup = mode === "groupAccess";
 
 	for (let i = 0; i < raw.length; i++) {
 		const row = normalizeRow(raw[i] ?? {});
 		const email = pickField(row, EMAIL_KEYS).toLowerCase();
 		const first = pickField(row, FIRST_KEYS);
 		const last = pickField(row, LAST_KEYS);
+		const groupName = pickField(row, GROUP_KEYS);
 
 		if (!email || !EMAIL_RE.test(email)) {
 			failedRecords += 1;
 			errors.push(`Row ${i + 2}: invalid or missing email`);
+			continue;
+		}
+		if (requireGroup && !groupName) {
+			failedRecords += 1;
+			errors.push(`Row ${i + 2}: missing group_name`);
 			continue;
 		}
 		if (seen.has(email)) {
@@ -84,7 +109,11 @@ export function buildParsedRows(raw: Record<string, unknown>[]): {
 			continue;
 		}
 		seen.add(email);
-		rows.push({ email, first, last });
+		rows.push(
+			requireGroup
+				? { email, first, last, groupName }
+				: { email, first, last },
+		);
 	}
 
 	return { rows, failedRecords, errors: errors.slice(0, 20) };

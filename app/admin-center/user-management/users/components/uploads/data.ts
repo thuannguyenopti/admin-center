@@ -16,6 +16,8 @@ export type Upload = {
 /** Row status in staging (Upload tab). Duplicate = email already on the system. */
 export type StagingRowStatus = "Valid" | "Duplicate";
 
+export type StagingGroupMatch = "matched" | "unknown";
+
 export type StagingUser = {
 	id: string;
 	uploadId: string;
@@ -24,6 +26,16 @@ export type StagingUser = {
 	first: string;
 	last: string;
 	status: StagingRowStatus;
+	/** How this row was imported. */
+	importMode?: "users" | "groupAccess";
+	/** Group name from CSV (group-access import). */
+	groupName?: string;
+	groupId?: string;
+	groupMatch?: StagingGroupMatch;
+	/** Access copied from matched group. */
+	product?: string;
+	instance?: string;
+	role?: string;
 };
 
 /** Jobs start empty — populated when the user uploads a real CSV. */

@@ -7,6 +7,7 @@ import {
 	formatUploadDate,
 	parseImportCsvFile,
 	parsedRowsToStaging,
+	type ImportParseMode,
 } from "./parseImportCsv";
 
 function sanitizeDisplayName(name: string): string {
@@ -17,10 +18,12 @@ export function useImportJob({
 	systemEmails,
 	onJobUpdate,
 	onJobComplete,
+	mode = "users",
 }: {
 	systemEmails: string[];
 	onJobUpdate: (job: Upload) => void;
 	onJobComplete: (job: Upload, staging: StagingUser[]) => void;
+	mode?: ImportParseMode;
 }) {
 	const [fileName, setFileName] = useState("");
 	const [error, setError] = useState("");
@@ -90,7 +93,7 @@ export function useImportJob({
 		setFileName(sanitizeDisplayName(file.name));
 		setError("");
 
-		const result = await parseImportCsvFile(file);
+		const result = await parseImportCsvFile(file, mode);
 		setFileName(result.fileName);
 
 		if (!result.ok) {
@@ -118,6 +121,7 @@ export function useImportJob({
 			result.fileName,
 			result.rows,
 			systemEmails,
+			mode,
 		);
 		const job: Upload = {
 			id: uploadId,

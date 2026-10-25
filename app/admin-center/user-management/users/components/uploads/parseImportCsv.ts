@@ -7,11 +7,14 @@ import {
 import {
 	buildParsedRows,
 	headersHaveEmail,
+	headersHaveGroup,
 	normalizeHeader,
+	type ImportParseMode,
 	type ParsedImportRow,
 } from "./parseImportRows";
+import { resolveGroupByName, sampleGroupNames } from "./resolveGroupAccess";
 
-export type { ParsedImportRow };
+export type { ParsedImportRow, ImportParseMode };
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const MAX_ROWS = 1000;
@@ -55,6 +58,7 @@ function decodeTextBuffer(buf: ArrayBuffer): string {
 function parseCsvText(
 	text: string,
 	fileName: string,
+	mode: ImportParseMode = "users",
 ): Promise<ParseImportResult> {
 	return new Promise((resolve) => {
 		Papa.parse<Record<string, unknown>>(text, {
@@ -93,6 +97,19 @@ function parseCsvText(
 					return;
 				}
 
+				if (mode === "groupAccess" && !headersHaveGroup(headers)) {
+					const found =
+						headers.length > 0
+							? ` Found columns: ${headers.join(", ")}.`
+							: "";
+					resolve({
+						ok: false,
+						fileName,
+						message: `File must include a "group_name" column.${found}`,
+					});
+					return;
+				}
+
 				const raw = results.data ?? [];
 				if (raw.length > MAX_ROWS) {
 					resolve({
@@ -103,13 +120,15 @@ function parseCsvText(
 					return;
 				}
 
-				const { rows, failedRecords, errors } = buildParsedRows(raw);
+				const { rows, failedRecords, errors } = buildParsedRows(raw, mode);
 				if (rows.length === 0) {
 					resolve({
 						ok: false,
 						fileName,
 						message:
-							"No valid users found. Check that emails are valid and the template columns are correct.",
+							mode === "groupAccess"
+								? "No valid users found. Check email and group_name columns."
+								: "No valid users found. Check that emails are valid and the template columns are correct.",
 					});
 					return;
 				}
@@ -137,8 +156,12 @@ function parseCsvText(
  * Parse a user-import spreadsheet in the browser.
  * Accepts real CSV and Excel (.xlsx), including Excel files misnamed as .csv.
  * Column order does not matter. Headers: email + first/last name aliases.
+ * Group-access mode also requires group_name.
  */
-export function parseImportCsvFile(file: File): Promise<ParseImportResult> {
+export function parseImportCsvFile(
+	file: File,
+	mode: ImportParseMode = "users",
+): Promise<ParseImportResult> {
 	const fileName = sanitizeFileName(file.name || "users.csv");
 	const lower = fileName.toLowerCase();
 	const extOk =
@@ -178,7 +201,7 @@ export function parseImportCsvFile(file: File): Promise<ParseImportResult> {
 				lower.endsWith(".xlsx") ||
 				lower.endsWith(".xls")
 			) {
-				const excel = parseImportExcelBuffer(buf);
+				const excel = parseImportExcelBuffer(buf, mode);
 				if (!excel.ok) {
 					return { ok: false as const, fileName, message: excel.message };
 				}
@@ -208,7 +231,7 @@ export function parseImportCsvFile(file: File): Promise<ParseImportResult> {
 				};
 			}
 
-			return parseCsvText(text, fileName);
+			return parseCsvText(text, fileName, mode);
 		})
 		.catch(() => ({
 			ok: false as const,
@@ -222,20 +245,60 @@ export function parsedRowsToStaging(
 	fileName: string,
 	rows: ParsedImportRow[],
 	systemEmails: Iterable<string>,
+	mode: ImportParseMode = "users",
 ): StagingUser[] {
 	const existing = new Set(
 		[...systemEmails].map((e) => e.trim().toLowerCase()),
 	);
 	const stamp = Date.now();
-	return rows.map((r, i) => ({
-		id: `st-${stamp}-${i}`,
-		uploadId,
-		fileName,
-		email: r.email,
-		first: r.first,
-		last: r.last,
-		status: existing.has(r.email) ? "Duplicate" : "Valid",
-	}));
+	return rows.map((r, i) => {
+		const base: StagingUser = {
+			id: `st-${stamp}-${i}`,
+			uploadId,
+			fileName,
+			email: r.email,
+			first: r.first,
+			last: r.last,
+			status: existing.has(r.email) ? "Duplicate" : "Valid",
+			importMode: mode,
+		};
+
+		if (mode !== "groupAccess" || !r.groupName) {
+			return base;
+		}
+
+		const matched = resolveGroupByName(r.groupName);
+		if (!matched) {
+			return {
+				...base,
+				groupName: r.groupName,
+				groupMatch: "unknown" as const,
+			};
+		}
+
+		return {
+			...base,
+			groupName: matched.groupName,
+			groupId: matched.groupId,
+			groupMatch: "matched" as const,
+			product: matched.product,
+			instance: matched.instance,
+			role: matched.role,
+		};
+	});
+}
+
+function triggerCsvDownload(csv: string, downloadName: string): void {
+	const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement("a");
+	a.href = url;
+	a.download = downloadName;
+	a.rel = "noopener";
+	document.body.appendChild(a);
+	a.click();
+	a.remove();
+	URL.revokeObjectURL(url);
 }
 
 export function downloadImportTemplate(): void {
@@ -243,16 +306,18 @@ export function downloadImportTemplate(): void {
 		"email,first_name,last_name\n" +
 		"ava.example@acme.com,Ava,Example\n" +
 		"liam.example@acme.com,Liam,Example\n";
-	const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement("a");
-	a.href = url;
-	a.download = "user-import-template.csv";
-	a.rel = "noopener";
-	document.body.appendChild(a);
-	a.click();
-	a.remove();
-	URL.revokeObjectURL(url);
+	triggerCsvDownload(csv, "user-import-template.csv");
+}
+
+export function downloadGroupAccessTemplate(): void {
+	const [g1, g2] = sampleGroupNames(2);
+	const groupA = g1 ?? "CMS Editors - Marketing Site";
+	const groupB = g2 ?? "Brand Studio Reviewers";
+	const csv =
+		"email,first_name,last_name,group_name\n" +
+		`ava.example@acme.com,Ava,Example,"${groupA.replace(/"/g, '""')}"\n` +
+		`liam.example@acme.com,Liam,Example,"${groupB.replace(/"/g, '""')}"\n`;
+	triggerCsvDownload(csv, "user-import-by-group-access-template.csv");
 }
 
 export function formatUploadDate(d = new Date()): string {
