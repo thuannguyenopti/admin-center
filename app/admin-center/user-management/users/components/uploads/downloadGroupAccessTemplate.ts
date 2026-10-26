@@ -99,7 +99,26 @@ export async function downloadGroupAccessTemplate(): Promise<void> {
 	input.addRow(["", "", "", sampleGroup]);
 
 	const groupLastRow = Math.max(2, groups.length + 1);
-	input.dataValidations.add("D2:D1001", {
+	// exceljs runtime supports dataValidations; official typings omit it.
+	const inputWithValidation = input as typeof input & {
+		dataValidations: {
+			add: (
+				range: string,
+				rule: {
+					type: "list";
+					allowBlank?: boolean;
+					showErrorMessage?: boolean;
+					showInputMessage?: boolean;
+					promptTitle?: string;
+					prompt?: string;
+					errorTitle?: string;
+					error?: string;
+					formulae: string[];
+				},
+			) => void;
+		};
+	};
+	inputWithValidation.dataValidations.add("D2:D1001", {
 		type: "list",
 		allowBlank: true,
 		showErrorMessage: true,
