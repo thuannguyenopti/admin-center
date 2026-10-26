@@ -15,8 +15,12 @@ export function normalizeHeader(h: string): string {
 		.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, " ")
 		.trim()
 		.replace(/^["']+|["']+$/g, "")
+		// "Email (require)" / "first_name(optional)" → email / first_name
+		.replace(/\([^)]*\)/g, " ")
 		.toLowerCase()
-		.replace(/[\s-]+/g, "_");
+		.replace(/[\s-]+/g, "_")
+		.replace(/_+/g, "_")
+		.replace(/^_|_$/g, "");
 }
 
 function pickField(row: Record<string, string>, keys: string[]): string {

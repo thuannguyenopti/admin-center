@@ -78,7 +78,7 @@ export function ImportUsersPanel({
 		? "Import by group access"
 		: "Import users";
 	const templateLabel = isGroupAccess
-		? "columns: email, first_name, last_name, group_name — group_name must match an existing group"
+		? "Excel: Input sheet with Email (require), first_name(optional), last_name(optional), Group — Group dropdown from Group data sheet"
 		: "columns: email, first_name, last_name in any order — CSV or Excel, max 10MB, 1,000 users";
 
 	return createPortal(

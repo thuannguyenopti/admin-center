@@ -24,8 +24,3 @@ export function resolveGroupByName(
 		role: group.role,
 	};
 }
-
-/** Sample group names for the CSV template (known groups only). */
-export function sampleGroupNames(limit = 2): string[] {
-	return GROUPS_DATA.slice(0, limit).map((g) => g.name);
-}

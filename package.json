@@ -52,6 +52,7 @@
     "@tiptap/y-tiptap": "^3.0.3",
     "@xyflow/react": "^12.10.0",
     "axios": "^1.16.1",
+    "cfb": "^1.2.2",
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "codemirror": "^6.0.2",

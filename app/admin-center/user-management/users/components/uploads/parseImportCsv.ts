@@ -12,9 +12,10 @@ import {
 	type ImportParseMode,
 	type ParsedImportRow,
 } from "./parseImportRows";
-import { resolveGroupByName, sampleGroupNames } from "./resolveGroupAccess";
+import { resolveGroupByName } from "./resolveGroupAccess";
 
 export type { ParsedImportRow, ImportParseMode };
+export { downloadGroupAccessTemplate } from "./downloadGroupAccessTemplate";
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const MAX_ROWS = 1000;
@@ -307,17 +308,6 @@ export function downloadImportTemplate(): void {
 		"ava.example@acme.com,Ava,Example\n" +
 		"liam.example@acme.com,Liam,Example\n";
 	triggerCsvDownload(csv, "user-import-template.csv");
-}
-
-export function downloadGroupAccessTemplate(): void {
-	const [g1, g2] = sampleGroupNames(2);
-	const groupA = g1 ?? "CMS Editors - Marketing Site";
-	const groupB = g2 ?? "Brand Studio Reviewers";
-	const csv =
-		"email,first_name,last_name,group_name\n" +
-		`ava.example@acme.com,Ava,Example,"${groupA.replace(/"/g, '""')}"\n` +
-		`liam.example@acme.com,Liam,Example,"${groupB.replace(/"/g, '""')}"\n`;
-	triggerCsvDownload(csv, "user-import-by-group-access-template.csv");
 }
 
 export function formatUploadDate(d = new Date()): string {
