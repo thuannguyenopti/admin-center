@@ -137,8 +137,11 @@ export function ImportUsersPanel({
 							href="#"
 							onClick={(e) => {
 								e.preventDefault();
-								if (isGroupAccess) downloadGroupAccessTemplate();
-								else downloadImportTemplate();
+								if (isGroupAccess) {
+									void downloadGroupAccessTemplate();
+								} else {
+									downloadImportTemplate();
+								}
 							}}
 						>
 							this template
