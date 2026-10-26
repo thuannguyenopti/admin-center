@@ -12,20 +12,22 @@ import {
 } from "@optiaxiom/react";
 import { IconTrashCan, IconXmark } from "@optiaxiom/icons";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import type { StagingUser } from "./data";
+import { stagingStatusColor, type StagingUser } from "./data";
 
-const PANEL_WIDTH = 560;
+const PANEL_WIDTH = 640;
 
 export function StagingIssuesPanel({
 	open,
 	issues,
 	onClose,
 	onDelete,
+	onOverride,
 }: {
 	open: boolean;
 	issues: StagingUser[];
 	onClose: () => void;
 	onDelete: (ids: string[]) => void;
+	onOverride: (ids: string[]) => void;
 }) {
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -47,6 +49,12 @@ export function StagingIssuesPanel({
 	const allSelected =
 		issues.length > 0 && issues.every((u) => selected.has(u.id));
 
+	const overrideableSelected = issues.filter(
+		(u) =>
+			selected.has(u.id) &&
+			(u.status === "Duplicate" || u.status === "Conflict"),
+	);
+
 	const toggle = (id: string) => {
 		setSelected((prev) => {
 			const next = new Set(prev);
@@ -63,6 +71,13 @@ export function StagingIssuesPanel({
 		const ids = [...selected];
 		if (ids.length === 0) return;
 		onDelete(ids);
+		setSelected(new Set());
+	};
+
+	const handleOverride = () => {
+		const ids = overrideableSelected.map((u) => u.id);
+		if (ids.length === 0) return;
+		onOverride(ids);
 		setSelected(new Set());
 	};
 
@@ -104,7 +119,7 @@ export function StagingIssuesPanel({
 					borderB="1"
 					borderColor="border.tertiary"
 				>
-					<Heading level="2">Duplicate emails</Heading>
+					<Heading level="2">Staging issues</Heading>
 					<Button
 						appearance="subtle"
 						size="md"
@@ -114,18 +129,26 @@ export function StagingIssuesPanel({
 					/>
 				</Box>
 
-				<Box flex="1" overflow="auto" px="24" py="20" display="flex" flexDirection="column" gap="16">
-					<Banner intent="danger">
+				<Box
+					flex="1"
+					overflow="auto"
+					px="24"
+					py="20"
+					display="flex"
+					flexDirection="column"
+					gap="16"
+				>
+					<Banner intent="warning">
 						<Text fontSize="sm">
-							These emails already exist on the system. Remove them from
-							staging before assigning access, or keep them dismissed from this
-							import batch.
+							Duplicates and conflicts: Remove to skip, or Override to
+							overwrite the existing user&rsquo;s access. Unknown groups: fix
+							the group on the staging table first.
 						</Text>
 					</Banner>
 
 					{issues.length === 0 ? (
 						<Text fontSize="sm" color="fg.tertiary">
-							No duplicate emails in staging.
+							No issues in staging.
 						</Text>
 					) : (
 						<Table>
@@ -139,8 +162,8 @@ export function StagingIssuesPanel({
 										/>
 									</Th>
 									<Th style={{ paddingLeft: 8 }}>Email</Th>
-									<Th>Name</Th>
-									<Th>Source file</Th>
+									<Th>Group</Th>
+									<Th>Status</Th>
 								</Tr>
 							</thead>
 							<tbody>
@@ -161,16 +184,28 @@ export function StagingIssuesPanel({
 											/>
 										</Td>
 										<Td style={{ paddingLeft: 8 }}>
-											<Text color="fg.error" fontWeight="500">
-												{u.email}
-											</Text>
+											<Box display="flex" flexDirection="column" gap="2">
+												<Text color="fg.error" fontWeight="500">
+													{u.email}
+												</Text>
+												<Text fontSize="sm" color="fg.secondary">
+													{u.first} {u.last}
+												</Text>
+											</Box>
 										</Td>
 										<Td>
-											{u.first} {u.last}
+											<Text fontSize="sm">{u.groupName || "—"}</Text>
 										</Td>
 										<Td>
-											<Text fontSize="sm" color="fg.secondary">
-												{u.fileName}
+											<Text
+												asChild
+												color={stagingStatusColor(u.status)}
+												fontWeight="500"
+											>
+												<span>
+													{u.status}
+													{u.resolution === "override" ? " · override" : ""}
+												</span>
 											</Text>
 										</Td>
 									</Tr>
@@ -189,9 +224,17 @@ export function StagingIssuesPanel({
 					borderT="1"
 					borderColor="border.tertiary"
 					bg="bg.page"
+					flexWrap="wrap"
 				>
 					<Button appearance="subtle" onClick={onClose}>
 						Close
+					</Button>
+					<Button
+						appearance="default"
+						disabled={overrideableSelected.length === 0}
+						onClick={handleOverride}
+					>
+						{`Override${overrideableSelected.length > 0 ? ` (${overrideableSelected.length})` : ""}`}
 					</Button>
 					<Button
 						appearance="danger-outline"
@@ -200,7 +243,7 @@ export function StagingIssuesPanel({
 						disabled={selected.size === 0}
 						onClick={handleDelete}
 					>
-						{`Remove from staging${selected.size > 0 ? ` (${selected.size})` : ""}`}
+						{`Remove${selected.size > 0 ? ` (${selected.size})` : ""}`}
 					</Button>
 				</Box>
 			</Box>

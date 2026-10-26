@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Text, toaster } from "@optiaxiom/react";
 import { IconPlus } from "@optiaxiom/icons";
 import {
-	applyDuplicateCheck,
+	applyStagingReview,
+	isStagingImportable,
+	isStagingIssue,
+	type ExistingUserAccess,
 	type StagingUser,
 	type Upload,
 } from "./data";
@@ -12,6 +15,7 @@ import { StagingIssuesPanel } from "./StagingIssuesPanel";
 import { StagingAssignPanel } from "./StagingAssignPanel";
 import { UploadJobsSection } from "./UploadJobsSection";
 import { StagingUsersSection } from "./StagingUsersSection";
+import type { GroupAccessPatch } from "./StagingGroupCell";
 
 const PAGE_SIZE = 10;
 
@@ -21,7 +25,7 @@ export function UploadsTab({
 	setStaging,
 	onViewDetails,
 	onImportUsers,
-	systemEmails,
+	existingUsers,
 	onOpenImport,
 }: {
 	files: Upload[];
@@ -29,7 +33,7 @@ export function UploadsTab({
 	setStaging: React.Dispatch<React.SetStateAction<StagingUser[]>>;
 	onViewDetails: (u: Upload) => void;
 	onImportUsers: (users: StagingUser[]) => void;
-	systemEmails: string[];
+	existingUsers: ExistingUserAccess[];
 	onOpenImport: () => void;
 }) {
 	const [search, setSearch] = useState("");
@@ -40,11 +44,11 @@ export function UploadsTab({
 	const [assignOpen, setAssignOpen] = useState(false);
 
 	useEffect(() => {
-		setStaging((prev) => applyDuplicateCheck(prev, systemEmails));
-	}, [systemEmails, setStaging]);
+		setStaging((prev) => applyStagingReview(prev, existingUsers));
+	}, [existingUsers, setStaging]);
 
 	const issues = useMemo(
-		() => staging.filter((u) => u.status === "Duplicate"),
+		() => staging.filter((u) => isStagingIssue(u) && u.resolution !== "override"),
 		[staging],
 	);
 
@@ -71,18 +75,24 @@ export function UploadsTab({
 		safePage * PAGE_SIZE,
 	);
 
-	const validSelected = useMemo(
+	const importableSelected = useMemo(
 		() =>
-			staging.filter((u) => selectedIds.has(u.id) && u.status === "Valid"),
+			staging.filter(
+				(u) => selectedIds.has(u.id) && isStagingImportable(u),
+			),
 		[staging, selectedIds],
 	);
 
 	const allSelectedHaveGroupAccess =
-		validSelected.length > 0 &&
-		validSelected.every((u) => u.groupMatch === "matched");
+		importableSelected.length > 0 &&
+		importableSelected.every((u) => u.groupMatch === "matched");
+
+	const allSelectedAreOverrides =
+		importableSelected.length > 0 &&
+		importableSelected.every((u) => u.resolution === "override");
 
 	const toggleRow = (u: StagingUser) => {
-		if (u.status !== "Valid") return;
+		if (!isStagingImportable(u)) return;
 		setSelectedIds((prev) => {
 			const next = new Set(prev);
 			next.has(u.id) ? next.delete(u.id) : next.add(u.id);
@@ -90,18 +100,18 @@ export function UploadsTab({
 		});
 	};
 
-	const validOnPage = pageRows.filter((u) => u.status === "Valid");
-	const allValidOnPageSelected =
-		validOnPage.length > 0 &&
-		validOnPage.every((u) => selectedIds.has(u.id));
+	const importableOnPage = pageRows.filter(isStagingImportable);
+	const allImportableOnPageSelected =
+		importableOnPage.length > 0 &&
+		importableOnPage.every((u) => selectedIds.has(u.id));
 
 	const togglePageSelectAll = () => {
 		setSelectedIds((prev) => {
 			const next = new Set(prev);
-			if (allValidOnPageSelected) {
-				validOnPage.forEach((u) => next.delete(u.id));
+			if (allImportableOnPageSelected) {
+				importableOnPage.forEach((u) => next.delete(u.id));
 			} else {
-				validOnPage.forEach((u) => next.add(u.id));
+				importableOnPage.forEach((u) => next.add(u.id));
 			}
 			return next;
 		});
@@ -121,6 +131,34 @@ export function UploadsTab({
 		);
 	};
 
+	const markOverride = (ids: string[]) => {
+		const idSet = new Set(ids);
+		setStaging((prev) =>
+			prev.map((u) =>
+				idSet.has(u.id) &&
+				(u.status === "Duplicate" || u.status === "Conflict")
+					? { ...u, resolution: "override" as const }
+					: u,
+			),
+		);
+		setSelectedIds((prev) => {
+			const next = new Set(prev);
+			ids.forEach((id) => next.add(id));
+			return next;
+		});
+		toaster.create(
+			`Marked ${ids.length} user${ids.length === 1 ? "" : "s"} to override existing access`,
+			{ intent: "information" },
+		);
+	};
+
+	const handleChangeGroup = (id: string, patch: GroupAccessPatch) => {
+		setStaging((prev) => {
+			const next = prev.map((u) => (u.id === id ? { ...u, ...patch } : u));
+			return applyStagingReview(next, existingUsers);
+		});
+	};
+
 	const handleAssignComplete = (ids: string[]) => {
 		const idSet = new Set(ids);
 		const imported = staging.filter((u) => idSet.has(u.id));
@@ -129,17 +167,32 @@ export function UploadsTab({
 		setSelectedIds(new Set());
 	};
 
-	const handleImportWithGroupAccess = () => {
-		if (!allSelectedHaveGroupAccess) return;
-		const ids = validSelected.map((u) => u.id);
-		toaster.create(
-			`${ids.length} user${ids.length === 1 ? "" : "s"} imported with group access`,
-			{ intent: "success" },
-		);
+	const handleImportSelected = () => {
+		if (importableSelected.length === 0) return;
+		const ids = importableSelected.map((u) => u.id);
+		const overrideCount = importableSelected.filter(
+			(u) => u.resolution === "override",
+		).length;
+		const newCount = importableSelected.length - overrideCount;
+		const parts: string[] = [];
+		if (newCount > 0) {
+			parts.push(
+				`${newCount} new user${newCount === 1 ? "" : "s"}`,
+			);
+		}
+		if (overrideCount > 0) {
+			parts.push(
+				`${overrideCount} override${overrideCount === 1 ? "" : "s"}`,
+			);
+		}
+		toaster.create(`Imported ${parts.join(" · ")}`, { intent: "success" });
 		handleAssignComplete(ids);
 	};
 
 	const completedFiles = files.filter((f) => f.status === "Completed");
+	const showGroupCol = staging.some(
+		(u) => u.importMode === "groupAccess" || Boolean(u.groupName),
+	);
 
 	return (
 		<Box display="flex" flexDirection="column" gap="20">
@@ -165,20 +218,21 @@ export function UploadsTab({
 				}}
 				completedFiles={completedFiles}
 				pageRows={pageRows}
-				validOnPage={validOnPage}
-				allValidOnPageSelected={allValidOnPageSelected}
+				importableOnPage={importableOnPage}
+				allImportableOnPageSelected={allImportableOnPageSelected}
 				onTogglePageSelectAll={togglePageSelectAll}
 				selectedIds={selectedIds}
 				onToggleRow={toggleRow}
 				safePage={safePage}
 				totalPages={totalPages}
 				onPageChange={setPage}
-				showGroupCol={staging.some(
-					(u) => u.importMode === "groupAccess" || Boolean(u.groupName),
-				)}
+				showGroupCol={showGroupCol}
+				onChangeGroup={handleChangeGroup}
+				onRemoveRow={(id) => removeFromStaging([id])}
+				onOverrideRow={(id) => markOverride([id])}
 			/>
 
-			{validSelected.length > 0 && (
+			{importableSelected.length > 0 && (
 				<Box
 					display="flex"
 					alignItems="center"
@@ -199,46 +253,75 @@ export function UploadsTab({
 					flexWrap="wrap"
 				>
 					<Text fontSize="sm" fontWeight="500">
-						{`${validSelected.length} valid user${
-							validSelected.length === 1 ? "" : "s"
-						} selected`}
+						{`${importableSelected.length} user${
+							importableSelected.length === 1 ? "" : "s"
+						} ready to import`}
+						{allSelectedAreOverrides ? " (override)" : ""}
 					</Text>
 					<Box display="flex" alignItems="center" gap="8" flexWrap="wrap">
-						{allSelectedHaveGroupAccess && (
+						<Button
+							appearance="subtle"
+							size="sm"
+							onClick={() =>
+								removeFromStaging(importableSelected.map((u) => u.id))
+							}
+						>
+							Remove
+						</Button>
+						{(allSelectedHaveGroupAccess || allSelectedAreOverrides) && (
 							<Button
 								appearance="primary"
 								size="sm"
-								onClick={handleImportWithGroupAccess}
+								onClick={handleImportSelected}
 							>
-								Import with group access
+								{allSelectedAreOverrides
+									? "Import & override"
+									: "Import with group access"}
 							</Button>
 						)}
-						<Button
-							appearance={allSelectedHaveGroupAccess ? "default" : "primary"}
-							size="sm"
-							icon={<IconPlus size={16} />}
-							iconPosition="start"
-							onClick={() => setAssignOpen(true)}
-						>
-							Assign access
-						</Button>
+						{!allSelectedHaveGroupAccess && !allSelectedAreOverrides && (
+							<Button
+								appearance="primary"
+								size="sm"
+								icon={<IconPlus size={16} />}
+								iconPosition="start"
+								onClick={() => setAssignOpen(true)}
+							>
+								Assign access
+							</Button>
+						)}
+						{allSelectedHaveGroupAccess && !allSelectedAreOverrides && (
+							<Button
+								appearance="default"
+								size="sm"
+								icon={<IconPlus size={16} />}
+								iconPosition="start"
+								onClick={() => setAssignOpen(true)}
+							>
+								Assign access
+							</Button>
+						)}
 					</Box>
 				</Box>
 			)}
 
 			<StagingIssuesPanel
 				open={issuesOpen}
-				issues={issues}
+				issues={staging.filter(isStagingIssue)}
 				onClose={() => setIssuesOpen(false)}
 				onDelete={(ids) => {
 					removeFromStaging(ids);
 					if (ids.length >= issues.length) setIssuesOpen(false);
 				}}
+				onOverride={(ids) => {
+					markOverride(ids);
+					setIssuesOpen(false);
+				}}
 			/>
 
 			<StagingAssignPanel
 				open={assignOpen}
-				users={validSelected}
+				users={importableSelected}
 				onClose={() => setAssignOpen(false)}
 				onComplete={handleAssignComplete}
 			/>

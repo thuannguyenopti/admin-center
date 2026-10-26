@@ -13,10 +13,23 @@ export type Upload = {
 	failedRecords: number;
 };
 
-/** Row status in staging (Upload tab). Duplicate = email already on the system. */
-export type StagingRowStatus = "Valid" | "Duplicate";
+/**
+ * Staging row status after comparing to the live user list.
+ * - New: email not on system — can import
+ * - Duplicate: email exists with same (or no) access — remove or override
+ * - Conflict: email exists with different product/instance/role — remove or override
+ * - Unknown group: group-access row whose group_name did not match
+ */
+export type StagingRowStatus =
+	| "New"
+	| "Duplicate"
+	| "Conflict"
+	| "Unknown group";
 
 export type StagingGroupMatch = "matched" | "unknown";
+
+/** User chose to overwrite the existing account on import. */
+export type StagingResolution = "override";
 
 export type StagingUser = {
 	id: string;
@@ -26,16 +39,25 @@ export type StagingUser = {
 	first: string;
 	last: string;
 	status: StagingRowStatus;
+	resolution?: StagingResolution;
 	/** How this row was imported. */
 	importMode?: "users" | "groupAccess";
 	/** Group name from CSV (group-access import). */
 	groupName?: string;
 	groupId?: string;
 	groupMatch?: StagingGroupMatch;
-	/** Access copied from matched group. */
+	/** Access copied from matched group (or assigned later). */
 	product?: string;
 	instance?: string;
 	role?: string;
+};
+
+/** Minimal existing-user snapshot for conflict detection. */
+export type ExistingUserAccess = {
+	email: string;
+	product: string;
+	instance: string;
+	role: string;
 };
 
 /** Jobs start empty — populated when the user uploads a real CSV. */
@@ -54,22 +76,90 @@ export function statusColor(
 
 export function stagingStatusColor(
 	status: StagingRowStatus,
-): "fg.success" | "fg.error" {
-	return status === "Valid" ? "fg.success" : "fg.error";
+): "fg.success" | "fg.warning" | "fg.error" {
+	if (status === "New") return "fg.success";
+	if (status === "Conflict" || status === "Unknown group") return "fg.warning";
+	return "fg.error";
 }
 
-/** Mark rows duplicate if email already exists in the system user list. */
+/** True when the row can be selected for import (including override). */
+export function isStagingImportable(u: StagingUser): boolean {
+	if (u.status === "Unknown group") return false;
+	if (u.status === "New") {
+		if (u.importMode === "groupAccess" && u.groupMatch !== "matched") {
+			return false;
+		}
+		return true;
+	}
+	// Duplicate / Conflict — only after Override
+	return u.resolution === "override";
+}
+
+/** Rows that need a user decision (remove or override / fix group). */
+export function isStagingIssue(u: StagingUser): boolean {
+	return (
+		u.status === "Duplicate" ||
+		u.status === "Conflict" ||
+		u.status === "Unknown group"
+	);
+}
+
+/**
+ * Recompute New / Duplicate / Conflict / Unknown group from the live user list.
+ * Preserves `resolution: override` when the row is still Duplicate or Conflict.
+ */
+export function applyStagingReview(
+	staging: StagingUser[],
+	existing: Iterable<ExistingUserAccess>,
+): StagingUser[] {
+	const byEmail = new Map(
+		[...existing].map((u) => [u.email.trim().toLowerCase(), u] as const),
+	);
+
+	return staging.map((u) => {
+		const wasOverride = u.resolution === "override";
+
+		if (u.importMode === "groupAccess" && u.groupMatch === "unknown") {
+			return { ...u, status: "Unknown group" as const, resolution: undefined };
+		}
+
+		const ex = byEmail.get(u.email.toLowerCase());
+		if (!ex) {
+			return { ...u, status: "New" as const, resolution: undefined };
+		}
+
+		const hasIncomingAccess =
+			u.groupMatch === "matched" &&
+			Boolean(u.product && u.instance && u.role);
+		const accessDiffers =
+			hasIncomingAccess &&
+			(u.product !== ex.product ||
+				u.instance !== ex.instance ||
+				u.role !== ex.role);
+
+		const status: StagingRowStatus = accessDiffers ? "Conflict" : "Duplicate";
+		return {
+			...u,
+			status,
+			resolution: wasOverride ? ("override" as const) : undefined,
+		};
+	});
+}
+
+/** @deprecated Use applyStagingReview — kept for call-site migration. */
 export function applyDuplicateCheck(
 	staging: StagingUser[],
 	systemEmails: Iterable<string>,
 ): StagingUser[] {
-	const set = new Set(
-		[...systemEmails].map((e) => e.trim().toLowerCase()),
+	return applyStagingReview(
+		staging,
+		[...systemEmails].map((email) => ({
+			email,
+			product: "",
+			instance: "",
+			role: "",
+		})),
 	);
-	return staging.map((u) => ({
-		...u,
-		status: set.has(u.email.toLowerCase()) ? "Duplicate" : "Valid",
-	}));
 }
 
 /** Upsert a job into the list (newest first). */

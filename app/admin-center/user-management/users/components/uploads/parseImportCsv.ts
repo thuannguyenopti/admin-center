@@ -260,7 +260,8 @@ export function parsedRowsToStaging(
 			email: r.email,
 			first: r.first,
 			last: r.last,
-			status: existing.has(r.email) ? "Duplicate" : "Valid",
+			// Final New/Duplicate/Conflict applied in Upload tab via applyStagingReview.
+			status: existing.has(r.email) ? "Duplicate" : "New",
 			importMode: mode,
 		};
 

@@ -292,36 +292,84 @@ export default function AdminCenterUsersPage() {
 			day: "2-digit",
 			year: "numeric",
 		});
-		const existing = new Set(users.map((u) => u.email.toLowerCase()));
-		const newUsers: User[] = staged
-			.filter((u) => !existing.has(u.email.toLowerCase()))
-			.map((u, i) => ({
-				id: `u-import-${Date.now()}-${i}`,
-				firstName: u.first,
-				lastName: u.last,
-				email: u.email,
-				activationStatus: "N/A" as const,
-				createdDate: today,
-				lastActiveDate: null,
-				userType: "Local" as const,
-				product:
-					u.groupMatch === "matched" && u.product
-						? u.product
-						: PRODUCTS[0],
-				instance:
-					u.groupMatch === "matched" && u.instance
-						? u.instance
-						: INSTANCES[0],
-				project: PROJECTS[0],
-				role:
-					u.groupMatch === "matched" && u.role ? u.role : ROLES[0],
-			}));
-		if (newUsers.length === 0) return;
-		setUsers((prev) => [...newUsers, ...prev]);
+
+		const accessFromStaging = (u: StagingUser) => ({
+			product:
+				u.groupMatch === "matched" && u.product
+					? u.product
+					: u.product || PRODUCTS[0],
+			instance:
+				u.groupMatch === "matched" && u.instance
+					? u.instance
+					: u.instance || INSTANCES[0],
+			role:
+				u.groupMatch === "matched" && u.role
+					? u.role
+					: u.role || ROLES[0],
+		});
+
+		const overrides = staged.filter((u) => u.resolution === "override");
+		const creates = staged.filter((u) => u.resolution !== "override");
+
+		setUsers((prev) => {
+			let next = prev.map((ex) => {
+				const hit = overrides.find(
+					(u) => u.email.toLowerCase() === ex.email.toLowerCase(),
+				);
+				if (!hit) return ex;
+				const access = accessFromStaging(hit);
+				return {
+					...ex,
+					firstName: hit.first || ex.firstName,
+					lastName: hit.last || ex.lastName,
+					product: access.product,
+					instance: access.instance,
+					role: access.role,
+				};
+			});
+
+			const existingEmails = new Set(
+				next.map((u) => u.email.toLowerCase()),
+			);
+			const newUsers: User[] = creates
+				.filter((u) => !existingEmails.has(u.email.toLowerCase()))
+				.map((u, i) => {
+					const access = accessFromStaging(u);
+					return {
+						id: `u-import-${Date.now()}-${i}`,
+						firstName: u.first,
+						lastName: u.last,
+						email: u.email,
+						activationStatus: "N/A" as const,
+						createdDate: today,
+						lastActiveDate: null,
+						userType: "Local" as const,
+						product: access.product,
+						instance: access.instance,
+						project: PROJECTS[0],
+						role: access.role,
+					};
+				});
+
+			return newUsers.length > 0 ? [...newUsers, ...next] : next;
+		});
+
+		if (overrides.length === 0 && creates.length === 0) return;
 		setActiveTab("all");
 		setFilters(DEFAULT_FILTERS);
 		setCurrentPage(1);
 	};
+
+	const existingUserAccess = useMemo(
+		() =>
+			users.map((u) => ({
+				email: u.email,
+				product: u.product,
+				instance: u.instance,
+				role: u.role,
+			})),
+		[users],
+	);
 
 	return (
 		<Box>
@@ -427,7 +475,7 @@ export default function AdminCenterUsersPage() {
 					setStaging={setStagingUsers}
 					onViewDetails={setDetailUpload}
 					onImportUsers={handleStagingImport}
-					systemEmails={systemEmails}
+					existingUsers={existingUserAccess}
 					onOpenImport={() => {
 						setImportMode("users");
 						setImportPanelOpen(true);

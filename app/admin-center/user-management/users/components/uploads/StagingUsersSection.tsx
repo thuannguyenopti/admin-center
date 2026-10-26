@@ -11,7 +11,16 @@ import {
 	Text,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import { stagingStatusColor, type StagingUser, type Upload } from "./data";
+import {
+	isStagingImportable,
+	stagingStatusColor,
+	type StagingUser,
+	type Upload,
+} from "./data";
+import {
+	StagingGroupCell,
+	type GroupAccessPatch,
+} from "./StagingGroupCell";
 
 export function StagingUsersSection({
 	stagingCount,
@@ -23,8 +32,8 @@ export function StagingUsersSection({
 	onFileFilterChange,
 	completedFiles,
 	pageRows,
-	validOnPage,
-	allValidOnPageSelected,
+	importableOnPage,
+	allImportableOnPageSelected,
 	onTogglePageSelectAll,
 	selectedIds,
 	onToggleRow,
@@ -32,6 +41,9 @@ export function StagingUsersSection({
 	totalPages,
 	onPageChange,
 	showGroupCol = false,
+	onChangeGroup,
+	onRemoveRow,
+	onOverrideRow,
 }: {
 	stagingCount: number;
 	issuesCount: number;
@@ -42,8 +54,8 @@ export function StagingUsersSection({
 	onFileFilterChange: (id: string) => void;
 	completedFiles: Upload[];
 	pageRows: StagingUser[];
-	validOnPage: StagingUser[];
-	allValidOnPageSelected: boolean;
+	importableOnPage: StagingUser[];
+	allImportableOnPageSelected: boolean;
 	onTogglePageSelectAll: () => void;
 	selectedIds: Set<string>;
 	onToggleRow: (u: StagingUser) => void;
@@ -51,8 +63,11 @@ export function StagingUsersSection({
 	totalPages: number;
 	onPageChange: (p: number) => void;
 	showGroupCol?: boolean;
+	onChangeGroup: (id: string, patch: GroupAccessPatch) => void;
+	onRemoveRow: (id: string) => void;
+	onOverrideRow: (id: string) => void;
 }) {
-	const colSpan = showGroupCol ? 7 : 6;
+	const colSpan = showGroupCol ? 8 : 7;
 
 	return (
 		<Box display="flex" flexDirection="column" gap="12">
@@ -62,14 +77,13 @@ export function StagingUsersSection({
 					<Badge variant="subtle">{stagingCount}</Badge>
 				</Box>
 				<Text fontSize="sm" color="fg.secondary">
-					Separate from All users. Fix duplicates, then select valid users to
-					assign access and import. Group-access rows can import with the
-					matched group&rsquo;s product, instance, and role.
+					Review the mapping, fix groups, then resolve duplicates/conflicts
+					(Remove or Override) before importing.
 				</Text>
 			</Box>
 
 			{issuesCount > 0 && (
-				<Banner intent="danger">
+				<Banner intent="warning">
 					<Box
 						display="flex"
 						alignItems="center"
@@ -79,10 +93,10 @@ export function StagingUsersSection({
 						w="full"
 					>
 						<Text fontSize="sm">
-							{`${issuesCount} email${issuesCount === 1 ? "" : "s"} already exist on the system and cannot be selected for access.`}
+							{`${issuesCount} row${issuesCount === 1 ? "" : "s"} need action — duplicate, conflict, or unknown group.`}
 						</Text>
 						<Button appearance="default" size="sm" onClick={onViewIssues}>
-							View duplicates
+							Review issues
 						</Button>
 					</Box>
 				</Banner>
@@ -91,7 +105,7 @@ export function StagingUsersSection({
 			<Box display="flex" alignItems="center" gap="12" flexWrap="wrap">
 				<Box style={{ width: 280 }}>
 					<SearchInput
-						placeholder="Search staging by name or email"
+						placeholder="Search by name, email, or group"
 						value={search}
 						onChange={(e) => onSearchChange(e.target.value)}
 					/>
@@ -122,18 +136,19 @@ export function StagingUsersSection({
 					<Tr>
 						<Th style={{ width: 40, paddingLeft: 16, paddingRight: 0 }}>
 							<Checkbox
-								checked={allValidOnPageSelected}
+								checked={allImportableOnPageSelected}
 								onCheckedChange={onTogglePageSelectAll}
-								aria-label="Select all valid on this page"
-								disabled={validOnPage.length === 0}
+								aria-label="Select all importable on this page"
+								disabled={importableOnPage.length === 0}
 							/>
 						</Th>
 						<Th style={{ paddingLeft: 8 }}>Email</Th>
 						<Th>First name</Th>
 						<Th>Last name</Th>
-						{showGroupCol && <Th>Group</Th>}
+						{showGroupCol && <Th>Group access</Th>}
 						<Th>Source file</Th>
 						<Th>Status</Th>
+						<Th style={{ width: 160 }}>Action</Th>
 					</Tr>
 				</thead>
 				<tbody>
@@ -149,12 +164,17 @@ export function StagingUsersSection({
 						</tr>
 					) : (
 						pageRows.map((u) => {
-							const isDup = u.status === "Duplicate";
+							const importable = isStagingImportable(u);
+							const needsDecision =
+								u.status === "Duplicate" || u.status === "Conflict";
+							const isIssue =
+								needsDecision || u.status === "Unknown group";
+
 							return (
 								<Tr
 									key={u.id}
 									onClick={() => onToggleRow(u)}
-									style={isDup ? { opacity: 0.85 } : undefined}
+									style={isIssue && !u.resolution ? { opacity: 0.92 } : undefined}
 								>
 									<Td
 										style={{
@@ -170,20 +190,20 @@ export function StagingUsersSection({
 										>
 											<Checkbox
 												checked={selectedIds.has(u.id)}
-												disabled={isDup}
+												disabled={!importable}
 												onCheckedChange={() => onToggleRow(u)}
 												aria-label={
-													isDup
-														? `${u.email} is a duplicate`
-														: `Select ${u.email}`
+													importable
+														? `Select ${u.email}`
+														: `${u.email} needs action before import`
 												}
 											/>
 										</Box>
 									</Td>
 									<Td style={{ paddingLeft: 8 }}>
 										<Text
-											color={isDup ? "fg.error" : "fg.default"}
-											fontWeight={isDup ? "500" : "400"}
+											color={isIssue && !u.resolution ? "fg.error" : "fg.default"}
+											fontWeight={isIssue ? "500" : "400"}
 										>
 											{u.email}
 										</Text>
@@ -192,29 +212,13 @@ export function StagingUsersSection({
 									<Td>{u.last}</Td>
 									{showGroupCol && (
 										<Td>
-											{u.groupName ? (
-												<Box
-													display="flex"
-													flexDirection="column"
-													gap="2"
-												>
-													<Text fontSize="sm">{u.groupName}</Text>
-													{u.groupMatch === "matched" && (
-														<Text fontSize="sm" color="fg.secondary">
-															{u.product} · {u.instance} · {u.role}
-														</Text>
-													)}
-													{u.groupMatch === "unknown" && (
-														<Text fontSize="sm" color="fg.error">
-															Unknown group
-														</Text>
-													)}
-												</Box>
-											) : (
-												<Text fontSize="sm" color="fg.tertiary">
-													—
-												</Text>
-											)}
+											<StagingGroupCell
+												user={u}
+												editable={u.importMode === "groupAccess"}
+												onChangeGroup={(patch) =>
+													onChangeGroup(u.id, patch)
+												}
+											/>
 										</Td>
 									)}
 									<Td>
@@ -223,13 +227,51 @@ export function StagingUsersSection({
 										</Text>
 									</Td>
 									<Td>
-										<Text
-											asChild
-											color={stagingStatusColor(u.status)}
-											fontWeight="500"
+										<Box display="flex" flexDirection="column" gap="2">
+											<Text
+												asChild
+												color={stagingStatusColor(u.status)}
+												fontWeight="500"
+											>
+												<span>{u.status}</span>
+											</Text>
+											{u.resolution === "override" && (
+												<Text fontSize="sm" color="fg.secondary">
+													Will override
+												</Text>
+											)}
+										</Box>
+									</Td>
+									<Td>
+										<Box
+											display="flex"
+											alignItems="center"
+											gap="4"
+											flexWrap="wrap"
+											onClick={(e) => e.stopPropagation()}
 										>
-											<span>{u.status}</span>
-										</Text>
+											{needsDecision && u.resolution !== "override" && (
+												<Button
+													appearance="subtle"
+													size="sm"
+													onClick={() => onOverrideRow(u.id)}
+												>
+													Override
+												</Button>
+											)}
+											{u.resolution === "override" && (
+												<Text fontSize="sm" color="fg.secondary">
+													Override set
+												</Text>
+											)}
+											<Button
+												appearance="subtle"
+												size="sm"
+												onClick={() => onRemoveRow(u.id)}
+											>
+												Remove
+											</Button>
+										</Box>
 									</Td>
 								</Tr>
 							);
